@@ -1,6 +1,8 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
-import { PUBLIC_BASE_URL } from '$env/static/public';
+import { env as PUBLIC_ENV } from '$env/dynamic/public';
 import type { D1Database, R2Bucket } from '@cloudflare/workers-types';
+
+const PUBLIC_BASE_URL = PUBLIC_ENV.PUBLIC_BASE_URL ?? 'https://santrionline.com';
 
 export type CertificateRow = {
     id: string;
@@ -299,4 +301,3 @@ export const formatIssuedAtLabel = (date: Date | string) => {
     if (!d || Number.isNaN(d.getTime())) return '';
     return new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(d);
 };
-
