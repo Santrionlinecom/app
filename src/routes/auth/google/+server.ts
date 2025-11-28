@@ -1,12 +1,11 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { google } from '$lib/server/lucia';
+import { getGoogleOAuthClient } from '$lib/server/lucia';
 import { generateCodeVerifier, generateState } from 'arctic';
 
-export const GET: RequestHandler = async ({ cookies }) => {
-	if (!google) {
-		throw error(503, 'Google OAuth belum dikonfigurasi.');
-	}
+export const GET: RequestHandler = async ({ cookies, url }) => {
+	const google = getGoogleOAuthClient(url.origin);
+	if (!google) throw error(503, 'Google OAuth belum dikonfigurasi.');
 
 	const state = generateState();
 	const codeVerifier = generateCodeVerifier();

@@ -7,20 +7,17 @@ export default defineConfig({
 		sveltekit(),
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
-			manifestFilename: 'manifest.json',
-			includeAssets: ['favicon.ico', 'robots.txt', 'logo.png', 'logo-santri.png'],
+			includeAssets: ['favicon.ico', 'robots.txt', 'pwa-192x192.png', 'pwa-512x512.png'],
 			manifest: {
-				id: '/',
 				name: 'Santri Online',
 				short_name: 'SantriOnline',
-				description:
-					'Platform Digital Terintegrasi untuk Santri - Setor Hafalan, History Belajar Kitab, dan Ibadah Harian',
-				start_url: '/',
-				scope: '/',
+				description: 'Platform Digital Terintegrasi untuk Santri - Setor Hafalan, History Belajar Kitab, dan Ibadah Harian',
+				theme_color: '#15803d',
+				background_color: '#ffffff',
 				display: 'standalone',
 				orientation: 'portrait',
-				background_color: '#ffffff',
-				theme_color: '#15803d',
+				start_url: '/',
+				scope: '/',
 				categories: ['education', 'productivity', 'lifestyle'],
 				icons: [
 					{
@@ -38,42 +35,73 @@ export default defineConfig({
 				]
 			},
 			workbox: {
+				// Pastikan pola ini menangkap semua file statis penting
 				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+				
+				// Strategi Caching (Penyimpanan Offline)
 				runtimeCaching: [
+					// 1. Simpan Halaman HTML (Dashboard, Menu)
+					// Strategi: NetworkFirst (Cari sinyal dulu, kalau mati baru buka cache)
 					{
-						urlPattern: /^https:\/\/app\.santrionline\.com\/.*$/,
+						urlPattern: ({ request }) => request.destination === 'document',
 						handler: 'NetworkFirst',
 						options: {
 							cacheName: 'santri-pages',
-							networkTimeoutSeconds: 3,
 							expiration: {
 								maxEntries: 50,
-								maxAgeSeconds: 60 * 60 * 24
+								maxAgeSeconds: 60 * 60 * 24 * 7 // Simpan 1 minggu
+							},
+							networkTimeoutSeconds: 3 // Kalau 3 detik gak ada sinyal, anggap offline
+						}
+					},
+					// 2. Simpan Data API (Amalan, Wirid, Hafalan) - INI PENTING BUAT OFFLINE
+					{
+						urlPattern: ({ url }) => url.pathname.startsWith('/api/') || url.pathname.startsWith('/amalan'),
+						handler: 'NetworkFirst',
+						options: {
+							cacheName: 'santri-api-data',
+							expiration: {
+								maxEntries: 100,
+								maxAgeSeconds: 60 * 60 * 24 * 30 // Simpan 1 bulan biar wirid aman
 							},
 							cacheableResponse: {
 								statuses: [0, 200]
 							}
 						}
 					},
+					// 3. Simpan Aset (CSS, JS, Worker) - Biar aplikasi ngebut
 					{
 						urlPattern: ({ request }) => ['style', 'script', 'worker'].includes(request.destination),
-						handler: 'StaleWhileRevalidate',
+						handler: 'StaleWhileRevalidate', // Pakai cache lama sambil update cache baru di background
 						options: {
 							cacheName: 'santri-assets',
 							expiration: {
-								maxEntries: 60,
-								maxAgeSeconds: 60 * 60 * 24 * 14
+								maxEntries: 100,
+								maxAgeSeconds: 60 * 60 * 24 * 30
 							}
 						}
 					},
+					// 4. Simpan Gambar - Biar hemat kuota
 					{
 						urlPattern: ({ request }) => request.destination === 'image',
-						handler: 'CacheFirst',
+						handler: 'CacheFirst', // Utamakan cache, jarang update gambar
 						options: {
 							cacheName: 'santri-images',
 							expiration: {
 								maxEntries: 60,
 								maxAgeSeconds: 60 * 60 * 24 * 30
+							}
+						}
+					},
+					// 5. Simpan Font (Google Fonts / Amiri)
+					{
+						urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com',
+						handler: 'CacheFirst',
+						options: {
+							cacheName: 'santri-fonts',
+							expiration: {
+								maxEntries: 10,
+								maxAgeSeconds: 60 * 60 * 24 * 365 // Simpan setahun
 							}
 						}
 					}

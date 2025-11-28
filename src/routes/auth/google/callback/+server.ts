@@ -1,6 +1,6 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { google, initializeLucia } from '$lib/server/lucia';
+import { getGoogleOAuthClient, initializeLucia } from '$lib/server/lucia';
 import { generateId } from 'lucia';
 
 type GoogleProfile = {
@@ -14,10 +14,23 @@ export const GET: RequestHandler = async ({ url, cookies, fetch, platform }) => 
 	if (!db) throw error(500, 'Database Error');
 	
 	const lucia = initializeLucia(db);
+	const google = getGoogleOAuthClient(url.origin);
+	if (!google) throw error(503, 'Google OAuth belum dikonfigurasi.');
+
+	const oauthError = url.searchParams.get('error');
+	if (oauthError) throw error(400, 'Google membatalkan proses login. Silakan coba lagi.');
+
 	const code = url.searchParams.get('code');
 	const codeVerifier = cookies.get('google_oauth_code_verifier');
+	const state = url.searchParams.get('state');
+	const storedState = cookies.get('google_oauth_state');
 
-	if (!code || !codeVerifier) throw error(400, 'Gagal verifikasi Google.');
+	if (!code || !codeVerifier || !state || !storedState || state !== storedState) {
+		// Bersihkan cookie supaya percobaan berikutnya bersih
+		cookies.delete('google_oauth_code_verifier', { path: '/' });
+		cookies.delete('google_oauth_state', { path: '/' });
+		throw error(400, 'Gagal verifikasi Google. Silakan coba lagi.');
+	}
 
 	try {
 		// 1. Ambil Data dari Google
@@ -57,6 +70,8 @@ export const GET: RequestHandler = async ({ url, cookies, fetch, platform }) => 
 		const session = await lucia.createSession(userId!, {});
 		const sessionCookie = lucia.createSessionCookie(session.id);
 		cookies.set(sessionCookie.name, sessionCookie.value, { path: '/', ...sessionCookie.attributes });
+		cookies.delete('google_oauth_code_verifier', { path: '/' });
+		cookies.delete('google_oauth_state', { path: '/' });
 
 	} catch (e) {
 		console.error(e);

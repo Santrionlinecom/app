@@ -40,14 +40,15 @@ const GOOGLE_CLIENT_ID = privateEnv.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = privateEnv.GOOGLE_CLIENT_SECRET;
 const PUBLIC_BASE_URL = publicEnv.PUBLIC_BASE_URL;
 
-// Settingan Google Login
-const redirectUri = `${PUBLIC_BASE_URL}/auth/google/callback`;
+const normalizeBaseUrl = (value?: string | null) => value?.replace(/\/+$/, '') || null;
 
-export const google = new Google(
-    GOOGLE_CLIENT_ID!, // Tanda seru (!) untuk meyakinkan TS bahwa ini ada
-    GOOGLE_CLIENT_SECRET!,
-    redirectUri
-);
+// Buat instance Google OAuth per request supaya domain callback selalu sama dengan host yang sedang dipakai user
+export const getGoogleOAuthClient = (origin?: string) => {
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) return null;
+    const baseUrl = normalizeBaseUrl(origin) ?? normalizeBaseUrl(PUBLIC_BASE_URL);
+    if (!baseUrl) return null;
+    return new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, `${baseUrl}/auth/google/callback`);
+};
 
 declare module 'lucia' {
     interface Register {
