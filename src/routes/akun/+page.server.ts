@@ -1,5 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { Scrypt } from 'oslo/password';
+import { Scrypt } from '$lib/server/password';
 import type { Actions, PageServerLoad } from './$types';
 
 const ensureGenderColumn = async (db: App.Locals['db']) => {

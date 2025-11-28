@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { initializeLucia } from '$lib/server/auth';
-import { Scrypt } from 'oslo/password'; // HANYA IMPORT SCRYPT (JANGAN ARGON2)
+import { initializeLucia } from '$lib/server/lucia';
+import { Scrypt } from '$lib/server/password'; // HANYA IMPORT SCRYPT (JANGAN ARGON2)
 import type { Actions, PageServerLoad } from './$types';
 
 // Jika user sudah login, lempar ke dashboard

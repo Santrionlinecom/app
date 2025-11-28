@@ -1,7 +1,7 @@
 // src/lib/server/progress.ts
 
 // PERBAIKAN: Ganti Argon2id dengan Scrypt agar kompatibel dengan Cloudflare
-import { Scrypt } from 'oslo/password'; 
+import { Scrypt } from '$lib/server/password'; 
 import { generateId } from 'lucia';
 import type { D1Database } from '@cloudflare/workers-types';
 import { SURAH_DATA } from '$lib/surah-data';

@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { initializeLucia } from '$lib/server/lucia';
 import { generateId } from 'lucia';
-import { Scrypt } from 'oslo/password'; // <-- GANTI: Pakai Scrypt yang aman untuk Cloudflare
+import { Scrypt } from '$lib/server/password'; // <-- GANTI: Pakai Scrypt yang aman untuk Cloudflare
 import type { Actions } from './$types';
 
 export const actions: Actions = {

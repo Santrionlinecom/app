@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { generateId } from 'lucia';
-import { Scrypt } from 'oslo/password';
+import { Scrypt } from '$lib/server/password';
 import type { RequestHandler } from './$types';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'admin'] as const;

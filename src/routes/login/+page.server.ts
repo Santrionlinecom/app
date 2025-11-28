@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { Scrypt, Argon2id } from 'oslo/password';
+import { Scrypt } from '$lib/server/password';
 import { initializeLucia, google } from '$lib/server/lucia';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -33,20 +33,15 @@ export const actions: Actions = {
 			return fail(400, { message: 'Email tidak ditemukan.' });
 		}
 
-		let verified = false;
+		const scrypt = new Scrypt();
 		const isArgonHash = user.password_hash.startsWith('$argon2');
 		if (isArgonHash) {
-			verified = await new Argon2id().verify(user.password_hash, password);
-			if (verified) {
-				const newHash = await new Scrypt().hash(password);
-				await db
-					.prepare('UPDATE users SET password_hash = ? WHERE id = ?')
-					.bind(newHash, user.id)
-					.run();
-			}
-		} else {
-			verified = await new Scrypt().verify(user.password_hash, password);
+			return fail(400, {
+				message: 'Akun lama masih memakai hash Argon2. Silakan reset password untuk bisa login.'
+			});
 		}
+
+		const verified = await scrypt.verify(user.password_hash, password);
 
 		if (!verified) {
 			return fail(400, { message: 'Password salah.' });

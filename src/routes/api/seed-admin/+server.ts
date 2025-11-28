@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { generateId } from 'lucia';
-import { Scrypt } from 'oslo/password';
+import { Scrypt } from '$lib/server/password';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ locals }) => {
