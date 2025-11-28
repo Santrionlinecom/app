@@ -1,0 +1,29 @@
+-- Data Bacaan Tahlil NU Lengkap
+-- Untuk tabel: amalan (judul, kategori, konten_arab, terjemahan, urutan)
+
+INSERT INTO amalan (judul, kategori, konten_arab, terjemahan, urutan) VALUES 
+('Al-Fatihah', 'Tahlil', 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ. الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ. الرَّحْمَٰنِ الرَّحِيمِ. مَالِكِ يَوْمِ الدِّينِ. إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ. اِهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ. صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ', 'Dengan nama Allah Yang Maha Pengasih, Maha Penyayang. Segala puji bagi Allah, Tuhan seluruh alam. Yang Maha Pengasih, Maha Penyayang. Pemilik hari pembalasan. Hanya kepada-Mu kami menyembah dan hanya kepada-Mu kami mohon pertolongan. Tunjukilah kami jalan yang lurus. (Yaitu) jalan orang-orang yang telah Engkau beri nikmat kepadanya; bukan (jalan) mereka yang dimurkai, dan bukan (pula jalan) mereka yang sesat.', 1);
+
+INSERT INTO amalan (judul, kategori, konten_arab, terjemahan, urutan) VALUES 
+('Al-Ikhlas (3x)', 'Tahlil', 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ. قُلْ هُوَ اللَّهُ أَحَدٌ. اللَّهُ الصَّمَدُ. لَمْ يَلِدْ وَلَمْ يُولَدْ. وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ', 'Katakanlah (Muhammad), "Dialah Allah Yang Maha Esa. Allah tempat meminta segala sesuatu. (Dia) tidak beranak dan tidak pula diperanakkan. Dan tidak ada sesuatu yang setara dengan-Nya." (dibaca 3 kali)', 2);
+
+INSERT INTO amalan (judul, kategori, konten_arab, terjemahan, urutan) VALUES 
+('Al-Falaq', 'Tahlil', 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ. قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ. مِنْ شَرِّ مَا خَلَقَ. وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ. وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ. وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ', 'Katakanlah, "Aku berlindung kepada Tuhan yang menguasai subuh, dari kejahatan makhluk-Nya, dan dari kejahatan malam apabila telah gelap gulita, dan dari kejahatan wanita-wanita tukang sihir yang menghembus pada buhul-buhul, dan dari kejahatan orang yang dengki apabila dia dengki."', 3);
+
+INSERT INTO amalan (judul, kategori, konten_arab, terjemahan, urutan) VALUES 
+('An-Nas', 'Tahlil', 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ. قُلْ أَعُوذُ بِرَبِّ النَّاسِ. مَلِكِ النَّاسِ. إِلَٰهِ النَّاسِ. مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ. الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ. مِنَ الْجِنَّةِ وَالنَّاسِ', 'Katakanlah, "Aku berlindung kepada Tuhan manusia, Raja manusia, Sembahan manusia, dari kejahatan (bisikan) setan yang biasa bersembunyi, yang membisikkan (kejahatan) ke dalam dada manusia, dari (golongan) jin dan manusia."', 4);
+
+INSERT INTO amalan (judul, kategori, konten_arab, terjemahan, urutan) VALUES 
+('Tahlil', 'Tahlil', 'لَا إِلَٰهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ يُحْيِي وَيُمِيتُ وَهُوَ حَيٌّ لَا يَمُوتُ بِيَدِهِ الْخَيْرُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ', 'Tidak ada Tuhan selain Allah, Yang Maha Esa, tidak ada sekutu bagi-Nya. Bagi-Nya kerajaan dan bagi-Nya segala pujian. Dia menghidupkan dan mematikan, dan Dia Maha Hidup yang tidak mati. Di tangan-Nya segala kebaikan dan Dia Mahakuasa atas segala sesuatu. (dibaca 100x)', 5);
+
+INSERT INTO amalan (judul, kategori, konten_arab, terjemahan, urutan) VALUES 
+('Istighfar', 'Tahlil', 'أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ الَّذِي لَا إِلَٰهَ إِلَّا هُوَ الْحَيَّ الْقَيُّومَ وَأَتُوبُ إِلَيْهِ', 'Aku mohon ampun kepada Allah Yang Maha Agung, yang tiada Tuhan selain Dia, Yang Maha Hidup, Yang Maha Berdiri Sendiri, dan aku bertobat kepada-Nya. (dibaca 3x)', 6);
+
+INSERT INTO amalan (judul, kategori, konten_arab, terjemahan, urutan) VALUES 
+('Shalawat Nariyah', 'Tahlil', 'اَللَّهُمَّ صَلِّ صَلَاةً كَامِلَةً وَسَلِّمْ سَلَامًا تَامًّا عَلَى سَيِّدِنَا مُحَمَّدٍ الَّذِي تَنْحَلُّ بِهِ الْعُقَدُ وَتَنْفَرِجُ بِهِ الْكُرَبُ وَتُقْضَى بِهِ الْحَوَائِجُ وَتُنَالُ بِهِ الرَّغَائِبُ وَحُسْنُ الْخَوَاتِمِ وَيُسْتَسْقَى الْغَمَامُ بِوَجْهِهِ الْكَرِيمِ وَعَلَى آلِهِ وَصَحْبِهِ فِي كُلِّ لَمْحَةٍ وَنَفَسٍ بِعَدَدِ كُلِّ مَعْلُومٍ لَكَ', 'Ya Allah, limpahkanlah shalawat yang sempurna dan salam yang penuh kepada junjungan kami Nabi Muhammad, yang dengan sebabnya semua kesulitan dapat terpecahkan, semua kesusahan dapat dilenyapkan, semua keperluan dapat terpenuhi, semua yang diinginkan dan husnul khatimah dapat tercapai, dan hujan turun dengan berkah wajahnya yang mulia, dan limpahkanlah shalawat dan salam kepada keluarga dan sahabatnya di setiap detik dan nafas sebanyak bilangan semua yang Engkau ketahui.', 7);
+
+INSERT INTO amalan (judul, kategori, konten_arab, terjemahan, urutan) VALUES 
+('Doa Tahlil', 'Tahlil', 'اَللَّهُمَّ إِنَّ هَذِهِ الصَّدَقَةَ عَنْ رُوحِ فُلَانٍ فَبَلِّغْهُ إِيَّاهَا وَآجِرْنَا عَلَيْهَا. اَللَّهُمَّ اغْفِرْ لِحَيِّنَا وَمَيِّتِنَا وَشَاهِدِنَا وَغَائِبِنَا وَصَغِيرِنَا وَكَبِيرِنَا وَذَكَرِنَا وَأُنْثَانَا. اَللَّهُمَّ مَنْ أَحْيَيْتَهُ مِنَّا فَأَحْيِهِ عَلَى الْإِسْلَامِ وَمَنْ تَوَفَّيْتَهُ مِنَّا فَتَوَفَّهُ عَلَى الْإِيمَانِ بِرَحْمَتِكَ يَا أَرْحَمَ الرَّاحِمِينَ', 'Ya Allah, sesungguhnya sedekah ini untuk roh si fulan, maka sampaikanlah kepadanya dan berilah kami pahala atasnya. Ya Allah, ampunilah orang-orang kami yang masih hidup dan yang sudah meninggal, yang hadir dan yang tidak hadir, yang masih kecil dan yang sudah besar, laki-laki dan perempuan kami. Ya Allah, barangsiapa di antara kami yang Engkau hidupkan, maka hidupkanlah dia dalam Islam, dan barangsiapa yang Engkau wafatkan, maka wafatkanlah dia dalam iman, dengan rahmat-Mu wahai Tuhan Yang Maha Penyayang.', 8);
+
+INSERT INTO amalan (judul, kategori, konten_arab, terjemahan, urutan) VALUES 
+('Doa Penutup', 'Tahlil', 'سُبْحَانَ رَبِّكَ رَبِّ الْعِزَّةِ عَمَّا يَصِفُونَ. وَسَلَامٌ عَلَى الْمُرْسَلِينَ. وَالْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ. اَلْفَاتِحَة', 'Maha Suci Tuhanmu Yang Mempunyai Keperkasaan dari apa yang mereka sifatkan. Dan kesejahteraan dilimpahkan atas para rasul. Dan segala puji bagi Allah Tuhan seluruh alam. (Al-Fatihah)', 9);

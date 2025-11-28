@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.santrionline.app",
+      "sha256_cert_fingerprints": [
+        "77:13:3D:B9:62:6B:B4:FA:D1:BD:DE:A0:5C:4D:26:7A:8C:7E:6C:44:72:CF:D5:5D:EF:DE:B2:D5:97:45:0B:15"
+      ]
+    }
+  }
+]

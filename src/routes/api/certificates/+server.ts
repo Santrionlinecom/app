@@ -1,0 +1,164 @@
+import { json, error } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import {
+    buildCertificatePdf,
+    buildDownloadUrl,
+    buildStorageKey,
+    collectCertificateStats,
+    createCertificateRecord,
+    ensureCertificateTable,
+    formatIssuedAtLabel,
+    listCertificatesForSantri,
+    uploadCertificateToR2
+} from '$lib/server/certificates';
+import { generateId } from 'lucia';
+
+const ensureAuth = (locals: App.Locals) => {
+    if (!locals.user) {
+        throw error(401, 'Unauthorized');
+    }
+    if (!locals.db) {
+        throw error(500, 'Database tidak tersedia');
+    }
+};
+
+export const GET: RequestHandler = async ({ locals, url }) => {
+    ensureAuth(locals);
+    const targetId =
+        locals.user?.role === 'santri'
+            ? locals.user.id
+            : url.searchParams.get('userId') || locals.user?.id;
+
+    const withStats = url.searchParams.get('withStats') === '1';
+
+    if (!targetId) {
+        throw error(400, 'userId wajib diisi');
+    }
+
+    const certificates = await listCertificatesForSantri(locals.db, targetId);
+    const mapped = certificates.map((row) => ({
+        ...row,
+        downloadUrl: buildDownloadUrl(row.id)
+    }));
+
+    const payload: Record<string, unknown> = { certificates: mapped };
+    if (withStats) {
+        payload.stats = await collectCertificateStats(locals.db, targetId);
+    }
+
+    return json(payload);
+};
+
+export const POST: RequestHandler = async ({ locals, request, platform }) => {
+    ensureAuth(locals);
+    const bucket = platform?.env?.BUCKET;
+    if (!bucket) {
+        throw error(500, 'Storage R2 tidak tersedia');
+    }
+
+    const body = await request.json().catch(() => ({}));
+
+    const programTitle = typeof body.title === 'string' && body.title.trim() ? body.title.trim() : 'Program Tahfiz';
+    const description = typeof body.description === 'string' ? body.description.trim() : '';
+    const minAyat = typeof body.minAyat === 'number' ? body.minAyat : 30;
+    const minSessions = typeof body.minSessions === 'number' ? body.minSessions : 8;
+    const targetSantri =
+        locals.user?.role === 'santri'
+            ? locals.user.id
+            : typeof body.userId === 'string'
+              ? body.userId
+              : locals.user?.id;
+
+    if (!targetSantri) {
+        throw error(400, 'userId santri wajib diisi');
+    }
+
+    if (locals.user?.role === 'santri' && targetSantri !== locals.user.id) {
+        throw error(403, 'Santri hanya bisa membuat sertifikat untuk dirinya sendiri');
+    }
+
+    await ensureCertificateTable(locals.db);
+
+    const stats = await collectCertificateStats(locals.db, targetSantri);
+    if (stats.totalHifzAyat < minAyat || stats.totalSessions < minSessions) {
+        return json(
+            {
+                error: `Belum memenuhi syarat minimal (${minAyat} ayat disetujui & ${minSessions} sesi).`,
+                stats
+            },
+            { status: 400 }
+        );
+    }
+
+    const santri = await locals.db
+        .prepare('SELECT username, email FROM users WHERE id = ?')
+        .bind(targetSantri)
+        .first<{ username: string | null; email: string }>();
+    if (!santri) {
+        throw error(404, 'Data santri tidak ditemukan');
+    }
+
+    // Tentukan ustadz yang tercantum di sertifikat
+    let ustadzId: string | null = locals.user?.role === 'ustadz' || locals.user?.role === 'admin' ? locals.user.id : null;
+    if (!ustadzId && typeof body.ustadzId === 'string') {
+        ustadzId = body.ustadzId;
+    }
+    let ustadzName = locals.user?.role === 'ustadz' || locals.user?.role === 'admin' ? locals.user.username || locals.user.email : 'Ustadz Pembimbing';
+    if (ustadzId && (!ustadzName || ustadzId !== locals.user?.id)) {
+        const ustadzRow = await locals.db
+            .prepare('SELECT username, email FROM users WHERE id = ?')
+            .bind(ustadzId)
+            .first<{ username: string | null; email: string | null }>();
+        ustadzName = ustadzRow?.username || ustadzRow?.email || ustadzName;
+    }
+
+    const certificateId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : generateId(20);
+    const storageKey = buildStorageKey(targetSantri, certificateId);
+    const issuedAt = new Date().toISOString();
+    const issuedLabel = formatIssuedAtLabel(issuedAt) || issuedAt;
+
+    const summary =
+        description ||
+        `Berhasil menuntaskan ${stats.totalHifzAyat} ayat disetujui, ${stats.totalDoa} doa dikuasai, dan ${stats.totalSessions} sesi setor/murajaah dalam ${stats.durationDays || 0} hari.`;
+
+    const pdfBytes = await buildCertificatePdf({
+        studentName: santri.username || santri.email,
+        ustadzName,
+        programTitle,
+        issuedAt: issuedLabel,
+        summary,
+        stats
+    });
+
+    await uploadCertificateToR2(bucket, storageKey, pdfBytes, {
+        santriId: targetSantri,
+        ustadzId,
+        title: programTitle
+    });
+
+    const downloadUrl = buildDownloadUrl(certificateId);
+    await createCertificateRecord(locals.db, {
+        id: certificateId,
+        santri_id: targetSantri,
+        ustadz_id: ustadzId,
+        title: programTitle,
+        description: summary,
+        issued_at: issuedAt,
+        duration_days: stats.durationDays,
+        total_hifz_ayat: stats.totalHifzAyat,
+        total_doa: stats.totalDoa,
+        total_sessions: stats.totalSessions,
+        certificate_url: downloadUrl
+    });
+
+    return json({
+        id: certificateId,
+        downloadUrl,
+        title: programTitle,
+        issuedAt,
+        stats,
+        summary,
+        ustadzId,
+        santriId: targetSantri
+    });
+};

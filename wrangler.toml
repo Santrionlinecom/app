@@ -1,0 +1,14 @@
+name = "app-santrionline"
+compatibility_date = "2024-11-19"
+pages_build_output_dir = ".svelte-kit/cloudflare"
+
+# --- Konfigurasi Database D1 ---
+[[d1_databases]]
+binding = "DB" # Ini nama variabel yang akan kita panggil di kodingan (misal: platform.env.DB)
+database_name = "inti-santri"
+database_id = "b42e974f-4b45-4edc-92e5-553b7c4cbf3b"
+
+# --- Konfigurasi R2 Storage ---
+[[r2_buckets]]
+binding = "BUCKET" # Ini nama variabel untuk storage (misal: platform.env.BUCKET)
+bucket_name = "santri-online-files"

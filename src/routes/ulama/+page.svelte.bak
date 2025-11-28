@@ -1,0 +1,236 @@
+<script lang="ts">
+	import { ulama } from '$lib/data/ulama';
+</script>
+
+<svelte:head>
+	<title>Jaringan Ulama & Wali</title>
+</svelte:head>
+
+<section class="max-w-5xl mx-auto space-y-10 py-12">
+	<header class="space-y-4 text-center">
+		<p class="text-sm uppercase tracking-[0.3em] text-sky-500">Sanad Keilmuan</p>
+		<h1 class="text-4xl font-bold text-slate-900">Rantai Ulama Ahlussunnah wal Jama'ah</h1>
+		<p class="text-slate-600">
+			Dari Madinah ke
+			<a href="#baghdad" class="font-semibold text-emerald-700 underline underline-offset-4">Baghdad</a>,
+			<a href="#damaskus" class="font-semibold text-emerald-700 underline underline-offset-4">Damaskus</a>,
+			<a href="#mesir" class="font-semibold text-emerald-700 underline underline-offset-4">Mesir</a>,
+			<a href="#hadramaut" class="font-semibold text-emerald-700 underline underline-offset-4">Hadramaut</a>,
+			hingga Jawa melalui
+			<a href="#walisongo" class="font-semibold text-emerald-700 underline underline-offset-4">Walisongo</a>,
+			sanad dakwah Aswaja bersambung kepada para
+			<a href="/sahabat" class="font-semibold text-emerald-700 underline underline-offset-4">sahabat</a>,
+			tabi'in, tabi'ut tabi'in, dan ulama masa kini.
+		</p>
+	</header>
+
+	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+		{#each ulama as guru}
+			<a href={`/ulama/${guru.slug}`} class="group rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+				<p class="text-xs uppercase tracking-[0.2em] text-emerald-500">{guru.era}</p>
+				<h2 class="mt-1 text-xl font-semibold text-slate-900 group-hover:text-emerald-700">{guru.nama}</h2>
+				<p class="text-sm text-slate-500">{guru.region}</p>
+				<p class="mt-3 text-sm text-slate-700 line-clamp-3">{guru.legacy}</p>
+				<span class="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-emerald-600">Baca kisah →</span>
+			</a>
+		{/each}
+	</div>
+
+	<div class="rounded-3xl border bg-white p-6 shadow-sm space-y-3">
+		<h3 class="text-lg font-semibold text-slate-800">Mengapa mereka panutan Aswaja?</h3>
+		<p class="text-slate-700">
+			Para imam mazhab dan ulama besar ini menjaga sanad aqidah Asy’ari-Maturidi, fiqih empat mazhab, dan tasawuf Al-Ghazali.
+			Kajian mereka menjadi fondasi kurikulum pesantren di Nusantara dan diakui di seluruh dunia Islam.
+		</p>
+		<p class="text-slate-700">
+			Klik salah satu nama di atas untuk membaca kisah singkat dan kontribusi mereka bagi Ahlussunnah wal Jama'ah.
+		</p>
+	</div>
+
+	<section id="walisongo" class="rounded-3xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-8 shadow-lg space-y-6">
+		<div class="flex items-start justify-between gap-3">
+			<div>
+				<p class="text-xs uppercase tracking-[0.2em] text-emerald-600">Sejarah Nusantara</p>
+				<h2 class="text-3xl font-bold text-emerald-800 mb-2">Jejak Walisongo di Tanah Jawa</h2>
+				<p class="text-gray-700">9 Wali penyebar Islam dengan pendekatan budaya, seni, dan kearifan lokal.</p>
+			</div>
+		</div>
+		
+		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<a href="/walisongo/sunan-gresik" class="group rounded-2xl border-2 border-emerald-300 bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl">
+				<span class="text-3xl mb-2 block">1️⃣</span>
+				<h3 class="text-lg font-bold text-emerald-700 group-hover:text-emerald-800">Sunan Gresik</h3>
+				<p class="text-sm text-gray-600 mt-1">Maulana Malik Ibrahim — Gresik</p>
+				<p class="text-xs text-gray-500 mt-2">Pembuka dakwah Walisongo</p>
+			</a>
+			<a href="/walisongo/sunan-ampel" class="group rounded-2xl border-2 border-blue-300 bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl">
+				<span class="text-3xl mb-2 block">2️⃣</span>
+				<h3 class="text-lg font-bold text-blue-700 group-hover:text-blue-800">Sunan Ampel</h3>
+				<p class="text-sm text-gray-600 mt-1">Raden Rahmat — Surabaya</p>
+				<p class="text-xs text-gray-500 mt-2">Pendiri Pesantren Ampel</p>
+			</a>
+			<a href="/walisongo/sunan-bonang" class="group rounded-2xl border-2 border-purple-300 bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl">
+				<span class="text-3xl mb-2 block">3️⃣</span>
+				<h3 class="text-lg font-bold text-purple-700 group-hover:text-purple-800">Sunan Bonang</h3>
+				<p class="text-sm text-gray-600 mt-1">Makhdum Ibrahim — Tuban</p>
+				<p class="text-xs text-gray-500 mt-2">Dakwah melalui gamelan</p>
+			</a>
+			<a href="/walisongo/sunan-drajat" class="group rounded-2xl border-2 border-amber-300 bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl">
+				<span class="text-3xl mb-2 block">4️⃣</span>
+				<h3 class="text-lg font-bold text-amber-700 group-hover:text-amber-800">Sunan Drajat</h3>
+				<p class="text-sm text-gray-600 mt-1">Raden Qasim — Lamongan</p>
+				<p class="text-xs text-gray-500 mt-2">Fokus dakwah sosial</p>
+			</a>
+			<a href="/walisongo/sunan-kudus" class="group rounded-2xl border-2 border-rose-300 bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl">
+				<span class="text-3xl mb-2 block">5️⃣</span>
+				<h3 class="text-lg font-bold text-rose-700 group-hover:text-rose-800">Sunan Kudus</h3>
+				<p class="text-sm text-gray-600 mt-1">Ja'far Shadiq — Kudus</p>
+				<p class="text-xs text-gray-500 mt-2">Toleransi & Masjid Menara</p>
+			</a>
+			<a href="/walisongo/sunan-kalijaga" class="group rounded-2xl border-2 border-indigo-300 bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl">
+				<span class="text-3xl mb-2 block">6️⃣</span>
+				<h3 class="text-lg font-bold text-indigo-700 group-hover:text-indigo-800">Sunan Kalijaga</h3>
+				<p class="text-sm text-gray-600 mt-1">Raden Said — Demak</p>
+				<p class="text-xs text-gray-500 mt-2">Dakwah melalui wayang</p>
+			</a>
+			<a href="/walisongo/sunan-muria" class="group rounded-2xl border-2 border-teal-300 bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl">
+				<span class="text-3xl mb-2 block">7️⃣</span>
+				<h3 class="text-lg font-bold text-teal-700 group-hover:text-teal-800">Sunan Muria</h3>
+				<p class="text-sm text-gray-600 mt-1">Raden Umar Said — Muria</p>
+				<p class="text-xs text-gray-500 mt-2">Dakwah di pedalaman</p>
+			</a>
+			<a href="/walisongo/sunan-giri" class="group rounded-2xl border-2 border-green-300 bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl">
+				<span class="text-3xl mb-2 block">8️⃣</span>
+				<h3 class="text-lg font-bold text-green-700 group-hover:text-green-800">Sunan Giri</h3>
+				<p class="text-sm text-gray-600 mt-1">Raden Paku — Giri</p>
+				<p class="text-xs text-gray-500 mt-2">Pusat fatwa & pendidikan</p>
+			</a>
+			<a href="/walisongo/sunan-gunung-jati" class="group rounded-2xl border-2 border-cyan-300 bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl">
+				<span class="text-3xl mb-2 block">9️⃣</span>
+				<h3 class="text-lg font-bold text-cyan-700 group-hover:text-cyan-800">Sunan Gunung Jati</h3>
+				<p class="text-sm text-gray-600 mt-1">Syarif Hidayatullah — Cirebon</p>
+				<p class="text-xs text-gray-500 mt-2">Dakwah politik & dagang</p>
+			</a>
+		</div>
+
+		<div class="flex justify-center mt-6">
+			<a href="/walisongo" class="btn bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg">
+				📖 Lihat Pembahasan Lengkap Walisongo
+			</a>
+		</div>
+	</section>
+
+	<section id="hadramaut" class="rounded-3xl border bg-white p-6 shadow-sm space-y-4">
+		<div class="flex items-start justify-between gap-3">
+			<div>
+				<p class="text-xs uppercase tracking-[0.2em] text-emerald-500">Jalur Hadramaut</p>
+				<h2 class="text-2xl font-semibold text-slate-900">Habaib Hadramaut di Jawa</h2>
+				<p class="text-sm text-slate-600">
+					Habaib dari Yaman hadir sejak abad 15–19, memperkuat dakwah di pesisir dan pesantren seperti Somalangu Al-Kahfi.
+				</p>
+			</div>
+			<a class="btn btn-sm variant-filled-primary" href="#top">Kembali ke atas</a>
+		</div>
+		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Habib Husain bin Abu Bakar Alaydrus</h3>
+				<p class="text-sm text-slate-600">Luar Batang, Batavia (1797–1871). Ulama Hadramaut yang berdakwah di pelabuhan dan komunitas pesisir.</p>
+			</div>
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Habib Ali bin Abdurrahman Al-Habsyi (Kwitang)</h3>
+				<p class="text-sm text-slate-600">Jakarta (1870–1968). Murid habaib Hadramaut, mendirikan majelis ilmu yang menjadi rujukan ulama Jawa.</p>
+			</div>
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Habib Abdullah bin Muhsin Al-Attas</h3>
+				<p class="text-sm text-slate-600">Bogor (1840–1914). Dzikir dan pengajaran tasawuf; silsilah ke Alawiyyin Hadramaut.</p>
+			</div>
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Habib Umar bin Hud Al-Attas</h3>
+				<p class="text-sm text-slate-600">Somalangu (abad 19). Menghidupkan pesantren Al-Kahfi Somalangu dengan jejaring ulama Yaman.</p>
+			</div>
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Habib Umar bin Hafidz</h3>
+				<p class="text-sm text-slate-600">Tarim (l. 1963). Dakwah manhaj Hadramaut ke Nusantara, sering berkunjung ke pesantren Jawa.</p>
+			</div>
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Habib Luthfi bin Yahya</h3>
+				<p class="text-sm text-slate-600">Pekalongan (l. 1949). Trah Ba'Alawi; majelisnya menjadi rujukan dzikir dan kebangsaan di Jawa.</p>
+			</div>
+		</div>
+	</section>
+
+	<section id="baghdad" class="rounded-3xl border bg-white p-6 shadow-sm space-y-4">
+		<div class="flex items-start justify-between gap-3">
+			<div>
+				<p class="text-xs uppercase tracking-[0.2em] text-emerald-500">Baghdad</p>
+				<h2 class="text-2xl font-semibold text-slate-900">Ulama Baghdad</h2>
+				<p class="text-sm text-slate-600">Poros ilmu fiqih, hadis, dan tasawuf di era Abbasiyah.</p>
+			</div>
+			<a class="btn btn-sm variant-filled-primary" href="#top">Kembali ke atas</a>
+		</div>
+		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Imam Abu Hanifah</h3>
+				<p class="text-sm text-slate-600">699–767. Pendiri mazhab Hanafi, Baghdad.</p>
+			</div>
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Imam Ahmad bin Hanbal</h3>
+				<p class="text-sm text-slate-600">780–855. Ulama hadis dan fiqih, Baghdad.</p>
+			</div>
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Imam Al-Ghazali</h3>
+				<p class="text-sm text-slate-600">1058–1111. Mengajar di Nizamiyyah Baghdad, hujjat al-Islam.</p>
+			</div>
+		</div>
+	</section>
+
+	<section id="damaskus" class="rounded-3xl border bg-white p-6 shadow-sm space-y-4">
+		<div class="flex items-start justify-between gap-3">
+			<div>
+				<p class="text-xs uppercase tracking-[0.2em] text-emerald-500">Damaskus</p>
+				<h2 class="text-2xl font-semibold text-slate-900">Ulama Damaskus</h2>
+				<p class="text-sm text-slate-600">Kota madrasah Syafiiyah dan pusat periwayatan hadis.</p>
+			</div>
+			<a class="btn btn-sm variant-filled-primary" href="#top">Kembali ke atas</a>
+		</div>
+		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Imam An-Nawawi</h3>
+				<p class="text-sm text-slate-600">1230–1277. Damaskus, penulis Riyadhus Shalihin & Al-Majmu'.</p>
+			</div>
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Imam Ibnu Asakir</h3>
+				<p class="text-sm text-slate-600">1105–1176. Damaskus, penulis Tarikh Dimasyq.</p>
+			</div>
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Imam Al-Buthi</h3>
+				<p class="text-sm text-slate-600">1929–2013. Damaskus, pengajar fiqih Syafi'i & akidah Asy'ariyah.</p>
+			</div>
+		</div>
+	</section>
+
+	<section id="mesir" class="rounded-3xl border bg-white p-6 shadow-sm space-y-4">
+		<div class="flex items-start justify-between gap-3">
+			<div>
+				<p class="text-xs uppercase tracking-[0.2em] text-emerald-500">Mesir</p>
+				<h2 class="text-2xl font-semibold text-slate-900">Ulama Mesir</h2>
+				<p class="text-sm text-slate-600">Tradisi Al-Azhar menguatkan Aswaja di Afrika–Asia.</p>
+			</div>
+			<a class="btn btn-sm variant-filled-primary" href="#top">Kembali ke atas</a>
+		</div>
+		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Imam Jalaluddin As-Suyuthi</h3>
+				<p class="text-sm text-slate-600">1445–1505. Kairo, pakar tafsir, hadis, dan fiqih Syafi'i.</p>
+			</div>
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Imam Ibnu Hajar Al-Haitami</h3>
+				<p class="text-sm text-slate-600">1503–1566. Mesir/Makkah; rujukan fiqih Syafi'i, Tuhfatul Muhtaj.</p>
+			</div>
+			<div class="rounded-2xl border bg-slate-50 p-4">
+				<h3 class="text-lg font-semibold text-slate-900">Syekh Muhammad Abduh</h3>
+				<p class="text-sm text-slate-600">1849–1905. Kairo, ulama Azhar yang membangkitkan reformasi pendidikan.</p>
+			</div>
+		</div>
+	</section>
+</section>
