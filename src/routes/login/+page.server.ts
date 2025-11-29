@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { Scrypt } from '$lib/server/password';
-import { initializeLucia, google } from '$lib/server/lucia';
+import { initializeLucia, getGoogleOAuthClient } from '$lib/server/lucia';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.user) {
@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	return {
-		googleEnabled: Boolean(google)
+		googleEnabled: Boolean(getGoogleOAuthClient())
 	};
 };
 

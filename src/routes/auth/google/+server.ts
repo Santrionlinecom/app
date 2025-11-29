@@ -9,7 +9,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 
 	const state = generateState();
 	const codeVerifier = generateCodeVerifier();
-	const url = await google.createAuthorizationURL(state, codeVerifier, {
+	const authUrl = await google.createAuthorizationURL(state, codeVerifier, {
 		scopes: ['profile', 'email']
 	});
 
@@ -27,5 +27,5 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 		sameSite: 'lax'
 	});
 
-	throw redirect(302, url.toString());
+	throw redirect(302, authUrl.toString());
 };

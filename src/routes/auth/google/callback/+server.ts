@@ -1,7 +1,8 @@
-import { redirect, error } from '@sveltejs/kit';
+import { redirect, error, type HttpError } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getGoogleOAuthClient, initializeLucia } from '$lib/server/lucia';
 import { generateId } from 'lucia';
+import { OAuth2RequestError } from 'arctic';
 
 type GoogleProfile = {
 	sub: string;
@@ -38,7 +39,17 @@ export const GET: RequestHandler = async ({ url, cookies, fetch, platform }) => 
 		const profileResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
 			headers: { Authorization: `Bearer ${tokens.accessToken}` }
 		});
+		if (!profileResponse.ok) {
+			const detail = await profileResponse.text();
+			console.error('Google userinfo failed', profileResponse.status, detail);
+			throw error(400, 'Google menolak permintaan profil. Silakan coba lagi.');
+		}
 		const googleUser = (await profileResponse.json()) as GoogleProfile;
+
+		if (!googleUser.sub || !googleUser.email) {
+			console.error('Google profile missing fields', googleUser);
+			throw error(400, 'Data Google tidak lengkap. Silakan coba lagi.');
+		}
 
 		// 2. Cek: Apakah akun Google ini sudah terdaftar?
 		const existingAccount = await db.prepare('SELECT user_id FROM google_accounts WHERE google_id = ?')
@@ -74,7 +85,25 @@ export const GET: RequestHandler = async ({ url, cookies, fetch, platform }) => 
 		cookies.delete('google_oauth_state', { path: '/' });
 
 	} catch (e) {
-		console.error(e);
+		console.error('Google login error', e);
+		cookies.delete('google_oauth_code_verifier', { path: '/' });
+		cookies.delete('google_oauth_state', { path: '/' });
+
+		if (e instanceof OAuth2RequestError) {
+			throw error(400, 'Sesi Google kedaluwarsa atau token tidak valid. Silakan coba login lagi.');
+		}
+
+		if (e instanceof Response && e.status >= 400 && e.status < 500) {
+			throw e;
+		}
+
+		if (e instanceof Error && 'status' in e) {
+			const status = (e as HttpError).status;
+			if (typeof status === 'number' && status < 500) {
+				throw e as HttpError;
+			}
+		}
+
 		throw error(500, 'Gagal Login Google');
 	}
 

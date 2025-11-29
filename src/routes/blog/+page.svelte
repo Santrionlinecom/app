@@ -1,6 +1,14 @@
 <script lang="ts">
 const articles = [
 	{
+		slug: 'fatima-al-fihri-masjid-dan-kampus-tertua',
+		title: 'Fatima al-Fihri: Wanita, Masjid, dan Kampus Tertua di Dunia',
+		excerpt:
+			'Kisah pendirian Masjid/Universitas Al-Qarawiyyin di Fez oleh seorang muslimah wakif, dari niat mulia hingga lahirnya kampus tertua dunia.',
+		date: '2025-11-29',
+		category: 'Sejarah Islam'
+	},
+	{
 		slug: 'keutamaan-alquran-akhir-zaman',
 		title: 'Keutamaan Al-Qur’an di Akhir Zaman: Dalil Shahih & Kalam Ulama',
 		excerpt:

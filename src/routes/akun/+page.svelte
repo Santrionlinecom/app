@@ -48,18 +48,18 @@
 
 				<div class="space-y-4">
 					<div>
-						<label class="block text-sm font-semibold text-gray-700 mb-2">📧 Email</label>
-						<input class="input input-bordered w-full bg-gray-50" value={profile?.email} readonly />
+						<label for="profile-email" class="block text-sm font-semibold text-gray-700 mb-2">📧 Email</label>
+						<input id="profile-email" class="input input-bordered w-full bg-gray-50" value={profile?.email} readonly />
 					</div>
 
 					<div>
-						<label class="block text-sm font-semibold text-gray-700 mb-2">👤 Nama Lengkap</label>
-						<input name="displayName" class="input input-bordered w-full" value={profile?.username ?? ''} placeholder="Masukkan nama lengkap" />
+						<label for="profile-name" class="block text-sm font-semibold text-gray-700 mb-2">👤 Nama Lengkap</label>
+						<input id="profile-name" name="displayName" class="input input-bordered w-full" value={profile?.username ?? ''} placeholder="Masukkan nama lengkap" />
 					</div>
 
 					<div>
-						<label class="block text-sm font-semibold text-gray-700 mb-2">⚧️ Jenis Kelamin</label>
-						<select name="gender" class="select select-bordered w-full" value={profile?.gender || ''}>
+						<label for="profile-gender" class="block text-sm font-semibold text-gray-700 mb-2">⚧️ Jenis Kelamin</label>
+						<select id="profile-gender" name="gender" class="select select-bordered w-full" value={profile?.gender || ''}>
 							<option value="">Pilih jenis kelamin</option>
 							<option value="pria">👨 Laki-laki</option>
 							<option value="wanita">👩 Perempuan</option>
@@ -67,8 +67,8 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-semibold text-gray-700 mb-2">🆔 Username</label>
-						<input name="handle" class="input input-bordered w-full" value={profile?.id ?? ''} placeholder="username_unik" />
+						<label for="profile-username" class="block text-sm font-semibold text-gray-700 mb-2">🆔 Username</label>
+						<input id="profile-username" name="handle" class="input input-bordered w-full" value={profile?.id ?? ''} placeholder="username_unik" />
 						<p class="text-xs text-gray-500 mt-1">Gunakan huruf, angka, atau underscore</p>
 					</div>
 
@@ -100,13 +100,13 @@
 
 				<div class="space-y-4">
 					<div>
-						<label class="block text-sm font-semibold text-gray-700 mb-2">🔑 Password Baru</label>
-						<input name="password" type="password" class="input input-bordered w-full" required minlength="6" placeholder="Masukkan password baru" />
+						<label for="password-new" class="block text-sm font-semibold text-gray-700 mb-2">🔑 Password Baru</label>
+						<input id="password-new" name="password" type="password" class="input input-bordered w-full" required minlength="6" placeholder="Masukkan password baru" />
 					</div>
 
 					<div>
-						<label class="block text-sm font-semibold text-gray-700 mb-2">✅ Konfirmasi Password</label>
-						<input name="confirm" type="password" class="input input-bordered w-full" required minlength="6" placeholder="Ulangi password baru" />
+						<label for="password-confirm" class="block text-sm font-semibold text-gray-700 mb-2">✅ Konfirmasi Password</label>
+						<input id="password-confirm" name="confirm" type="password" class="input input-bordered w-full" required minlength="6" placeholder="Ulangi password baru" />
 					</div>
 
 					{#if form?.success && form?.type === 'password'}
