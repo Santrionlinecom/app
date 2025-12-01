@@ -82,23 +82,6 @@ CREATE TABLE IF NOT EXISTS certificates (
 CREATE INDEX IF NOT EXISTS idx_certificates_santri ON certificates(santri_id);
 CREATE INDEX IF NOT EXISTS idx_certificates_ustadz ON certificates(ustadz_id);
 
--- Task Kanban untuk Admin dan Asisten
-CREATE TABLE IF NOT EXISTS kanban_tasks (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  description TEXT,
-  status TEXT NOT NULL DEFAULT 'todo' CHECK (status IN ('todo', 'in_progress', 'review', 'done')),
-  assigned_to TEXT REFERENCES users(id) ON DELETE SET NULL,
-  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
-  due_date TEXT,
-  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
-  updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
-);
-CREATE INDEX IF NOT EXISTS idx_kanban_tasks_status ON kanban_tasks(status);
-CREATE INDEX IF NOT EXISTS idx_kanban_tasks_assigned_to ON kanban_tasks(assigned_to);
-CREATE INDEX IF NOT EXISTS idx_kanban_tasks_created_by ON kanban_tasks(created_by);
-
 -- Permintaan akses asisten (pending approval dari admin)
 CREATE TABLE IF NOT EXISTS asisten_requests (
   id TEXT PRIMARY KEY,
