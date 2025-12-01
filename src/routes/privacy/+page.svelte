@@ -19,40 +19,35 @@
 			<div class="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
 				<h2 class="text-xl font-bold text-emerald-800 mb-3">Data yang Kami Simpan</h2>
 				<ul class="space-y-2 text-gray-700">
-					<li>• Akun: email, username, role, gender (opsional), timestamp pendaftaran.</li>
-					<li>• Login email/password: password disimpan sebagai hash <code>Scrypt</code> (tidak dalam bentuk asli).</li>
-					<li>• Login Google: ID Google, email, nama; kami tidak menyimpan token akses setelah sesi dibuat.</li>
-					<li>• Sesi: ID sesi dan cookie untuk autentikasi.</li>
-					<li>• Progres hafalan & murojaah: catatan ayat/surah yang Anda setorkan.</li>
-					<li>• Kalender/notes: catatan agenda yang Anda buat.</li>
-					<li>• Sertifikat: data santri/ustadz terkait sertifikat dan statistiknya.</li>
-					<li>• Permintaan akses asisten & riwayat perubahan role.</li>
-					<li>• Data referensi surah/kitab/konten yang tampil di aplikasi.</li>
-					<li class="text-emerald-700 font-semibold">• Tidak ada data kanban yang disimpan (fitur sudah dihapus).</li>
+					<li>• Akun dasar: email, nama/username, serta metode login (email atau Google).</li>
+					<li>• Kata sandi disimpan sebagai hash <code>Scrypt</code> (bukan teks asli).</li>
+					<li>• Login Google: ID Google, nama, dan email; token akses tidak disimpan setelah sesi dibuat.</li>
+					<li>• Progres hafalan santri: setoran ayat/surah dan statistik terkait.</li>
+					<li>• Referensi konten Aswaja: data surah/kitab/riwayat yang tampil di aplikasi.</li>
+					<li>• Sesi login dan cookie untuk menjaga Anda tetap masuk.</li>
 				</ul>
 			</div>
 
 			<div class="rounded-2xl border border-teal-100 bg-white p-6 shadow-sm">
 				<h2 class="text-xl font-bold text-teal-800 mb-3">Cara Kami Menggunakan Data</h2>
 				<ul class="space-y-2 text-gray-700">
-					<li>• Autentikasi dan sesi login (email/password atau Google OAuth).</li>
-					<li>• Menampilkan progres hafalan, kalender, sertifikat, dan statistik dashboard sesuai role.</li>
-					<li>• Mengelola peran pengguna (admin, asisten, ustadz, santri).</li>
-					<li>• Pengelolaan akses asisten dan riwayat perubahan role.</li>
-					<li>• Dukungan dan perbaikan layanan jika terjadi kendala teknis.</li>
-					<li>• Kami tidak menjual atau membagikan data ke pihak ketiga untuk iklan.</li>
+					<li>• Autentikasi dan menjaga sesi login.</li>
+					<li>• Menampilkan progres hafalan santri dan konten Aswaja yang relevan.</li>
+					<li>• Memberi akses sesuai peran (admin, asisten, ustadz, santri) secukupnya.</li>
+					<li>• Dukungan teknis dan peningkatan layanan.</li>
+					<li>• Tidak menjual atau membagikan data ke pihak ketiga untuk iklan.</li>
 				</ul>
 			</div>
 		</section>
 
 		<section class="grid md:grid-cols-2 gap-6">
 			<div class="rounded-2xl border border-cyan-100 bg-white p-6 shadow-sm">
-				<h2 class="text-xl font-bold text-cyan-800 mb-3">Tempat Penyimpanan & Keamanan</h2>
+				<h2 class="text-xl font-bold text-cyan-800 mb-3">Penyimpanan & Keamanan</h2>
 				<ul class="space-y-2 text-gray-700">
-					<li>• Basis data menggunakan <strong>Cloudflare D1</strong> (SQL) baik untuk produksi maupun pengembangan.</li>
-					<li>• Password di-hash dengan <code>Scrypt</code>; token Google tidak disimpan setelah validasi.</li>
-					<li>• Cookie sesi menggunakan atribut aman (httpOnly, sameSite) dan secure di produksi.</li>
-					<li>• Akses dashboard dan data dibatasi berdasarkan role.</li>
+					<li>• Data disimpan di basis data SQL.</li>
+					<li>• Password di-hash dengan <code>Scrypt</code>; token Google dibuang setelah validasi.</li>
+					<li>• Cookie sesi memakai pengaturan aman (httpOnly, sameSite) dan <code>secure</code> di produksi.</li>
+					<li>• Akses dibatasi sesuai peran pengguna.</li>
 				</ul>
 			</div>
 
@@ -60,18 +55,22 @@
 				<h2 class="text-xl font-bold text-amber-800 mb-3">Hak dan Kontrol Anda</h2>
 				<ul class="space-y-2 text-gray-700">
 					<li>• Anda dapat meminta koreksi atau penghapusan data akun.</li>
-					<li>• Anda dapat keluar (logout) kapan saja untuk menghentikan sesi aktif.</li>
-					<li>• Jika ingin menutup akun atau menghapus data hafalan/sertifikat, hubungi kami.</li>
+					<li>• Anda bisa logout kapan saja untuk menghentikan sesi aktif.</li>
+					<li>• Untuk menutup akun atau menghapus data hafalan, hubungi kami.</li>
 				</ul>
 			</div>
 		</section>
 
 		<section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
 			<h2 class="text-xl font-bold text-slate-900">Kontak</h2>
-			<p class="text-gray-700">
-				Jika ada pertanyaan atau permintaan terkait privasi, silakan email:
-				<a class="text-emerald-700 font-semibold hover:underline" href="mailto:websantrionline@gmail.com">websantrionline@gmail.com</a>.
-			</p>
+			<div class="text-gray-700 space-y-2">
+				<p>Jika ada pertanyaan atau permintaan terkait privasi, silakan hubungi:</p>
+				<ul class="space-y-1">
+					<li>• <a class="text-emerald-700 font-semibold hover:underline" href="mailto:masyogik@santrionline.com">masyogik@santrionline.com</a></li>
+					<li>• <a class="text-emerald-700 font-semibold hover:underline" href="mailto:hanifah@santrionline.com">hanifah@santrionline.com</a></li>
+					<li>• <a class="text-emerald-700 font-semibold hover:underline" href="mailto:sarah@santrionline.com">sarah@santrionline.com</a></li>
+				</ul>
+			</div>
 			<p class="text-sm text-gray-600">
 				Kebijakan ini dapat diperbarui sewaktu-waktu. Perubahan signifikan akan diinformasikan melalui situs/app.
 			</p>
