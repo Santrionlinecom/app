@@ -6,8 +6,8 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
 # --- Konfigurasi Database D1 ---
 [[d1_databases]]
 binding = "DB" # Ini nama variabel yang akan kita panggil di kodingan (misal: platform.env.DB)
-database_name = "inti-santri"
-database_id = "b42e974f-4b45-4edc-92e5-553b7c4cbf3b"
+database_name = "db-app"
+database_id = "9c7b8ab4-8e7a-406d-9e44-6da413d7d9e0"
 
 # --- Konfigurasi R2 Storage ---
 [[r2_buckets]]
