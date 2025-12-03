@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT,
   gender TEXT, -- 'pria' atau 'wanita'
   whatsapp TEXT,
+  balance INTEGER NOT NULL DEFAULT 0,
   role TEXT NOT NULL DEFAULT 'santri',
   googleId TEXT,
   created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
@@ -121,3 +122,19 @@ CREATE TABLE IF NOT EXISTS muroja_tracking (
 );
 CREATE INDEX IF NOT EXISTS idx_muroja_tracking_user ON muroja_tracking(user_id);
 CREATE INDEX IF NOT EXISTS idx_muroja_tracking_date ON muroja_tracking(muroja_date);
+
+-- Santri Cell (saldo & transaksi PPOB)
+-- Perintah migrasi kolom saldo (jalankan sekali di DB lama):
+-- ALTER TABLE users ADD COLUMN balance INTEGER NOT NULL DEFAULT 0;
+
+-- Catatan transaksi PPOB
+CREATE TABLE IF NOT EXISTS transactions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_type TEXT NOT NULL,
+  destination_number TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'success', 'failed')),
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+);
+CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id, created_at);
