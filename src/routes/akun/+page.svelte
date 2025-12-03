@@ -124,6 +124,48 @@
 					</button>
 				</div>
 			</form>
+
+			<!-- Update WhatsApp -->
+			<form method="POST" action="?/updateWhatsapp" class="rounded-3xl border-2 border-emerald-200 bg-white p-6 shadow-xl">
+				<div class="flex items-center gap-3 mb-6">
+					<span class="text-4xl">📱</span>
+					<div>
+						<h2 class="text-2xl font-bold text-gray-900">Nomor WhatsApp</h2>
+						<p class="text-sm text-gray-600">Gunakan nomor aktif untuk pengingat</p>
+					</div>
+				</div>
+
+				<div class="space-y-4">
+					<div>
+						<label for="profile-whatsapp" class="block text-sm font-semibold text-gray-700 mb-2">📲 Nomor WhatsApp</label>
+						<input
+							id="profile-whatsapp"
+							name="whatsapp"
+							type="tel"
+							inputmode="tel"
+							placeholder="Contoh 087854545274"
+							class="input input-bordered w-full"
+							value={profile?.whatsapp ?? ''}
+							required
+						/>
+						<p class="text-xs text-gray-500 mt-1">Angka saja, 9-15 digit (boleh diawali +62)</p>
+					</div>
+
+					{#if form?.success && form?.type === 'whatsapp'}
+						<div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl">
+							<p class="text-green-800 font-semibold">✅ Nomor WhatsApp tersimpan!</p>
+						</div>
+					{:else if form?.message && form?.type === 'whatsapp'}
+						<div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
+							<p class="text-red-800">❌ {form.message}</p>
+						</div>
+					{/if}
+
+					<button type="submit" class="btn w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg">
+						💾 Simpan Nomor
+					</button>
+				</div>
+			</form>
 		</div>
 
 		<!-- Quick Actions -->

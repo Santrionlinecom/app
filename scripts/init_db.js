@@ -12,6 +12,7 @@ try {
             email TEXT UNIQUE,
             username TEXT,
             password_hash TEXT,
+            whatsapp TEXT,
             role TEXT DEFAULT 'santri',
             created_at INTEGER,
             google_id TEXT

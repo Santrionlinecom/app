@@ -25,7 +25,7 @@
 		<!-- Ulama Grid -->
 		<div class="mb-12">
 			<h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">Ulama Besar Ahlussunnah</h2>
-			<div class="grid grid-cols-2 gap-6 lg:grid-cols-3">
+			<div class="grid grid-cols-1 gap-6">
 				{#each ulama as guru}
 					<a href="/ulama/{guru.slug}" class="group relative overflow-hidden rounded-2xl border-2 border-teal-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
 						<div class="absolute top-0 right-0 h-32 w-32 rounded-full bg-gradient-to-br from-teal-100 to-cyan-100 opacity-50 blur-2xl"></div>
@@ -64,7 +64,7 @@
 				</div>
 			</div>
 			
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+			<div class="grid grid-cols-1 gap-4 mb-6">
 				{#each [
 					{ slug: 'sunan-gresik', num: '1️⃣', name: 'Sunan Gresik', desc: 'Maulana Malik Ibrahim — Gresik', color: 'emerald' },
 					{ slug: 'sunan-ampel', num: '2️⃣', name: 'Sunan Ampel', desc: 'Raden Rahmat — Surabaya', color: 'blue' },
@@ -100,7 +100,7 @@
 					<p class="text-gray-700">Ulama dari Yaman yang memperkuat dakwah di pesisir dan pesantren Nusantara</p>
 				</div>
 			</div>
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="grid grid-cols-1 gap-4">
 				{#each [
 					{ name: 'Habib Husain bin Abu Bakar Alaydrus', desc: 'Luar Batang, Batavia (1797–1871). Ulama Hadramaut yang berdakwah di pelabuhan.' },
 					{ name: 'Habib Ali bin Abdurrahman Al-Habsyi', desc: 'Jakarta (1870–1968). Mendirikan majelis ilmu rujukan ulama Jawa.' },
@@ -126,7 +126,7 @@
 					<p class="text-gray-700">Poros ilmu fiqih, hadis, dan tasawuf di era Abbasiyah</p>
 				</div>
 			</div>
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="grid grid-cols-1 gap-4">
 				{#each [
 					{ name: 'Imam Abu Hanifah', desc: '699–767 M. Pendiri mazhab Hanafi, Baghdad.' },
 					{ name: 'Imam Ahmad bin Hanbal', desc: '780–855 M. Ulama hadis dan fiqih, Baghdad.' },
@@ -149,7 +149,7 @@
 					<p class="text-gray-700">Kota madrasah Syafiiyah dan pusat periwayatan hadis</p>
 				</div>
 			</div>
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="grid grid-cols-1 gap-4">
 				{#each [
 					{ name: 'Imam An-Nawawi', desc: '1230–1277 M. Damaskus, penulis Riyadhus Shalihin & Al-Majmu\'.' },
 					{ name: 'Imam Ibnu Asakir', desc: '1105–1176 M. Damaskus, penulis Tarikh Dimasyq.' },
@@ -172,7 +172,7 @@
 					<p class="text-gray-700">Tradisi Al-Azhar menguatkan Aswaja di Afrika–Asia</p>
 				</div>
 			</div>
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="grid grid-cols-1 gap-4">
 				{#each [
 					{ name: 'Imam Jalaluddin As-Suyuthi', desc: '1445–1505 M. Kairo, pakar tafsir, hadis, dan fiqih Syafi\'i.' },
 					{ name: 'Imam Ibnu Hajar Al-Haitami', desc: '1503–1566 M. Mesir/Makkah; rujukan fiqih Syafi\'i, Tuhfatul Muhtaj.' },

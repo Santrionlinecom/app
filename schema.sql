@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT,
   gender TEXT, -- 'pria' atau 'wanita'
+  whatsapp TEXT,
   role TEXT NOT NULL DEFAULT 'santri',
   googleId TEXT,
   created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)

@@ -2,15 +2,19 @@ import { fail, redirect } from '@sveltejs/kit';
 import { Scrypt } from '$lib/server/password';
 import type { Actions, PageServerLoad } from './$types';
 
-const ensureGenderColumn = async (db: App.Locals['db']) => {
-	try {
-		await db.prepare('ALTER TABLE users ADD COLUMN gender TEXT').run();
-		// ignore if column already exists
-	} catch (err: any) {
-		if (!`${err?.message ?? ''}`.includes('duplicate column name')) {
-			throw err;
+const ensureUserOptionalColumns = async (db: App.Locals['db']) => {
+	const addColumn = async (name: string, type: string) => {
+		try {
+			await db.prepare(`ALTER TABLE users ADD COLUMN ${name} ${type}`).run();
+		} catch (err: any) {
+			if (!`${err?.message ?? ''}`.includes('duplicate column name')) {
+				throw err;
+			}
 		}
-	}
+	};
+
+	await addColumn('gender', 'TEXT');
+	await addColumn('whatsapp', 'TEXT');
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -20,11 +24,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const { db, user } = locals;
 	if (db) {
-		await ensureGenderColumn(db);
+		await ensureUserOptionalColumns(db);
 	}
 	const profile =
 		(await db
-			.prepare('SELECT id, email, username, role, gender, created_at as createdAt FROM users WHERE id = ?')
+			.prepare(
+				'SELECT id, email, username, role, gender, whatsapp, created_at as createdAt FROM users WHERE id = ?'
+			)
 			.bind(user.id)
 			.first<{
 				id: string;
@@ -32,6 +38,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				username: string | null;
 				role: string;
 				gender: string | null;
+				whatsapp: string | null;
 				createdAt: number;
 			}>())
 		?? null;
@@ -68,7 +75,7 @@ export const actions: Actions = {
 		const genderValue = gender === 'pria' || gender === 'wanita' ? gender : null;
 
 		try {
-			await ensureGenderColumn(locals.db);
+			await ensureUserOptionalColumns(locals.db);
 
 			await locals.db
 				.prepare('UPDATE users SET username = ?, id = ?, gender = ? WHERE id = ?')
@@ -88,6 +95,39 @@ export const actions: Actions = {
 		}
 
 		return { success: true, message: 'Profil diperbarui' };
+	},
+
+	updateWhatsapp: async ({ request, locals }) => {
+		if (!locals.user) return fail(401, { message: 'Unauthenticated', type: 'whatsapp' });
+
+		const form = await request.formData();
+		const whatsapp = form.get('whatsapp');
+
+		if (typeof whatsapp !== 'string') {
+			return fail(400, { message: 'Nomor WhatsApp tidak valid', type: 'whatsapp' });
+		}
+
+		const sanitized = whatsapp.replace(/[\s-]/g, '').trim();
+		if (!sanitized) {
+			return fail(400, { message: 'Nomor WhatsApp wajib diisi', type: 'whatsapp' });
+		}
+		if (!/^\+?\d{9,15}$/.test(sanitized)) {
+			return fail(400, {
+				message: 'Gunakan 9-15 digit angka, boleh diawali +62',
+				type: 'whatsapp'
+			});
+		}
+
+		await ensureUserOptionalColumns(locals.db);
+
+		await locals.db
+			.prepare('UPDATE users SET whatsapp = ? WHERE id = ?')
+			.bind(sanitized, locals.user.id)
+			.run();
+
+		locals.user = { ...locals.user, whatsapp: sanitized } as typeof locals.user;
+
+		return { success: true, message: 'Nomor WhatsApp tersimpan', type: 'whatsapp' };
 	},
 
 	updatePassword: async ({ request, locals }) => {

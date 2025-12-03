@@ -41,57 +41,56 @@
 			</div>
 		</a>
 
-<!-- Kitab Grid -->
-<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-	{#each [
-		{
-			icon: '🔤',
-			title: 'Bahasa Arab',
-			desc: 'Miftahul Lughoh & Amtsilah Tasrifiyah',
-			color: 'border-blue-200'
-		},
-		{
-			icon: '🤲',
-			title: 'Aqidah',
-			desc: 'Aqidatul Awam dan dasar Aswaja',
-			color: 'border-purple-200'
-		},
-		{
-			icon: '⚖️',
-			title: 'Fiqih',
-			desc: 'Safinatun Najah dan ibadah praktis',
-			color: 'border-green-200'
-		},
-		{
-			icon: '📜',
-			title: 'Hadits',
-			desc: 'Arbain Nawawi dan Mukhtaruh Ahadits',
-			color: 'border-amber-200'
-		},
-		{
-			icon: '✨',
-			title: 'Tasawuf & Adab',
-			desc: 'Bidayatul Hidayah, Minahus Saniyah',
-			color: 'border-rose-200',
-			wide: true
-		}
-	] as item}
-		<a
-			href={isLoggedIn ? '/kitab/coming-soon' : '/register'}
-			class={`rounded-2xl border-2 ${item.color} bg-white p-6 shadow-lg transition hover:scale-[1.02] hover:shadow-2xl ${item.wide ? 'md:col-span-2' : ''}`}
-		>
-			<div class="flex items-center gap-3 mb-4">
-				<span class="text-4xl">{item.icon}</span>
-				<h2 class="text-2xl font-bold text-slate-800">{item.title}</h2>
-			</div>
-			<p class="text-gray-700">{item.desc}</p>
-			<div class="mt-4 inline-flex items-center gap-2 text-emerald-600 font-semibold">
-				{isLoggedIn ? 'Lihat detail (Coming Soon)' : 'Daftar untuk akses'}
-				<span>→</span>
-			</div>
-		</a>
-	{/each}
-</div>
+		<!-- Kitab Grid -->
+		<div class="grid grid-cols-1 gap-6">
+			{#each [
+				{
+					icon: '🔤',
+					title: 'Bahasa Arab',
+					desc: 'Miftahul Lughoh & Amtsilah Tasrifiyah',
+					color: 'border-blue-200'
+				},
+				{
+					icon: '🤲',
+					title: 'Aqidah',
+					desc: 'Aqidatul Awam dan dasar Aswaja',
+					color: 'border-purple-200'
+				},
+				{
+					icon: '⚖️',
+					title: 'Fiqih',
+					desc: 'Safinatun Najah dan ibadah praktis',
+					color: 'border-green-200'
+				},
+				{
+					icon: '📜',
+					title: 'Hadits',
+					desc: 'Arbain Nawawi dan Mukhtaruh Ahadits',
+					color: 'border-amber-200'
+				},
+				{
+					icon: '✨',
+					title: 'Tasawuf & Adab',
+					desc: 'Bidayatul Hidayah, Minahus Saniyah',
+					color: 'border-rose-200'
+				}
+			] as item}
+				<a
+					href={isLoggedIn ? '/kitab/coming-soon' : '/register'}
+					class={`rounded-2xl border-2 ${item.color} bg-white p-6 shadow-lg transition hover:scale-[1.02] hover:shadow-2xl`}
+				>
+					<div class="flex items-center gap-3 mb-4">
+						<span class="text-4xl">{item.icon}</span>
+						<h2 class="text-2xl font-bold text-slate-800">{item.title}</h2>
+					</div>
+					<p class="text-gray-700">{item.desc}</p>
+					<div class="mt-4 inline-flex items-center gap-2 text-emerald-600 font-semibold">
+						{isLoggedIn ? 'Lihat detail (Coming Soon)' : 'Daftar untuk akses'}
+						<span>→</span>
+					</div>
+				</a>
+			{/each}
+		</div>
 
 		<!-- Info Box -->
 		<div class="mt-12 rounded-3xl border-2 border-indigo-200 bg-white p-8 shadow-lg">
