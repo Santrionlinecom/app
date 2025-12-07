@@ -34,7 +34,7 @@
               <a href="/admin/posts/{post.id}/edit" class="btn btn-sm btn-ghost">Edit</a>
               <form method="POST" action="?/delete" use:enhance class="inline">
                 <input type="hidden" name="id" value={post.id} />
-                <button type="submit" class="btn btn-sm btn-error" onclick="return confirm('Delete this post?')">Delete</button>
+                <button type="submit" class="btn btn-sm btn-error" onclick={(e) => { if (!confirm('Delete this post?')) e.preventDefault(); }}>Delete</button>
               </form>
             </td>
           </tr>
