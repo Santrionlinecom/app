@@ -1,57 +1,25 @@
 <script lang="ts">
-const articles = [
-	{
-		slug: 'fatima-al-fihri-masjid-dan-kampus-tertua',
-		title: 'Fatima al-Fihri: Wanita, Masjid, dan Kampus Tertua di Dunia',
-		excerpt:
-			'Kisah pendirian Masjid/Universitas Al-Qarawiyyin di Fez oleh seorang muslimah wakif, dari niat mulia hingga lahirnya kampus tertua dunia.',
-		date: '2025-11-29',
-		category: 'Sejarah Islam'
-	},
-	{
-		slug: 'keutamaan-alquran-akhir-zaman',
-		title: 'Keutamaan Al-Qur’an di Akhir Zaman: Dalil Shahih & Kalam Ulama',
-		excerpt:
-			'Pengingat agar tetap berpegang pada Al-Qur’an di masa fitnah, disertai dalil shahih dan penjelasan ulama.',
-		date: '2025-12-01',
-		category: 'Tazkiyah'
-	},
-	{
-		slug: 'keutamaan-surat-quran',
-		title: 'Keutamaan Membaca Surat-Surat Penting dalam Al-Quran Secara Istiqomah',
-		excerpt: 'Dalil dan hadits shahih tentang keutamaan membaca surat Al-Mulk, Al-Waqiah, As-Sajadah, Yasin, Muawwidzatain, dan surat-surat penting lainnya dalam Al-Quran.',
-		date: '2025-11-28',
-		category: 'Kajian Hadits'
-	},
-	{
-		slug: 'keutamaan-santri',
-		title: '5 Keutamaan Menjadi Santri di Era Digital',
-		excerpt: 'Di era digital yang serba cepat ini, kita sering terjebak dalam pusaran konten tanpa henti. Yuk, kita bahas 5 keutamaan jadi santri yang bikin hidup kamu lebih bermakna!',
-		date: '2025-11-27',
-		category: 'Inspirasi'
-	}
-];
+  let { data } = $props();
 </script>
 
-<svelte:head>
-	<title>Blog - Santri Online</title>
-</svelte:head>
+<div class="container mx-auto p-4 max-w-4xl">
+  <h1 class="text-4xl font-bold mb-8">Blog</h1>
 
-<div class="max-w-4xl mx-auto">
-	<h1 class="text-4xl font-bold text-gray-900 mb-2">Blog</h1>
-	<p class="text-gray-600 mb-8">Artikel inspiratif seputar dunia santri dan pesantren</p>
-
-	<div class="grid gap-6">
-		{#each articles as article}
-			<a href="/blog/{article.slug}" class="block p-6 bg-white border rounded-lg hover:shadow-lg transition">
-				<div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
-					<span class="px-2 py-1 bg-blue-100 text-blue-600 rounded">{article.category}</span>
-					<span>•</span>
-					<time>{new Date(article.date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
-				</div>
-				<h2 class="text-2xl font-bold text-gray-900 mb-2">{article.title}</h2>
-				<p class="text-gray-600">{article.excerpt}</p>
-			</a>
-		{/each}
-	</div>
+  <div class="space-y-6">
+    {#each data.posts as post}
+      <article class="card bg-base-200">
+        <div class="card-body">
+          <h2 class="card-title">
+            <a href="/blog/{post.slug}" class="hover:underline">{post.title}</a>
+          </h2>
+          {#if post.excerpt}
+            <p class="text-base-content/70">{post.excerpt}</p>
+          {/if}
+          <div class="card-actions justify-end">
+            <a href="/blog/{post.slug}" class="btn btn-sm btn-primary">Read More</a>
+          </div>
+        </div>
+      </article>
+    {/each}
+  </div>
 </div>

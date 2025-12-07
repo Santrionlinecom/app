@@ -1,0 +1,7 @@
+import { getPublishedPosts } from '$lib/server/cms';
+import type { PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ platform }) => {
+  const posts = await getPublishedPosts(platform!.env.DB);
+  return { posts };
+};
