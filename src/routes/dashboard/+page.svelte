@@ -171,11 +171,7 @@
 			<p class="relative text-sm font-medium opacity-90">Sertifikat</p>
 			<p class="relative mt-1 text-2xl font-bold">Kelola</p>
 		</a>
-		<a href="/dashboard/request-asisten" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🤝</div>
-			<p class="relative text-sm font-medium opacity-90">Request Asisten</p>
-			<p class="relative mt-1 text-2xl font-bold">Kelola</p>
-		</a>
+		<!-- Removed Request Asisten link -->
 		<a href="/kalender" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-500 to-pink-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📅</div>
 			<p class="relative text-sm font-medium opacity-90">Kalender</p>

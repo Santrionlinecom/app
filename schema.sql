@@ -15,11 +15,11 @@ CREATE TABLE IF NOT EXISTS users (
   created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
 );
 
+-- PERUBAHAN DI SINI (Lucia v3 Format)
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  active_expires INTEGER NOT NULL,
-  idle_expires INTEGER NOT NULL
+  expires_at INTEGER NOT NULL -- Ini yang dicari oleh sistem Lucia v3
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 
@@ -122,10 +122,6 @@ CREATE TABLE IF NOT EXISTS muroja_tracking (
 );
 CREATE INDEX IF NOT EXISTS idx_muroja_tracking_user ON muroja_tracking(user_id);
 CREATE INDEX IF NOT EXISTS idx_muroja_tracking_date ON muroja_tracking(muroja_date);
-
--- Santri Cell (saldo & transaksi PPOB)
--- Perintah migrasi kolom saldo (jalankan sekali di DB lama):
--- ALTER TABLE users ADD COLUMN balance INTEGER NOT NULL DEFAULT 0;
 
 -- Catatan transaksi PPOB
 CREATE TABLE IF NOT EXISTS transactions (

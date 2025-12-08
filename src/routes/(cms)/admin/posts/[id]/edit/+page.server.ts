@@ -19,12 +19,14 @@ export const actions: Actions = {
     const content = data.get('content') as string;
     const excerpt = data.get('excerpt') as string;
     const status = data.get('status') as 'draft' | 'published';
+    const seo_keyword = data.get('seo_keyword') as string;
+    const meta_description = data.get('meta_description') as string;
 
     if (!title || !slug || !content) {
       return fail(400, { error: 'Missing required fields' });
     }
 
-    await updatePost(platform!.env.DB, params.id, { title, slug, content, excerpt, status });
+    await updatePost(platform!.env.DB, params.id, { title, slug, content, excerpt, status, seo_keyword, meta_description });
     
     throw redirect(303, '/admin/posts');
   }
