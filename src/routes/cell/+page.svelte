@@ -167,9 +167,9 @@
 							class="input input-bordered w-full"
 							required
 						/>
-						<label class="label">
-							<span class="label-text-alt text-slate-400">Gunakan angka saja, tanpa spasi atau tanda baca.</span>
-						</label>
+      <div class="label">
+                        <span class="label-text-alt text-slate-400">Gunakan angka saja, tanpa spasi atau tanda baca.</span>
+                    </div>
 					</div>
 
 					{#if form?.success}

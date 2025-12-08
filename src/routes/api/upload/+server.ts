@@ -1,5 +1,4 @@
 import { json } from '@sveltejs/kit';
-import { v4 as uuidv4 } from 'uuid';
 
 export async function POST({ request, platform }) {
   const formData = await request.formData();
@@ -10,9 +9,13 @@ export async function POST({ request, platform }) {
   }
 
   const fileExtension = file.name.split('.').pop();
-  const filename = `${uuidv4()}.${fileExtension}`;
+  const filename = `${crypto.randomUUID()}.${fileExtension}`;
 
   try {
+    if (!platform?.env?.BUCKET) {
+      return json({ error: 'Storage binding (R2 BUCKET) is not available.' }, { status: 500 });
+    }
+
     await platform.env.BUCKET.put(filename, await file.arrayBuffer(), {
       httpMetadata: {
         contentType: file.type,
