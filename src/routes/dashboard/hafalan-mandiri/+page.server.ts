@@ -183,7 +183,7 @@ export const actions: Actions = {
 };
 
 async function ensureHafalanSurahChecksTable(db: App.Locals['db']) {
-	await db
+	await db!
 		.prepare(
 			`CREATE TABLE IF NOT EXISTS hafalan_surah_checks (
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
