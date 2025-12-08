@@ -20,7 +20,7 @@
 		const matchSearch = !searchQuery || 
 			s.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			s.email?.toLowerCase().includes(searchQuery.toLowerCase());
-		const matchRole = filterRole === 'all' || s.role === filterRole;
+		const matchRole = filterRole === 'all' || s.role === filterRole || (filterRole === 'ustadz' && s.role === 'ustadzah');
 		return matchSearch && matchRole;
 	});
 
@@ -139,8 +139,7 @@
 					<select class="select select-bordered w-full md:w-auto" bind:value={filterRole}>
 						<option value="all">Semua Role</option>
 						<option value="santri">Santri</option>
-						<option value="ustadz">Ustadz</option>
-						<option value="ustadzah">Ustadzah</option>
+						<option value="ustadz">Ustadz/Ustadzah</option>
 						<option value="admin">Admin</option>
 					</select>
 				</div>
@@ -265,8 +264,7 @@
 						</label>
 						<select id="role" class="select select-bordered" bind:value={form.role}>
 							<option value="santri">🎓 Santri</option>
-							<option value="ustadz">👨‍🏫 Ustadz</option>
-							<option value="ustadzah">👩‍🏫 Ustadzah</option>
+							<option value="ustadz">👩‍🏫 Ustadz/Ustadzah (otomatis sesuai gender)</option>
 							<option value="admin">⚙️ Admin</option>
 						</select>
 					</div>

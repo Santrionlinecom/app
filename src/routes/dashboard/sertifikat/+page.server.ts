@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) {
         throw redirect(302, '/auth');
     }
-    if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz') {
+    if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah') {
         throw redirect(302, '/dashboard');
     }
     if (!locals.db) {

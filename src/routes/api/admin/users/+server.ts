@@ -24,7 +24,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	}
 
 	if (action === 'role') {
-		if (!role || !['admin', 'ustadz', 'santri'].includes(role)) {
+		if (!role || !['admin', 'ustadz', 'ustadzah', 'santri', 'alumni'].includes(role)) {
 			throw error(400, 'Role tidak valid');
 		}
 		if (userId === locals.user.id && role !== 'admin') {

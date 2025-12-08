@@ -9,8 +9,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!locals.db) {
 		throw error(500, 'DB not available');
 	}
-	// Hanya admin atau ustadz yang boleh assign setoran
-	if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz') {
+	// Hanya admin atau ustadz/ustadzah yang boleh assign setoran
+	if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah') {
 		throw error(403, 'Forbidden');
 	}
 

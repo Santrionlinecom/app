@@ -4,7 +4,7 @@ import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params, platform }) => {
   if (!locals.user) throw redirect(302, '/login');
-  if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz') {
+  if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah') {
     throw redirect(302, '/dashboard');
   }
   const db = platform?.env?.DB;
@@ -18,7 +18,10 @@ export const load: PageServerLoad = async ({ locals, params, platform }) => {
 
 export const actions: Actions = {
   default: async ({ request, params, platform, locals }) => {
-    if (!locals.user || (locals.user.role !== 'admin' && locals.user.role !== 'ustadz')) {
+    if (
+      !locals.user ||
+      (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah')
+    ) {
       return fail(403, { error: 'Tidak diizinkan' });
     }
     const db = platform?.env?.DB;

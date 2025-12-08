@@ -33,7 +33,7 @@
 				<ul class="space-y-2 text-gray-700">
 					<li>• Autentikasi dan menjaga sesi login.</li>
 					<li>• Menampilkan progres hafalan santri dan konten Aswaja yang relevan.</li>
-					<li>• Memberi akses sesuai peran (admin, asisten, ustadz, santri) secukupnya.</li>
+					<li>• Memberi akses sesuai peran (admin, ustadz/ustadzah, santri) secukupnya.</li>
 					<li>• Dukungan teknis dan peningkatan layanan.</li>
 					<li>• Tidak menjual atau membagikan data ke pihak ketiga untuk iklan.</li>
 				</ul>

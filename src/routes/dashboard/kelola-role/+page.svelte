@@ -6,11 +6,14 @@
 
 	const roleLabels: Record<string, string> = {
 		admin: 'Admin',
-		ustadz: 'Ustadz',
-		ustadzah: 'Ustadzah',
+		ustadz: 'Ustadz/Ustadzah (otomatis sesuai gender)',
 		santri: 'Santri',
-		asisten: 'Asisten',
 		alumni: 'Alumni'
+	};
+
+	const displayLabels: Record<string, string> = {
+		...roleLabels,
+		ustadzah: 'Ustadzah'
 	};
 
 	const roleColors: Record<string, string> = {
@@ -18,22 +21,35 @@
 		ustadz: 'bg-emerald-100 text-emerald-800 border-emerald-300',
 		ustadzah: 'bg-pink-100 text-pink-800 border-pink-300',
 		santri: 'bg-blue-100 text-blue-800 border-blue-300',
-		asisten: 'bg-indigo-100 text-indigo-800 border-indigo-300',
 		alumni: 'bg-amber-100 text-amber-800 border-amber-300'
 	};
+
+	const normalizeRole = (role: string) => (role === 'ustadzah' ? 'ustadz' : role);
 
 	let searchQuery = '';
 	let filterRole = '';
 	let editingUser: string | null = null;
 	let selectedRole = '';
+	let roleStats: Record<string, number> = { admin: 0, ustadz: 0, santri: 0, alumni: 0 };
 
 	$: filteredUsers = data.users.filter((u: any) => {
 		const matchSearch = !searchQuery || 
 			u.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			u.email?.toLowerCase().includes(searchQuery.toLowerCase());
-		const matchRole = !filterRole || u.role === filterRole;
+		const matchRole = !filterRole || normalizeRole(u.role) === filterRole;
 		return matchSearch && matchRole;
 	});
+
+	$: roleStats = data.users.reduce(
+		(acc: Record<string, number>, u: any) => {
+			const key = normalizeRole(u.role);
+			if (key in roleLabels) {
+				acc[key] = (acc[key] ?? 0) + 1;
+			}
+			return acc;
+		},
+		{ admin: 0, ustadz: 0, santri: 0, alumni: 0 }
+	);
 
 	const formatDate = (timestamp: number) => {
 		return new Date(timestamp).toLocaleDateString('id-ID', {
@@ -45,7 +61,7 @@
 
 	const startEdit = (userId: string, currentRole: string) => {
 		editingUser = userId;
-		selectedRole = currentRole;
+		selectedRole = normalizeRole(currentRole);
 	};
 
 	const cancelEdit = () => {
@@ -79,10 +95,9 @@
 
 	<div class="stats">
 		{#each Object.entries(roleLabels) as [role, label]}
-			{@const count = data.users.filter((u: any) => u.role === role).length}
 			<div class="stat-card {roleColors[role]}">
 				<div class="stat-label">{label}</div>
-				<div class="stat-value">{count}</div>
+				<div class="stat-value">{roleStats[role] ?? 0}</div>
 			</div>
 		{/each}
 	</div>
@@ -131,8 +146,8 @@
 									</div>
 								</form>
 							{:else}
-								<span class="role-badge {roleColors[user.role]}">
-									{roleLabels[user.role] || user.role}
+								<span class="role-badge {roleColors[user.role] || 'bg-gray-100 text-gray-800 border-gray-200'}">
+									{displayLabels[user.role] || user.role}
 								</span>
 							{/if}
 						</td>

@@ -84,19 +84,6 @@ CREATE TABLE IF NOT EXISTS certificates (
 CREATE INDEX IF NOT EXISTS idx_certificates_santri ON certificates(santri_id);
 CREATE INDEX IF NOT EXISTS idx_certificates_ustadz ON certificates(ustadz_id);
 
--- Permintaan akses asisten (pending approval dari admin)
-CREATE TABLE IF NOT EXISTS asisten_requests (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  requested_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
-  approved_at INTEGER,
-  approved_by TEXT REFERENCES users(id) ON DELETE SET NULL,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-  reason TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_asisten_requests_user ON asisten_requests(user_id);
-CREATE INDEX IF NOT EXISTS idx_asisten_requests_status ON asisten_requests(status);
-
 -- User role assignment tracking
 CREATE TABLE IF NOT EXISTS user_role_history (
   id TEXT PRIMARY KEY,

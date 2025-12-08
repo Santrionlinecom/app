@@ -18,6 +18,9 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	if (!id) throw error(400, 'ID tidak valid');
 
 	const body = await request.json().catch(() => ({}));
+	const { results: targetRows } =
+		(await db.prepare('SELECT gender FROM users WHERE id = ?').bind(id).all<{ gender?: string }>()) ?? {};
+	const targetGender = targetRows?.[0]?.gender;
 	const username = typeof body.username === 'string' ? body.username.trim() : undefined;
 	const email = typeof body.email === 'string' ? body.email.trim() : undefined;
 	const role =
@@ -47,8 +50,14 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 			values.push(email);
 		}
 		if (role !== undefined) {
+			const normalizedRole =
+				role === 'ustadz' || role === 'ustadzah'
+					? targetGender === 'wanita'
+						? 'ustadzah'
+						: 'ustadz'
+					: role;
 			fields.push('role = ?');
-			values.push(role);
+			values.push(normalizedRole);
 		}
 		if (passwordHash) {
 			fields.push('password_hash = ?');

@@ -16,7 +16,7 @@ export const GET: RequestHandler = async ({ locals, params, platform }) => {
     }
 
     const isOwner = cert.santri_id === locals.user.id;
-    const isPrivileged = locals.user.role === 'admin' || locals.user.role === 'ustadz';
+    const isPrivileged = locals.user.role === 'admin' || locals.user.role === 'ustadz' || locals.user.role === 'ustadzah';
     if (!isOwner && !isPrivileged) {
         throw error(403, 'Tidak boleh mengunduh sertifikat ini');
     }
@@ -38,4 +38,3 @@ export const GET: RequestHandler = async ({ locals, params, platform }) => {
 
     return new Response(object.body, { status: 200, headers });
 };
-

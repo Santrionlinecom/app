@@ -18,7 +18,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const rows =
 		(await db
 			.prepare(
-				"SELECT id, username, email, role, created_at as createdAt FROM users WHERE role IN ('santri','ustadz') ORDER BY created_at DESC"
+				"SELECT id, username, email, role, created_at as createdAt FROM users WHERE role IN ('santri','ustadz','ustadzah') ORDER BY created_at DESC"
 			)
 			.all<{ id: string; username: string | null; email: string; role: string; createdAt: number }>()) ?? [];
 
@@ -35,6 +35,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const email = typeof body.email === 'string' ? body.email.trim() : '';
 	const password = typeof body.password === 'string' ? body.password : '';
 	const role = typeof body.role === 'string' && allowedRoles.includes(body.role) ? body.role : 'santri';
+	const genderRaw = typeof body.gender === 'string' ? body.gender.trim() : '';
+	const gender = genderRaw === 'pria' || genderRaw === 'wanita' ? genderRaw : null;
 
 	if (!email || !password) {
 		throw error(400, 'Email dan password wajib diisi');
@@ -45,13 +47,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const userId = generateId(15);
 	const hashedPassword = await new Scrypt().hash(password);
+	const normalizedRole =
+		role === 'ustadz' || role === 'ustadzah'
+			? gender === 'wanita'
+				? 'ustadzah'
+				: 'ustadz'
+			: role;
 
 	try {
 		await db
 			.prepare(
-				'INSERT INTO users (id, username, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+				'INSERT INTO users (id, username, email, password_hash, role, gender, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
 			)
-			.bind(userId, username || null, email, hashedPassword, role, Date.now())
+			.bind(userId, username || null, email, hashedPassword, normalizedRole, gender, Date.now())
 			.run();
 	} catch (err: any) {
 		if (err?.code === 'SQLITE_CONSTRAINT') {
@@ -61,7 +69,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	return json(
-		{ id: userId, username, email, role },
+		{ id: userId, username, email, role: normalizedRole },
 		{
 			status: 201
 		}

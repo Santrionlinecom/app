@@ -99,11 +99,17 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
     }
 
     // Tentukan ustadz yang tercantum di sertifikat
-    let ustadzId: string | null = locals.user?.role === 'ustadz' || locals.user?.role === 'admin' ? locals.user.id : null;
+    let ustadzId: string | null =
+        locals.user?.role === 'ustadz' || locals.user?.role === 'ustadzah' || locals.user?.role === 'admin'
+            ? locals.user.id
+            : null;
     if (!ustadzId && typeof body.ustadzId === 'string') {
         ustadzId = body.ustadzId;
     }
-    let ustadzName = locals.user?.role === 'ustadz' || locals.user?.role === 'admin' ? locals.user.username || locals.user.email : 'Ustadz Pembimbing';
+    let ustadzName =
+        locals.user?.role === 'ustadz' || locals.user?.role === 'ustadzah' || locals.user?.role === 'admin'
+            ? locals.user.username || locals.user.email
+            : 'Ustadz Pembimbing';
     if (ustadzId && (!ustadzName || ustadzId !== locals.user?.id)) {
         const ustadzRow = await locals.db
             .prepare('SELECT username, email FROM users WHERE id = ?')

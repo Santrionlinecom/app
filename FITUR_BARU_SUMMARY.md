@@ -25,14 +25,13 @@
 ### 2. **Kalender Terintegrasi** 📅
 **Lokasi**: `/kalender`
 
-**Tujuan**: Kalender pribadi yang terintegrasi dengan muroja'ah dan task kanban
+**Tujuan**: Kalender pribadi yang terintegrasi dengan muroja'ah
 
 **Fitur**:
 - ✅ **Privacy by Default**: User hanya melihat kalender sendiri
 - ✅ **Admin Full Access**: Admin melihat semua kalender untuk monitoring
 - ✅ **Auto Integration**: 
   - Muroja'ah dari hafalan mandiri → Kalender
-  - Task kanban dengan due_date → Kalender
   - Catatan manual user → Kalender
 - ✅ CRUD kalender notes (Create, Read, Update, Delete)
 - ✅ Filter dan pencarian
@@ -48,26 +47,6 @@ Admin:
 - Melihat semua catatan semua user
 - Monitoring aktivitas
 ```
-
----
-
-### 3. **Integrasi Kanban → Kalender** 📋
-**Lokasi**: API `/api/kanban`
-
-**Tujuan**: Task dengan deadline otomatis masuk ke kalender
-
-**Cara Kerja**:
-1. Admin/Asisten create task di Kanban
-2. Jika task memiliki `due_date` dan `assigned_to`
-3. **Otomatis** membuat entry di kalender user yang di-assign
-4. Format: `📋 Task: [Judul Task]`
-5. User melihat task di kalender mereka
-
-**Benefit**:
-- ✅ Reminder visual di kalender
-- ✅ Tidak perlu manual input ke kalender
-- ✅ Sinkronisasi otomatis
-- ✅ User aware dengan deadline
 
 ---
 
@@ -96,12 +75,11 @@ CREATE TABLE muroja_tracking (
 
 ## 🔐 Akses & Permission
 
-| Fitur | Santri | Ustadz | Ustadzah | Asisten | Admin |
-|-------|:------:|:------:|:--------:|:-------:|:-----:|
-| Hafalan Mandiri | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Kalender Pribadi | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Lihat Kalender Semua | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Create Task Kanban | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Fitur | Santri | Ustadz | Ustadzah | Admin |
+|-------|:------:|:------:|:--------:|:-----:|
+| Hafalan Mandiri | ✅ | ✅ | ✅ | ✅ |
+| Kalender Pribadi | ✅ | ✅ | ✅ | ✅ |
+| Lihat Kalender Semua | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
@@ -134,18 +112,7 @@ CREATE TABLE muroja_tracking (
 7. User lihat di kalender: "Muroja'ah Surah X"
 ```
 
-### Flow 2: Task Kanban → Kalender
-```
-1. Admin/Asisten create task
-2. Set due_date dan assigned_to
-3. Klik Create
-   ↓
-4. Task masuk ke tabel kanban_tasks
-5. Otomatis create entry di calendar_notes
-6. User yang di-assign lihat di kalender: "📋 Task: ..."
-```
-
-### Flow 3: Kalender Manual
+### Flow 2: Kalender Manual
 ```
 1. User buka Kalender
 2. Klik tanggal tertentu
@@ -200,29 +167,12 @@ CREATE TABLE muroja_tracking (
 2. Buka Kalender
 3. Lihat semua catatan dari semua user
 4. Monitor: siapa yang rajin muroja'ah, siapa yang jarang
-5. Lihat task yang di-assign ke user
-6. Koordinasi jadwal kegiatan
+5. Koordinasi jadwal kegiatan
 
 **Benefit**:
 - ✅ Visibility penuh
 - ✅ Data-driven decision
 - ✅ Monitoring efektif
-
-### Use Case 4: Task dengan Deadline
-**Persona**: Admin/Asisten, assign task ke team
-
-**Scenario**:
-1. Create task di Kanban: "Persiapan Ujian Tahfidz"
-2. Set due_date: 2025-12-01
-3. Assign ke: Santri A, B, C
-4. Task otomatis muncul di kalender mereka
-5. Santri aware dengan deadline
-6. Koordinasi lebih mudah
-
-**Benefit**:
-- ✅ Reminder otomatis
-- ✅ Tidak perlu manual notify
-- ✅ Visual di kalender
 
 ---
 
@@ -243,7 +193,6 @@ npm run deploy
 - [ ] Test privacy: user biasa hanya lihat sendiri
 - [ ] Test admin: lihat semua kalender
 - [ ] Test integrasi: muroja'ah → kalender
-- [ ] Test integrasi: task kanban → kalender
 - [ ] Test responsive: mobile dan desktop
 
 ---
@@ -260,17 +209,15 @@ npm run deploy
 
 ### Modified Files
 1. `/schema.sql` - Added `muroja_tracking` table
-2. `/src/routes/api/kanban/+server.ts` - Added calendar integration
-3. `/src/routes/dashboard/+page.svelte` - Added links to new features
+2. `/src/routes/dashboard/+page.svelte` - Added links ke fitur baru
 
 ---
 
 ## 🎉 Summary
 
-**Total Fitur Baru**: 3 fitur utama
+**Total Fitur Baru**: 2 fitur utama
 1. Hafalan Mandiri dengan tracking kualitas
 2. Kalender terintegrasi dengan privacy
-3. Auto-sync Kanban task ke kalender
 
 **Total Tabel Baru**: 1 tabel
 - `muroja_tracking`
@@ -281,9 +228,8 @@ npm run deploy
 - ✅ Alumni bisa tetap tracking muroja'ah
 - ✅ Santri punya tracking tambahan
 - ✅ Admin bisa monitoring semua aktivitas
-- ✅ Task management lebih efektif dengan kalender
 - ✅ Privacy terjaga (user hanya lihat sendiri)
-- ✅ Integrasi otomatis (no manual work)
+- ✅ Integrasi otomatis untuk hafalan mandiri (no manual work)
 
 **Next Steps**:
 1. Deploy ke Cloudflare

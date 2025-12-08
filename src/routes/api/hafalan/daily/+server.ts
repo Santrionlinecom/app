@@ -1,9 +1,9 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-type Role = 'admin' | 'ustadz' | 'santri';
+type Role = 'admin' | 'ustadz' | 'ustadzah' | 'santri';
 
-const canSeeAll = (role: Role) => role === 'admin' || role === 'ustadz';
+const canSeeAll = (role: Role) => role === 'admin' || role === 'ustadz' || role === 'ustadzah';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	if (!locals.user) throw error(401, 'Unauthorized');

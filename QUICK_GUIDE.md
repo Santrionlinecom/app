@@ -19,20 +19,8 @@
 2. **Dashboard** → Klik "Kalender"
 3. **Lihat Semua** aktivitas user:
    - Muroja'ah semua user
-   - Task yang di-assign
    - Catatan manual user
 4. **Monitoring** → Identifikasi user yang aktif/tidak aktif
-
-### Untuk Admin/Asisten (Task Management)
-1. **Dashboard** → Klik "Task Kanban"
-2. **Create Task**:
-   - Masukkan judul & deskripsi
-   - Set **Due Date**
-   - **Assign** ke user tertentu
-   - Klik **Create**
-3. **Otomatis** → Task muncul di kalender user yang di-assign
-
----
 
 ## 📍 URL Routes
 
@@ -40,9 +28,7 @@
 |-------|-----|-------|
 | Hafalan Mandiri | `/dashboard/hafalan-mandiri` | Semua user |
 | Kalender | `/kalender` | Semua user |
-| Kanban Tasks | `/dashboard/kanban-tugas` | Admin, Asisten |
 | Kelola Role | `/dashboard/kelola-role` | Admin only |
-| Request Asisten | `/dashboard/request-asisten` | Ustadz, Admin |
 
 ---
 
@@ -52,12 +38,6 @@
 - 🟢 **Hijau** = Lancar
 - 🟡 **Kuning** = Kurang Lancar  
 - 🔴 **Merah** = Belum Lancar
-
-### Priority Task (Kanban)
-- 🔵 **Biru** = Low
-- 🟡 **Kuning** = Medium
-- 🟠 **Orange** = High
-- 🔴 **Merah** = Urgent
 
 ---
 
@@ -75,12 +55,6 @@
 - ✅ Admin: Monitor aktivitas user secara berkala
 - ✅ Tambah catatan manual untuk event khusus
 
-### Task Kanban
-- ✅ Selalu set **due_date** agar masuk kalender
-- ✅ Assign ke user yang tepat
-- ✅ Gunakan priority untuk urgent task
-- ✅ Update status task secara real-time
-
 ---
 
 ## ❓ FAQ
@@ -93,9 +67,6 @@
 
 ### Q: Bagaimana cara menghapus muroja'ah yang salah input?
 **A**: Klik tombol "🗑️ Hapus" di card muroja'ah tersebut.
-
-### Q: Apakah task kanban otomatis masuk kalender?
-**A**: Ya, jika task memiliki due_date dan assigned_to.
 
 ### Q: Bagaimana admin melihat kalender semua user?
 **A**: Admin otomatis melihat semua kalender saat buka `/kalender`.
@@ -116,11 +87,6 @@
 1. Pastikan semua field terisi
 2. Cek ayat mulai ≤ ayat selesai
 3. Cek koneksi internet
-
-### Task tidak muncul di kalender user
-1. Pastikan task memiliki due_date
-2. Pastikan task di-assign ke user
-3. User harus refresh kalender
 
 ---
 
@@ -145,12 +111,6 @@ Jika ada masalah atau pertanyaan:
 - ✅ Identifikasi user yang tidak aktif
 - ✅ Berikan feedback berdasarkan data
 - ✅ Gunakan kalender untuk koordinasi event
-
-### Untuk Asisten
-- ✅ Selalu set due_date untuk task
-- ✅ Assign task ke user yang tepat
-- ✅ Follow up task yang mendekati deadline
-- ✅ Update status task secara real-time
 
 ---
 

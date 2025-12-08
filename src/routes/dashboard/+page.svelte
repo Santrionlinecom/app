@@ -5,12 +5,10 @@
 	const isAdmin = data.role === 'admin';
 	const isUstadz = data.role === 'ustadz' || data.role === 'ustadzah';
 	const isSantri = data.role === 'santri';
-	const isAsisten = data.role === 'asisten';
 	const isAlumni = data.role === 'alumni';
 
 	const roleConfig = {
 		admin: { title: 'Admin Dashboard', gradient: 'from-purple-600 via-purple-500 to-indigo-600', icon: '👑' },
-		asisten: { title: 'Asisten Dashboard', gradient: 'from-indigo-600 via-indigo-500 to-blue-600', icon: '🤝' },
 		ustadz: { title: 'Ustadz Dashboard', gradient: 'from-emerald-600 via-teal-500 to-cyan-600', icon: '📚' },
 		ustadzah: { title: 'Ustadzah Dashboard', gradient: 'from-pink-600 via-rose-500 to-red-600', icon: '👩‍🏫' },
 		santri: { title: 'Santri Dashboard', gradient: 'from-blue-600 via-indigo-500 to-purple-600', icon: '🎓' },
@@ -26,8 +24,18 @@
 	const stats = 'stats' in data ? data.stats : undefined;
 	const series = 'series' in data ? data.series ?? [] : [];
 
+	const normalizeRoleForCount = (role: string) => (role === 'ustadzah' ? 'ustadz' : role);
 	let roleCounter = { admin: 0, ustadz: 0, santri: 0 };
-	$: roleCounter = users.reduce((acc, u) => ({ ...acc, [u.role]: (acc[u.role as keyof typeof acc] ?? 0) + 1 }), { admin: 0, ustadz: 0, santri: 0 });
+	$: roleCounter = users.reduce(
+		(acc, u) => {
+			const key = normalizeRoleForCount(u.role) as keyof typeof acc;
+			if (key in acc) {
+				acc[key] = (acc[key] ?? 0) + 1;
+			}
+			return acc;
+		},
+		{ admin: 0, ustadz: 0, santri: 0 }
+	);
 
 	const approvedAyah = stats?.approved ?? 0;
 	const targetAyah = checklist.reduce((sum, r) => sum + (r.totalAyah ?? 0), 0);
@@ -177,22 +185,10 @@
 			<p class="relative text-sm font-medium opacity-90">Sertifikat</p>
 			<p class="relative mt-1 text-2xl font-bold">Kelola</p>
 		</a>
-		<!-- Removed Request Asisten link -->
 		<a href="/kalender" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-500 to-pink-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📅</div>
 			<p class="relative text-sm font-medium opacity-90">Kalender</p>
 			<p class="relative mt-1 text-2xl font-bold">Semua</p>
-		</a>
-	{:else if isAsisten}
-		<a href="/dashboard/review-setoran" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">✅</div>
-			<p class="relative text-sm font-medium opacity-90">Bantuan Lain</p>
-			<p class="relative mt-1 text-2xl font-bold">Support</p>
-		</a>
-		<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
-			<p class="relative text-sm font-medium opacity-90">Pencapaian Hafalan</p>
-			<p class="relative mt-1 text-2xl font-bold">{approvedAyah}</p>
 		</a>
 	{:else if isUstadz}
 		<a href="/dashboard/review-setoran" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">

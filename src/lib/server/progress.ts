@@ -244,7 +244,17 @@ export const createUser = async (
 };
 
 export const updateUserRole = async (db: D1Database, params: { id: string; role: string }) => {
-    await db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(params.role, params.id).run();
+    const { results } =
+        (await db.prepare('SELECT gender FROM users WHERE id = ?').bind(params.id).all<{ gender?: string }>()) ?? {};
+    const gender = results?.[0]?.gender;
+    const normalizedRole =
+        params.role === 'ustadz' || params.role === 'ustadzah'
+            ? gender === 'wanita'
+                ? 'ustadzah'
+                : 'ustadz'
+            : params.role;
+
+    await db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(normalizedRole, params.id).run();
 };
 
 export const resetUserPassword = async (db: D1Database, params: { id: string; password: string }) => {

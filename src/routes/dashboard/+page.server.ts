@@ -38,8 +38,8 @@ export const load: PageServerLoad = async ({ locals }) => {
     const role = locals.user.role;
 
     // Load data based on user role
-    if (role === 'admin' || role === 'asisten') {
-		// Admin/Asisten: list all users + santri & surah options
+    if (role === 'admin') {
+		// Admin: list all users + santri & surah options
 		const { results } = await db
 			.prepare('SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC')
 			.all<{ id: string; username: string | null; email: string; role: string; created_at: string }>();
@@ -57,20 +57,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 			}[],
 			surahs,
 			students: await getAllStudentsProgress(db),
-			pending: role === 'admin' ? await getPendingSubmissions(db) : []
+			pending: await getPendingSubmissions(db)
 		};
-	} else if (role === 'ustadz') {
+	} else if (role === 'ustadz' || role === 'ustadzah') {
 		// Ustadz: pending submissions and student progress
         const surahs = await fetchSurahs(db);
         return {
-            role: 'ustadz',
+            role,
             currentUser: locals.user,
             pending: await getPendingSubmissions(db),
             students: await getAllStudentsProgress(db),
             surahs
         };
-	} else if (role === 'santri') {
-        // Santri: personal progress and checklist
+	} else if (role === 'santri' || role === 'alumni') {
+        // Santri/Alumni: personal progress and checklist
         const checklist = await getSantriChecklist(db, locals.user.id);
         const stats = await getSantriStats(db, locals.user.id);
         const series = await getDailySeries(db, locals.user.id, 7);
@@ -79,7 +79,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         const percentage = totalAyah ? (stats.approved / totalAyah) * 100 : 0;
 
         return {
-            role: 'santri',
+            role,
             currentUser: locals.user,
             checklist,
             stats,

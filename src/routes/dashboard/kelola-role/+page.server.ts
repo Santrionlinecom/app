@@ -28,19 +28,26 @@ export const actions: Actions = {
 			return fail(400, { error: 'Data tidak lengkap' });
 		}
 
-		const validRoles = ['admin', 'ustadz', 'ustadzah', 'santri', 'asisten', 'alumni'];
+		const validRoles = ['admin', 'ustadz', 'ustadzah', 'santri', 'alumni'];
 		if (!validRoles.includes(newRole)) {
 			return fail(400, { error: 'Role tidak valid' });
 		}
 
-		const { results } = await locals.db.prepare('SELECT role FROM users WHERE id = ?').bind(userId).all();
+		const { results } = await locals.db.prepare('SELECT role, gender FROM users WHERE id = ?').bind(userId).all();
 		const user = results?.[0] as any;
 		
 		if (!user) {
 			return fail(404, { error: 'User tidak ditemukan' });
 		}
 
-		await locals.db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(newRole, userId).run();
+		const normalizedRole =
+			newRole === 'ustadz' || newRole === 'ustadzah'
+				? user.gender === 'wanita'
+					? 'ustadzah'
+					: 'ustadz'
+				: newRole;
+
+		await locals.db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(normalizedRole, userId).run();
 
 		await locals.db.prepare(`
 			INSERT INTO user_role_history (id, user_id, old_role, new_role, changed_by)
@@ -49,7 +56,7 @@ export const actions: Actions = {
 			crypto.randomUUID(),
 			userId,
 			user.role,
-			newRole,
+			normalizedRole,
 			locals.user.id
 		).run();
 
