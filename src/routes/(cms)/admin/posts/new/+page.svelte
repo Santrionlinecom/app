@@ -8,6 +8,7 @@
   let seo_keyword = $state('');
   let meta_description = $state('');
   let editingSlug = $state(false);
+  let thumbnail_url = $state('');
 
   function generateSlug() {
     slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -49,6 +50,26 @@
     if (score >= 50) return 'text-warning';
     return 'text-error';
   });
+
+  let fileInput: HTMLInputElement | null = null;
+  async function onPickFeatured(e: Event) {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append('file', file);
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: form });
+      if (!res.ok) throw new Error('Upload gagal');
+      const { url } = await res.json();
+      thumbnail_url = url;
+    } catch (err) {
+      console.error('Upload featured image error:', err);
+      alert('Gagal mengunggah gambar. Pastikan storage R2 aktif.');
+    } finally {
+      if (target) target.value = '';
+    }
+  }
 </script>
 
 <div class="container mx-auto p-4 max-w-7xl">
@@ -121,6 +142,33 @@
 
       <!-- Right Column (30%) - SEO Panel -->
       <div class="space-y-4">
+        <!-- Featured Image / Thumbnail -->
+        <div class="card bg-base-200">
+          <div class="card-body gap-3">
+            <div class="flex items-center justify-between">
+              <h2 class="card-title text-lg">Featured Image</h2>
+              <button type="button" class="btn btn-xs" onclick={() => fileInput?.click()}>Upload</button>
+            </div>
+
+            {#if thumbnail_url}
+              <div class="space-y-2">
+                <img src={thumbnail_url} alt="Featured image" class="w-full rounded border border-base-300" />
+                <div class="flex gap-2">
+                  <button type="button" class="btn btn-xs btn-ghost" onclick={() => window.open(thumbnail_url, '_blank')}>Buka</button>
+                  <button type="button" class="btn btn-xs btn-error" onclick={() => (thumbnail_url = '')}>Hapus</button>
+                </div>
+              </div>
+            {:else}
+              <div class="rounded border border-dashed border-base-300 p-4 text-sm opacity-70">
+                Belum ada gambar. Klik Upload untuk memilih gambar.
+              </div>
+            {/if}
+
+            <input type="file" accept="image/*" class="hidden" bind:this={fileInput} onchange={onPickFeatured} />
+            <input type="hidden" name="thumbnail_url" value={thumbnail_url} />
+          </div>
+        </div>
+
         <div class="card bg-base-200">
           <div class="card-body">
             <h2 class="card-title text-lg">SEO Settings</h2>

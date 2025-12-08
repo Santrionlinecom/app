@@ -24,6 +24,7 @@ export const actions: Actions = {
     const status = data.get('status') as 'draft' | 'published';
     const seo_keyword = data.get('seo_keyword') as string;
     const meta_description = data.get('meta_description') as string;
+    const thumbnail_url = (data.get('thumbnail_url') as string) || null;
 
     if (!title || !slug || !content) {
       return fail(400, { error: 'Missing required fields' });
@@ -47,6 +48,7 @@ export const actions: Actions = {
         content,
         excerpt,
         status,
+        thumbnail_url,
         seo_keyword,
         meta_description
       });

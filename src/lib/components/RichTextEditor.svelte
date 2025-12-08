@@ -5,6 +5,7 @@
   import Link from '@tiptap/extension-link';
   import Underline from '@tiptap/extension-underline';
   import TextAlign from '@tiptap/extension-text-align';
+  import Image from '@tiptap/extension-image';
 
   // Prop bindable: value (HTML string)
   let { value = $bindable('') } = $props();
@@ -21,7 +22,8 @@
         StarterKit,
         Link.configure({ openOnClick: false }),
         Underline,
-        TextAlign.configure({ types: ['heading', 'paragraph'] })
+        TextAlign.configure({ types: ['heading', 'paragraph'] }),
+        Image
       ],
       content: value,
       editorProps: {
@@ -64,6 +66,28 @@
   function addLink() {
     const url = prompt('Masukkan URL:');
     if (url) editor?.chain().focus().setLink({ href: url }).run();
+  }
+
+  // Upload gambar ke R2 lalu sisipkan ke editor
+  let fileInput: HTMLInputElement | null = null;
+  async function onPickImage(e: Event) {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append('file', file);
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: form });
+      if (!res.ok) throw new Error('Upload gagal');
+      const { url } = await res.json();
+      if (url) editor?.chain().focus().setImage({ src: url, alt: file.name }).run();
+    } catch (err) {
+      console.error('Upload image error:', err);
+      alert('Gagal mengunggah gambar. Pastikan binding R2 aktif.');
+    } finally {
+      // reset agar bisa memilih file yang sama lagi jika perlu
+      if (target) target.value = '';
+    }
   }
 
   // Sync perubahan eksternal ke editor
@@ -266,6 +290,19 @@
       >
         <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M7.5 10a2.5 2.5 0 012.5-2.5h3V6h-3a4 4 0 100 8h3v-1.5h-3A2.5 2.5 0 017.5 10zm5-1.5h-3V10h3A2.5 2.5 0 0115.5 12.5 2.5 2.5 0 0113 15h-3v1.5h3a4 4 0 100-8z"/></svg>
       </button>
+
+      <!-- Insert Image (upload ke R2 lalu sisipkan) -->
+      <button
+        type="button"
+        class="btn btn-sm btn-ghost"
+        disabled={mode === 'text'}
+        title="Insert Image"
+        aria-label="Insert Image"
+        onclick={() => fileInput?.click()}
+      >
+        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zm1 2v8l3-3 2 2 3-4 3 4V5H5z"/></svg>
+      </button>
+      <input bind:this={fileInput} type="file" accept="image/*" class="hidden" onchange={onPickImage} />
 
       <div class="divider divider-horizontal mx-0"></div>
 

@@ -7,6 +7,7 @@ export interface CmsPost {
   content: string;
   excerpt: string | null;
   status: 'draft' | 'published';
+  thumbnail_url: string | null;
   seo_keyword: string | null;
   meta_description: string | null;
   created_at: number;
@@ -26,6 +27,7 @@ async function ensureCmsSchema(db: D1Database) {
         content TEXT NOT NULL,
         excerpt TEXT,
         status TEXT NOT NULL DEFAULT 'draft',
+        thumbnail_url TEXT,
         seo_keyword TEXT,
         meta_description TEXT,
         created_at INTEGER NOT NULL,
@@ -46,6 +48,11 @@ async function ensureCmsSchema(db: D1Database) {
   }
   try {
     await db.prepare('ALTER TABLE cms_posts ADD COLUMN meta_description TEXT').run();
+  } catch (_) {
+    // abaikan jika sudah ada
+  }
+  try {
+    await db.prepare('ALTER TABLE cms_posts ADD COLUMN thumbnail_url TEXT').run();
   } catch (_) {
     // abaikan jika sudah ada
   }
@@ -80,7 +87,7 @@ export async function createPost(db: D1Database, post: Omit<CmsPost, 'created_at
   const now = Date.now();
   await db
     .prepare(
-      'INSERT INTO cms_posts (id, title, slug, content, excerpt, status, seo_keyword, meta_description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO cms_posts (id, title, slug, content, excerpt, status, thumbnail_url, seo_keyword, meta_description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
     .bind(
       post.id,
@@ -89,6 +96,7 @@ export async function createPost(db: D1Database, post: Omit<CmsPost, 'created_at
       post.content,
       post.excerpt ?? null,
       post.status ?? 'draft',
+      post.thumbnail_url ?? null,
       post.seo_keyword ?? null,
       post.meta_description ?? null,
       now,
