@@ -4,15 +4,25 @@ import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params, platform }) => {
   if (!locals.user) throw redirect(302, '/login');
-  
-  const post = await getPostById(platform!.env.DB, params.id);
+  if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz') {
+    throw redirect(302, '/dashboard');
+  }
+  const db = platform?.env?.DB;
+  if (!db) throw error(500, 'Database (D1) tidak tersedia');
+
+  const post = await getPostById(db, params.id);
   if (!post) throw error(404, 'Post not found');
   
   return { post };
 };
 
 export const actions: Actions = {
-  default: async ({ request, params, platform }) => {
+  default: async ({ request, params, platform, locals }) => {
+    if (!locals.user || (locals.user.role !== 'admin' && locals.user.role !== 'ustadz')) {
+      return fail(403, { error: 'Tidak diizinkan' });
+    }
+    const db = platform?.env?.DB;
+    if (!db) return fail(500, { error: 'Database (D1) tidak tersedia' });
     const data = await request.formData();
     const title = data.get('title') as string;
     const slug = data.get('slug') as string;
@@ -25,8 +35,15 @@ export const actions: Actions = {
     if (!title || !slug || !content) {
       return fail(400, { error: 'Missing required fields' });
     }
-
-    await updatePost(platform!.env.DB, params.id, { title, slug, content, excerpt, status, seo_keyword, meta_description });
+    try {
+      await updatePost(db, params.id, { title, slug, content, excerpt, status, seo_keyword, meta_description });
+    } catch (e: any) {
+      const msg = String(e?.message || e || '');
+      if (msg.includes('UNIQUE') && msg.toLowerCase().includes('slug')) {
+        return fail(400, { error: 'Slug sudah digunakan. Silakan pilih slug lain.' });
+      }
+      return fail(500, { error: 'Gagal memperbarui post', detail: msg });
+    }
     
     throw redirect(303, '/admin/posts');
   }

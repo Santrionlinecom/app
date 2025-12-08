@@ -146,6 +146,12 @@
 			<p class="relative text-sm font-medium opacity-90">Kelola Role</p>
 			<p class="relative mt-1 text-2xl font-bold">Users</p>
 		</a>
+        <!-- Kelola Blog (Admin only) -->
+        <a href="/admin/posts" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
+            <div class="absolute -right-4 -top-4 text-6xl opacity-20">📝</div>
+            <p class="relative text-sm font-medium opacity-90">Kelola Blog</p>
+            <p class="relative mt-1 text-2xl font-bold">Posting</p>
+        </a>
 		<a href="/dashboard/kelola-santri" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">👥</div>
 			<p class="relative text-sm font-medium opacity-90">Kelola Santri</p>
@@ -194,6 +200,12 @@
 			<p class="relative text-sm font-medium opacity-90">Review Setoran</p>
 			<p class="relative mt-1 text-2xl font-bold">{pending.length}</p>
 		</a>
+        <!-- Kelola Blog (Ustadz) -->
+        <a href="/admin/posts" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 p-6 text-white shadow-lg transition hover:scale-105">
+            <div class="absolute -right-4 -top-4 text-6xl opacity-20">📝</div>
+            <p class="relative text-sm font-medium opacity-90">Kelola Blog</p>
+            <p class="relative mt-1 text-2xl font-bold">Posting</p>
+        </a>
 		<a href="/dashboard/kelola-santri" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">👥</div>
 			<p class="relative text-sm font-medium opacity-90">Santri</p>
