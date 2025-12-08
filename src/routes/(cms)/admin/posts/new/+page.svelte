@@ -1,6 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import WysiwygEditor from '$lib/components/editor/WysiwygEditor.svelte';
+  import RichTextEditor from '$lib/components/RichTextEditor.svelte';
   
   let slug = $state('');
   let title = $state('');
@@ -90,7 +90,7 @@
           <div class="label">
             <span class="label-text">Content</span>
           </div>
-          <WysiwygEditor bind:content={content} />
+          <RichTextEditor bind:value={content} />
           <input type="hidden" name="content" value={content} />
         </div>
 
