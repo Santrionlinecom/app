@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.db) throw redirect(302, '/auth');
 
 	const isAdmin = locals.user.role === 'admin';
-	const db = locals.db;
+	const db = locals.db!;
 
 	await ensureCalendarTable(db);
 
@@ -33,7 +33,7 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 
-		const db = locals.db;
+		const db = locals.db!;
 		await ensureCalendarTable(db);
 
 		const data = await request.formData();
@@ -65,7 +65,7 @@ export const actions: Actions = {
 	updateNote: async ({ request, locals }) => {
 		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
-		const db = locals.db;
+		const db = locals.db!;
 		await ensureCalendarTable(db);
 
 		const data = await request.formData();
@@ -99,7 +99,7 @@ export const actions: Actions = {
 	deleteNote: async ({ request, locals }) => {
 		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
-		const db = locals.db;
+		const db = locals.db!;
 		await ensureCalendarTable(db);
 
 		const data = await request.formData();

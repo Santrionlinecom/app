@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	default: async ({ request, cookies, locals }) => {
-		const db = locals.db;
+		const db = locals.db!;
 
 		const formData = await request.formData();
 		const email = formData.get('email');

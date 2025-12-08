@@ -29,7 +29,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	}
 
 	try {
-		await submitSurahForUser(locals.db, {
+		await submitSurahForUser(locals.db!, {
 			userId,
 			surahNumber,
 			status: status ?? 'setor',

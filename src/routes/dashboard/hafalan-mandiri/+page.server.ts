@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user!;
 	await ensureMurojaTable(db);
 	await ensureCalendarTable(db);
-	await ensureHafalanSurahChecksTable(db);
+	await ensureHafalanSurahChecksTable(db!);
 
 	const { results: progress } = await db.prepare(`
 		SELECT surah_number, ayah_number, status, quality_status, notes, reviewed_at
@@ -153,7 +153,7 @@ export const actions: Actions = {
 
 		const db = locals.db!;
 		const user = locals.user!;
-		await ensureHafalanSurahChecksTable(db);
+	await ensureHafalanSurahChecksTable(db!);
 
 		const data = await request.formData();
 		const surahNumber = parseInt(String(data.get('surahNumber') ?? ''), 10);

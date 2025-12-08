@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	const role = locals.user.role as any;
-	const db = locals.db;
+	const db = locals.db!;
 
 	try {
 		await ensureHafalanTable(db);

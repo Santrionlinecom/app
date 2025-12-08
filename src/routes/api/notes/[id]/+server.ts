@@ -9,7 +9,7 @@ const requireUser = (locals: App.Locals) => {
 	if (!locals.db) {
 		throw error(500, 'Database not available');
 	}
-	return { user: locals.user as NonNullable<App.Locals['user']>, db: locals.db };
+	return { user: locals.user as NonNullable<App.Locals['user']>, db: locals.db! };
 };
 
 const ensureCalendarTable = async (db: D1Database) => {

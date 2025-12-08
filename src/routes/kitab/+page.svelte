@@ -1,103 +1,251 @@
 <script lang="ts">
-	import type { PageData } from './$types';
-	export let data: PageData;
+	let activeTab = $state<'tanya' | 'upload'>('tanya');
 
-	const isLoggedIn = !!data?.user;
+	let pertanyaan = $state('');
+	let jawaban = $state('');
+	let referensi = $state<{ judul_kitab: string; halaman?: string | number; jilid?: string | number }[]>([]);
+	let chatLoading = $state(false);
+	let chatError = $state('');
+
+	let uploadForm = $state({ judul: '', halaman: '', jilid: '', text: '' });
+	let uploadLoading = $state(false);
+	let uploadMessage = $state('');
+	let uploadError = $state('');
+	let uploadHistory = $state<
+		{ id: string; judul: string; halaman: string; jilid: string | null; createdAt: string | null }[]
+	>([]);
+
+	const switchTab = (tab: 'tanya' | 'upload') => {
+		activeTab = tab;
+		chatError = '';
+		uploadError = '';
+		uploadMessage = '';
+	};
+
+const loadHistory = async () => {
+	try {
+		const res = await fetch('/api/kitab/upload');
+		const result = await res.json();
+		if (!res.ok || !result.ok) return;
+		uploadHistory = result.items ?? [];
+	} catch (err) {
+		console.error('Gagal memuat riwayat upload', err);
+	}
+};
+
+$effect(() => {
+	if (activeTab === 'upload') {
+		void loadHistory();
+	}
+});
+
+const handleTanya = async () => {
+		chatLoading = true;
+		chatError = '';
+		jawaban = '';
+		referensi = [];
+		try {
+			const res = await fetch('/api/kitab/tanya', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ pertanyaan })
+			});
+			const result = await res.json();
+			if (!res.ok || !result.ok) {
+				throw new Error(result?.error || 'Gagal mendapatkan jawaban');
+			}
+			jawaban = result.jawaban;
+			referensi = result.referensi ?? [];
+		} catch (err: any) {
+			chatError = err?.message || 'Terjadi kesalahan';
+		} finally {
+			chatLoading = false;
+		}
+	};
+
+	const handleUpload = async () => {
+		uploadLoading = true;
+		uploadError = '';
+		uploadMessage = '';
+		try {
+			const res = await fetch('/api/kitab/upload', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					text: uploadForm.text,
+					judul: uploadForm.judul,
+					halaman: uploadForm.halaman,
+					jilid: uploadForm.jilid || undefined
+				})
+			});
+			const result = await res.json();
+			if (!res.ok || !result.ok) {
+				throw new Error(result?.error || 'Gagal menyimpan dokumen');
+			}
+			uploadMessage = 'Berhasil menyimpan potongan kitab.';
+			uploadForm = { judul: '', halaman: '', jilid: '', text: '' };
+			void loadHistory();
+		} catch (err: any) {
+			uploadError = err?.message || 'Terjadi kesalahan';
+		} finally {
+			uploadLoading = false;
+		}
+	};
 </script>
 
 <svelte:head>
-	<title>Kitab Turats Nusantara</title>
+	<title>Tanya Kitab</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12">
-	<div class="max-w-6xl mx-auto px-4">
-		<!-- Hero -->
-		<div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8 md:p-12 text-white shadow-2xl mb-12">
-			<div class="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-white/10 blur-3xl"></div>
-			<div class="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-white/10 blur-3xl"></div>
-			<div class="relative z-10">
-				<span class="text-6xl mb-4 block">📚</span>
-				<h1 class="text-4xl md:text-5xl font-bold mb-4">Kitab Turats Nusantara</h1>
-				<p class="text-xl md:text-2xl opacity-90 mb-6">Warisan Ulama untuk Santri</p>
-				<p class="text-lg opacity-80 max-w-3xl">Selain menghafal Al-Qur'an, kami mempelajari kitab-kitab dasar rujukan pesantren Ahlussunnah wal Jama'ah dari masa sahabat, tabi'in, hingga para wali di Nusantara.</p>
-			</div>
-		</div>
-
-		<!-- Al-Quran Featured -->
-		<a href="/kitab/quran" class="block mb-12 rounded-3xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-8 shadow-xl hover:scale-[1.02] transition">
-			<div class="flex items-start gap-6">
-				<div class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white text-3xl font-bold shadow-lg">
-					📖
-				</div>
-				<div class="flex-1">
-					<h2 class="text-3xl font-bold text-gray-900 mb-3">Al-Qur'an</h2>
-					<p class="text-gray-700 leading-relaxed mb-4">
-						Melanjutkan tradisi hifdz dan tadabbur, kami memulai perjalanan ilmu dengan sejarah turunnya Al-Qur'an melalui Malaikat Jibril kepada Rasulullah ﷺ. Baca kisah dan garis waktunya di halaman Sejarah Quran.
-					</p>
-					<span class="inline-flex items-center gap-2 text-emerald-600 font-bold text-lg">
-						Lihat Sejarah Quran →
-					</span>
-				</div>
-			</div>
-		</a>
-
-		<!-- Kitab Grid -->
-		<div class="grid grid-cols-1 gap-6">
-			{#each [
-				{
-					icon: '🔤',
-					title: 'Bahasa Arab',
-					desc: 'Miftahul Lughoh & Amtsilah Tasrifiyah',
-					color: 'border-blue-200'
-				},
-				{
-					icon: '🤲',
-					title: 'Aqidah',
-					desc: 'Aqidatul Awam dan dasar Aswaja',
-					color: 'border-purple-200'
-				},
-				{
-					icon: '⚖️',
-					title: 'Fiqih',
-					desc: 'Safinatun Najah dan ibadah praktis',
-					color: 'border-green-200'
-				},
-				{
-					icon: '📜',
-					title: 'Hadits',
-					desc: 'Arbain Nawawi dan Mukhtaruh Ahadits',
-					color: 'border-amber-200'
-				},
-				{
-					icon: '✨',
-					title: 'Tasawuf & Adab',
-					desc: 'Bidayatul Hidayah, Minahus Saniyah',
-					color: 'border-rose-200'
-				}
-			] as item}
-				<a
-					href={isLoggedIn ? '/kitab/coming-soon' : '/register'}
-					class={`rounded-2xl border-2 ${item.color} bg-white p-6 shadow-lg transition hover:scale-[1.02] hover:shadow-2xl`}
-				>
-					<div class="flex items-center gap-3 mb-4">
-						<span class="text-4xl">{item.icon}</span>
-						<h2 class="text-2xl font-bold text-slate-800">{item.title}</h2>
-					</div>
-					<p class="text-gray-700">{item.desc}</p>
-					<div class="mt-4 inline-flex items-center gap-2 text-emerald-600 font-semibold">
-						{isLoggedIn ? 'Lihat detail (Coming Soon)' : 'Daftar untuk akses'}
-						<span>→</span>
-					</div>
-				</a>
-			{/each}
-		</div>
-
-		<!-- Info Box -->
-		<div class="mt-12 rounded-3xl border-2 border-indigo-200 bg-white p-8 shadow-lg">
-			<h3 class="text-2xl font-bold text-gray-900 mb-4">📖 Tentang Kitab Turats</h3>
-			<p class="text-gray-700 leading-relaxed">
-				Daftar kitab ini menjadi fondasi sebelum santri melanjutkan ke turats lanjutan sesuai arahan para masyayikh. Setiap kitab dipilih karena kemudahan pemahaman, kedalaman ilmu, dan kesesuaian dengan tradisi pesantren Nusantara.
-			</p>
-		</div>
+<div class="mx-auto max-w-5xl px-4 py-10 space-y-6">
+	<div class="rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-6 shadow-xl">
+		<p class="text-xs uppercase tracking-[0.25em] text-white/80">RAG • Vectorize + AI</p>
+		<h1 class="text-3xl font-bold mt-2">Tanya Kitab</h1>
+		<p class="text-sm text-white/90 mt-1">
+			Ajukan pertanyaan seputar kitab. Jawaban dihasilkan dengan retrieval + AI dan menyertakan referensi halaman.
+		</p>
 	</div>
+
+	<div class="flex gap-3">
+		<button
+			class={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'tanya' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+			onclick={() => switchTab('tanya')}
+		>
+			💬 Tanya Jawab
+		</button>
+		<button
+			class={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'upload' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+			onclick={() => switchTab('upload')}
+		>
+			⬆️ Upload Data
+		</button>
+	</div>
+
+	{#if activeTab === 'tanya'}
+		<div class="rounded-2xl border bg-white p-6 shadow space-y-4">
+			<label class="block text-sm font-semibold text-slate-700">
+				<span class="mb-1 block">Pertanyaan</span>
+				<textarea
+					class="textarea textarea-bordered w-full min-h-[140px]"
+					bind:value={pertanyaan}
+					placeholder="Contoh: Bagaimana adab wudhu menurut kitab X?"
+				></textarea>
+			</label>
+			<div class="flex items-center gap-3">
+				<button class="btn btn-primary" onclick={handleTanya} disabled={chatLoading}>
+					{chatLoading ? 'Meminta jawaban...' : 'Tanyakan'}
+				</button>
+				{#if chatError}
+					<span class="text-sm text-red-600">{chatError}</span>
+				{/if}
+			</div>
+
+			{#if jawaban}
+				<div class="mt-4 rounded-xl border bg-slate-50 p-4 space-y-3">
+					<div class="flex items-center gap-2 text-slate-800">
+						<span class="text-lg">🤖</span>
+						<p class="font-semibold">Jawaban</p>
+					</div>
+					<p class="text-slate-800 leading-relaxed whitespace-pre-wrap">{jawaban}</p>
+
+					{#if referensi.length}
+						<div class="pt-2">
+							<p class="text-sm font-semibold text-slate-700">Referensi</p>
+							<div class="mt-2 grid gap-2 sm:grid-cols-2">
+								{#each referensi as ref}
+									<div class="rounded-lg border border-emerald-100 bg-white px-3 py-2 shadow-sm">
+										<p class="text-sm font-semibold text-emerald-700">{ref.judul_kitab}</p>
+										<p class="text-xs text-slate-600">
+											Hal: {ref.halaman || '-'} {ref.jilid ? `• Jilid ${ref.jilid}` : ''}
+										</p>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	{:else}
+	<div class="rounded-2xl border bg-white p-6 shadow space-y-4">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<label class="block text-sm font-semibold text-slate-700 mb-1">
+					Judul Kitab
+					<input
+						type="text"
+						class="input input-bordered w-full mt-1"
+						bind:value={uploadForm.judul}
+						placeholder="Misal: Fathul Qarib"
+					/>
+				</label>
+				<div class="grid grid-cols-2 gap-3">
+					<label class="block text-sm font-semibold text-slate-700 mb-1">
+						Halaman
+						<input
+							type="text"
+							class="input input-bordered w-full mt-1"
+							bind:value={uploadForm.halaman}
+							placeholder="cth: 12"
+						/>
+					</label>
+					<label class="block text-sm font-semibold text-slate-700 mb-1">
+						Jilid (opsional)
+						<input
+							type="text"
+							class="input input-bordered w-full mt-1"
+							bind:value={uploadForm.jilid}
+							placeholder="cth: 1"
+						/>
+					</label>
+				</div>
+			</div>
+
+			<label class="block text-sm font-semibold text-slate-700 mb-1">
+				Isi Kitab
+				<textarea
+					class="textarea textarea-bordered w-full min-h-[200px] mt-1"
+					bind:value={uploadForm.text}
+					placeholder="Tempel potongan kitab di sini..."
+				></textarea>
+			</label>
+
+			<div class="flex items-center gap-3">
+				<button class="btn btn-primary" onclick={handleUpload} disabled={uploadLoading}>
+					{uploadLoading ? 'Menyimpan...' : 'Simpan ke Index'}
+				</button>
+				{#if uploadMessage}
+					<span class="text-sm text-emerald-600">{uploadMessage}</span>
+				{/if}
+				{#if uploadError}
+					<span class="text-sm text-red-600">{uploadError}</span>
+				{/if}
+			</div>
+		</div>
+
+		<div class="rounded-2xl border bg-white p-6 shadow space-y-3">
+			<div class="flex items-center justify-between">
+				<p class="text-lg font-semibold text-slate-800">Riwayat Upload</p>
+				<button class="btn btn-sm" onclick={loadHistory}>↻ Muat Ulang</button>
+			</div>
+			{#if uploadHistory.length === 0}
+				<p class="text-sm text-slate-500">Belum ada data yang di-upload.</p>
+			{:else}
+				<div class="grid gap-3 md:grid-cols-2">
+					{#each uploadHistory as item}
+						<div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
+							<p class="text-sm font-semibold text-slate-800">{item.judul}</p>
+							<p class="text-xs text-slate-600">
+								Hal: {item.halaman || '-'} {item.jilid ? `• Jilid ${item.jilid}` : ''}
+							</p>
+							{#if item.createdAt}
+								<p class="text-[11px] text-slate-500 mt-1">
+									{new Date(item.createdAt as string).toLocaleString('id-ID')}
+								</p>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	{/if}
 </div>

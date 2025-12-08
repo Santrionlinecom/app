@@ -10,7 +10,7 @@ export const GET: RequestHandler = async ({ locals, params, platform }) => {
         throw error(500, 'Database tidak tersedia');
     }
 
-    const cert = await getCertificateById(locals.db, params.id);
+    const cert = await getCertificateById(locals.db!, params.id);
     if (!cert) {
         throw error(404, 'Sertifikat tidak ditemukan');
     }
@@ -36,5 +36,5 @@ export const GET: RequestHandler = async ({ locals, params, platform }) => {
     headers.set('Content-Type', object.httpMetadata?.contentType ?? 'application/pdf');
     headers.set('Content-Disposition', `inline; filename="${cert.id}.pdf"`);
 
-    return new Response(object.body, { status: 200, headers });
+    return new Response(object.body as any, { status: 200, headers });
 };

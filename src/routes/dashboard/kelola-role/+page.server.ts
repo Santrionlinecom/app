@@ -5,7 +5,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) throw redirect(302, '/auth');
 	if (locals.user.role !== 'admin') throw redirect(302, '/dashboard');
 
-	const { results } = await locals.db.prepare(`
+	const { results } = await locals.db!.prepare(`
 		SELECT id, username, email, role, gender, created_at 
 		FROM users 
 		ORDER BY created_at DESC
@@ -33,7 +33,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Role tidak valid' });
 		}
 
-		const { results } = await locals.db.prepare('SELECT role, gender FROM users WHERE id = ?').bind(userId).all();
+		const { results } = await locals.db!.prepare('SELECT role, gender FROM users WHERE id = ?').bind(userId).all();
 		const user = results?.[0] as any;
 		
 		if (!user) {
@@ -47,9 +47,9 @@ export const actions: Actions = {
 					: 'ustadz'
 				: newRole;
 
-		await locals.db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(normalizedRole, userId).run();
+		await locals.db!.prepare('UPDATE users SET role = ? WHERE id = ?').bind(normalizedRole, userId).run();
 
-		await locals.db.prepare(`
+		await locals.db!.prepare(`
 			INSERT INTO user_role_history (id, user_id, old_role, new_role, changed_by)
 			VALUES (?, ?, ?, ?, ?)
 		`).bind(

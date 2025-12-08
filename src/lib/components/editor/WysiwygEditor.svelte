@@ -58,7 +58,9 @@
 <div class="border border-gray-300 bg-white rounded">
   <!-- Header: Tabs Visual/Text -->
   <div class="flex items-center justify-between border-b border-gray-300 bg-gray-100 px-3">
-    <EditorToolbar {editor} disabled={mode === 'text'} />
+    {#if editor}
+      <EditorToolbar {editor} disabled={mode === 'text'} />
+    {/if}
 
     <div class="flex items-center gap-1 text-sm">
       <button type="button" class="px-3 py-2 rounded-t border-x border-t border-gray-300 bg-white"

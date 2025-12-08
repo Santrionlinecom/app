@@ -98,9 +98,9 @@ export const GET: RequestHandler = async ({ url, cookies, fetch, platform }) => 
 		}
 
 		if (e instanceof Error && 'status' in e) {
-			const status = (e as HttpError).status;
+			const status = (e as unknown as HttpError).status;
 			if (typeof status === 'number' && status < 500) {
-				throw e as HttpError;
+				throw e as unknown as HttpError;
 			}
 		}
 

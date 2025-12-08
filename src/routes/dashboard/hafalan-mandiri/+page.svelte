@@ -267,14 +267,14 @@ let toggling = new Set<number>();
 					<div class="muroja-card">
 						<div class="muroja-header">
 							<div>
-								<h3 class="muroja-surah">{getSurahName(m.surah_number)}</h3>
+								<h3 class="muroja-surah">{getSurahName(m.surah_number as number)}</h3>
 								<p class="muroja-ayah">Ayat {m.ayah_start} - {m.ayah_end}</p>
 							</div>
-							<span class="quality-badge {qualityColors[m.quality]}">
-								{qualityLabels[m.quality]}
+							<span class="quality-badge {qualityColors[(m as any).quality]}">
+								{qualityLabels[(m as any).quality]}
 							</span>
 						</div>
-						<p class="muroja-date">📅 {formatDate(m.muroja_date)}</p>
+						<p class="muroja-date">📅 {formatDate(m.muroja_date as string)}</p>
 						{#if m.notes}
 							<p class="muroja-notes">{m.notes}</p>
 						{/if}

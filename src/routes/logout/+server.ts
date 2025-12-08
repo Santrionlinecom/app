@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { initializeLucia } from '$lib/server/lucia';
 
 export const POST: RequestHandler = async ({ locals, cookies }) => {
-	const db = locals.db;
+	const db = locals.db!;
 	const lucia = initializeLucia(db);
 
 	if (locals.session) {

@@ -74,7 +74,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, '/auth');
 	}
 
-	const db = locals.db;
+	const db = locals.db!;
 	if (!db) {
 		return {
 			balance: 0,
@@ -95,7 +95,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	purchase: async ({ request, locals, fetch }) => {
 		if (!locals.user) return fail(401, { message: 'Silakan login dulu.' });
-		const db = locals.db;
+		const db = locals.db!;
 		if (!db) return fail(500, { message: 'Database tidak tersedia.' });
 
 		await ensureCellSchema(db);

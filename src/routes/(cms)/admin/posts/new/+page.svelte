@@ -152,7 +152,7 @@
 
             {#if thumbnail_url}
               <div class="space-y-2">
-                <img src={thumbnail_url} alt="Featured image" class="w-full rounded border border-base-300" />
+                <img src={thumbnail_url} alt="Featured thumbnail" class="w-full rounded border border-base-300" />
                 <div class="flex gap-2">
                   <button type="button" class="btn btn-xs btn-ghost" onclick={() => window.open(thumbnail_url, '_blank')}>Buka</button>
                   <button type="button" class="btn btn-xs btn-error" onclick={() => (thumbnail_url = '')}>Hapus</button>

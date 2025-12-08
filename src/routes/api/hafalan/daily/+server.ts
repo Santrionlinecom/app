@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 	// Ambil agregat per tanggal approve
 	const { results } =
-		(await locals.db
+		(await locals.db!
 			.prepare(
 				`SELECT DATE(tanggal_approve) as tanggal,
 				        COUNT(*) as totalAyat,

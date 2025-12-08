@@ -13,7 +13,7 @@ const ensureAuth = (locals: App.Locals) => {
 
 export const GET: RequestHandler = async ({ locals }) => {
 	ensureAuth(locals);
-	const db = locals.db;
+	const db = locals.db!;
 	if (!db) throw error(500, 'Database tidak tersedia');
 	const rows =
 		(await db
@@ -27,7 +27,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	ensureAuth(locals);
-	const db = locals.db;
+	const db = locals.db!;
 	if (!db) throw error(500, 'Database tidak tersedia');
 	const body = await request.json().catch(() => ({}));
 

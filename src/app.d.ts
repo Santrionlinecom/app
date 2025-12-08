@@ -1,5 +1,5 @@
 // 👇 BARIS INI WAJIB ADA (Supaya D1Database & R2Bucket dikenali sistem)
-import type { D1Database, R2Bucket } from '@cloudflare/workers-types';
+import type { Ai, D1Database, R2Bucket, VectorizeIndex } from '@cloudflare/workers-types';
 
 declare global {
     namespace App {
@@ -21,7 +21,8 @@ declare global {
             env: {
                 // Pastikan binding di wrangler.toml namanya "DB"
                 DB: D1Database;
-                
+                VECTORIZE_INDEX: VectorizeIndex;
+                AI: Ai;
                 // Pastikan binding di wrangler.toml namanya "BUCKET"
                 // (Jika belum pakai R2, baris ini boleh dihapus atau biarkan saja)
                 BUCKET: R2Bucket; 

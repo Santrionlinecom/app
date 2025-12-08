@@ -8,9 +8,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	}
 	const role = locals.user.role as 'admin' | 'ustadz' | 'ustadzah' | 'santri';
 	const targetUser = url.searchParams.get('userId') || undefined;
-	const flagged = await getFlaggedHafalan(locals.db, {
+	const flagged = await getFlaggedHafalan(locals.db!, {
 		currentUserId: locals.user.id,
-		role,
+		role: role as any,
 		userId: targetUser
 	});
 

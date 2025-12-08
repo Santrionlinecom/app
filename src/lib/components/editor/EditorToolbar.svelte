@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { Editor } from '@tiptap/svelte';
+	import type { Editor } from '@tiptap/core';
 	import { createEventDispatcher } from 'svelte';
 
-	let { editor }: { editor: Editor } = $props();
+	let { editor, disabled = false }: { editor: Editor; disabled?: boolean } = $props();
 
 	const dispatch = createEventDispatcher<{
 		addImage: { url: string };

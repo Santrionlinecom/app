@@ -244,7 +244,7 @@ export const listCertificatesForSantri = async (db: D1Database, santriId: string
             )
             .bind(santriId)
             .all<CertificateRow>()) ?? {};
-    return (results ?? []) as CertificateRow[];
+    return (results ?? []) as unknown as CertificateRow[];
 };
 
 export const getCertificateById = async (db: D1Database, id: string) => {

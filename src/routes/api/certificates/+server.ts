@@ -35,7 +35,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
         throw error(400, 'userId wajib diisi');
     }
 
-    const certificates = await listCertificatesForSantri(locals.db, targetId);
+    const certificates = await listCertificatesForSantri(locals.db!, targetId);
     const mapped = certificates.map((row) => ({
         ...row,
         downloadUrl: buildDownloadUrl(row.id)
@@ -43,7 +43,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
     const payload: Record<string, unknown> = { certificates: mapped };
     if (withStats) {
-        payload.stats = await collectCertificateStats(locals.db, targetId);
+        payload.stats = await collectCertificateStats(locals.db!, targetId);
     }
 
     return json(payload);
@@ -77,9 +77,9 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
         throw error(403, 'Santri hanya bisa membuat sertifikat untuk dirinya sendiri');
     }
 
-    await ensureCertificateTable(locals.db);
+    await ensureCertificateTable(locals.db!);
 
-    const stats = await collectCertificateStats(locals.db, targetSantri);
+    const stats = await collectCertificateStats(locals.db!, targetSantri);
     if (stats.totalHifzAyat < minAyat || stats.totalSessions < minSessions) {
         return json(
             {
@@ -90,7 +90,7 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
         );
     }
 
-    const santri = await locals.db
+    const santri = await locals.db!
         .prepare('SELECT username, email FROM users WHERE id = ?')
         .bind(targetSantri)
         .first<{ username: string | null; email: string }>();
@@ -111,7 +111,7 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
             ? locals.user.username || locals.user.email
             : 'Ustadz Pembimbing';
     if (ustadzId && (!ustadzName || ustadzId !== locals.user?.id)) {
-        const ustadzRow = await locals.db
+        const ustadzRow = await locals.db!
             .prepare('SELECT username, email FROM users WHERE id = ?')
             .bind(ustadzId)
             .first<{ username: string | null; email: string | null }>();
@@ -143,7 +143,7 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
     });
 
     const downloadUrl = buildDownloadUrl(certificateId);
-    await createCertificateRecord(locals.db, {
+    await createCertificateRecord(locals.db!, {
         id: certificateId,
         santri_id: targetSantri,
         ustadz_id: ustadzId,

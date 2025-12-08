@@ -113,7 +113,7 @@ import { SURAH_DATA } from '$lib/surah-data';
 							<tbody>
 								{#each data.hafalanResmi as surah}
 									<tr>
-										<td class="font-semibold">{getSurahName(surah.surah_number)}</td>
+										<td class="font-semibold">{getSurahName(surah.surah_number as number)}</td>
 										<td class="text-center">{surah.total_ayat}</td>
 										<td class="text-center">
 											<span class="badge green">{surah.lancar || 0}</span>
@@ -220,12 +220,12 @@ import { SURAH_DATA } from '$lib/surah-data';
 							<tbody>
 								{#each data.murojaPerSurah as surah}
 									<tr>
-										<td class="font-semibold">{getSurahName(surah.surah_number)}</td>
+										<td class="font-semibold">{getSurahName(surah.surah_number as number)}</td>
 										<td class="text-center">
 											<span class="badge blue">{surah.total_muroja}x</span>
 										</td>
 										<td class="text-sm text-gray-600">
-											{formatDate(surah.last_muroja)}
+											{formatDate(surah.last_muroja as string)}
 										</td>
 									</tr>
 								{/each}

@@ -4,7 +4,7 @@ import { Scrypt } from '$lib/server/password';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ locals }) => {
-	const db = locals.db;
+	const db = locals.db!;
 	const defaultPassword = 'password123';
 
 	// Define demo users for each role

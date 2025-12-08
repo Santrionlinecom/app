@@ -16,10 +16,10 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	if (action === 'delete') {
 		if (userId === locals.user.id) throw error(400, 'Tidak boleh hapus akun sendiri');
 		// bersihkan hafalan terkait
-		await locals.db.prepare('DELETE FROM hafalan_progress WHERE user_id = ?').bind(userId).run();
-		await locals.db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(userId).run();
-		await locals.db.prepare('DELETE FROM google_accounts WHERE user_id = ?').bind(userId).run();
-		await locals.db.prepare('DELETE FROM users WHERE id = ?').bind(userId).run();
+		await locals.db!.prepare('DELETE FROM hafalan_progress WHERE user_id = ?').bind(userId).run();
+		await locals.db!.prepare('DELETE FROM sessions WHERE user_id = ?').bind(userId).run();
+		await locals.db!.prepare('DELETE FROM google_accounts WHERE user_id = ?').bind(userId).run();
+		await locals.db!.prepare('DELETE FROM users WHERE id = ?').bind(userId).run();
 		return json({ ok: true });
 	}
 
@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		if (userId === locals.user.id && role !== 'admin') {
 			throw error(400, 'Tidak boleh menurunkan peran admin sendiri');
 		}
-		await updateUserRole(locals.db, { id: userId, role });
+		await updateUserRole(locals.db!, { id: userId, role });
 		return json({ ok: true });
 	}
 

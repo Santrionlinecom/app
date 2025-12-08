@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { Scrypt } from '$lib/server/password';
 import type { Actions, PageServerLoad } from './$types';
 
-const ensureUserOptionalColumns = async (db: App.Locals['db']) => {
+const ensureUserOptionalColumns = async (db: NonNullable<App.Locals['db']>) => {
 	const addColumn = async (name: string, type: string) => {
 		try {
 			await db.prepare(`ALTER TABLE users ADD COLUMN ${name} ${type}`).run();
@@ -22,10 +22,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, '/auth');
 	}
 
-	const { db, user } = locals;
-	if (db) {
-		await ensureUserOptionalColumns(db);
+	if (!locals.db) {
+		throw redirect(302, '/auth');
 	}
+
+	const { db, user } = { db: locals.db!, user: locals.user };
+	await ensureUserOptionalColumns(db);
 	const profile =
 		(await db
 			.prepare(
@@ -75,9 +77,9 @@ export const actions: Actions = {
 		const genderValue = gender === 'pria' || gender === 'wanita' ? gender : null;
 
 		try {
-			await ensureUserOptionalColumns(locals.db);
+			await ensureUserOptionalColumns(locals.db!);
 
-			await locals.db
+			await locals.db!
 				.prepare('UPDATE users SET username = ?, id = ?, gender = ? WHERE id = ?')
 				.bind(displayName.trim(), trimmedHandle, genderValue, locals.user.id)
 				.run();
@@ -118,9 +120,9 @@ export const actions: Actions = {
 			});
 		}
 
-		await ensureUserOptionalColumns(locals.db);
+		await ensureUserOptionalColumns(locals.db!);
 
-		await locals.db
+		await locals.db!
 			.prepare('UPDATE users SET whatsapp = ? WHERE id = ?')
 			.bind(sanitized, locals.user.id)
 			.run();
@@ -147,7 +149,7 @@ export const actions: Actions = {
 		}
 
 		const hashed = await new Scrypt().hash(password);
-		await locals.db
+		await locals.db!
 			.prepare('UPDATE users SET password_hash = ? WHERE id = ?')
 			.bind(hashed, locals.user.id)
 			.run();

@@ -146,16 +146,16 @@
 									</div>
 								</form>
 							{:else}
-								<span class="role-badge {roleColors[user.role] || 'bg-gray-100 text-gray-800 border-gray-200'}">
-									{displayLabels[user.role] || user.role}
+								<span class="role-badge {roleColors[(user as any).role] || 'bg-gray-100 text-gray-800 border-gray-200'}">
+									{displayLabels[(user as any).role] || (user as any).role}
 								</span>
 							{/if}
 						</td>
-						<td>{formatDate(user.created_at)}</td>
+						<td>{formatDate(new Date(user.created_at as string).getTime())}</td>
 						<td>
 							{#if editingUser !== user.id}
 								<button
-									on:click={() => startEdit(user.id, user.role)}
+									on:click={() => startEdit(user.id as string, user.role as string)}
 									class="btn-edit"
 								>
 									✏️ Ubah

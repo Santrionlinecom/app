@@ -34,7 +34,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, '/auth');
 	}
 
-    const db = locals.db;
+    const db = locals.db!;
     const role = locals.user.role;
 
     // Load data based on user role

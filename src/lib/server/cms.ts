@@ -61,7 +61,7 @@ async function ensureCmsSchema(db: D1Database) {
 export async function getAllPosts(db: D1Database): Promise<CmsPost[]> {
   await ensureCmsSchema(db);
   const { results } = await db.prepare('SELECT * FROM cms_posts ORDER BY created_at DESC').all();
-  return results as CmsPost[];
+  return results as unknown as CmsPost[];
 }
 
 export async function getPublishedPosts(db: D1Database): Promise<CmsPost[]> {
@@ -69,7 +69,7 @@ export async function getPublishedPosts(db: D1Database): Promise<CmsPost[]> {
   const { results } = await db
     .prepare("SELECT * FROM cms_posts WHERE status = 'published' ORDER BY created_at DESC")
     .all();
-  return results as CmsPost[];
+  return results as unknown as CmsPost[];
 }
 
 export async function getPostById(db: D1Database, id: string): Promise<CmsPost | null> {
