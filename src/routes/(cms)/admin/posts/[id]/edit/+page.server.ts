@@ -34,12 +34,13 @@ export const actions: Actions = {
     const status = data.get('status') as 'draft' | 'published';
     const seo_keyword = data.get('seo_keyword') as string;
     const meta_description = data.get('meta_description') as string;
+    const thumbnail_url = (data.get('thumbnail_url') as string) || null;
 
     if (!title || !slug || !content) {
       return fail(400, { error: 'Missing required fields' });
     }
     try {
-      await updatePost(db, params.id, { title, slug, content, excerpt, status, seo_keyword, meta_description });
+      await updatePost(db, params.id, { title, slug, content, excerpt, status, seo_keyword, meta_description, thumbnail_url });
     } catch (e: any) {
       const msg = String(e?.message || e || '');
       if (msg.includes('UNIQUE') && msg.toLowerCase().includes('slug')) {

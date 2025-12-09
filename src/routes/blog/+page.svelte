@@ -8,6 +8,9 @@
   <div class="space-y-6">
     {#each data.posts as post}
       <article class="card bg-base-200">
+        {#if post.thumbnail_url}
+          <img src={post.thumbnail_url} alt={`Thumbnail ${post.title}`} class="w-full h-56 object-cover rounded-t" loading="lazy" />
+        {/if}
         <div class="card-body">
           <h2 class="card-title">
             <a href="/blog/{post.slug}" class="hover:underline">{post.title}</a>
