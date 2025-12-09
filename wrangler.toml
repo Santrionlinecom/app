@@ -9,6 +9,11 @@ binding = "DB" # Ini nama variabel yang akan kita panggil di kodingan (misal: pl
 database_name = "db-app"
 database_id = "9c7b8ab4-8e7a-406d-9e44-6da413d7d9e0"
 
+# --- Konfigurasi R2 Storage ---
+[[r2_buckets]]
+binding = "BUCKET" # Ini nama variabel untuk storage (misal: platform.env.BUCKET)
+bucket_name = "santri-online-files"
+
 [[vectorize]]
 binding = "VECTORIZE_INDEX"
 index_name = "santri_kitab_index"
