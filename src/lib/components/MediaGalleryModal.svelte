@@ -8,9 +8,8 @@
     created_at: number;
   };
 
-  export let title = 'Pilih gambar dari galeri';
-  export let limit = 60;
-  export let onSelect: (url: string, item: MediaItem) => void = () => {};
+  let { title = 'Pilih gambar dari galeri', limit = 60, onSelect = (_url: string, _item: MediaItem) => {} } =
+    $props();
 
   let isOpen = $state(false);
   let items = $state<MediaItem[]>([]);
