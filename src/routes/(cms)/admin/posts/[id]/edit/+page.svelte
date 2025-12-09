@@ -1,6 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import WysiwygEditor from '$lib/components/editor/WysiwygEditor.svelte';
+  import RichTextEditor from '$lib/components/RichTextEditor.svelte';
   
   let { data } = $props();
   let title = $state(data.post.title);
@@ -11,6 +11,11 @@
   let meta_description = $state(data.post.meta_description || '');
   let thumbnail_url = $state(data.post.thumbnail_url || '');
   let fileInput: HTMLInputElement | null = null;
+  let editingSlug = $state(false);
+
+  const generateSlug = () => {
+    slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  };
 
   // SEO Score Logic
   const seoChecks = $derived(() => {
@@ -76,25 +81,39 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Left Column (70%) -->
       <div class="lg:col-span-2 space-y-4">
-        <div class="form-control">
-          <label class="label" for="title">
-            <span class="label-text">Title</span>
-          </label>
-          <input type="text" id="title" name="title" bind:value={title} class="input input-bordered" required />
-        </div>
+        <!-- Title besar + Permalink -->
+        <div class="space-y-2">
+          <input
+            type="text"
+            id="title"
+            name="title"
+            bind:value={title}
+            oninput={() => { if (!editingSlug) generateSlug(); }}
+            placeholder="Tambah judul"
+            class="w-full text-3xl font-semibold border border-gray-300 rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
+            required
+          />
 
-        <div class="form-control">
-          <label class="label" for="slug">
-            <span class="label-text">Slug</span>
-          </label>
-          <input type="text" id="slug" name="slug" bind:value={slug} class="input input-bordered" required />
+          <div class="text-sm text-gray-600 flex items-center gap-2 flex-wrap">
+            <span class="opacity-80">Permalink:</span>
+            {#if !editingSlug}
+              <span class="bg-gray-100 px-2 py-1 rounded border border-gray-300">/posts/{slug || 'judul-post'}</span>
+              <button type="button" class="btn btn-xs" onclick={() => editingSlug = true}>Sunting</button>
+            {:else}
+              <div class="flex items-center gap-2">
+                <input type="text" class="input input-sm input-bordered" bind:value={slug} />
+                <button type="button" class="btn btn-xs btn-primary" onclick={() => editingSlug = false}>OK</button>
+                <button type="button" class="btn btn-xs btn-ghost" onclick={() => { editingSlug = false; generateSlug(); }}>Batal</button>
+              </div>
+            {/if}
+          </div>
         </div>
 
         <div class="form-control">
           <div class="label">
             <span class="label-text">Content</span>
           </div>
-          <WysiwygEditor bind:content={content} />
+          <RichTextEditor bind:value={content} />
           <input type="hidden" name="content" value={content} />
         </div>
 
