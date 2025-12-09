@@ -73,12 +73,20 @@ export async function getAllPosts(db: D1Database): Promise<CmsPost[]> {
 
 export async function getPublishedPosts(db: D1Database): Promise<CmsPost[]> {
   await ensureCmsSchema(db);
-  const { results } = await db
-    .prepare(
-      "SELECT * FROM cms_posts WHERE status = 'published' AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now')*1000) ORDER BY COALESCE(scheduled_at, created_at) DESC"
-    )
-    .all();
-  return results as unknown as CmsPost[];
+  // Coba query dengan kolom scheduled_at; jika DB lama belum punya kolom, fallback ke query sederhana
+  try {
+    const { results } = await db
+      .prepare(
+        "SELECT * FROM cms_posts WHERE status = 'published' AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now')*1000) ORDER BY COALESCE(scheduled_at, created_at) DESC"
+      )
+      .all();
+    return results as unknown as CmsPost[];
+  } catch (_) {
+    const { results } = await db
+      .prepare("SELECT * FROM cms_posts WHERE status = 'published' ORDER BY created_at DESC")
+      .all();
+    return results as unknown as CmsPost[];
+  }
 }
 
 export async function getPostById(db: D1Database, id: string): Promise<CmsPost | null> {
