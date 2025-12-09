@@ -3,6 +3,26 @@
   import RichTextEditor from '$lib/components/RichTextEditor.svelte';
   
   let { data } = $props();
+
+  const toLocalDate = (ts: number | null) =>
+    ts
+      ? new Intl.DateTimeFormat('sv-SE', {
+          timeZone: 'Asia/Jakarta',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(ts)
+      : '';
+
+  const toLocalTime = (ts: number | null) =>
+    ts
+      ? new Intl.DateTimeFormat('sv-SE', {
+          timeZone: 'Asia/Jakarta',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }).format(ts)
+      : '';
   let title = $state(data.post.title);
   let slug = $state(data.post.slug);
   let content = $state(data.post.content);
@@ -12,12 +32,8 @@
   let thumbnail_url = $state(data.post.thumbnail_url || '');
   let fileInput: HTMLInputElement | null = null;
   let editingSlug = $state(false);
-  let schedule_date = $state(data.post.scheduled_at ? new Date(data.post.scheduled_at).toISOString().slice(0, 10) : '');
-  let schedule_time = $state(
-    data.post.scheduled_at
-      ? new Date(data.post.scheduled_at).toISOString().slice(11, 16)
-      : ''
-  );
+  let schedule_date = $state(toLocalDate(data.post.scheduled_at));
+  let schedule_time = $state(toLocalTime(data.post.scheduled_at));
 
   const generateSlug = () => {
     slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');

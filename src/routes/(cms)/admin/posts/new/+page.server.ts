@@ -3,6 +3,13 @@ import type { D1Database } from '@cloudflare/workers-types';
 import { createPost } from '$lib/server/cms';
 import type { PageServerLoad, Actions } from './$types';
 
+const toJakartaEpoch = (dateStr: string | null, timeStr: string | null) => {
+  if (!dateStr) return null;
+  const time = timeStr && timeStr.trim() ? timeStr : '00:00';
+  const parsed = Date.parse(`${dateStr}T${time}+07:00`);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(302, '/login');
   if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah') {
@@ -31,10 +38,7 @@ export const actions: Actions = {
     const schedule_date = data.get('schedule_date') as string;
     const schedule_time = data.get('schedule_time') as string;
 
-    const scheduled_at =
-      schedule_date
-        ? new Date(`${schedule_date}T${schedule_time || '00:00'}`).getTime()
-        : null;
+    const scheduled_at = toJakartaEpoch(schedule_date, schedule_time);
 
     if (!title || !slug || !content) {
       return fail(400, { error: 'Missing required fields' });
