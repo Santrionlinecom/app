@@ -168,9 +168,11 @@
           </select>
         </div>
 
-        <div class="flex gap-2">
-          <button type="submit" class="btn btn-primary">Update Post</button>
-          <a href="/admin/posts" class="btn btn-ghost">Cancel</a>
+        <input type="hidden" name="slug" bind:value={slug} />
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button type="submit" class="btn btn-primary w-full sm:w-auto">Update Post</button>
+          <a href="/admin/posts" class="btn btn-ghost w-full sm:w-auto">Cancel</a>
         </div>
       </div>
 
