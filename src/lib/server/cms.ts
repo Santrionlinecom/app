@@ -10,6 +10,7 @@ export interface CmsPost {
   thumbnail_url: string | null;
   seo_keyword: string | null;
   meta_description: string | null;
+  scheduled_at: number | null;
   created_at: number;
   updated_at: number;
 }
@@ -28,6 +29,7 @@ async function ensureCmsSchema(db: D1Database) {
         excerpt TEXT,
         status TEXT NOT NULL DEFAULT 'draft',
         thumbnail_url TEXT,
+        scheduled_at INTEGER,
         seo_keyword TEXT,
         meta_description TEXT,
         created_at INTEGER NOT NULL,
@@ -56,6 +58,11 @@ async function ensureCmsSchema(db: D1Database) {
   } catch (_) {
     // abaikan jika sudah ada
   }
+  try {
+    await db.prepare('ALTER TABLE cms_posts ADD COLUMN scheduled_at INTEGER').run();
+  } catch (_) {
+    // abaikan jika sudah ada
+  }
 }
 
 export async function getAllPosts(db: D1Database): Promise<CmsPost[]> {
@@ -67,7 +74,9 @@ export async function getAllPosts(db: D1Database): Promise<CmsPost[]> {
 export async function getPublishedPosts(db: D1Database): Promise<CmsPost[]> {
   await ensureCmsSchema(db);
   const { results } = await db
-    .prepare("SELECT * FROM cms_posts WHERE status = 'published' ORDER BY created_at DESC")
+    .prepare(
+      "SELECT * FROM cms_posts WHERE status = 'published' AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now')*1000) ORDER BY COALESCE(scheduled_at, created_at) DESC"
+    )
     .all();
   return results as unknown as CmsPost[];
 }
@@ -87,7 +96,7 @@ export async function createPost(db: D1Database, post: Omit<CmsPost, 'created_at
   const now = Date.now();
   await db
     .prepare(
-      'INSERT INTO cms_posts (id, title, slug, content, excerpt, status, thumbnail_url, seo_keyword, meta_description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO cms_posts (id, title, slug, content, excerpt, status, thumbnail_url, seo_keyword, meta_description, scheduled_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
     .bind(
       post.id,
@@ -99,6 +108,7 @@ export async function createPost(db: D1Database, post: Omit<CmsPost, 'created_at
       post.thumbnail_url ?? null,
       post.seo_keyword ?? null,
       post.meta_description ?? null,
+      post.scheduled_at ?? null,
       now,
       now
     )

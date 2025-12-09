@@ -12,6 +12,12 @@
   let thumbnail_url = $state(data.post.thumbnail_url || '');
   let fileInput: HTMLInputElement | null = null;
   let editingSlug = $state(false);
+  let schedule_date = $state(data.post.scheduled_at ? new Date(data.post.scheduled_at).toISOString().slice(0, 10) : '');
+  let schedule_time = $state(
+    data.post.scheduled_at
+      ? new Date(data.post.scheduled_at).toISOString().slice(11, 16)
+      : ''
+  );
 
   const generateSlug = () => {
     slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -122,6 +128,34 @@
             <span class="label-text">Excerpt</span>
           </label>
           <textarea id="excerpt" name="excerpt" bind:value={excerpt} class="textarea textarea-bordered" rows="2"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-control">
+            <label class="label" for="schedule_date">
+              <span class="label-text">Jadwalkan Tanggal</span>
+            </label>
+            <input
+              id="schedule_date"
+              name="schedule_date"
+              type="date"
+              class="input input-bordered"
+              bind:value={schedule_date}
+            />
+          </div>
+          <div class="form-control">
+            <label class="label" for="schedule_time">
+              <span class="label-text">Jam</span>
+            </label>
+            <input
+              id="schedule_time"
+              name="schedule_time"
+              type="time"
+              class="input input-bordered"
+              bind:value={schedule_time}
+              step="60"
+            />
+          </div>
         </div>
 
         <div class="form-control">

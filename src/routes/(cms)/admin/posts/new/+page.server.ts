@@ -28,6 +28,13 @@ export const actions: Actions = {
     const seo_keyword = data.get('seo_keyword') as string;
     const meta_description = data.get('meta_description') as string;
     const thumbnail_url = (data.get('thumbnail_url') as string) || null;
+    const schedule_date = data.get('schedule_date') as string;
+    const schedule_time = data.get('schedule_time') as string;
+
+    const scheduled_at =
+      schedule_date
+        ? new Date(`${schedule_date}T${schedule_time || '00:00'}`).getTime()
+        : null;
 
     if (!title || !slug || !content) {
       return fail(400, { error: 'Missing required fields' });
@@ -53,7 +60,8 @@ export const actions: Actions = {
         status,
         thumbnail_url,
         seo_keyword,
-        meta_description
+        meta_description,
+        scheduled_at
       });
     } catch (e: any) {
       const msg = String(e?.message || e || '');
