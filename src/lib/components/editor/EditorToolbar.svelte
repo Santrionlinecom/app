@@ -38,7 +38,7 @@
 	};
 
 	const openFileDialog = () => {
-		fileInput.click();
+		fileInput?.click();
 	};
 </script>
 
@@ -48,6 +48,7 @@
 		<!-- Paragraph/Heading Dropdown -->
 		<select
 			class="border border-gray-300 rounded-sm px-2 py-1 text-sm"
+			disabled={disabled}
 			onchange={(e) => {
 				const level = parseInt((e.target as HTMLSelectElement).value);
 				if (level === 0) {
@@ -65,13 +66,17 @@
 
 		<!-- Text Formatting -->
 		<button
+			type="button"
 			class:active={editor.isActive('bold')}
+			disabled={disabled}
 			onclick={() => editor.chain().focus().toggleBold().run()}
 		>
 			B
 		</button>
 		<button
+			type="button"
 			class:active={editor.isActive('italic')}
+			disabled={disabled}
 			onclick={() => editor.chain().focus().toggleItalic().run()}
 		>
 			I
@@ -79,13 +84,17 @@
 
 		<!-- Lists -->
 		<button
+			type="button"
 			class:active={editor.isActive('bulletList')}
+			disabled={disabled}
 			onclick={() => editor.chain().focus().toggleBulletList().run()}
 		>
 			&bull; List
 		</button>
 		<button
+			type="button"
 			class:active={editor.isActive('orderedList')}
+			disabled={disabled}
 			onclick={() => editor.chain().focus().toggleOrderedList().run()}
 		>
 			1. List
@@ -93,19 +102,33 @@
 
 		<!-- Blockquote -->
 		<button
+			type="button"
 			class:active={editor.isActive('blockquote')}
+			disabled={disabled}
 			onclick={() => editor.chain().focus().toggleBlockquote().run()}
 		>
 			&ldquo;
 		</button>
 
 		<!-- Alignment -->
-		<button onclick={() => editor.chain().focus().setTextAlign('left').run()}>L</button>
-		<button onclick={() => editor.chain().focus().setTextAlign('center').run()}>C</button>
-		<button onclick={() => editor.chain().focus().setTextAlign('right').run()}>R</button>
+		<button type="button" disabled={disabled} onclick={() => editor.chain().focus().setTextAlign('left').run()}>
+			L
+		</button>
+		<button
+			type="button"
+			disabled={disabled}
+			onclick={() => editor.chain().focus().setTextAlign('center').run()}
+		>
+			C
+		</button>
+		<button type="button" disabled={disabled} onclick={() => editor.chain().focus().setTextAlign('right').run()}>
+			R
+		</button>
 
 		<!-- Link -->
 		<button
+			type="button"
+			disabled={disabled}
 			onclick={() => {
 				const url = prompt('Enter URL:');
 				if (url) {
@@ -119,7 +142,12 @@
 
 	<!-- Row 2 -->
 	<div class="flex items-center gap-1 pt-1 border-t border-gray-200">
-		<button class="flex items-center gap-2 px-2 py-1 text-sm" onclick={openFileDialog}>
+		<button
+			type="button"
+			class="flex items-center gap-2 px-2 py-1 text-sm"
+			disabled={disabled}
+			onclick={openFileDialog}
+		>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				width="16"
@@ -137,7 +165,14 @@
 			>
 			Tambahkan Media
 		</button>
-		<input type="file" bind:this={fileInput} onchange={handleFileSelect} class="hidden" accept="image/*" />
+		<input
+			type="file"
+			bind:this={fileInput}
+			onchange={handleFileSelect}
+			class="hidden"
+			accept="image/*"
+			disabled={disabled}
+		/>
 	</div>
 </div>
 

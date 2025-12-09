@@ -1,12 +1,18 @@
 import type { Config } from 'tailwindcss';
 import daisyui from 'daisyui';
+// 1. Kita import (panggil) plugin typography di sini
+import typography from '@tailwindcss/typography';
 
 export default {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
     extend: {}
   },
-  plugins: [daisyui],
+  // 2. Masukkan 'typography' ke dalam daftar plugins SEBELUM daisyui
+  plugins: [
+    typography, 
+    daisyui
+  ],
   daisyui: {
     themes: [
       {
