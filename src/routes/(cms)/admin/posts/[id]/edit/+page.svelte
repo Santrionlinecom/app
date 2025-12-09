@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import RichTextEditor from '$lib/components/RichTextEditor.svelte';
+  import MediaGalleryModal from '$lib/components/MediaGalleryModal.svelte';
   
   let { data } = $props();
 
@@ -196,9 +197,16 @@
       <div class="space-y-4">
         <div class="card bg-base-200">
           <div class="card-body gap-3">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between flex-wrap gap-2">
               <h2 class="card-title text-lg">Featured Image</h2>
-              <button type="button" class="btn btn-xs" onclick={() => fileInput?.click()}>Upload</button>
+              <div class="flex items-center gap-2">
+                <MediaGalleryModal onSelect={(url) => (thumbnail_url = url)} let:open>
+                  <button type="button" slot="trigger" class="btn btn-xs btn-ghost" onclick={open}>
+                    Pilih dari Galeri
+                  </button>
+                </MediaGalleryModal>
+                <button type="button" class="btn btn-xs" onclick={() => fileInput?.click()}>Upload</button>
+              </div>
             </div>
 
             {#if thumbnail_url}

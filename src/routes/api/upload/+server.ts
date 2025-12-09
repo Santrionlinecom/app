@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { recordMedia } from '$lib/server/media';
 
 export async function POST({ request, platform }) {
   const formData = await request.formData();
@@ -18,11 +19,26 @@ export async function POST({ request, platform }) {
 
     await platform.env.BUCKET.put(filename, await file.arrayBuffer(), {
       httpMetadata: {
-        contentType: file.type,
-      },
+        contentType: file.type
+      }
     });
 
     const publicUrl = `https://files.santrionline.com/${filename}`;
+
+    // Simpan metadata ke D1 (jika tersedia) agar muncul di galeri
+    if (platform?.env?.DB) {
+      try {
+        await recordMedia(platform.env.DB, {
+          filename,
+          url: publicUrl,
+          mime_type: file.type || null,
+          size: file.size ?? null
+        });
+      } catch (err) {
+        console.warn('Gagal menyimpan metadata media:', err);
+      }
+    }
+
     return json({ url: publicUrl });
   } catch (error) {
     console.error('Error uploading to R2:', error);
