@@ -1,5 +1,5 @@
 <script lang="ts">
-  export type MediaItem = {
+  type MediaItem = {
     id: string;
     filename: string;
     url: string;
@@ -8,14 +8,15 @@
     created_at: number;
   };
 
-  let { title = 'Pilih gambar dari galeri', limit = 60, onSelect = (_url: string, _item: MediaItem) => {} } =
-    $props();
+  export let title = 'Pilih gambar dari galeri';
+  export let limit = 60;
+  export let onSelect: (url: string, item: MediaItem) => void = () => {};
 
-  let isOpen = $state(false);
-  let items = $state<MediaItem[]>([]);
-  let loading = $state(false);
-  let error = $state('');
-  let initialized = $state(false);
+  let isOpen = false;
+  let items: MediaItem[] = [];
+  let loading = false;
+  let error = '';
+  let initialized = false;
 
   const open = async () => {
     isOpen = true;
@@ -59,7 +60,7 @@
 
 {#if isOpen}
   <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
-    <div class="absolute inset-0 bg-black/40" onclick={close}></div>
+    <button type="button" class="absolute inset-0 bg-black/40" on:click={close} aria-label="Tutup galeri"></button>
     <div class="relative bg-base-100 w-full max-w-4xl max-h-[85vh] rounded-lg shadow-xl border border-base-300 overflow-hidden flex flex-col">
       <div class="flex items-center justify-between px-4 py-3 border-b border-base-300">
         <div>
@@ -67,8 +68,8 @@
           <p class="text-xs text-base-content/60">Pilih gambar yang sudah pernah diupload</p>
         </div>
         <div class="flex items-center gap-2">
-          <button type="button" class="btn btn-sm" onclick={load}>Refresh</button>
-          <button type="button" class="btn btn-sm btn-ghost" onclick={close}>Tutup</button>
+          <button type="button" class="btn btn-sm" on:click={load}>Refresh</button>
+          <button type="button" class="btn btn-sm btn-ghost" on:click={close}>Tutup</button>
         </div>
       </div>
 
@@ -89,7 +90,7 @@
               <button
                 type="button"
                 class="group border border-base-300 rounded-lg overflow-hidden hover:border-primary transition-colors text-left"
-                onclick={() => handleSelect(item)}
+                on:click={() => handleSelect(item)}
               >
                 <div class="aspect-video bg-base-200 overflow-hidden">
                   <img src={item.url} alt={item.filename} class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform" loading="lazy" />

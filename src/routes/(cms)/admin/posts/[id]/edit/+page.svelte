@@ -200,10 +200,12 @@
             <div class="flex items-center justify-between flex-wrap gap-2">
               <h2 class="card-title text-lg">Featured Image</h2>
               <div class="flex items-center gap-2">
-                <MediaGalleryModal onSelect={(url) => (thumbnail_url = url)} let:open>
-                  <button type="button" slot="trigger" class="btn btn-xs btn-ghost" onclick={open}>
-                    Pilih dari Galeri
-                  </button>
+                <MediaGalleryModal onSelect={(url: string) => (thumbnail_url = url)}>
+                  <svelte:fragment slot="trigger" let:open>
+                    <button type="button" class="btn btn-xs btn-ghost" onclick={open}>
+                      Pilih dari Galeri
+                    </button>
+                  </svelte:fragment>
                 </MediaGalleryModal>
                 <button type="button" class="btn btn-xs" onclick={() => fileInput?.click()}>Upload</button>
               </div>

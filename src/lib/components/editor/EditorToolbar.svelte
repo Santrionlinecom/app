@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Editor } from '@tiptap/core';
 	import { createEventDispatcher } from 'svelte';
+	import MediaGalleryModal from '$lib/components/MediaGalleryModal.svelte';
 
 	let { editor, disabled = false }: { editor: Editor; disabled?: boolean } = $props();
 
@@ -39,6 +40,11 @@
 
 	const openFileDialog = () => {
 		fileInput?.click();
+	};
+
+	const handleGallerySelect = (url: string) => {
+		if (!url) return;
+		dispatch('addImage', { url });
 	};
 </script>
 
@@ -173,6 +179,38 @@
 			accept="image/*"
 			disabled={disabled}
 		/>
+
+		<MediaGalleryModal onSelect={(url) => handleGallerySelect(url)}>
+			<svelte:fragment slot="trigger" let:open>
+				<button
+					type="button"
+					class="flex items-center gap-2 px-2 py-1 text-sm"
+					disabled={disabled}
+					onclick={() => {
+						if (!disabled) open();
+					}}
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						class="lucide lucide-gallery-vertical-end"
+					>
+						<path d="M7 2h10" />
+						<path d="M5 6h14" />
+						<rect width="18" height="12" x="3" y="10" rx="2" />
+						<path d="M10 16l2-2 2 2" />
+					</svg>
+					Galeri
+				</button>
+			</svelte:fragment>
+		</MediaGalleryModal>
 	</div>
 </div>
 

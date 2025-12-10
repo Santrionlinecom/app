@@ -309,17 +309,18 @@
         <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zm1 2v8l3-3 2 2 3-4 3 4V5H5z"/></svg>
       </button>
       <input bind:this={fileInput} type="file" accept="image/*" class="hidden" onchange={onPickImage} />
-      <MediaGalleryModal onSelect={(url) => insertImageFromGallery(url)} let:open>
-        <button
-          slot="trigger"
-          type="button"
-          class="btn btn-sm btn-ghost"
-          disabled={mode === 'text'}
-          onclick={open}
-          title="Pilih gambar dari galeri"
-        >
-          Galeri
-        </button>
+      <MediaGalleryModal onSelect={(url: string) => insertImageFromGallery(url)}>
+        <svelte:fragment slot="trigger" let:open>
+          <button
+            type="button"
+            class="btn btn-sm btn-ghost"
+            disabled={mode === 'text'}
+            onclick={open}
+            title="Pilih gambar dari galeri"
+          >
+            Galeri
+          </button>
+        </svelte:fragment>
       </MediaGalleryModal>
 
       <div class="divider divider-horizontal mx-0"></div>

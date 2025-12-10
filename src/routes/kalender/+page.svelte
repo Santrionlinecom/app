@@ -263,10 +263,7 @@
 								<div class="absolute top-1 right-1 text-sm md:text-xl">🌟</div>
 							{/if}
 							<div class="absolute inset-0 flex items-center justify-center">
-								<div class="text-xl md:text-3xl font-bold {
-									cell.date.toDateString() === selectedDate.toDateString() ? 'text-purple-400' :
-									cell.date.toDateString() === today.toDateString() ? 'text-blue-400' : 'text-gray-300'
-								}">
+								<div class="text-xl md:text-3xl font-bold text-green-700">
 									{toArabicNumeral(hijriDayNumber(cell.date) ?? '')}
 								</div>
 							</div>

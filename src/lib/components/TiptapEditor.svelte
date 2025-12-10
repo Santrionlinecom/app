@@ -57,7 +57,7 @@
   // Sinkronisasi perubahan dari luar -> editor (hindari loop dengan pengecekan isi)
   $effect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value, false);
+      editor.commands.setContent(value, { emitUpdate: false });
       textContent = value;
     }
   });
@@ -69,7 +69,7 @@
       textContent = editor?.getHTML() ?? textContent;
       value = textContent;
     } else if (editor) {
-      editor.commands.setContent(textContent, false);
+      editor.commands.setContent(textContent, { emitUpdate: false });
       value = textContent;
     }
 
