@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import * as UICalendar from '$lib/components/ui/calendar';
-	import { type DateValue, getLocalTimeZone, today as todayValue } from '@internationalized/date';
 
-	type CalendarMonth = { value: DateValue; weeks: DateValue[][] };
+	type CalendarCell = { date: Date; inMonth: boolean };
 	type CalendarNote = { id: string; userId: string; role: string; title: string; content: string; eventDate: string; createdAt: number; updatedAt: number };
 	type HafalanPoint = { date: string; total: number; hijau: number; kuning: number; merah: number };
 
 	const pasaranCycle = ['Legi', 'Pahing', 'Pon', 'Wage', 'Kliwon'];
+	const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+	const dayEmojis = ['☀️', '🌙', '🔥', '💧', '⚡', '🕌', '🌟'];
 	const DAILY_THEMES: Record<number, { name: string; emoji: string; color: string }> = {
 		0: { name: 'Aqidah', emoji: '🤲', color: 'from-purple-500 to-pink-500' },
 		1: { name: "Tadabbur Qur'an", emoji: '📖', color: 'from-blue-500 to-cyan-500' },
@@ -38,14 +38,10 @@
 		} catch { return null; }
 	};
 
-	const tz = getLocalTimeZone();
-	const toISODate = (d: Date) =>
-		`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-	const toJsDate = (value: DateValue) => value.toDate(tz);
-	const todayJs = toJsDate(todayValue(tz));
-
-	let calendarValue: DateValue = todayValue(tz);
-	let selectedDate = toJsDate(calendarValue);
+	let today = new Date();
+	let viewMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+	let selectedDate = new Date(today);
+	let weeks: CalendarCell[][] = [];
 	let notesByDate: Record<string, CalendarNote[]> = {};
 	let noteModalDate: Date | null = null;
 	let formTitle = '';
@@ -58,6 +54,7 @@
 	$: currentUser = $page.data.user;
 	$: modalTheme = noteModalDate ? DAILY_THEMES[noteModalDate.getDay()] : DAILY_THEMES[selectedDate.getDay()];
 
+	const toISODate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 	const pasaranFor = (date: Date) => {
 		const baseline = Date.UTC(1970, 0, 1);
 		const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
@@ -65,10 +62,46 @@
 		return pasaranCycle[((diffDays + 3) % 5 + 5) % 5];
 	};
 
+	function buildWeeks(monthDate: Date) {
+		const start = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+		const startDay = start.getDay();
+		const firstCell = new Date(start);
+		firstCell.setDate(1 - startDay);
+		const cells: CalendarCell[] = [];
+		for (let i = 0; i < 42; i++) {
+			const d = new Date(firstCell);
+			d.setDate(firstCell.getDate() + i);
+			cells.push({ date: d, inMonth: d.getMonth() === monthDate.getMonth() });
+		}
+		const chunked: CalendarCell[][] = [];
+		for (let i = 0; i < 42; i += 7) chunked.push(cells.slice(i, i + 7));
+		return chunked;
+	}
+
 	onMount(() => {
-		loadNotesForMonth(selectedDate);
+		weeks = buildWeeks(viewMonth);
+		loadNotesForMonth(viewMonth);
 		loadDaily();
 	});
+
+	const setMonth = (delta: number) => {
+		viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + delta, 1);
+		weeks = buildWeeks(viewMonth);
+		loadNotesForMonth(viewMonth);
+	};
+
+	const pickDate = (date: Date) => {
+		selectedDate = new Date(date);
+		if (date.getMonth() !== viewMonth.getMonth()) {
+			viewMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+			weeks = buildWeeks(viewMonth);
+			loadNotesForMonth(viewMonth);
+		}
+		noteModalDate = new Date(date);
+		formTitle = '';
+		formContent = '';
+		editId = null;
+	};
 
 	const loadNotesForMonth = async (monthDate: Date) => {
 		if (!currentUser) return;
@@ -145,34 +178,6 @@
 	};
 
 	const canEdit = (note: CalendarNote) => currentUser && (currentUser.role === 'admin' || currentUser.id === note.userId);
-
-	const goToToday = () => {
-		calendarValue = todayValue(tz);
-	};
-
-	const shiftMonth = (delta: number) => {
-		if (!calendarValue) return;
-		calendarValue = calendarValue.add({ months: delta });
-	};
-
-	let loadedMonthKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}`;
-	$: if (calendarValue) {
-		const nextDate = toJsDate(calendarValue);
-		if (nextDate.toDateString() !== selectedDate.toDateString()) {
-			selectedDate = nextDate;
-			noteModalDate = new Date(nextDate);
-			formTitle = '';
-			formContent = '';
-			editId = null;
-		}
-		const monthKey = `${nextDate.getFullYear()}-${nextDate.getMonth()}`;
-		if (monthKey !== loadedMonthKey) {
-			loadedMonthKey = monthKey;
-			loadNotesForMonth(nextDate);
-		}
-	}
-
-	$: monthLabel = gregMonthFormatter.format(selectedDate);
 </script>
 
 <svelte:head>
@@ -208,9 +213,81 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<!-- Calendar -->
-	
+		<div class="rounded-2xl md:rounded-3xl border-2 border-white bg-white/80 backdrop-blur-sm p-3 md:p-6 shadow-2xl">
+			<div class="flex items-center justify-between mb-4 md:mb-6">
+				<h2 class="text-xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+					{gregMonthFormatter.format(viewMonth)}
+				</h2>
+				<div class="flex gap-1 md:gap-2">
+					<button class="btn btn-circle btn-xs md:btn-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:scale-110 transition" on:click={() => setMonth(-1)}>←</button>
+					<button class="btn btn-xs md:btn-sm bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:scale-105 transition" on:click={() => { viewMonth = new Date(today.getFullYear(), today.getMonth(), 1); weeks = buildWeeks(viewMonth); selectedDate = new Date(today); }}>
+						Hari Ini
+					</button>
+					<button class="btn btn-circle btn-xs md:btn-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:scale-110 transition" on:click={() => setMonth(1)}>→</button>
+				</div>
+			</div>
+
+			<!-- Days Header -->
+			<div class="grid grid-cols-7 gap-1 md:gap-2 mb-2 md:mb-4">
+				{#each dayNames as name, i}
+					<div class="text-center">
+						<div class="text-lg md:text-2xl mb-0.5 md:mb-1">{dayEmojis[i]}</div>
+						<div class="text-[10px] md:text-sm font-bold text-gray-700">{name}</div>
+					</div>
+				{/each}
+			</div>
+
+			<!-- Calendar Grid -->
+			<div class="grid grid-cols-7 gap-1 md:gap-2">
+				{#each weeks.flat() as cell}
+					{#if cell.inMonth}
+						<button
+							class="group relative aspect-square rounded-xl md:rounded-2xl border-2 transition-all hover:scale-105 hover:shadow-xl {
+								cell.date.toDateString() === selectedDate.toDateString()
+									? 'border-purple-500 bg-gradient-to-br from-purple-100 to-pink-100 shadow-lg scale-105'
+									: cell.date.toDateString() === today.toDateString()
+										? 'border-blue-500 bg-gradient-to-br from-blue-50 to-cyan-50'
+										: 'border-gray-200 bg-white hover:border-purple-300'
+							}"
+							on:click={() => pickDate(cell.date)}
+						>
+							<div class="absolute top-1 left-1 text-xs md:text-lg font-bold {
+								cell.date.toDateString() === selectedDate.toDateString() ? 'text-purple-600' :
+								cell.date.toDateString() === today.toDateString() ? 'text-blue-600' : 'text-gray-700'
+							}">
+								{cell.date.getDate()}
+							</div>
+							{#if cell.date.toDateString() === today.toDateString()}
+								<div class="absolute top-1 right-1 text-sm md:text-xl">🌟</div>
+							{/if}
+							<div class="absolute inset-0 flex items-center justify-center">
+								<div class="text-xl md:text-3xl font-bold text-green-700">
+									{toArabicNumeral(hijriDayNumber(cell.date) ?? '')}
+								</div>
+							</div>
+							<div class="absolute bottom-1 left-1 right-1 text-center">
+								<div class="text-[9px] md:text-xs font-semibold text-purple-600">{pasaranFor(cell.date)}</div>
+								<div class="flex justify-center gap-0.5 md:gap-1 mt-0.5">
+									{#if notesByDate[toISODate(cell.date)]?.length}
+										<div class="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
+									{/if}
+									{#if dailyMap[toISODate(cell.date)]?.total}
+										<div class="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+									{/if}
+								</div>
+							</div>
+						</button>
+					{:else}
+						<div class="aspect-square rounded-xl md:rounded-2xl bg-gray-50 opacity-30 flex items-center justify-center text-xs md:text-base text-gray-400">
+							{cell.date.getDate()}
+						</div>
+					{/if}
+				{/each}
+			</div>
+		</div>
+
 		<!-- Legend -->
 		<div class="mt-6 flex flex-wrap gap-4 justify-center text-sm">
 			<div class="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow">
