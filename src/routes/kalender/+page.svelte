@@ -253,29 +253,58 @@
 							}"
 							on:click={() => pickDate(cell.date)}
 						>
-							<div class="absolute top-1 left-1 text-xs md:text-lg font-bold {
-								cell.date.toDateString() === selectedDate.toDateString() ? 'text-purple-600' :
-								cell.date.toDateString() === today.toDateString() ? 'text-blue-600' : 'text-gray-700'
-							}">
-								{cell.date.getDate()}
-							</div>
-							{#if cell.date.toDateString() === today.toDateString()}
-								<div class="absolute top-1 right-1 text-sm md:text-xl">🌟</div>
-							{/if}
-							<div class="absolute inset-0 flex items-center justify-center">
-								<div class="text-xl md:text-3xl font-bold text-green-700">
+							<div class="md:hidden absolute inset-0 flex flex-col justify-between p-1">
+								<div class="flex items-start justify-between">
+									<div class="text-[11px] font-bold {
+										cell.date.toDateString() === selectedDate.toDateString() ? 'text-purple-600' :
+										cell.date.toDateString() === today.toDateString() ? 'text-blue-600' : 'text-gray-700'
+									}">
+										{cell.date.getDate()}
+									</div>
+									{#if cell.date.toDateString() === today.toDateString()}
+										<div class="text-[11px]">🌟</div>
+									{/if}
+								</div>
+								<div class="text-center text-sm font-semibold text-emerald-700 leading-none">
 									{toArabicNumeral(hijriDayNumber(cell.date) ?? '')}
 								</div>
+								<div class="text-center">
+									<div class="text-[9px] font-semibold text-purple-600">{pasaranFor(cell.date)}</div>
+									<div class="flex justify-center gap-0.5 mt-0.5">
+										{#if notesByDate[toISODate(cell.date)]?.length}
+											<div class="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
+										{/if}
+										{#if dailyMap[toISODate(cell.date)]?.total}
+											<div class="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+										{/if}
+									</div>
+								</div>
 							</div>
-							<div class="absolute bottom-1 left-1 right-1 text-center">
-								<div class="text-[9px] md:text-xs font-semibold text-purple-600">{pasaranFor(cell.date)}</div>
-								<div class="flex justify-center gap-0.5 md:gap-1 mt-0.5">
-									{#if notesByDate[toISODate(cell.date)]?.length}
-										<div class="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
-									{/if}
-									{#if dailyMap[toISODate(cell.date)]?.total}
-										<div class="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-									{/if}
+							<div class="hidden md:block">
+								<div class="absolute top-1 left-1 text-xs md:text-lg font-bold {
+									cell.date.toDateString() === selectedDate.toDateString() ? 'text-purple-600' :
+									cell.date.toDateString() === today.toDateString() ? 'text-blue-600' : 'text-gray-700'
+								}">
+									{cell.date.getDate()}
+								</div>
+								{#if cell.date.toDateString() === today.toDateString()}
+									<div class="absolute top-1 right-1 text-sm md:text-xl">🌟</div>
+								{/if}
+								<div class="absolute inset-0 flex items-center justify-center">
+									<div class="text-xl md:text-3xl font-bold text-green-700">
+										{toArabicNumeral(hijriDayNumber(cell.date) ?? '')}
+									</div>
+								</div>
+								<div class="absolute bottom-1 left-1 right-1 text-center">
+									<div class="text-[9px] md:text-xs font-semibold text-purple-600">{pasaranFor(cell.date)}</div>
+									<div class="flex justify-center gap-0.5 md:gap-1 mt-0.5">
+										{#if notesByDate[toISODate(cell.date)]?.length}
+											<div class="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
+										{/if}
+										{#if dailyMap[toISODate(cell.date)]?.total}
+											<div class="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+										{/if}
+									</div>
 								</div>
 							</div>
 						</button>
