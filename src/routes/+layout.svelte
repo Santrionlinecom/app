@@ -48,7 +48,7 @@ const baseNav = [
 </script>
 
 <svelte:head>
-	<meta name="google-site-verification" content="OM9tj7E9_eOwNXM2UULeXxtMvKP2HdYavx6Xesf5Kb0" />
+	<meta name="google-site-verification" content="vyZh4AQIE37XnqZCsPo_qfSKT7F1NRQdPYh8sPIDRFw" />
 </svelte:head>
 
 <div class="min-h-screen bg-base-100">
