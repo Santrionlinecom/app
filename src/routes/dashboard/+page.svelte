@@ -20,6 +20,9 @@
 
 	const currentUser = 'currentUser' in data ? data.currentUser : null;
 	const isSystemAdmin = isAdmin && !currentUser?.orgId;
+	const orgSlug = data.org?.slug;
+	const canManageUmmah =
+		!!orgSlug && !!currentUser?.orgId && (data.role === 'admin' || data.role === 'tamir' || data.role === 'bendahara');
 	const users = ('users' in data ? data.users ?? [] : []).map(u => ({ ...u, role: u.role ?? 'santri' }));
 	const pending = 'pending' in data ? data.pending ?? [] : [];
 	const students = 'students' in data ? data.students ?? [] : [];
@@ -152,6 +155,13 @@
 
 <!-- Quick Actions -->
 <div class="mt-8 grid grid-cols-2 gap-4">
+	{#if canManageUmmah}
+		<a href={`/org/${orgSlug}/ummah`} class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-lime-600 p-6 text-white shadow-lg transition hover:scale-105">
+			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🧾</div>
+			<p class="relative text-sm font-medium opacity-90">Solusi Ummah</p>
+			<p class="relative mt-1 text-2xl font-bold">Zakat &amp; Qurban</p>
+		</a>
+	{/if}
 	{#if isAdmin}
 		<a href="/dashboard/kelola-role" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🔐</div>

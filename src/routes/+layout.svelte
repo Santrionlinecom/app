@@ -47,6 +47,10 @@ const baseNav = [
 ];
 </script>
 
+<svelte:head>
+	<meta name="google-site-verification" content="OM9tj7E9_eOwNXM2UULeXxtMvKP2HdYavx6Xesf5Kb0" />
+</svelte:head>
+
 <div class="min-h-screen bg-base-100">
 	<header class="sticky top-0 z-50 w-full border-b bg-base-100 py-2">
 		<div class="container mx-auto max-w-6xl px-4 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between">

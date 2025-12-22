@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getPendingSubmissions, getAllStudentsProgress, getSantriChecklist, getSantriStats, getDailySeries } from '$lib/server/progress';
-import { getOrgScope } from '$lib/server/organizations';
+import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
 import type { D1Database } from '@cloudflare/workers-types';
 import { SURAH_DATA } from '$lib/surah-data';
 
@@ -35,10 +35,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, '/auth');
 	}
 
-    const db = locals.db!;
+	const db = locals.db!;
     const role = locals.user.role;
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 	const scopedOrgId = isSystemAdmin ? null : orgId;
+	const orgProfile = orgId ? await getOrganizationById(db, orgId) : null;
 
     // Load data based on user role
     if (role === 'admin') {
@@ -53,6 +54,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		return {
 			role,
 			currentUser: locals.user,
+			org: orgProfile,
 			users: (results ?? []) as {
 				id: string;
                 username: string | null;
@@ -70,6 +72,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         return {
             role,
             currentUser: locals.user,
+			org: orgProfile,
             pending: await getPendingSubmissions(db, scopedOrgId),
             students: await getAllStudentsProgress(db, scopedOrgId),
             surahs
@@ -86,6 +89,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         return {
             role,
             currentUser: locals.user,
+			org: orgProfile,
             checklist,
             stats,
             series,
@@ -97,6 +101,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		role,
 		currentUser: locals.user,
+		org: orgProfile,
 		checklist: [],
 		stats: { approved: 0, submitted: 0, todayApproved: 0 },
 		series: [],

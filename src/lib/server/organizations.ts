@@ -131,6 +131,27 @@ export const getOrganizationBySlug = async (db: D1Database, slug: string, type?:
 	}>();
 };
 
+export const getOrganizationById = async (db: D1Database, id: string) => {
+	return db
+		.prepare(
+			`SELECT id, type, name, slug, status, address, city, contact_phone as contactPhone, created_at as createdAt
+			 FROM organizations
+			 WHERE id = ?`
+		)
+		.bind(id)
+		.first<{
+			id: string;
+			type: OrgType;
+			name: string;
+			slug: string;
+			status: OrgStatus;
+			address: string | null;
+			city: string | null;
+			contactPhone: string | null;
+			createdAt: number;
+		}>();
+};
+
 export const createOrganization = async (
 	db: D1Database,
 	params: {

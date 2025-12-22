@@ -2,6 +2,9 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getOrganizationBySlug } from '$lib/server/organizations';
 
+export const ssr = true;
+export const prerender = false;
+
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const db = locals.db;
 	if (!db) {

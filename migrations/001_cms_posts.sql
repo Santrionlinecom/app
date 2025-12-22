@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS cms_posts (
   updated_at INTEGER NOT NULL
 );
 
-CREATE INDEX idx_cms_posts_slug ON cms_posts(slug);
-CREATE INDEX idx_cms_posts_status ON cms_posts(status);
+CREATE INDEX IF NOT EXISTS idx_cms_posts_slug ON cms_posts(slug);
+CREATE INDEX IF NOT EXISTS idx_cms_posts_status ON cms_posts(status);
