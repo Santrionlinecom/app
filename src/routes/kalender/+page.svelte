@@ -250,7 +250,7 @@
 									: cell.date.toDateString() === today.toDateString()
 										? 'border-blue-500 bg-gradient-to-br from-blue-50 to-cyan-50'
 										: 'border-gray-200 bg-white hover:border-purple-300'
-							}"
+							} {cell.date.getDay() === 5 ? 'border-green-500' : cell.date.getDay() === 0 ? 'border-red-500' : ''}"
 							on:click={() => pickDate(cell.date)}
 						>
 							<div class="md:hidden absolute inset-0 flex flex-col justify-between p-1">
