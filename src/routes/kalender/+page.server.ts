@@ -1,5 +1,6 @@
 import { redirect, fail } from '@sveltejs/kit';
 import { ensureCalendarTable } from '$lib/server/calendar';
+import { getOrgScope } from '$lib/server/organizations';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -7,17 +8,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.db) throw redirect(302, '/auth');
 
 	const isAdmin = locals.user.role === 'admin';
+	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 	const db = locals.db!;
 
 	await ensureCalendarTable(db);
 
 	// Admin melihat semua, user lain hanya miliknya
 	const query = isAdmin
-		? 'SELECT * FROM calendar_notes ORDER BY event_date DESC'
+		? isSystemAdmin
+			? 'SELECT * FROM calendar_notes ORDER BY event_date DESC'
+			: `SELECT cn.* FROM calendar_notes cn JOIN users u ON u.id = cn.user_id WHERE u.org_id = ? ORDER BY cn.event_date DESC`
 		: 'SELECT * FROM calendar_notes WHERE user_id = ? ORDER BY event_date DESC';
 
 	const { results } = isAdmin
-		? await db.prepare(query).all()
+		? isSystemAdmin
+			? await db.prepare(query).all()
+			: await db.prepare(query).bind(orgId).all()
 		: await db.prepare(query).bind(locals.user.id).all();
 
 	return {
@@ -78,13 +84,18 @@ export const actions: Actions = {
 			return fail(400, { error: 'Data tidak lengkap' });
 		}
 
+		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 		// Pastikan user hanya bisa update miliknya sendiri (kecuali admin)
 		const condition = locals.user.role === 'admin'
-			? 'WHERE id = ?'
+			? isSystemAdmin
+				? 'WHERE id = ?'
+				: 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
 			: 'WHERE id = ? AND user_id = ?';
 
 		const params = locals.user.role === 'admin'
-			? [title, content || '', eventDate, Date.now(), id]
+			? isSystemAdmin
+				? [title, content || '', eventDate, Date.now(), id]
+				: [title, content || '', eventDate, Date.now(), id, orgId]
 			: [title, content || '', eventDate, Date.now(), id, locals.user.id];
 
 		await db.prepare(`
@@ -105,12 +116,17 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const id = data.get('id') as string;
 
+		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 		const condition = locals.user.role === 'admin'
-			? 'WHERE id = ?'
+			? isSystemAdmin
+				? 'WHERE id = ?'
+				: 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
 			: 'WHERE id = ? AND user_id = ?';
 
 		const params = locals.user.role === 'admin'
-			? [id]
+			? isSystemAdmin
+				? [id]
+				: [id, orgId]
 			: [id, locals.user.id];
 
 		await db.prepare(`DELETE FROM calendar_notes ${condition}`).bind(...params).run();

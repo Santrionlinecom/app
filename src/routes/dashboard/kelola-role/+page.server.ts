@@ -1,15 +1,19 @@
 import { redirect, fail } from '@sveltejs/kit';
+import { getOrgScope } from '$lib/server/organizations';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) throw redirect(302, '/auth');
 	if (locals.user.role !== 'admin') throw redirect(302, '/dashboard');
 
-	const { results } = await locals.db!.prepare(`
-		SELECT id, username, email, role, gender, created_at 
-		FROM users 
-		ORDER BY created_at DESC
-	`).all();
+	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const baseQuery = `
+		SELECT id, username, email, role, gender, org_id as orgId, org_status as orgStatus, created_at 
+		FROM users`;
+	const { results } = await (isSystemAdmin
+		? locals.db!.prepare(`${baseQuery} ORDER BY created_at DESC`)
+		: locals.db!.prepare(`${baseQuery} WHERE org_id = ? ORDER BY created_at DESC`).bind(orgId)
+	).all();
 
 	return { users: results || [] };
 };
@@ -28,16 +32,23 @@ export const actions: Actions = {
 			return fail(400, { error: 'Data tidak lengkap' });
 		}
 
-		const validRoles = ['admin', 'ustadz', 'ustadzah', 'santri', 'alumni'];
+		const validRoles = ['admin', 'ustadz', 'ustadzah', 'santri', 'alumni', 'jamaah', 'tamir', 'bendahara'];
 		if (!validRoles.includes(newRole)) {
 			return fail(400, { error: 'Role tidak valid' });
 		}
 
-		const { results } = await locals.db!.prepare('SELECT role, gender FROM users WHERE id = ?').bind(userId).all();
+		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+		const { results } = await locals.db!
+			.prepare('SELECT role, gender, org_id as orgId FROM users WHERE id = ?')
+			.bind(userId)
+			.all();
 		const user = results?.[0] as any;
 		
 		if (!user) {
 			return fail(404, { error: 'User tidak ditemukan' });
+		}
+		if (!isSystemAdmin && user.orgId && user.orgId !== orgId) {
+			return fail(403, { error: 'Tidak boleh mengubah role lembaga lain' });
 		}
 
 		const normalizedRole =

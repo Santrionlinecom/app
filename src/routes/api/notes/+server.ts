@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import { generateId } from 'lucia';
 import type { RequestHandler } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
+import { getOrgScope } from '$lib/server/organizations';
 
 const requireUser = (locals: App.Locals) => {
 	if (!locals.user) {
@@ -36,7 +37,7 @@ const fetchSchema = async (db: D1Database) => {
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	try {
-		const { db } = requireUser(locals);
+		const { db, user } = requireUser(locals);
 		const start = url.searchParams.get('start');
 		const end = url.searchParams.get('end');
 
@@ -46,23 +47,33 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 		await ensureCalendarTable(db);
 
-		const { results } =
-			(await db
-				.prepare(
-					`SELECT id,
-					        user_id as userId,
-					        role,
-					        title,
-					        content,
-					        event_date as eventDate,
-					        created_at as createdAt,
-					        updated_at as updatedAt
-					   FROM calendar_notes
-					  WHERE event_date BETWEEN ? AND ?
-			ORDER BY event_date ASC, created_at ASC`
-				)
-				.bind(start, end)
-				.all()) ?? {};
+		const { orgId, isSystemAdmin } = getOrgScope(user);
+		const baseSelect = `SELECT cn.id,
+					        cn.user_id as userId,
+					        cn.role,
+					        cn.title,
+					        cn.content,
+					        cn.event_date as eventDate,
+					        cn.created_at as createdAt,
+					        cn.updated_at as updatedAt
+					   FROM calendar_notes cn`;
+		const conditions = ['cn.event_date BETWEEN ? AND ?'];
+		const params: (string | number)[] = [start, end];
+
+		let query = `${baseSelect} WHERE ${conditions.join(' AND ')}`;
+		if (user.role === 'admin') {
+			if (!isSystemAdmin) {
+				query = `${baseSelect} JOIN users u ON u.id = cn.user_id WHERE ${conditions.join(
+					' AND '
+				)} AND u.org_id = ?`;
+				params.push(orgId ?? '');
+			}
+		} else {
+			query = `${baseSelect} WHERE ${conditions.join(' AND ')} AND cn.user_id = ?`;
+			params.push(user.id);
+		}
+
+		const { results } = (await db.prepare(`${query} ORDER BY cn.event_date ASC, cn.created_at ASC`).bind(...params).all()) ?? {};
 
 		return json({ notes: results ?? [] });
 	} catch (err) {

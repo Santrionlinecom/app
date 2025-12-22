@@ -12,10 +12,14 @@
 		ustadz: { title: 'Ustadz Dashboard', gradient: 'from-emerald-600 via-teal-500 to-cyan-600', icon: '📚' },
 		ustadzah: { title: 'Ustadzah Dashboard', gradient: 'from-pink-600 via-rose-500 to-red-600', icon: '👩‍🏫' },
 		santri: { title: 'Santri Dashboard', gradient: 'from-blue-600 via-indigo-500 to-purple-600', icon: '🎓' },
-		alumni: { title: 'Alumni Dashboard', gradient: 'from-amber-600 via-orange-500 to-red-600', icon: '🏆' }
+		alumni: { title: 'Alumni Dashboard', gradient: 'from-amber-600 via-orange-500 to-red-600', icon: '🏆' },
+		jamaah: { title: 'Jamaah Dashboard', gradient: 'from-cyan-600 via-sky-500 to-blue-600', icon: '🧎‍♂️' },
+		tamir: { title: "Ta'mir Dashboard", gradient: 'from-emerald-600 via-teal-500 to-green-600', icon: '🕌' },
+		bendahara: { title: 'Bendahara Dashboard', gradient: 'from-yellow-500 via-amber-500 to-orange-500', icon: '💰' }
 	};
 
 	const currentUser = 'currentUser' in data ? data.currentUser : null;
+	const isSystemAdmin = isAdmin && !currentUser?.orgId;
 	const users = ('users' in data ? data.users ?? [] : []).map(u => ({ ...u, role: u.role ?? 'santri' }));
 	const pending = 'pending' in data ? data.pending ?? [] : [];
 	const students = 'students' in data ? data.students ?? [] : [];
@@ -154,6 +158,13 @@
 			<p class="relative text-sm font-medium opacity-90">Kelola Role</p>
 			<p class="relative mt-1 text-2xl font-bold">Users</p>
 		</a>
+		{#if isSystemAdmin}
+			<a href="/dashboard/kelola-lembaga" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🏛️</div>
+				<p class="relative text-sm font-medium opacity-90">Kelola Lembaga</p>
+				<p class="relative mt-1 text-2xl font-bold">Pondok/Masjid</p>
+			</a>
+		{/if}
         <!-- Kelola Blog (Admin only) -->
         <a href="/admin/posts" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
             <div class="absolute -right-4 -top-4 text-6xl opacity-20">📝</div>

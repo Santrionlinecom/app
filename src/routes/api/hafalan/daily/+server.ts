@@ -4,6 +4,7 @@ import type { RequestHandler } from './$types';
 type Role = 'admin' | 'ustadz' | 'ustadzah' | 'santri';
 
 const canSeeAll = (role: Role) => role === 'admin' || role === 'ustadz' || role === 'ustadzah';
+const isSystemAdmin = (user: App.Locals['user']) => user?.role === 'admin' && !user?.orgId;
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	if (!locals.user) throw error(401, 'Unauthorized');
@@ -11,12 +12,22 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 	const reqRole = locals.user.role as Role;
 	const defaultUserId = locals.user.id;
+	const requesterOrgId = locals.user.orgId ?? null;
 
 	const targetUserId = url.searchParams.get('userId');
 	const daysParam = url.searchParams.get('days');
 	const days = daysParam ? Math.max(1, Math.min(60, Number(daysParam))) : 30;
 
 	const userId = canSeeAll(reqRole) && targetUserId ? targetUserId : defaultUserId;
+	if (targetUserId && !isSystemAdmin(locals.user)) {
+		const target = await locals.db!
+			.prepare('SELECT org_id as orgId FROM users WHERE id = ?')
+			.bind(targetUserId)
+			.first<{ orgId: string | null }>();
+		if (target?.orgId && requesterOrgId && target.orgId !== requesterOrgId) {
+			throw error(403, 'Tidak boleh mengakses data lembaga lain');
+		}
+	}
 
 	// Ambil agregat per tanggal approve
 	const { results } =

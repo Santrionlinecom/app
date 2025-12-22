@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { getFlaggedHafalan } from '$lib/server/progress';
 import { ensureMurojaTable } from '$lib/server/calendar';
 import { ensureHafalanTable } from '$lib/server/hafalan';
+import { getOrgScope } from '$lib/server/organizations';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -15,6 +16,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const role = locals.user.role as any;
 	const db = locals.db!;
+	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 
 	try {
 		await ensureHafalanTable(db);
@@ -23,7 +25,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		// Data setoran resmi
 		const flagged = await getFlaggedHafalan(db, {
 			currentUserId: locals.user.id,
-			role: role === 'alumni' ? 'santri' : role
+			role: role === 'alumni' ? 'santri' : role,
+			orgId: isSystemAdmin ? null : orgId
 		});
 
 		// Data hafalan resmi (approved)

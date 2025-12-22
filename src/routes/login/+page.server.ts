@@ -5,7 +5,7 @@ import { initializeLucia, getGoogleOAuthClient } from '$lib/server/lucia';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.user) {
-		throw redirect(302, `/dashboard/${locals.user.role}`);
+		throw redirect(302, '/dashboard');
 	}
 
 	return {

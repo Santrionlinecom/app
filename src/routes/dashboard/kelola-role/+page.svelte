@@ -8,7 +8,10 @@
 		admin: 'Admin',
 		ustadz: 'Ustadz/Ustadzah (otomatis sesuai gender)',
 		santri: 'Santri',
-		alumni: 'Alumni'
+		alumni: 'Alumni',
+		jamaah: 'Jamaah',
+		tamir: "Ta'mir",
+		bendahara: 'Bendahara'
 	};
 
 	const displayLabels: Record<string, string> = {
@@ -21,7 +24,10 @@
 		ustadz: 'bg-emerald-100 text-emerald-800 border-emerald-300',
 		ustadzah: 'bg-pink-100 text-pink-800 border-pink-300',
 		santri: 'bg-blue-100 text-blue-800 border-blue-300',
-		alumni: 'bg-amber-100 text-amber-800 border-amber-300'
+		alumni: 'bg-amber-100 text-amber-800 border-amber-300',
+		jamaah: 'bg-cyan-100 text-cyan-800 border-cyan-300',
+		tamir: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+		bendahara: 'bg-yellow-100 text-yellow-800 border-yellow-300'
 	};
 
 	const normalizeRole = (role: string) => (role === 'ustadzah' ? 'ustadz' : role);
@@ -30,7 +36,15 @@
 	let filterRole = '';
 	let editingUser: string | null = null;
 	let selectedRole = '';
-	let roleStats: Record<string, number> = { admin: 0, ustadz: 0, santri: 0, alumni: 0 };
+	let roleStats: Record<string, number> = {
+		admin: 0,
+		ustadz: 0,
+		santri: 0,
+		alumni: 0,
+		jamaah: 0,
+		tamir: 0,
+		bendahara: 0
+	};
 
 	$: filteredUsers = data.users.filter((u: any) => {
 		const matchSearch = !searchQuery || 
@@ -48,7 +62,7 @@
 			}
 			return acc;
 		},
-		{ admin: 0, ustadz: 0, santri: 0, alumni: 0 }
+		{ admin: 0, ustadz: 0, santri: 0, alumni: 0, jamaah: 0, tamir: 0, bendahara: 0 }
 	);
 
 	const formatDate = (timestamp: number) => {

@@ -1,8 +1,9 @@
 import { json, error } from '@sveltejs/kit';
 import { Scrypt } from '$lib/server/password';
+import { getOrgScope } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
 
-const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'admin'] as const;
+const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'jamaah', 'tamir', 'bendahara', 'admin'] as const;
 
 const ensureAuth = (locals: App.Locals) => {
 	if (!locals.user) {
@@ -12,6 +13,9 @@ const ensureAuth = (locals: App.Locals) => {
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	ensureAuth(locals);
+	if (locals.user?.role !== 'admin') {
+		throw error(403, 'Forbidden');
+	}
 	const db = locals.db!;
 	if (!db) throw error(500, 'Database tidak tersedia');
 	const id = params.id;
@@ -19,15 +23,27 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
 	const body = await request.json().catch(() => ({}));
 	const { results: targetRows } =
-		(await db.prepare('SELECT gender FROM users WHERE id = ?').bind(id).all<{ gender?: string }>()) ?? {};
+		(await db
+			.prepare('SELECT gender, org_id as orgId FROM users WHERE id = ?')
+			.bind(id)
+			.all<{ gender?: string; orgId?: string | null }>()) ?? {};
 	const targetGender = targetRows?.[0]?.gender;
+	const targetOrgId = targetRows?.[0]?.orgId ?? null;
+	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	if (!isSystemAdmin && targetOrgId && targetOrgId !== orgId) {
+		throw error(403, 'Tidak boleh mengubah user lembaga lain');
+	}
 	const username = typeof body.username === 'string' ? body.username.trim() : undefined;
 	const email = typeof body.email === 'string' ? body.email.trim() : undefined;
 	const role =
 		typeof body.role === 'string' && allowedRoles.includes(body.role) ? body.role : undefined;
+	const orgStatus =
+		typeof body.orgStatus === 'string' && ['pending', 'active'].includes(body.orgStatus)
+			? body.orgStatus
+			: undefined;
 	const password = typeof body.password === 'string' ? body.password : undefined;
 
-	if (!username && !email && !role && !password) {
+	if (!username && !email && !role && !password && !orgStatus) {
 		throw error(400, 'Tidak ada data yang diubah');
 	}
 
@@ -63,6 +79,10 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 			fields.push('password_hash = ?');
 			values.push(passwordHash);
 		}
+		if (orgStatus) {
+			fields.push('org_status = ?');
+			values.push(orgStatus);
+		}
 
 		values.push(id);
 
@@ -82,10 +102,24 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
 	ensureAuth(locals);
+	if (locals.user?.role !== 'admin') {
+		throw error(403, 'Forbidden');
+	}
 	const db = locals.db!;
 	if (!db) throw error(500, 'Database tidak tersedia');
 	const id = params.id;
 	if (!id) throw error(400, 'ID tidak valid');
+
+	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	if (!isSystemAdmin) {
+		const target = await db
+			.prepare('SELECT org_id as orgId FROM users WHERE id = ?')
+			.bind(id)
+			.first<{ orgId: string | null }>();
+		if (target?.orgId && target.orgId !== orgId) {
+			throw error(403, 'Tidak boleh menghapus user lembaga lain');
+		}
+	}
 
 	await db.prepare('DELETE FROM users WHERE id = ?').bind(id).run();
 

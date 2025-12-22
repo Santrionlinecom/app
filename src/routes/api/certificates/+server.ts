@@ -34,6 +34,17 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     if (!targetId) {
         throw error(400, 'userId wajib diisi');
     }
+    if (locals.user?.role === 'admin' && !locals.user.orgId) {
+        // system admin boleh semua
+    } else if (locals.user?.orgId) {
+        const target = await locals.db!
+            .prepare('SELECT org_id as orgId FROM users WHERE id = ?')
+            .bind(targetId)
+            .first<{ orgId: string | null }>();
+        if (target?.orgId && target.orgId !== locals.user.orgId) {
+            throw error(403, 'Tidak boleh mengakses sertifikat lembaga lain');
+        }
+    }
 
     const certificates = await listCertificatesForSantri(locals.db!, targetId);
     const mapped = certificates.map((row) => ({
@@ -75,6 +86,17 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
 
     if (locals.user?.role === 'santri' && targetSantri !== locals.user.id) {
         throw error(403, 'Santri hanya bisa membuat sertifikat untuk dirinya sendiri');
+    }
+    if (locals.user?.role === 'admin' && !locals.user.orgId) {
+        // system admin boleh semua
+    } else if (locals.user?.orgId) {
+        const target = await locals.db!
+            .prepare('SELECT org_id as orgId FROM users WHERE id = ?')
+            .bind(targetSantri)
+            .first<{ orgId: string | null }>();
+        if (target?.orgId && target.orgId !== locals.user.orgId) {
+            throw error(403, 'Tidak boleh membuat sertifikat lembaga lain');
+        }
     }
 
     await ensureCertificateTable(locals.db!);

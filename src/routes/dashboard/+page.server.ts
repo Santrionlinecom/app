@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getPendingSubmissions, getAllStudentsProgress, getSantriChecklist, getSantriStats, getDailySeries } from '$lib/server/progress';
+import { getOrgScope } from '$lib/server/organizations';
 import type { D1Database } from '@cloudflare/workers-types';
 import { SURAH_DATA } from '$lib/surah-data';
 
@@ -36,13 +37,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     const db = locals.db!;
     const role = locals.user.role;
+	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const scopedOrgId = isSystemAdmin ? null : orgId;
 
     // Load data based on user role
     if (role === 'admin') {
 		// Admin: list all users + santri & surah options
-		const { results } = await db
-			.prepare('SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC')
-			.all<{ id: string; username: string | null; email: string; role: string; created_at: string }>();
+		const baseQuery = 'SELECT id, username, email, role, created_at FROM users';
+		const { results } = await (scopedOrgId
+			? db.prepare(`${baseQuery} WHERE org_id = ? ORDER BY created_at DESC`).bind(scopedOrgId)
+			: db.prepare(`${baseQuery} ORDER BY created_at DESC`)
+		).all<{ id: string; username: string | null; email: string; role: string; created_at: string }>();
 
 		const surahs = await fetchSurahs(db);
 		return {
@@ -56,8 +61,8 @@ export const load: PageServerLoad = async ({ locals }) => {
                 created_at: string;
 			}[],
 			surahs,
-			students: await getAllStudentsProgress(db),
-			pending: await getPendingSubmissions(db)
+			students: await getAllStudentsProgress(db, scopedOrgId),
+			pending: await getPendingSubmissions(db, scopedOrgId)
 		};
 	} else if (role === 'ustadz' || role === 'ustadzah') {
 		// Ustadz: pending submissions and student progress
@@ -65,8 +70,8 @@ export const load: PageServerLoad = async ({ locals }) => {
         return {
             role,
             currentUser: locals.user,
-            pending: await getPendingSubmissions(db),
-            students: await getAllStudentsProgress(db),
+            pending: await getPendingSubmissions(db, scopedOrgId),
+            students: await getAllStudentsProgress(db, scopedOrgId),
             surahs
         };
 	} else if (role === 'santri' || role === 'alumni') {
@@ -88,7 +93,14 @@ export const load: PageServerLoad = async ({ locals }) => {
             totalAyah: stats.approved // approved ayat count
         };
     }
-
-    // If role is unknown, redirect to home
-    throw redirect(302, '/');
+	// Role lainnya: tetap izinkan masuk dengan data kosong
+	return {
+		role,
+		currentUser: locals.user,
+		checklist: [],
+		stats: { approved: 0, submitted: 0, todayApproved: 0 },
+		series: [],
+		percentage: 0,
+		totalAyah: 0
+	};
 };

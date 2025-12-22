@@ -175,7 +175,14 @@ export const markHafalanStatus = async (
         .run();
 };
 
-export const getPendingSubmissions = async (db: D1Database) => {
+export const getPendingSubmissions = async (db: D1Database, orgId?: string | null) => {
+    const conditions = ["hp.status = 'setor'"];
+    const params: (string | number)[] = [];
+    if (orgId) {
+        conditions.push('u.org_id = ?');
+        params.push(orgId);
+    }
+
     const { results } = await db
         .prepare(
             `SELECT hp.id,
@@ -186,9 +193,10 @@ export const getPendingSubmissions = async (db: D1Database) => {
                     u.email
              FROM hafalan_progress hp
              JOIN users u ON u.id = hp.user_id
-             WHERE hp.status = 'setor'
+             WHERE ${conditions.join(' AND ')}
              ORDER BY hp.tanggal_setor ASC`
         )
+        .bind(...params)
         .all<{
             id: number;
             userId: string;
@@ -360,17 +368,25 @@ export const submitSurahForUser = async (
     }
 };
 
-export const getAllStudentsProgress = async (db: D1Database) => {
+export const getAllStudentsProgress = async (db: D1Database, orgId?: string | null) => {
     try {
+        const conditions = ["u.role = 'santri'"];
+        const params: (string | number)[] = [];
+        if (orgId) {
+            conditions.push('u.org_id = ?');
+            params.push(orgId);
+        }
+
         const { results } = await db
             .prepare(
                 `SELECT u.id, u.email, u.username,
                     COUNT(CASE WHEN hp.status = 'disetujui' THEN 1 END) as approvedAyah
              FROM users u
              LEFT JOIN hafalan_progress hp ON hp.user_id = u.id
-             WHERE u.role = 'santri'
+             WHERE ${conditions.join(' AND ')}
              GROUP BY u.id, u.email, u.username`
             )
+            .bind(...params)
             .all<{ id: string; email: string; username: string | null; approvedAyah: number }>();
 
         // Total ayat Al-Quran = 6236
@@ -394,7 +410,7 @@ export const getAllStudentsProgress = async (db: D1Database) => {
 
 export const getFlaggedHafalan = async (
     db: D1Database,
-    opts: { currentUserId: string; role: 'admin' | 'ustadz' | 'santri'; userId?: string }
+    opts: { currentUserId: string; role: 'admin' | 'ustadz' | 'santri'; userId?: string; orgId?: string | null }
 ) => {
     let hasQuality = false;
     try {
@@ -416,6 +432,10 @@ export const getFlaggedHafalan = async (
         conditions.push("(hp.quality_status IN ('merah','kuning') OR hp.status = 'setor')");
     } else {
         conditions.push("hp.status = 'setor'");
+    }
+    if (opts.orgId) {
+        conditions.push('u.org_id = ?');
+        params.push(opts.orgId);
     }
 
     const { results } = await db

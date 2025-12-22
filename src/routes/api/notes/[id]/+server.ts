@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
+import { getOrgScope } from '$lib/server/organizations';
 
 const requireUser = (locals: App.Locals) => {
 	if (!locals.user) {
@@ -67,6 +68,16 @@ export const PUT: RequestHandler = async ({ locals, params, request }) => {
 		const note = await fetchNote(db, params.id);
 		if (!note) throw error(404, 'Note tidak ditemukan');
 		if (!canEdit(user, note.userId)) throw error(403, 'Tidak boleh mengedit');
+		const { orgId, isSystemAdmin } = getOrgScope(user);
+		if (user.role === 'admin' && !isSystemAdmin) {
+			const ownerOrg = await db
+				.prepare('SELECT org_id as orgId FROM users WHERE id = ?')
+				.bind(note.userId)
+				.first<{ orgId: string | null }>();
+			if (ownerOrg?.orgId && ownerOrg.orgId !== orgId) {
+				throw error(403, 'Tidak boleh mengedit catatan lembaga lain');
+			}
+		}
 
 		const body = await request.json().catch(() => ({}));
 		const { title, content = '', eventDate } = body as {
@@ -104,6 +115,16 @@ export const DELETE: RequestHandler = async ({ locals, params }) => {
 		const note = await fetchNote(db, params.id);
 		if (!note) throw error(404, 'Note tidak ditemukan');
 		if (!canEdit(user, note.userId)) throw error(403, 'Tidak boleh menghapus');
+		const { orgId, isSystemAdmin } = getOrgScope(user);
+		if (user.role === 'admin' && !isSystemAdmin) {
+			const ownerOrg = await db
+				.prepare('SELECT org_id as orgId FROM users WHERE id = ?')
+				.bind(note.userId)
+				.first<{ orgId: string | null }>();
+			if (ownerOrg?.orgId && ownerOrg.orgId !== orgId) {
+				throw error(403, 'Tidak boleh menghapus catatan lembaga lain');
+			}
+		}
 
 		await db.prepare('DELETE FROM calendar_notes WHERE id = ?').bind(params.id).run();
 

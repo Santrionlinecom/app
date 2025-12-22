@@ -30,7 +30,9 @@ export const initializeLucia = (D1: D1Database) => {
                 email: attributes.email,
                 googleId: attributes.googleId,
                 gender: attributes.gender,
-                whatsapp: attributes.whatsapp
+                whatsapp: attributes.whatsapp,
+                orgId: attributes.org_id ?? null,
+                orgStatus: attributes.org_status ?? 'active'
             };
         }
     });
@@ -65,4 +67,6 @@ interface DatabaseUserAttributes {
     googleId: string;
     gender?: string;
     whatsapp?: string;
+    org_id?: string | null;
+    org_status?: string | null;
 }

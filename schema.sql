@@ -11,9 +11,27 @@ CREATE TABLE IF NOT EXISTS users (
   whatsapp TEXT,
   balance INTEGER NOT NULL DEFAULT 0,
   role TEXT NOT NULL DEFAULT 'santri',
+  org_id TEXT,
+  org_status TEXT NOT NULL DEFAULT 'active',
   googleId TEXT,
   created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
 );
+
+-- Organizations (pondok/masjid/musholla)
+CREATE TABLE IF NOT EXISTS organizations (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  address TEXT,
+  city TEXT,
+  contact_phone TEXT,
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+);
+CREATE INDEX IF NOT EXISTS idx_org_type_status ON organizations(type, status);
+CREATE INDEX IF NOT EXISTS idx_org_slug ON organizations(slug);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_org_type_slug ON organizations(type, slug);
 
 -- PERUBAHAN DI SINI (Lucia v3 Format)
 CREATE TABLE IF NOT EXISTS sessions (

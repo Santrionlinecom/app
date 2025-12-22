@@ -15,6 +15,8 @@ const ensureUserOptionalColumns = async (db: NonNullable<App.Locals['db']>) => {
 
 	await addColumn('gender', 'TEXT');
 	await addColumn('whatsapp', 'TEXT');
+	await addColumn('org_id', 'TEXT');
+	await addColumn('org_status', "TEXT NOT NULL DEFAULT 'active'");
 };
 
 export const load: PageServerLoad = async ({ locals }) => {

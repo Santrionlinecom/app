@@ -9,6 +9,7 @@
 	let formError = '';
 	let searchQuery = '';
 	let filterRole = 'all';
+	let filterStatus = 'all';
 	let form = {
 		username: '',
 		email: '',
@@ -21,14 +22,16 @@
 			s.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			s.email?.toLowerCase().includes(searchQuery.toLowerCase());
 		const matchRole = filterRole === 'all' || s.role === filterRole || (filterRole === 'ustadz' && s.role === 'ustadzah');
-		return matchSearch && matchRole;
+		const matchStatus = filterStatus === 'all' || (s.orgStatus || 'active') === filterStatus;
+		return matchSearch && matchRole && matchStatus;
 	});
 
 	$: stats = {
 		total: santri.length,
 		santri: santri.filter(s => s.role === 'santri').length,
 		ustadz: santri.filter(s => s.role === 'ustadz' || s.role === 'ustadzah').length,
-		admin: santri.filter(s => s.role === 'admin').length
+		admin: santri.filter(s => s.role === 'admin').length,
+		pending: santri.filter(s => (s.orgStatus || 'active') === 'pending').length
 	};
 
 	const resetForm = () => {
@@ -66,6 +69,20 @@
 		}
 	};
 
+	const approveMember = async (id: string) => {
+		try {
+			const res = await fetch(`/api/santri/${id}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ orgStatus: 'active' })
+			});
+			if (!res.ok) throw new Error('Gagal menyetujui');
+			await refresh();
+		} catch (err) {
+			alert(err instanceof Error ? err.message : 'Gagal menyetujui');
+		}
+	};
+
 	const removeSantri = async (id: string) => {
 		if (!confirm('Hapus santri ini?')) return;
 		try {
@@ -82,7 +99,10 @@
 			admin: 'badge-error',
 			ustadz: 'badge-info',
 			ustadzah: 'badge-info',
-			santri: 'badge-success'
+			santri: 'badge-success',
+			jamaah: 'badge-accent',
+			tamir: 'badge-secondary',
+			bendahara: 'badge-warning'
 		};
 		return classes[role as keyof typeof classes] || 'badge-ghost';
 	};
@@ -106,7 +126,7 @@
 	</div>
 
 	<!-- Stats Cards -->
-	<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+	<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
 		<div class="rounded-xl border bg-white p-4 shadow-sm">
 			<div class="text-2xl font-bold text-blue-600">{stats.total}</div>
 			<div class="text-sm text-slate-600">Total Pengguna</div>
@@ -122,6 +142,10 @@
 		<div class="rounded-xl border bg-white p-4 shadow-sm">
 			<div class="text-2xl font-bold text-red-600">{stats.admin}</div>
 			<div class="text-sm text-slate-600">Admin</div>
+		</div>
+		<div class="rounded-xl border bg-white p-4 shadow-sm">
+			<div class="text-2xl font-bold text-amber-600">{stats.pending}</div>
+			<div class="text-sm text-slate-600">Menunggu Approval</div>
 		</div>
 	</div>
 
@@ -140,7 +164,15 @@
 						<option value="all">Semua Role</option>
 						<option value="santri">Santri</option>
 						<option value="ustadz">Ustadz/Ustadzah</option>
+						<option value="jamaah">Jamaah</option>
+						<option value="tamir">Ta'mir</option>
+						<option value="bendahara">Bendahara</option>
 						<option value="admin">Admin</option>
+					</select>
+					<select class="select select-bordered w-full md:w-auto" bind:value={filterStatus}>
+						<option value="all">Semua Status</option>
+						<option value="active">Aktif</option>
+						<option value="pending">Pending</option>
 					</select>
 				</div>
 
@@ -152,6 +184,7 @@
 								<th class="text-slate-700">Nama</th>
 								<th class="text-slate-700">Email</th>
 								<th class="text-slate-700">Role</th>
+								<th class="text-slate-700">Status</th>
 								<th class="text-slate-700">Terdaftar</th>
 								<th class="text-slate-700">Aksi</th>
 							</tr>
@@ -159,7 +192,7 @@
 						<tbody>
 							{#if filteredSantri.length === 0}
 								<tr>
-									<td colspan="6" class="text-center text-slate-500 py-8">
+									<td colspan="7" class="text-center text-slate-500 py-8">
 										{#if searchQuery || filterRole !== 'all'}
 											Tidak ada hasil yang cocok
 										{:else}
@@ -178,6 +211,11 @@
 										<td>
 											<span class="badge {getRoleBadgeClass(s.role)}">{s.role}</span>
 										</td>
+										<td>
+											<span class="badge {s.orgStatus === 'pending' ? 'badge-warning' : 'badge-success'}">
+												{s.orgStatus === 'pending' ? 'Pending' : 'Aktif'}
+											</span>
+										</td>
 										<td class="text-sm text-slate-500">
 											{#if s.createdAt}
 												{new Date(s.createdAt).toLocaleDateString('id-ID', { 
@@ -190,6 +228,14 @@
 											{/if}
 										</td>
 										<td>
+											{#if s.orgStatus === 'pending'}
+												<button
+													class="btn btn-xs btn-success text-white mr-2"
+													on:click={() => approveMember(s.id)}
+												>
+													✅ Setujui
+												</button>
+											{/if}
 											<button 
 												class="btn btn-xs btn-error text-white" 
 												on:click={() => removeSantri(s.id)}
@@ -265,6 +311,9 @@
 						<select id="role" class="select select-bordered" bind:value={form.role}>
 							<option value="santri">🎓 Santri</option>
 							<option value="ustadz">👩‍🏫 Ustadz/Ustadzah (otomatis sesuai gender)</option>
+							<option value="jamaah">🧎‍♂️ Jamaah</option>
+							<option value="tamir">🕌 Ta'mir</option>
+							<option value="bendahara">💰 Bendahara</option>
 							<option value="admin">⚙️ Admin</option>
 						</select>
 					</div>
