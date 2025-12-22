@@ -1,0 +1,3 @@
+Uthmani text sourced via Quran.com API v4.
+Primary text source: Tanzil.net (Uthmani).
+Please review the Tanzil terms: https://tanzil.net/docs/

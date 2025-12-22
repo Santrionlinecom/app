@@ -106,6 +106,15 @@ const handleTanya = async () => {
 		</p>
 	</div>
 
+	<div class="rounded-2xl border bg-base-100 p-5 shadow-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+		<div>
+			<p class="text-xs uppercase tracking-[0.25em] text-emerald-600">Mushaf Utsmani</p>
+			<h2 class="text-xl font-semibold text-slate-900 mt-1">Baca Al-Qur'an 30 Juz</h2>
+			<p class="text-sm text-slate-600 mt-1">Unduh per-juz, otomatis tersimpan offline setelah dibuka.</p>
+		</div>
+		<a href="/kitab/quran" class="btn btn-primary w-full md:w-auto">Buka Mushaf</a>
+	</div>
+
 	<div class="flex gap-3">
 		<button
 			class={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'tanya' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}

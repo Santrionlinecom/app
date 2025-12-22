@@ -36,7 +36,7 @@ export default defineConfig({
 			},
 			workbox: {
 				// Pastikan pola ini menangkap semua file statis penting
-				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2,ttf}'],
 				
 				// Strategi Caching (Penyimpanan Offline)
 				runtimeCaching: [
@@ -93,7 +93,19 @@ export default defineConfig({
 							}
 						}
 					},
-					// 5. Simpan Font (Google Fonts / Amiri)
+					// 5. Simpan Mushaf per Juz (on-demand)
+					{
+						urlPattern: ({ url }) => url.pathname.startsWith('/quran/'),
+						handler: 'CacheFirst',
+						options: {
+							cacheName: 'santri-quran-juz',
+							expiration: {
+								maxEntries: 40,
+								maxAgeSeconds: 60 * 60 * 24 * 365
+							}
+						}
+					},
+					// 6. Simpan Font (Google Fonts / Amiri)
 					{
 						urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com',
 						handler: 'CacheFirst',

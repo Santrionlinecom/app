@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Amiri Quran";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/AmiriQuran.ttf") format("truetype");
+}
+
 @layer base {
   * {
     @apply border-base-300;
