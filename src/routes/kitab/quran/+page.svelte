@@ -18,8 +18,9 @@
 	};
 
 	const JUZ_LIST = Array.from({ length: 30 }, (_v, idx) => idx + 1);
+	const DATA_VERSION = '2';
 	const STORAGE_KEY = 'quran.juz.selected';
-	const CACHE_KEY = 'quran.juz.cached';
+	const CACHE_KEY = `quran.juz.cached.v${DATA_VERSION}`;
 	const VIEW_KEY = 'quran.view.mode';
 
 	let activeTab: 'mushaf' | 'sejarah' = 'mushaf';
@@ -30,6 +31,7 @@
 	let pages: PageGroup[] = [];
 	let loading = false;
 	let error = '';
+	let pageWarning = '';
 	let query = '';
 	let cachedJuz: number[] = [];
 	let offline = false;
@@ -142,8 +144,11 @@
 
 		loading = true;
 		error = '';
+		pageWarning = '';
 		try {
-			const res = await fetch(`/quran/juz-${padJuz(juz)}.json`, { cache: 'force-cache' });
+			const res = await fetch(`/quran/juz-${padJuz(juz)}.json?v=${DATA_VERSION}`, {
+				cache: 'no-store'
+			});
 			if (!res.ok) {
 				throw new Error('Data juz tidak ditemukan');
 			}
@@ -157,9 +162,18 @@
 				};
 			});
 			pages = buildPages(verses);
-			markCached(juz);
-			if (viewMode === 'lembaran') {
-				await initFlipbook();
+			if (!pages.length && verses.length) {
+				pageWarning = 'Data lembaran belum terunduh. Coba muat ulang saat online agar halaman muncul.';
+				if (viewMode === 'lembaran') {
+					viewMode = 'teks';
+					localStorage.setItem(VIEW_KEY, 'teks');
+				}
+				destroyFlipbook();
+			} else {
+				markCached(juz);
+				if (viewMode === 'lembaran') {
+					await initFlipbook();
+				}
 			}
 		} catch (err: any) {
 			error = err?.message || 'Gagal memuat juz.';
@@ -341,6 +355,11 @@
 					<span>Data juz belum tersedia.</span>
 				</div>
 			{:else}
+				{#if pageWarning}
+					<div class="alert alert-warning">
+						<span>{pageWarning}</span>
+					</div>
+				{/if}
 				{#if viewMode === 'lembaran'}
 					<div class="mushaf-toolbar">
 						<div class="text-xs text-base-content/70">

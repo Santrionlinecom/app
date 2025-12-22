@@ -96,9 +96,10 @@ export default defineConfig({
 					// 5. Simpan Mushaf per Juz (on-demand)
 					{
 						urlPattern: ({ url }) => url.pathname.startsWith('/quran/'),
-						handler: 'CacheFirst',
+						handler: 'NetworkFirst',
 						options: {
-							cacheName: 'santri-quran-juz',
+							cacheName: 'santri-quran-juz-v2',
+							networkTimeoutSeconds: 4,
 							expiration: {
 								maxEntries: 40,
 								maxAgeSeconds: 60 * 60 * 24 * 365
