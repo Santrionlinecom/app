@@ -47,31 +47,31 @@ const baseNav = [
 ];
 </script>
 
-<div class="min-h-screen bg-white">
-	<header class="sticky top-0 z-50 w-full border-b bg-white py-2">
+<div class="min-h-screen bg-base-100">
+	<header class="sticky top-0 z-50 w-full border-b bg-base-100 py-2">
 		<div class="container mx-auto max-w-6xl px-4 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between">
 			<a href="/" class="flex items-center gap-2">
 				<img src="/logo-santri.png" alt="Santri Online" class="h-8 w-auto" loading="lazy" />
 			</a>
 			<nav class="hidden md:flex items-center gap-5">
-				<a href="/" class:active={pathname === '/'} class="text-gray-500 hover:text-primary-500">Beranda</a>
-				<a href="/blog" class:active={pathname.startsWith('/blog')} class="text-gray-500 hover:text-primary-500">Blog</a>
-				<a href="/nabi" class:active={pathname.startsWith('/nabi')} class="text-gray-500 hover:text-primary-500">Nabi</a>
-				<a href="/sahabat" class:active={pathname.startsWith('/sahabat')} class="text-gray-500 hover:text-primary-500">Sahabat</a>
-				<a href="/kitab" class:active={pathname === '/kitab'} class="text-gray-500 hover:text-primary-500">Kitab</a>
-				<a href="/ulama" class:active={pathname === '/ulama'} class="text-gray-500 hover:text-primary-500">Ulama</a>
+				<a href="/" class:active={pathname === '/'} class="text-base-content/60 hover:text-primary">Beranda</a>
+				<a href="/blog" class:active={pathname.startsWith('/blog')} class="text-base-content/60 hover:text-primary">Blog</a>
+				<a href="/nabi" class:active={pathname.startsWith('/nabi')} class="text-base-content/60 hover:text-primary">Nabi</a>
+				<a href="/sahabat" class:active={pathname.startsWith('/sahabat')} class="text-base-content/60 hover:text-primary">Sahabat</a>
+				<a href="/kitab" class:active={pathname === '/kitab'} class="text-base-content/60 hover:text-primary">Kitab</a>
+				<a href="/ulama" class:active={pathname === '/ulama'} class="text-base-content/60 hover:text-primary">Ulama</a>
 			</nav>
 			<div class="flex items-center gap-2">
 				{#if data.user}
-					<a href="/dashboard" class="btn btn-sm variant-ghost">Dashboard</a>
-					<a href="/kalender" class="btn btn-sm variant-ghost">Kalender</a>
-					<a href="/akun" class="btn btn-sm variant-ghost-primary">Profil</a>
+					<a href="/dashboard" class="btn btn-sm btn-ghost">Dashboard</a>
+					<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
+					<a href="/akun" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Profil</a>
 					<form method="POST" action="/logout">
-						<button type="submit" class="btn btn-sm variant-filled-error">Logout</button>
+						<button type="submit" class="btn btn-sm btn-error">Logout</button>
 					</form>
 				{:else}
-					<a href="/auth" class="btn btn-sm variant-ghost-primary">Login</a>
-					<a href="/register" class="btn btn-sm variant-filled-primary">Register</a>
+					<a href="/auth" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Login</a>
+					<a href="/register" class="btn btn-sm btn-primary">Register</a>
 				{/if}
 			</div>
 		</div>
@@ -82,7 +82,7 @@ const baseNav = [
 	</main>
 
 	<!-- Bottom nav (mobile) -->
-	<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white shadow-[0_-6px_24px_rgba(0,0,0,0.08)] md:hidden safe-area-bottom">
+	<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-base-200 bg-base-100 shadow-[0_-6px_24px_rgba(0,0,0,0.08)] md:hidden safe-area-bottom">
 		<div class="mx-auto flex max-w-2xl items-center justify-between px-2 py-3 pb-safe">
 			{#each baseNav as item}
 				<a

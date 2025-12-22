@@ -15,7 +15,7 @@
 				<h2 class="text-lg font-semibold text-slate-900">Ringkasan</h2>
 				<p class="text-sm text-slate-500">Siapkan jadwal ujian dan hasil penilaian.</p>
 			</div>
-			<a href="/dashboard" class="btn btn-sm variant-ghost-primary">Kembali ke dashboard</a>
+			<a href="/dashboard" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Kembali ke dashboard</a>
 		</div>
 		<div class="mt-3 grid gap-3 md:grid-cols-3">
 			<div class="rounded-xl border bg-slate-50 p-3">

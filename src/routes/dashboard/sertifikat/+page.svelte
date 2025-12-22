@@ -185,7 +185,7 @@
                                     <p class="text-[11px] text-slate-500">Terbit: {formatDate((cert as any).issuedAt || cert.issued_at)}</p>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <a class="btn btn-sm variant-filled-primary" href={cert.downloadUrl || cert.certificate_url} target="_blank">
+                                    <a class="btn btn-sm btn-primary" href={cert.downloadUrl || cert.certificate_url} target="_blank">
                                         Unduh
                                     </a>
                                     <span class="rounded-full bg-emerald-50 px-2 py-1 text-[11px] text-emerald-700">PDF</span>

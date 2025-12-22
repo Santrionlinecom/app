@@ -179,7 +179,7 @@
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <a
-                                        class="btn btn-sm variant-filled-primary"
+                                        class="btn btn-sm btn-primary"
                                         href={cert.downloadUrl || cert.certificate_url}
                                         target="_blank"
                                     >

@@ -19,8 +19,8 @@
 <CalendarPrimitive.PrevButton
 	bind:ref
 	class={cn(
-		buttonVariants({ variant: "outline" }),
-		"size-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+		buttonVariants({ variant: "outline", size: "icon" }),
+		"opacity-60 hover:opacity-100",
 		className
 	)}
 	children={children || Fallback}
