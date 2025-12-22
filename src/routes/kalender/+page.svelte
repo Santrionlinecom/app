@@ -244,7 +244,7 @@
 				{#each weeks.flat() as cell}
 					{#if cell.inMonth}
 						<button
-							class="group relative aspect-square rounded-xl md:rounded-2xl border-2 transition-all hover:scale-105 hover:shadow-xl {
+							class="group relative aspect-[4/5] md:aspect-square overflow-hidden rounded-xl md:rounded-2xl border-2 transition-all hover:scale-105 hover:shadow-xl {
 								cell.date.toDateString() === selectedDate.toDateString()
 									? 'border-purple-500 bg-gradient-to-br from-purple-100 to-pink-100 shadow-lg scale-105'
 									: cell.date.toDateString() === today.toDateString()
@@ -255,21 +255,21 @@
 						>
 							<div class="md:hidden absolute inset-0 flex flex-col justify-between p-1">
 								<div class="flex items-start justify-between">
-									<div class="text-[11px] font-bold {
+									<div class="text-[10px] font-bold {
 										cell.date.toDateString() === selectedDate.toDateString() ? 'text-purple-600' :
 										cell.date.toDateString() === today.toDateString() ? 'text-blue-600' : 'text-gray-700'
 									}">
 										{cell.date.getDate()}
 									</div>
 									{#if cell.date.toDateString() === today.toDateString()}
-										<div class="text-[11px]">🌟</div>
+										<div class="text-[10px]">🌟</div>
 									{/if}
 								</div>
-								<div class="text-center text-sm font-semibold text-emerald-700 leading-none">
+								<div class="text-center text-[12px] font-semibold text-emerald-700 leading-none">
 									{toArabicNumeral(hijriDayNumber(cell.date) ?? '')}
 								</div>
 								<div class="text-center">
-									<div class="text-[9px] font-semibold text-purple-600">{pasaranFor(cell.date)}</div>
+									<div class="text-[8px] font-semibold text-purple-600 leading-none">{pasaranFor(cell.date)}</div>
 									<div class="flex justify-center gap-0.5 mt-0.5">
 										{#if notesByDate[toISODate(cell.date)]?.length}
 											<div class="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
@@ -309,7 +309,7 @@
 							</div>
 						</button>
 					{:else}
-						<div class="aspect-square rounded-xl md:rounded-2xl bg-gray-50 opacity-30 flex items-center justify-center text-xs md:text-base text-gray-400">
+						<div class="aspect-[4/5] md:aspect-square rounded-xl md:rounded-2xl bg-gray-50 opacity-30 flex items-center justify-center text-xs md:text-base text-gray-400">
 							{cell.date.getDate()}
 						</div>
 					{/if}
