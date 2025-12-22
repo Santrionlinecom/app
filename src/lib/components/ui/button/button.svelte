@@ -23,12 +23,17 @@
 	export type ButtonSize = keyof typeof SIZE_CLASSES;
 
 	export const buttonVariants = (
-		options: { variant?: ButtonVariant; size?: ButtonSize } = {}
+		options: {
+			variant?: ButtonVariant;
+			size?: ButtonSize;
+			className?: string;
+		} = {}
 	) =>
 		cn(
 			"btn normal-case gap-2",
 			VARIANT_CLASSES[options.variant ?? "default"],
-			SIZE_CLASSES[options.size ?? "default"]
+			SIZE_CLASSES[options.size ?? "default"],
+			options.className
 		);
 
 	export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
@@ -39,8 +44,6 @@
 </script>
 
 <script lang="ts">
-	import { cn } from "$lib/utils.js";
-
 	let {
 		class: className,
 		variant = "default",
@@ -56,7 +59,7 @@
 {#if href}
 	<a
 		bind:this={ref}
-		class={cn(buttonVariants({ variant, size }), className)}
+		class={buttonVariants({ variant, size, className })}
 		{href}
 		{...restProps}
 	>
@@ -65,7 +68,7 @@
 {:else}
 	<button
 		bind:this={ref}
-		class={cn(buttonVariants({ variant, size }), className)}
+		class={buttonVariants({ variant, size, className })}
 		{type}
 		{...restProps}
 	>
