@@ -1,6 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { allowedRolesByType, getOrganizationBySlug } from '$lib/server/organizations';
+import { ensureUserOptionalColumns } from '$lib/server/users';
 import { initializeLucia } from '$lib/server/lucia';
 import { Scrypt } from '$lib/server/password';
 import { generateId } from 'lucia';
@@ -24,7 +25,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		org,
-		roles: allowedRolesByType.masjid.map((role) => ({
+		roles: allowedRolesByType.masjid.filter((role) => role !== 'ustadzah').map((role) => ({
 			value: role,
 			label: roleLabel(role)
 		}))
@@ -48,14 +49,20 @@ export const actions: Actions = {
 		const email = formData.get('email');
 		const password = formData.get('password');
 		const role = formData.get('role');
+		const gender = formData.get('gender');
 
 		if (
 			typeof name !== 'string' ||
 			typeof email !== 'string' ||
 			typeof password !== 'string' ||
-			typeof role !== 'string'
+			typeof role !== 'string' ||
+			typeof gender !== 'string'
 		) {
 			return fail(400, { error: 'Semua kolom wajib diisi.' });
+		}
+		const genderValue = gender === 'pria' || gender === 'wanita' ? gender : null;
+		if (!genderValue) {
+			return fail(400, { error: 'Jenis kelamin tidak valid.' });
 		}
 		if (!allowedRolesByType.masjid.includes(role as any)) {
 			return fail(400, { error: 'Role tidak valid.' });
@@ -69,14 +76,32 @@ export const actions: Actions = {
 			return fail(400, { error: 'Email sudah terdaftar.' });
 		}
 
+		const normalizedRole =
+			role === 'ustadz' || role === 'ustadzah'
+				? genderValue === 'wanita'
+					? 'ustadzah'
+					: 'ustadz'
+				: role;
+
 		const userId = generateId(15);
 		const hashed = await new Scrypt().hash(password);
+		await ensureUserOptionalColumns(db);
 		await db
 			.prepare(
-				`INSERT INTO users (id, username, email, password_hash, role, org_id, org_status, created_at)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+				`INSERT INTO users (id, username, email, password_hash, role, gender, org_id, org_status, created_at)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			)
-			.bind(userId, name.trim(), email.trim(), hashed, role, org.id, 'pending', Date.now())
+			.bind(
+				userId,
+				name.trim(),
+				email.trim(),
+				hashed,
+				normalizedRole,
+				genderValue,
+				org.id,
+				'pending',
+				Date.now()
+			)
 			.run();
 
 		const lucia = initializeLucia(db);

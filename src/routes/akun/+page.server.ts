@@ -1,24 +1,14 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { Scrypt } from '$lib/server/password';
-import { createOrganization, ensureOrgSchema, ensureUniqueSlug, getOrganizationById, slugify } from '$lib/server/organizations';
+import {
+	createOrganization,
+	ensureOrgSchema,
+	ensureUniqueSlug,
+	getOrganizationById,
+	slugify
+} from '$lib/server/organizations';
+import { ensureUserOptionalColumns } from '$lib/server/users';
 import type { Actions, PageServerLoad } from './$types';
-
-const ensureUserOptionalColumns = async (db: NonNullable<App.Locals['db']>) => {
-	const addColumn = async (name: string, type: string) => {
-		try {
-			await db.prepare(`ALTER TABLE users ADD COLUMN ${name} ${type}`).run();
-		} catch (err: any) {
-			if (!`${err?.message ?? ''}`.includes('duplicate column name')) {
-				throw err;
-			}
-		}
-	};
-
-	await addColumn('gender', 'TEXT');
-	await addColumn('whatsapp', 'TEXT');
-	await addColumn('org_id', 'TEXT');
-	await addColumn('org_status', "TEXT NOT NULL DEFAULT 'active'");
-};
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {

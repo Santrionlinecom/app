@@ -11,6 +11,13 @@ const ensureAuth = (locals: App.Locals) => {
 	}
 };
 
+const normalizeUstadzRole = (role?: string, gender?: string | null) => {
+	if (role === 'ustadz' || role === 'ustadzah') {
+		return gender === 'wanita' ? 'ustadzah' : 'ustadz';
+	}
+	return role;
+};
+
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	ensureAuth(locals);
 	if (locals.user?.role !== 'admin') {
@@ -24,10 +31,11 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const body = await request.json().catch(() => ({}));
 	const { results: targetRows } =
 		(await db
-			.prepare('SELECT gender, org_id as orgId FROM users WHERE id = ?')
+			.prepare('SELECT gender, role, org_id as orgId FROM users WHERE id = ?')
 			.bind(id)
-			.all<{ gender?: string; orgId?: string | null }>()) ?? {};
+			.all<{ gender?: string; role?: string; orgId?: string | null }>()) ?? {};
 	const targetGender = targetRows?.[0]?.gender;
+	const targetRole = targetRows?.[0]?.role;
 	const targetOrgId = targetRows?.[0]?.orgId ?? null;
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 	if (!isSystemAdmin && targetOrgId && targetOrgId !== orgId) {
@@ -66,12 +74,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 			values.push(email);
 		}
 		if (role !== undefined) {
-			const normalizedRole =
-				role === 'ustadz' || role === 'ustadzah'
-					? targetGender === 'wanita'
-						? 'ustadzah'
-						: 'ustadz'
-					: role;
+			const normalizedRole = normalizeUstadzRole(role, targetGender) ?? role;
 			fields.push('role = ?');
 			values.push(normalizedRole);
 		}
@@ -82,6 +85,13 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		if (orgStatus) {
 			fields.push('org_status = ?');
 			values.push(orgStatus);
+		}
+		if (orgStatus === 'active' && role === undefined) {
+			const normalizedRole = normalizeUstadzRole(targetRole, targetGender);
+			if (normalizedRole && normalizedRole !== targetRole) {
+				fields.push('role = ?');
+				values.push(normalizedRole);
+			}
 		}
 
 		values.push(id);

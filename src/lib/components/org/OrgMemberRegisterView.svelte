@@ -34,6 +34,17 @@
 		</div>
 
 		<div class="form-control">
+			<label class="label" for="gender">
+				<span class="label-text font-medium">Jenis Kelamin</span>
+			</label>
+			<select id="gender" name="gender" class="select select-bordered" required>
+				<option value="" disabled selected>Pilih jenis kelamin</option>
+				<option value="pria">Pria</option>
+				<option value="wanita">Wanita</option>
+			</select>
+		</div>
+
+		<div class="form-control">
 			<label class="label" for="role">
 				<span class="label-text font-medium">Peran</span>
 			</label>

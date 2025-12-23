@@ -163,7 +163,7 @@
 					<select class="select select-bordered w-full md:w-auto" bind:value={filterRole}>
 						<option value="all">Semua Role</option>
 						<option value="santri">Santri</option>
-						<option value="ustadz">Ustadz/Ustadzah</option>
+						<option value="ustadz">Ustadz</option>
 						<option value="jamaah">Jamaah</option>
 						<option value="tamir">Ta'mir</option>
 						<option value="bendahara">Bendahara</option>
@@ -310,7 +310,7 @@
 						</label>
 						<select id="role" class="select select-bordered" bind:value={form.role}>
 							<option value="santri">🎓 Santri</option>
-							<option value="ustadz">👩‍🏫 Ustadz/Ustadzah (otomatis sesuai gender)</option>
+							<option value="ustadz">👩‍🏫 Ustadz</option>
 							<option value="jamaah">🧎‍♂️ Jamaah</option>
 							<option value="tamir">🕌 Ta'mir</option>
 							<option value="bendahara">💰 Bendahara</option>

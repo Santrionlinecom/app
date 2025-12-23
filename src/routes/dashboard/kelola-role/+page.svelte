@@ -6,7 +6,7 @@
 
 	const roleLabels: Record<string, string> = {
 		admin: 'Admin',
-		ustadz: 'Ustadz/Ustadzah (otomatis sesuai gender)',
+		ustadz: 'Ustadz',
 		santri: 'Santri',
 		alumni: 'Alumni',
 		jamaah: 'Jamaah',
