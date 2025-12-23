@@ -1,4 +1,3 @@
 declare module 'pdfjs-dist/legacy/build/pdf.mjs' {
-	const pdfjsLib: any;
-	export default pdfjsLib;
+	export * from 'pdfjs-dist/types/src/pdf';
 }

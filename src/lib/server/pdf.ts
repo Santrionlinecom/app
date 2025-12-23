@@ -1,4 +1,4 @@
-import pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 type PdfPageText = {
 	pageNumber: number;
@@ -11,7 +11,7 @@ export const extractPdfTextPages = async (
 	data: ArrayBuffer,
 	options?: { maxPages?: number }
 ): Promise<{ pages: PdfPageText[]; totalPages: number } | null> => {
-	const loadingTask = pdfjsLib.getDocument({ data, disableWorker: true });
+	const loadingTask = pdfjsLib.getDocument({ data });
 	const pdf = await loadingTask.promise;
 	const totalPages = pdf.numPages;
 	const limit = Math.min(options?.maxPages ?? totalPages, totalPages);

@@ -1,6 +1,6 @@
 <script lang="ts" module>
 	import type { WithElementRef } from "bits-ui";
-	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from "svelte/elements";
+	import type { ClassValue, HTMLAnchorAttributes, HTMLButtonAttributes } from "svelte/elements";
 	import { cn } from "$lib/utils.js";
 
 	const VARIANT_CLASSES = {
@@ -26,9 +26,9 @@
 		options: {
 			variant?: ButtonVariant;
 			size?: ButtonSize;
-			className?: string;
+			className?: ClassValue | null;
 		} = {}
-	) =>
+	): string =>
 		cn(
 			"btn normal-case gap-2",
 			VARIANT_CLASSES[options.variant ?? "default"],
