@@ -75,7 +75,7 @@ const baseNav = [
 					</form>
 				{:else}
 					<a href="/auth" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Login</a>
-					<a href="/register" class="btn btn-sm btn-primary">Register</a>
+					<a href="/register" class="btn btn-sm btn-primary">Daftar Lembaga</a>
 				{/if}
 			</div>
 		</div>
@@ -124,7 +124,7 @@ const baseNav = [
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0M15 12h4m0 0l-2-2m2 2l-2 2" />
 					</svg>
-					<span class="text-[10px]">Daftar</span>
+					<span class="text-[10px]">Daftar Lembaga</span>
 				</a>
 			{/if}
 		</div>
