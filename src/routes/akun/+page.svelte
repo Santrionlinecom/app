@@ -25,6 +25,13 @@
 			.replace(/-+/g, '-')
 			.replace(/^-+|-+$/g, '');
 
+	const formatOrgType = (value?: string) => {
+		if (!value) return '-';
+		if (value === 'tpq') return 'TPQ';
+		if (value === 'rumah-tahfidz') return 'Rumah Tahfidz';
+		return value.charAt(0).toUpperCase() + value.slice(1);
+	};
+
 	$: if (!slugManual) {
 		orgSlug = toSlug(orgName);
 	}
@@ -66,7 +73,7 @@
 						<span class="text-4xl">🏛️</span>
 						<div>
 							<h2 class="text-2xl font-bold text-gray-900">Lengkapi Data Lembaga</h2>
-							<p class="text-sm text-gray-600">Isi data pondok/masjid/musholla agar akun Anda terhubung.</p>
+							<p class="text-sm text-gray-600">Isi data lembaga agar akun Anda terhubung.</p>
 						</div>
 					</div>
 
@@ -77,6 +84,8 @@
 								<option value="pondok">Pondok</option>
 								<option value="masjid">Masjid</option>
 								<option value="musholla">Musholla</option>
+								<option value="tpq">TPQ</option>
+								<option value="rumah-tahfidz">Rumah Tahfidz</option>
 							</select>
 						</div>
 						<div>
@@ -153,7 +162,7 @@
 						</div>
 						<div>
 							<p class="font-semibold">Tipe</p>
-							<p>{org.type}</p>
+							<p>{formatOrgType(org.type)}</p>
 						</div>
 						<div>
 							<p class="font-semibold">Slug</p>

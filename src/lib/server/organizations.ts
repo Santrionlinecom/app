@@ -1,7 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { generateId } from 'lucia';
 
-export type OrgType = 'pondok' | 'masjid' | 'musholla';
+export type OrgType = 'pondok' | 'masjid' | 'musholla' | 'tpq' | 'rumah-tahfidz';
 export type OrgStatus = 'pending' | 'active';
 export type OrgRole =
 	| 'admin'
@@ -198,5 +198,7 @@ export const canManageOrg = (user: { role?: string; orgId?: string | null }) =>
 export const allowedRolesByType: Record<OrgType, OrgRole[]> = {
 	pondok: ['santri', 'ustadz', 'ustadzah'],
 	masjid: ['jamaah', 'tamir', 'bendahara', 'ustadz', 'ustadzah'],
-	musholla: ['jamaah', 'tamir', 'bendahara', 'ustadz', 'ustadzah']
+	musholla: ['jamaah', 'tamir', 'bendahara', 'ustadz', 'ustadzah'],
+	tpq: ['santri', 'ustadz', 'ustadzah'],
+	'rumah-tahfidz': ['santri', 'ustadz', 'ustadzah']
 };

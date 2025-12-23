@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 
 const BASE_URL = 'https://app.santrionline.com';
-const allowedTypes = new Set(['pondok', 'masjid', 'musholla']);
+const allowedTypes = new Set(['pondok', 'masjid', 'musholla', 'tpq', 'rumah-tahfidz']);
 
 const toIsoDate = (value?: number | null) => {
 	if (!value) return null;

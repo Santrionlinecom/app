@@ -14,13 +14,25 @@
 			title: 'Musholla',
 			description: 'Daftarkan musholla untuk mengelola aktivitas dan anggota.',
 			href: '/musholla/daftar'
+		},
+		{
+			title: 'TPQ',
+			description: 'Daftarkan TPQ untuk mengelola kelas, santri, dan jadwal belajar.',
+			href: '/tpq/daftar'
+		},
+		{
+			title: 'Rumah Tahfidz',
+			description: 'Daftarkan rumah tahfidz untuk memantau target hafalan dan halaqah.',
+			href: '/rumah-tahfidz/daftar'
 		}
 	];
 
 	const memberOptions = [
 		{ title: 'Pondok Pesantren', href: '/pondok' },
 		{ title: 'Masjid', href: '/masjid' },
-		{ title: 'Musholla', href: '/musholla' }
+		{ title: 'Musholla', href: '/musholla' },
+		{ title: 'TPQ', href: '/tpq' },
+		{ title: 'Rumah Tahfidz', href: '/rumah-tahfidz' }
 	];
 </script>
 

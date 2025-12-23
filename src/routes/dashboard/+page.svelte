@@ -172,7 +172,7 @@
 			<a href="/dashboard/kelola-lembaga" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
 				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🏛️</div>
 				<p class="relative text-sm font-medium opacity-90">Kelola Lembaga</p>
-				<p class="relative mt-1 text-2xl font-bold">Pondok/Masjid</p>
+				<p class="relative mt-1 text-2xl font-bold">Lembaga</p>
 			</a>
 		{/if}
         <!-- Kelola Blog (Admin only) -->

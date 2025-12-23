@@ -10,6 +10,8 @@ import {
 import { ensureUserOptionalColumns } from '$lib/server/users';
 import type { Actions, PageServerLoad } from './$types';
 
+const allowedOrgTypes = ['pondok', 'masjid', 'musholla', 'tpq', 'rumah-tahfidz'] as const;
+
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth');
@@ -187,7 +189,7 @@ export const actions: Actions = {
 			return fail(400, { message: 'Semua kolom wajib diisi.', type: 'org' });
 		}
 
-		if (!['pondok', 'masjid', 'musholla'].includes(orgType)) {
+		if (!allowedOrgTypes.includes(orgType as typeof allowedOrgTypes[number])) {
 			return fail(400, { message: 'Tipe lembaga tidak valid.', type: 'org' });
 		}
 
@@ -200,9 +202,9 @@ export const actions: Actions = {
 			return fail(400, { message: 'Slug tidak valid.', type: 'org' });
 		}
 
-		const uniqueSlug = await ensureUniqueSlug(db, orgType as 'pondok' | 'masjid' | 'musholla', baseSlug);
+		const uniqueSlug = await ensureUniqueSlug(db, orgType as typeof allowedOrgTypes[number], baseSlug);
 		const orgId = await createOrganization(db, {
-			type: orgType as 'pondok' | 'masjid' | 'musholla',
+			type: orgType as typeof allowedOrgTypes[number],
 			name: orgName.trim(),
 			slug: uniqueSlug,
 			address: typeof orgAddress === 'string' ? orgAddress.trim() : '',

@@ -44,7 +44,7 @@
 					id="orgSlug"
 					name="orgSlug"
 					class="input input-bordered"
-					placeholder="contoh: pondok-al-falah"
+					placeholder="contoh: al-falah"
 					bind:value={orgSlug}
 					on:input={() => {
 						slugManual = true;

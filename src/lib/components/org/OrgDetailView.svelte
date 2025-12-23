@@ -1,6 +1,13 @@
 <script lang="ts">
 	export let org;
 	export let typePath = '';
+
+	const formatOrgType = (value?: string) => {
+		if (!value) return '-';
+		if (value === 'tpq') return 'TPQ';
+		if (value === 'rumah-tahfidz') return 'Rumah Tahfidz';
+		return value.charAt(0).toUpperCase() + value.slice(1);
+	};
 </script>
 
 <section class="max-w-4xl mx-auto py-10 px-4 space-y-6">
@@ -20,7 +27,7 @@
 	<div class="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
 		<h2 class="text-lg font-semibold text-slate-800">Informasi</h2>
 		<ul class="text-sm text-slate-600 space-y-2">
-			<li>Jenis: {org?.type}</li>
+			<li>Jenis: {formatOrgType(org?.type)}</li>
 			{#if org?.contactPhone}
 				<li>Kontak: {org.contactPhone}</li>
 			{/if}
