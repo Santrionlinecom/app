@@ -4,6 +4,30 @@
 	export let form: ActionData;
 
 	const profile = data.profile;
+	const org = data.org;
+
+	let orgType = 'pondok';
+	let orgName = '';
+	let orgSlug = '';
+	let orgAddress = '';
+	let orgCity = '';
+	let orgPhone = '';
+	let adminName = profile?.username ?? '';
+	const adminEmail = profile?.email ?? '';
+	let slugManual = false;
+
+	const toSlug = (value: string) =>
+		value
+			.toLowerCase()
+			.trim()
+			.replace(/[^a-z0-9\s-]/g, '')
+			.replace(/\s+/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-+|-+$/g, '');
+
+	$: if (!slugManual) {
+		orgSlug = toSlug(orgName);
+	}
 </script>
 
 <svelte:head>
@@ -36,6 +60,113 @@
 
 		<!-- Forms Grid -->
 		<div class="grid gap-6 lg:grid-cols-2">
+			{#if !profile?.orgId}
+				<form method="POST" action="?/registerOrg" class="rounded-3xl border-2 border-emerald-200 bg-white p-6 shadow-xl lg:col-span-2">
+					<div class="flex items-center gap-3 mb-6">
+						<span class="text-4xl">🏛️</span>
+						<div>
+							<h2 class="text-2xl font-bold text-gray-900">Lengkapi Data Lembaga</h2>
+							<p class="text-sm text-gray-600">Isi data pondok/masjid/musholla agar akun Anda terhubung.</p>
+						</div>
+					</div>
+
+					<div class="grid gap-4 md:grid-cols-2">
+						<div>
+							<label for="org-type" class="block text-sm font-semibold text-gray-700 mb-2">🏷️ Jenis Lembaga</label>
+							<select id="org-type" name="orgType" class="select select-bordered w-full" bind:value={orgType} required>
+								<option value="pondok">Pondok</option>
+								<option value="masjid">Masjid</option>
+								<option value="musholla">Musholla</option>
+							</select>
+						</div>
+						<div>
+							<label for="org-name" class="block text-sm font-semibold text-gray-700 mb-2">🕌 Nama Lembaga</label>
+							<input id="org-name" name="orgName" class="input input-bordered w-full" bind:value={orgName} required />
+						</div>
+						<div>
+							<label for="org-slug" class="block text-sm font-semibold text-gray-700 mb-2">🔗 Slug (opsional)</label>
+							<input
+								id="org-slug"
+								name="orgSlug"
+								class="input input-bordered w-full"
+								placeholder="contoh: al-ikhlas"
+								bind:value={orgSlug}
+								on:input={() => {
+									slugManual = true;
+								}}
+							/>
+						</div>
+						<div>
+							<label for="org-phone" class="block text-sm font-semibold text-gray-700 mb-2">📞 Kontak WA/HP</label>
+							<input id="org-phone" name="orgPhone" class="input input-bordered w-full" bind:value={orgPhone} placeholder="+62812xxxx" />
+						</div>
+						<div>
+							<label for="org-address" class="block text-sm font-semibold text-gray-700 mb-2">📍 Alamat</label>
+							<input id="org-address" name="orgAddress" class="input input-bordered w-full" bind:value={orgAddress} />
+						</div>
+						<div>
+							<label for="org-city" class="block text-sm font-semibold text-gray-700 mb-2">🏙️ Kota/Kabupaten</label>
+							<input id="org-city" name="orgCity" class="input input-bordered w-full" bind:value={orgCity} />
+						</div>
+					</div>
+
+					<div class="divider my-6">Akun Admin Lembaga</div>
+
+					<div class="grid gap-4 md:grid-cols-2">
+						<div>
+							<label for="admin-name" class="block text-sm font-semibold text-gray-700 mb-2">👤 Nama Admin</label>
+							<input id="admin-name" name="adminName" class="input input-bordered w-full" bind:value={adminName} required />
+						</div>
+						<div>
+							<label for="admin-email" class="block text-sm font-semibold text-gray-700 mb-2">📧 Email Admin</label>
+							<input id="admin-email" name="adminEmail" class="input input-bordered w-full bg-gray-50" value={adminEmail} readonly />
+						</div>
+					</div>
+
+					{#if form?.success && form?.type === 'org'}
+						<div class="mt-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl">
+							<p class="text-green-800 font-semibold">✅ {form.message}</p>
+						</div>
+					{:else if form?.message && form?.type === 'org'}
+						<div class="mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
+							<p class="text-red-800">❌ {form.message}</p>
+						</div>
+					{/if}
+
+					<button type="submit" class="btn mt-6 w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg">
+						✅ Simpan Data Lembaga
+					</button>
+				</form>
+			{:else if org}
+				<div class="rounded-3xl border-2 border-emerald-200 bg-white p-6 shadow-xl lg:col-span-2">
+					<div class="flex items-center gap-3 mb-4">
+						<span class="text-4xl">🏛️</span>
+						<div>
+							<h2 class="text-2xl font-bold text-gray-900">Lembaga Terdaftar</h2>
+							<p class="text-sm text-gray-600">Akun Anda sudah terhubung dengan lembaga berikut.</p>
+						</div>
+					</div>
+					<div class="grid gap-3 md:grid-cols-2 text-sm text-gray-700">
+						<div>
+							<p class="font-semibold">Nama</p>
+							<p>{org.name}</p>
+						</div>
+						<div>
+							<p class="font-semibold">Tipe</p>
+							<p>{org.type}</p>
+						</div>
+						<div>
+							<p class="font-semibold">Slug</p>
+							<p>/{org.slug}</p>
+						</div>
+						<div>
+							<p class="font-semibold">Status</p>
+							<p>{org.status}</p>
+						</div>
+					</div>
+				</div>
+			{/if}
+
 			<!-- Update Profile -->
 			<form method="POST" action="?/updateProfile" class="rounded-3xl border-2 border-blue-200 bg-white p-6 shadow-xl">
 				<div class="flex items-center gap-3 mb-6">

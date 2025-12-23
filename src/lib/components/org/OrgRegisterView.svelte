@@ -2,6 +2,23 @@
 	export let title = '';
 	export let typePath = '';
 	export let form;
+
+	let orgName = '';
+	let orgSlug = '';
+	let slugManual = false;
+
+	const toSlug = (value: string) =>
+		value
+			.toLowerCase()
+			.trim()
+			.replace(/[^a-z0-9\s-]/g, '')
+			.replace(/\s+/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-+|-+$/g, '');
+
+	$: if (!slugManual) {
+		orgSlug = toSlug(orgName);
+	}
 </script>
 
 <section class="max-w-3xl mx-auto py-10 px-4 space-y-6">
@@ -17,13 +34,22 @@
 				<label class="label" for="orgName">
 					<span class="label-text font-medium">Nama Lembaga</span>
 				</label>
-				<input id="orgName" name="orgName" class="input input-bordered" required />
+				<input id="orgName" name="orgName" class="input input-bordered" bind:value={orgName} required />
 			</div>
 			<div class="form-control">
 				<label class="label" for="orgSlug">
 					<span class="label-text font-medium">Slug (opsional)</span>
 				</label>
-				<input id="orgSlug" name="orgSlug" class="input input-bordered" placeholder="contoh: pondok-al-falah" />
+				<input
+					id="orgSlug"
+					name="orgSlug"
+					class="input input-bordered"
+					placeholder="contoh: pondok-al-falah"
+					bind:value={orgSlug}
+					on:input={() => {
+						slugManual = true;
+					}}
+				/>
 			</div>
 		</div>
 

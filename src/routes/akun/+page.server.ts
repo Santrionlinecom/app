@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { Scrypt } from '$lib/server/password';
+import { createOrganization, ensureOrgSchema, ensureUniqueSlug, getOrganizationById, slugify } from '$lib/server/organizations';
 import type { Actions, PageServerLoad } from './$types';
 
 const ensureUserOptionalColumns = async (db: NonNullable<App.Locals['db']>) => {
@@ -30,10 +31,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const { db, user } = { db: locals.db!, user: locals.user };
 	await ensureUserOptionalColumns(db);
+	await ensureOrgSchema(db);
 	const profile =
 		(await db
 			.prepare(
-				'SELECT id, email, username, role, gender, whatsapp, created_at as createdAt FROM users WHERE id = ?'
+				'SELECT id, email, username, role, gender, whatsapp, org_id as orgId, org_status as orgStatus, created_at as createdAt FROM users WHERE id = ?'
 			)
 			.bind(user.id)
 			.first<{
@@ -43,12 +45,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 				role: string;
 				gender: string | null;
 				whatsapp: string | null;
+				orgId: string | null;
+				orgStatus: string | null;
 				createdAt: number;
 			}>())
 		?? null;
 
+	const org = profile?.orgId ? await getOrganizationById(db, profile.orgId) : null;
+
 	return {
-		profile
+		profile,
+		org
 	};
 };
 
@@ -157,5 +164,79 @@ export const actions: Actions = {
 			.run();
 
 		return { success: true, message: 'Password diperbarui', type: 'password' };
+	},
+
+	registerOrg: async ({ request, locals }) => {
+		if (!locals.user) return fail(401, { message: 'Unauthenticated', type: 'org' });
+		if (!locals.db) return fail(500, { message: 'Database tidak tersedia', type: 'org' });
+
+		const db = locals.db!;
+		await ensureOrgSchema(db);
+		await ensureUserOptionalColumns(db);
+
+		if (locals.user.orgId) {
+			return fail(400, { message: 'Akun sudah terhubung ke lembaga.', type: 'org' });
+		}
+
+		const formData = await request.formData();
+		const orgType = formData.get('orgType');
+		const orgName = formData.get('orgName');
+		const orgSlug = formData.get('orgSlug');
+		const orgAddress = formData.get('orgAddress');
+		const orgCity = formData.get('orgCity');
+		const orgPhone = formData.get('orgPhone');
+		const adminName = formData.get('adminName');
+		const adminEmail = formData.get('adminEmail');
+
+		if (
+			typeof orgType !== 'string' ||
+			typeof orgName !== 'string' ||
+			typeof adminName !== 'string' ||
+			typeof adminEmail !== 'string'
+		) {
+			return fail(400, { message: 'Semua kolom wajib diisi.', type: 'org' });
+		}
+
+		if (!['pondok', 'masjid', 'musholla'].includes(orgType)) {
+			return fail(400, { message: 'Tipe lembaga tidak valid.', type: 'org' });
+		}
+
+		if (adminEmail.trim().toLowerCase() !== locals.user.email.toLowerCase()) {
+			return fail(400, { message: 'Email admin harus sama dengan akun yang login.', type: 'org' });
+		}
+
+		const baseSlug = slugify(typeof orgSlug === 'string' && orgSlug.trim() ? orgSlug : orgName);
+		if (!baseSlug) {
+			return fail(400, { message: 'Slug tidak valid.', type: 'org' });
+		}
+
+		const uniqueSlug = await ensureUniqueSlug(db, orgType as 'pondok' | 'masjid' | 'musholla', baseSlug);
+		const orgId = await createOrganization(db, {
+			type: orgType as 'pondok' | 'masjid' | 'musholla',
+			name: orgName.trim(),
+			slug: uniqueSlug,
+			address: typeof orgAddress === 'string' ? orgAddress.trim() : '',
+			city: typeof orgCity === 'string' ? orgCity.trim() : '',
+			contactPhone: typeof orgPhone === 'string' ? orgPhone.trim() : ''
+		});
+
+		await db
+			.prepare('UPDATE users SET username = ?, role = ?, org_id = ?, org_status = ? WHERE id = ?')
+			.bind(adminName.trim(), 'admin', orgId, 'active', locals.user.id)
+			.run();
+
+		locals.user = {
+			...locals.user,
+			username: adminName.trim(),
+			role: 'admin',
+			orgId,
+			orgStatus: 'active'
+		} as typeof locals.user;
+
+		return {
+			success: true,
+			message: 'Lembaga berhasil didaftarkan. Menunggu verifikasi admin sistem.',
+			type: 'org'
+		};
 	}
 };
