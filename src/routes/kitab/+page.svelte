@@ -284,7 +284,7 @@ const handleTanya = async () => {
 						type="file"
 						accept="application/pdf"
 						class="file-input file-input-bordered w-full mt-1"
-						on:change={handlePdfFileChange}
+						onchange={handlePdfFileChange}
 					/>
 				</label>
 				<label class="block text-sm font-semibold text-slate-700 mb-1">
