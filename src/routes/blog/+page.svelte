@@ -18,7 +18,7 @@
         {/if}
         <div class="card-body">
           <h2 class="card-title">
-            <a href="/blog/{post.slug}" class="hover:underline">{post.title}</a>
+            <a href={`/blog/${post.slug}`} class="hover:underline">{post.title}</a>
           </h2>
           <p class="text-xs text-base-content/60">
             {formatDateTime(post.scheduled_at ?? post.created_at)}
@@ -27,7 +27,7 @@
             <p class="text-base-content/70">{post.excerpt}</p>
           {/if}
           <div class="card-actions justify-end">
-            <a href="/blog/{post.slug}" class="btn btn-sm btn-primary">Read More</a>
+            <a href={`/blog/${post.slug}`} class="btn btn-sm btn-primary">Read More</a>
           </div>
         </div>
       </article>

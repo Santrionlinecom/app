@@ -113,6 +113,12 @@ const handleTanya = async () => {
 		pdfFile = file;
 	};
 
+	const normalizePageOffset = (value: unknown) => {
+		if (typeof value === 'string') return value.trim();
+		if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+		return '';
+	};
+
 	const handleUploadPdf = async () => {
 		pdfLoading = true;
 		pdfError = '';
@@ -127,7 +133,8 @@ const handleTanya = async () => {
 			const formData = new FormData();
 			formData.append('judul', pdfForm.judul.trim());
 			if (pdfForm.jilid.trim()) formData.append('jilid', pdfForm.jilid.trim());
-			if (pdfForm.pageOffset.trim()) formData.append('pageOffset', pdfForm.pageOffset.trim());
+			const pageOffsetValue = normalizePageOffset(pdfForm.pageOffset);
+			if (pageOffsetValue) formData.append('pageOffset', pageOffsetValue);
 			if (pdfForm.driveUrl.trim()) formData.append('driveUrl', pdfForm.driveUrl.trim());
 			if (pdfFile) formData.append('pdf', pdfFile);
 

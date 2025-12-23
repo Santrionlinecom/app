@@ -55,7 +55,7 @@
               </span>
             </td>
             <td>
-              <a href="/admin/posts/{post.id}/edit" class="btn btn-sm btn-ghost">Edit</a>
+              <a href={`/admin/posts/${post.id}/edit`} class="btn btn-sm btn-ghost">Edit</a>
               <form method="POST" action="?/toggle" use:enhance class="inline">
                 <input type="hidden" name="id" value={post.id} />
                 <input type="hidden" name="next" value={post.status === 'published' ? 'draft' : 'published'} />

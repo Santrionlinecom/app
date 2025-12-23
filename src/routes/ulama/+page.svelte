@@ -1,5 +1,107 @@
 <script lang="ts">
 	import { ulama } from '$lib/data/ulama';
+
+	const walisongo = [
+		{
+			slug: 'sunan-gresik',
+			num: '1️⃣',
+			name: 'Sunan Gresik',
+			desc: 'Maulana Malik Ibrahim — Gresik',
+			classes: {
+				border: 'border-emerald-300',
+				text: 'text-emerald-700',
+				hover: 'group-hover:text-emerald-800'
+			}
+		},
+		{
+			slug: 'sunan-ampel',
+			num: '2️⃣',
+			name: 'Sunan Ampel',
+			desc: 'Raden Rahmat — Surabaya',
+			classes: {
+				border: 'border-blue-300',
+				text: 'text-blue-700',
+				hover: 'group-hover:text-blue-800'
+			}
+		},
+		{
+			slug: 'sunan-bonang',
+			num: '3️⃣',
+			name: 'Sunan Bonang',
+			desc: 'Makhdum Ibrahim — Tuban',
+			classes: {
+				border: 'border-purple-300',
+				text: 'text-purple-700',
+				hover: 'group-hover:text-purple-800'
+			}
+		},
+		{
+			slug: 'sunan-drajat',
+			num: '4️⃣',
+			name: 'Sunan Drajat',
+			desc: 'Raden Qasim — Lamongan',
+			classes: {
+				border: 'border-amber-300',
+				text: 'text-amber-700',
+				hover: 'group-hover:text-amber-800'
+			}
+		},
+		{
+			slug: 'sunan-kudus',
+			num: '5️⃣',
+			name: 'Sunan Kudus',
+			desc: "Ja'far Shadiq — Kudus",
+			classes: {
+				border: 'border-rose-300',
+				text: 'text-rose-700',
+				hover: 'group-hover:text-rose-800'
+			}
+		},
+		{
+			slug: 'sunan-kalijaga',
+			num: '6️⃣',
+			name: 'Sunan Kalijaga',
+			desc: 'Raden Said — Demak',
+			classes: {
+				border: 'border-indigo-300',
+				text: 'text-indigo-700',
+				hover: 'group-hover:text-indigo-800'
+			}
+		},
+		{
+			slug: 'sunan-muria',
+			num: '7️⃣',
+			name: 'Sunan Muria',
+			desc: 'Raden Umar Said — Muria',
+			classes: {
+				border: 'border-teal-300',
+				text: 'text-teal-700',
+				hover: 'group-hover:text-teal-800'
+			}
+		},
+		{
+			slug: 'sunan-giri',
+			num: '8️⃣',
+			name: 'Sunan Giri',
+			desc: 'Raden Paku — Giri',
+			classes: {
+				border: 'border-green-300',
+				text: 'text-green-700',
+				hover: 'group-hover:text-green-800'
+			}
+		},
+		{
+			slug: 'sunan-gunung-jati',
+			num: '9️⃣',
+			name: 'Sunan Gunung Jati',
+			desc: 'Syarif Hidayatullah — Cirebon',
+			classes: {
+				border: 'border-cyan-300',
+				text: 'text-cyan-700',
+				hover: 'group-hover:text-cyan-800'
+			}
+		}
+	];
 </script>
 
 <svelte:head>
@@ -27,7 +129,7 @@
 			<h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">Ulama Besar Ahlussunnah</h2>
 			<div class="grid grid-cols-1 gap-6">
 				{#each ulama as guru}
-					<a href="/ulama/{guru.slug}" class="group relative overflow-hidden rounded-2xl border-2 border-teal-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
+					<a href={`/ulama/${guru.slug}`} class="group relative overflow-hidden rounded-2xl border-2 border-teal-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
 						<div class="absolute top-0 right-0 h-32 w-32 rounded-full bg-gradient-to-br from-teal-100 to-cyan-100 opacity-50 blur-2xl"></div>
 						<div class="relative">
 							<span class="inline-block bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">
@@ -65,20 +167,10 @@
 			</div>
 			
 			<div class="grid grid-cols-1 gap-4 mb-6">
-				{#each [
-					{ slug: 'sunan-gresik', num: '1️⃣', name: 'Sunan Gresik', desc: 'Maulana Malik Ibrahim — Gresik', color: 'emerald' },
-					{ slug: 'sunan-ampel', num: '2️⃣', name: 'Sunan Ampel', desc: 'Raden Rahmat — Surabaya', color: 'blue' },
-					{ slug: 'sunan-bonang', num: '3️⃣', name: 'Sunan Bonang', desc: 'Makhdum Ibrahim — Tuban', color: 'purple' },
-					{ slug: 'sunan-drajat', num: '4️⃣', name: 'Sunan Drajat', desc: 'Raden Qasim — Lamongan', color: 'amber' },
-					{ slug: 'sunan-kudus', num: '5️⃣', name: 'Sunan Kudus', desc: 'Ja\'far Shadiq — Kudus', color: 'rose' },
-					{ slug: 'sunan-kalijaga', num: '6️⃣', name: 'Sunan Kalijaga', desc: 'Raden Said — Demak', color: 'indigo' },
-					{ slug: 'sunan-muria', num: '7️⃣', name: 'Sunan Muria', desc: 'Raden Umar Said — Muria', color: 'teal' },
-					{ slug: 'sunan-giri', num: '8️⃣', name: 'Sunan Giri', desc: 'Raden Paku — Giri', color: 'green' },
-					{ slug: 'sunan-gunung-jati', num: '9️⃣', name: 'Sunan Gunung Jati', desc: 'Syarif Hidayatullah — Cirebon', color: 'cyan' }
-				] as wali}
-					<a href="/walisongo/{wali.slug}" class="group rounded-2xl border-2 border-{wali.color}-300 bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl">
+				{#each walisongo as wali}
+					<a href={`/walisongo/${wali.slug}`} class={`group rounded-2xl border-2 ${wali.classes.border} bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl`}>
 						<span class="text-3xl mb-2 block">{wali.num}</span>
-						<h3 class="text-lg font-bold text-{wali.color}-700 group-hover:text-{wali.color}-800">{wali.name}</h3>
+						<h3 class={`text-lg font-bold ${wali.classes.text} ${wali.classes.hover}`}>{wali.name}</h3>
 						<p class="text-sm text-gray-600 mt-1">{wali.desc}</p>
 					</a>
 				{/each}
