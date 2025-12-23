@@ -11,6 +11,11 @@
 	let uploadLoading = $state(false);
 	let uploadMessage = $state('');
 	let uploadError = $state('');
+	let pdfForm = $state({ judul: '', jilid: '', pageOffset: '1', driveUrl: '' });
+	let pdfFile = $state<File | null>(null);
+	let pdfLoading = $state(false);
+	let pdfMessage = $state('');
+	let pdfError = $state('');
 	let uploadHistory = $state<
 		{ id: string; judul: string; halaman: string; jilid: string | null; createdAt: string | null }[]
 	>([]);
@@ -20,6 +25,8 @@
 		chatError = '';
 		uploadError = '';
 		uploadMessage = '';
+		pdfError = '';
+		pdfMessage = '';
 	};
 
 const loadHistory = async () => {
@@ -89,6 +96,58 @@ const handleTanya = async () => {
 			uploadError = err?.message || 'Terjadi kesalahan';
 		} finally {
 			uploadLoading = false;
+		}
+	};
+
+	const MAX_PDF_SIZE = 20 * 1024 * 1024;
+
+	const handlePdfFileChange = (event: Event) => {
+		const target = event.currentTarget as HTMLInputElement;
+		const file = target.files?.[0] ?? null;
+		if (file && file.size > MAX_PDF_SIZE) {
+			pdfError = 'Ukuran PDF melebihi 20MB.';
+			target.value = '';
+			pdfFile = null;
+			return;
+		}
+		pdfFile = file;
+	};
+
+	const handleUploadPdf = async () => {
+		pdfLoading = true;
+		pdfError = '';
+		pdfMessage = '';
+		try {
+			if (!pdfForm.judul.trim()) {
+				throw new Error('Judul kitab wajib diisi');
+			}
+			if (!pdfFile && !pdfForm.driveUrl.trim()) {
+				throw new Error('Pilih file PDF atau isi link Google Drive');
+			}
+			const formData = new FormData();
+			formData.append('judul', pdfForm.judul.trim());
+			if (pdfForm.jilid.trim()) formData.append('jilid', pdfForm.jilid.trim());
+			if (pdfForm.pageOffset.trim()) formData.append('pageOffset', pdfForm.pageOffset.trim());
+			if (pdfForm.driveUrl.trim()) formData.append('driveUrl', pdfForm.driveUrl.trim());
+			if (pdfFile) formData.append('pdf', pdfFile);
+
+			const res = await fetch('/api/kitab/upload', {
+				method: 'POST',
+				body: formData
+			});
+			const result = await res.json();
+			if (!res.ok || !result.ok) {
+				throw new Error(result?.error || 'Gagal memproses PDF');
+			}
+
+			pdfMessage = `Berhasil memproses ${result.processedPages} halaman (${result.chunks} potongan).`;
+			pdfForm = { judul: '', jilid: '', pageOffset: '1', driveUrl: '' };
+			pdfFile = null;
+			void loadHistory();
+		} catch (err: any) {
+			pdfError = err?.message || 'Terjadi kesalahan';
+		} finally {
+			pdfLoading = false;
 		}
 	};
 </script>
@@ -176,7 +235,83 @@ const handleTanya = async () => {
 			{/if}
 		</div>
 	{:else}
-	<div class="rounded-2xl border bg-white p-6 shadow space-y-4">
+		<div class="rounded-2xl border bg-white p-6 shadow space-y-4">
+			<div class="flex items-center justify-between">
+				<div>
+					<p class="text-sm uppercase tracking-[0.2em] text-emerald-600">Upload PDF</p>
+					<h3 class="text-lg font-semibold text-slate-900 mt-1">Tambahkan Kitab dari PDF</h3>
+				</div>
+				<span class="text-xs text-slate-400">Maks 20MB</span>
+			</div>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<label class="block text-sm font-semibold text-slate-700 mb-1">
+					Judul Kitab
+					<input
+						type="text"
+						class="input input-bordered w-full mt-1"
+						bind:value={pdfForm.judul}
+						placeholder="Misal: Fathul Qarib"
+					/>
+				</label>
+				<div class="grid grid-cols-2 gap-3">
+					<label class="block text-sm font-semibold text-slate-700 mb-1">
+						Jilid (opsional)
+						<input
+							type="text"
+							class="input input-bordered w-full mt-1"
+							bind:value={pdfForm.jilid}
+							placeholder="cth: 1"
+						/>
+					</label>
+					<label class="block text-sm font-semibold text-slate-700 mb-1">
+						Mulai Halaman
+						<input
+							type="number"
+							min="1"
+							class="input input-bordered w-full mt-1"
+							bind:value={pdfForm.pageOffset}
+							placeholder="cth: 1"
+						/>
+					</label>
+				</div>
+			</div>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<label class="block text-sm font-semibold text-slate-700 mb-1">
+					File PDF
+					<input
+						type="file"
+						accept="application/pdf"
+						class="file-input file-input-bordered w-full mt-1"
+						on:change={handlePdfFileChange}
+					/>
+				</label>
+				<label class="block text-sm font-semibold text-slate-700 mb-1">
+					Atau Link Google Drive
+					<input
+						type="url"
+						class="input input-bordered w-full mt-1"
+						bind:value={pdfForm.driveUrl}
+						placeholder="https://drive.google.com/file/d/..."
+					/>
+				</label>
+			</div>
+
+			<div class="flex items-center gap-3">
+				<button class="btn btn-primary" onclick={handleUploadPdf} disabled={pdfLoading}>
+					{pdfLoading ? 'Memproses...' : 'Upload & Index PDF'}
+				</button>
+				{#if pdfMessage}
+					<span class="text-sm text-emerald-600">{pdfMessage}</span>
+				{/if}
+				{#if pdfError}
+					<span class="text-sm text-red-600">{pdfError}</span>
+				{/if}
+			</div>
+		</div>
+
+		<div class="rounded-2xl border bg-white p-6 shadow space-y-4">
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<label class="block text-sm font-semibold text-slate-700 mb-1">
 					Judul Kitab
