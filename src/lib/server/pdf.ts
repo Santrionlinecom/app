@@ -1,4 +1,75 @@
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+type PdfJsModule = typeof import('pdfjs-dist/legacy/build/pdf.mjs');
+
+let pdfjsPromise: Promise<PdfJsModule> | null = null;
+
+const ensureDomMatrix = () => {
+	const globalAny = globalThis as typeof globalThis & { DOMMatrix?: typeof DOMMatrix };
+	if (globalAny.DOMMatrix) return;
+
+	// Minimal DOMMatrix stub for non-rendering server usage (text extraction only).
+	class FallbackDOMMatrix {
+		a = 1;
+		b = 0;
+		c = 0;
+		d = 1;
+		e = 0;
+		f = 0;
+
+		constructor(
+			init?:
+				| number[]
+				| { a?: number; b?: number; c?: number; d?: number; e?: number; f?: number }
+		) {
+			if (Array.isArray(init)) {
+				[this.a, this.b, this.c, this.d, this.e, this.f] = [
+					init[0] ?? 1,
+					init[1] ?? 0,
+					init[2] ?? 0,
+					init[3] ?? 1,
+					init[4] ?? 0,
+					init[5] ?? 0
+				];
+			} else if (init && typeof init === 'object') {
+				this.a = init.a ?? 1;
+				this.b = init.b ?? 0;
+				this.c = init.c ?? 0;
+				this.d = init.d ?? 1;
+				this.e = init.e ?? 0;
+				this.f = init.f ?? 0;
+			}
+		}
+
+		multiplySelf() {
+			return this;
+		}
+
+		preMultiplySelf() {
+			return this;
+		}
+
+		translate() {
+			return this;
+		}
+
+		scale() {
+			return this;
+		}
+
+		invertSelf() {
+			return this;
+		}
+	}
+
+	globalAny.DOMMatrix = FallbackDOMMatrix as unknown as typeof DOMMatrix;
+};
+
+const loadPdfJs = async () => {
+	if (!pdfjsPromise) {
+		ensureDomMatrix();
+		pdfjsPromise = import('pdfjs-dist/legacy/build/pdf.mjs');
+	}
+	return pdfjsPromise;
+};
 
 type PdfPageText = {
 	pageNumber: number;
@@ -11,6 +82,7 @@ export const extractPdfTextPages = async (
 	data: ArrayBuffer,
 	options?: { maxPages?: number }
 ): Promise<{ pages: PdfPageText[]; totalPages: number } | null> => {
+	const pdfjsLib = await loadPdfJs();
 	const loadingTask = pdfjsLib.getDocument({ data });
 	const pdf = await loadingTask.promise;
 	const totalPages = pdf.numPages;

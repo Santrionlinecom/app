@@ -2,6 +2,14 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 
+const includePrerendered = process.env.PWA_INCLUDE_PRERENDERED === 'true';
+const pwaGlobPatterns = [
+	'client/**/*.{js,css,ico,png,svg,webp,woff2,ttf,webmanifest}'
+];
+if (includePrerendered) {
+	pwaGlobPatterns.push('prerendered/**/*.{html,json}');
+}
+
 export default defineConfig({
 	plugins: [
 		sveltekit(),
@@ -35,8 +43,9 @@ export default defineConfig({
 				]
 			},
 			workbox: {
-				// Pastikan pola ini menangkap semua file statis penting
-				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2,ttf}'],
+				// Optional: set PWA_INCLUDE_PRERENDERED=true to include prerendered pages.
+				modifyURLPrefix: {},
+				globPatterns: pwaGlobPatterns,
 				
 				// Strategi Caching (Penyimpanan Offline)
 				runtimeCaching: [
