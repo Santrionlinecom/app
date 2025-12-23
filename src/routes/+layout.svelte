@@ -1,11 +1,34 @@
 <script lang="ts">
 import '../app.css';
 import { page } from '$app/stores';
+import { onMount } from 'svelte';
 
 export let data;
 
 let pathname = '/';
 $: pathname = $page.url.pathname as string;
+
+const apkUrl = 'https://files.santrionline.com/Santrionline.apk';
+const installPromptKey = 'so_install_prompt_v1';
+let showInstallPopup = false;
+
+const dismissInstallPopup = (persist = true) => {
+	showInstallPopup = false;
+	if (!persist) return;
+	try {
+		localStorage.setItem(installPromptKey, '1');
+	} catch {
+		// Ignore storage failures (private mode, etc).
+	}
+};
+
+onMount(() => {
+	try {
+		showInstallPopup = !localStorage.getItem(installPromptKey);
+	} catch {
+		showInstallPopup = true;
+	}
+});
 
 const baseNav = [
 	{
@@ -129,6 +152,68 @@ const baseNav = [
 			{/if}
 		</div>
 	</nav>
+
+	{#if showInstallPopup}
+		<div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4 py-6 backdrop-blur-sm" on:click={() => dismissInstallPopup()}>
+			<div
+				class="relative w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+				role="dialog"
+				aria-modal="true"
+				aria-label="Install aplikasi Santri Online"
+				on:click|stopPropagation={() => {}}
+			>
+				<button
+					class="btn btn-sm btn-circle absolute right-4 top-4 bg-white/80 text-slate-700 hover:bg-white"
+					on:click={() => dismissInstallPopup()}
+					aria-label="Tutup"
+				>
+					✕
+				</button>
+				<div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 text-white">
+					<p class="text-xs uppercase tracking-[0.35em] text-white/80">Santri Online App</p>
+					<h2 class="text-2xl md:text-3xl font-bold mt-2">Install Aplikasi Resmi</h2>
+					<p class="text-sm text-white/90 mt-2">
+						Nikmati akses cepat, notifikasi, dan pengalaman yang lebih ringan di perangkat Android Anda.
+					</p>
+				</div>
+				<div class="p-6">
+					<div class="grid gap-3 md:grid-cols-3 text-sm text-slate-700">
+						<div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-3">
+							<span class="font-semibold">⚡ Akses Cepat</span>
+							<p class="mt-1 text-xs text-slate-600">Buka lebih cepat tanpa browser.</p>
+						</div>
+						<div class="rounded-2xl border border-teal-100 bg-teal-50 p-3">
+							<span class="font-semibold">🔔 Notifikasi</span>
+							<p class="mt-1 text-xs text-slate-600">Update kajian dan fitur terbaru.</p>
+						</div>
+						<div class="rounded-2xl border border-cyan-100 bg-cyan-50 p-3">
+							<span class="font-semibold">🛡️ Resmi</span>
+							<p class="mt-1 text-xs text-slate-600">APK aman dari Santri Online.</p>
+						</div>
+					</div>
+
+					<div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+						<a
+							href={apkUrl}
+							class="btn btn-primary"
+							target="_blank"
+							rel="noopener"
+							on:click={() => dismissInstallPopup()}
+						>
+							Unduh APK
+						</a>
+						<button class="btn btn-ghost" on:click={() => dismissInstallPopup()}>
+							Nanti saja
+						</button>
+					</div>
+
+					<p class="mt-4 text-xs text-slate-500">
+						*Jika diminta izin, aktifkan “Install unknown apps” untuk melanjutkan instalasi.
+					</p>
+				</div>
+			</div>
+		</div>
+	{/if}
 </div>
 
 <style>
