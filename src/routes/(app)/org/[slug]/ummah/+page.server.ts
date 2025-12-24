@@ -473,5 +473,107 @@ export const actions: Actions = {
 			.run();
 
 		return { success: true };
+	},
+
+	updateKas: async ({ request, locals, params }) => {
+		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
+		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+
+		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+		const role = locals.user.role ?? '';
+		if (!orgId || isSystemAdmin || !allowedRoles.has(role)) {
+			return fail(403, { error: 'Tidak memiliki akses' });
+		}
+
+		const org = await getOrganizationBySlug(locals.db, params.slug);
+		if (!org || org.id !== orgId) {
+			return fail(403, { error: 'Akses organisasi tidak sesuai' });
+		}
+		if (org.type !== 'masjid' && org.type !== 'musholla') {
+			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
+		}
+
+		await ensureUmmahTables(locals.db);
+
+		const data = await request.formData();
+		const id = `${data.get('id') ?? ''}`.trim();
+		const tanggalRaw = `${data.get('tanggal') ?? ''}`.trim();
+		const tipe = `${data.get('tipe') ?? ''}`.trim();
+		const kategori = `${data.get('kategori') ?? ''}`.trim();
+		const keterangan = `${data.get('keterangan') ?? ''}`.trim();
+		const nominalRaw = `${data.get('nominal') ?? ''}`.trim();
+
+		if (!id) {
+			return fail(400, { error: 'Transaksi tidak ditemukan' });
+		}
+
+		const nominal = Number(nominalRaw);
+		const tanggalValue = Date.parse(`${tanggalRaw}T00:00:00`);
+
+		if (!tanggalRaw || !Number.isFinite(tanggalValue)) {
+			return fail(400, { error: 'Tanggal tidak valid' });
+		}
+		if (tipe !== 'masuk' && tipe !== 'keluar') {
+			return fail(400, { error: 'Tipe transaksi tidak valid' });
+		}
+		if (!kategori) {
+			return fail(400, { error: 'Kategori wajib diisi' });
+		}
+		if (!Number.isFinite(nominal) || nominal <= 0) {
+			return fail(400, { error: 'Nominal harus lebih dari 0' });
+		}
+
+		const result = await locals.db
+			.prepare(
+				`UPDATE kas_masjid
+				 SET tanggal = ?, tipe = ?, kategori = ?, keterangan = ?, nominal = ?
+				 WHERE id = ? AND organization_id = ?`
+			)
+			.bind(tanggalValue, tipe, kategori, keterangan || null, nominal, id, orgId)
+			.run();
+
+		if ((result?.meta?.changes ?? 0) === 0) {
+			return fail(404, { error: 'Transaksi tidak ditemukan' });
+		}
+
+		return { success: true };
+	},
+
+	deleteKas: async ({ request, locals, params }) => {
+		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
+		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+
+		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+		const role = locals.user.role ?? '';
+		if (!orgId || isSystemAdmin || !allowedRoles.has(role)) {
+			return fail(403, { error: 'Tidak memiliki akses' });
+		}
+
+		const org = await getOrganizationBySlug(locals.db, params.slug);
+		if (!org || org.id !== orgId) {
+			return fail(403, { error: 'Akses organisasi tidak sesuai' });
+		}
+		if (org.type !== 'masjid' && org.type !== 'musholla') {
+			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
+		}
+
+		await ensureUmmahTables(locals.db);
+
+		const data = await request.formData();
+		const id = `${data.get('id') ?? ''}`.trim();
+		if (!id) {
+			return fail(400, { error: 'Transaksi tidak valid' });
+		}
+
+		const result = await locals.db
+			.prepare('DELETE FROM kas_masjid WHERE id = ? AND organization_id = ?')
+			.bind(id, orgId)
+			.run();
+
+		if ((result?.meta?.changes ?? 0) === 0) {
+			return fail(404, { error: 'Transaksi tidak ditemukan' });
+		}
+
+		return { success: true };
 	}
 };

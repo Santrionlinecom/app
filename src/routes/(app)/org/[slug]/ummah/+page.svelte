@@ -37,6 +37,47 @@
 	let zakatProgramId = data.activeProgramId || data.programs[0]?.id || '';
 	let qurbanProgramId = data.activeProgramId || data.programs[0]?.id || '';
 	let diterimaOleh = receiverDefault;
+	let kasId = '';
+	let kasTanggal = '';
+	let kasTipe = 'masuk';
+	let kasKategori = '';
+	let kasNominal = '';
+	let kasKeterangan = '';
+	let kasFormRef: HTMLFormElement | null = null;
+
+	const toDateInput = (value: number) => {
+		const date = new Date(value);
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	};
+
+	const startEditKas = (row: {
+		id: string;
+		tanggal: number;
+		tipe: string;
+		kategori: string;
+		keterangan: string | null;
+		nominal: number;
+	}) => {
+		kasId = row.id;
+		kasTanggal = toDateInput(row.tanggal);
+		kasTipe = row.tipe;
+		kasKategori = row.kategori;
+		kasNominal = `${row.nominal}`;
+		kasKeterangan = row.keterangan ?? '';
+		kasFormRef?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	};
+
+	const resetKasForm = () => {
+		kasId = '';
+		kasTanggal = '';
+		kasTipe = 'masuk';
+		kasKategori = '';
+		kasNominal = '';
+		kasKeterangan = '';
+	};
 
 	const refreshOnSuccess = () => {
 		return async ({ result }: { result: { type: string } }) => {
@@ -96,10 +137,28 @@
 					</div>
 				</div>
 
-				<form method="POST" action="?/addKas" class="mt-6 space-y-4" use:enhance={refreshOnSuccess}>
+				<form
+					method="POST"
+					action={kasId ? '?/updateKas' : '?/addKas'}
+					class="mt-6 space-y-4"
+					use:enhance={refreshOnSuccess}
+					bind:this={kasFormRef}
+				>
+					{#if kasId}
+						<input type="hidden" name="id" value={kasId} />
+						<div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+							Sedang mengedit transaksi kas. Simpan untuk memperbarui atau batalkan untuk kembali input baru.
+						</div>
+					{/if}
 					<div class="grid gap-3 md:grid-cols-2">
-						<input type="date" name="tanggal" class="input input-bordered w-full" required />
-						<select name="tipe" class="select select-bordered w-full" required>
+						<input
+							type="date"
+							name="tanggal"
+							class="input input-bordered w-full"
+							bind:value={kasTanggal}
+							required
+						/>
+						<select name="tipe" class="select select-bordered w-full" bind:value={kasTipe} required>
 							<option value="masuk">Pemasukan</option>
 							<option value="keluar">Pengeluaran</option>
 						</select>
@@ -110,6 +169,7 @@
 								list="kategoriKas"
 								placeholder="Kategori (misal: infaq, operasional)"
 								class="input input-bordered w-full"
+								bind:value={kasKategori}
 								required
 							/>
 							<datalist id="kategoriKas">
@@ -128,6 +188,7 @@
 							min="0"
 							placeholder="Nominal (rupiah)"
 							class="input input-bordered w-full"
+							bind:value={kasNominal}
 							required
 						/>
 						<textarea
@@ -135,9 +196,19 @@
 							rows="2"
 							placeholder="Keterangan singkat"
 							class="textarea textarea-bordered w-full md:col-span-2"
+							bind:value={kasKeterangan}
 						></textarea>
 					</div>
-					<button class="btn btn-primary w-full">Simpan Kas</button>
+					<div class="flex flex-col gap-2 sm:flex-row">
+						<button class="btn btn-primary w-full">
+							{kasId ? 'Perbarui Kas' : 'Simpan Kas'}
+						</button>
+						{#if kasId}
+							<button type="button" class="btn btn-outline w-full" on:click={resetKasForm}>
+								Batal Edit
+							</button>
+						{/if}
+					</div>
 				</form>
 			</div>
 
@@ -158,6 +229,7 @@
 									<th>Keterangan</th>
 									<th>Tipe</th>
 									<th>Nominal</th>
+									<th>Aksi</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -169,6 +241,27 @@
 										<td>{kasTypeLabel[row.tipe] ?? row.tipe}</td>
 										<td class={row.tipe === 'masuk' ? 'text-emerald-600' : 'text-rose-600'}>
 											{row.tipe === 'masuk' ? '+' : '-'} {formatCurrency(row.nominal)}
+										</td>
+										<td>
+											<div class="flex flex-wrap gap-2">
+												<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditKas(row)}>
+													Edit
+												</button>
+												<form method="POST" action="?/deleteKas" use:enhance={refreshOnSuccess}>
+													<input type="hidden" name="id" value={row.id} />
+													<button
+														type="submit"
+														class="btn btn-xs btn-ghost text-red-600"
+														on:click={(event) => {
+															if (!confirm('Hapus transaksi ini?')) {
+																event.preventDefault();
+															}
+														}}
+													>
+														Hapus
+													</button>
+												</form>
+											</div>
 										</td>
 									</tr>
 								{/each}
