@@ -4,9 +4,18 @@
 
 	export let data: PageData;
 
-	const orgs = data.orgs ?? [];
-	const pending = orgs.filter((o: any) => o.status === 'pending');
-	const active = orgs.filter((o: any) => o.status === 'active');
+	type OrgRow = {
+		id: string;
+		name: string;
+		slug: string;
+		status: string;
+		type?: string;
+		contactPhone?: string | null;
+	};
+
+	const orgs = (data.orgs ?? []) as OrgRow[];
+	const pending = orgs.filter((o) => o.status === 'pending');
+	const active = orgs.filter((o) => o.status === 'active');
 
 	const formatOrgType = (value?: string) => {
 		if (!value) return '-';

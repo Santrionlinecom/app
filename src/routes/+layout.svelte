@@ -22,6 +22,20 @@ const dismissInstallPopup = (persist = true) => {
 	}
 };
 
+const handleInstallOverlayKey = (event: KeyboardEvent) => {
+	if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') {
+		event.preventDefault();
+		dismissInstallPopup();
+	}
+};
+
+const handleInstallDialogKey = (event: KeyboardEvent) => {
+	if (event.key === 'Escape') {
+		event.preventDefault();
+		dismissInstallPopup();
+	}
+};
+
 onMount(() => {
 	try {
 		showInstallPopup = !localStorage.getItem(installPromptKey);
@@ -154,13 +168,21 @@ const baseNav = [
 	</nav>
 
 	{#if showInstallPopup}
-		<div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4 py-6 backdrop-blur-sm" on:click={() => dismissInstallPopup()}>
+		<div
+			class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4 py-6 backdrop-blur-sm"
+			role="button"
+			tabindex="0"
+			aria-label="Tutup popup instalasi"
+			on:click|self={() => dismissInstallPopup()}
+			on:keydown={handleInstallOverlayKey}
+		>
 			<div
 				class="relative w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl"
 				role="dialog"
 				aria-modal="true"
 				aria-label="Install aplikasi Santri Online"
-				on:click|stopPropagation={() => {}}
+				tabindex="0"
+				on:keydown={handleInstallDialogKey}
 			>
 				<button
 					class="btn btn-sm btn-circle absolute right-4 top-4 bg-white/80 text-slate-700 hover:bg-white"

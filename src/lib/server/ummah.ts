@@ -221,7 +221,11 @@ export const getOrgFinanceSummary = async (db: D1Database, orgId: string): Promi
 			lastUpdated: number | null;
 		}>();
 
-	const qurbanStatus: Record<string, number> = { hidup: 0, sembelih: 0, bagi: 0 };
+	const qurbanStatus: { hidup: number; sembelih: number; bagi: number } = {
+		hidup: 0,
+		sembelih: 0,
+		bagi: 0
+	};
 	const qurbanJenisMap = new Map<string, number>();
 	let qurbanTotal = 0;
 	let qurbanUpdated: number | null = null;
@@ -229,8 +233,8 @@ export const getOrgFinanceSummary = async (db: D1Database, orgId: string): Promi
 	for (const row of qurbanRows ?? []) {
 		const total = row.total ?? 0;
 		qurbanTotal += total;
-		if (row.statusHewan in qurbanStatus) {
-			qurbanStatus[row.statusHewan] = (qurbanStatus[row.statusHewan] ?? 0) + total;
+		if (row.statusHewan === 'hidup' || row.statusHewan === 'sembelih' || row.statusHewan === 'bagi') {
+			qurbanStatus[row.statusHewan] = qurbanStatus[row.statusHewan] + total;
 		}
 		if (row.jenisHewan) {
 			qurbanJenisMap.set(row.jenisHewan, (qurbanJenisMap.get(row.jenisHewan) ?? 0) + total);

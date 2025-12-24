@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		org,
 		roles: allowedRolesByType.tpq.filter((role) => role !== 'ustadzah').map((role) => ({
 			value: role,
-			label: role === 'ustadzah' ? 'Ustadzah' : role.charAt(0).toUpperCase() + role.slice(1)
+			label: role === 'ustadz' ? 'Ustadz' : role.charAt(0).toUpperCase() + role.slice(1)
 		}))
 	};
 };
