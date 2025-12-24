@@ -43,6 +43,7 @@ const parseSohibul = (value: string | null) => {
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { db, orgId, user, org } = await requireOrgContext(locals, params.slug);
 	await ensureUmmahTables(db);
+	const canManageKas = org.type === 'masjid' || org.type === 'musholla';
 
 	const { results: programRows } = await db
 		.prepare(
@@ -172,6 +173,67 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		totals.jiwa += jiwa;
 	}
 
+	let kasSummary = { masuk: 0, keluar: 0, saldo: 0 };
+	let kasEntries: {
+		id: string;
+		tanggal: number;
+		tipe: string;
+		kategori: string;
+		keterangan: string | null;
+		nominal: number;
+		createdAt: number;
+	}[] = [];
+
+	if (canManageKas) {
+		const { results: kasSummaryRows } = await db
+			.prepare(
+				`SELECT tipe,
+					SUM(nominal) as totalNominal
+				 FROM kas_masjid
+				 WHERE organization_id = ?
+				 GROUP BY tipe`
+			)
+			.bind(orgId)
+			.all<{ tipe: string; totalNominal: number | null }>();
+
+		for (const row of kasSummaryRows ?? []) {
+			const nominal = row.totalNominal ?? 0;
+			if (row.tipe === 'masuk') {
+				kasSummary.masuk = nominal;
+			} else if (row.tipe === 'keluar') {
+				kasSummary.keluar = nominal;
+			}
+		}
+		kasSummary.saldo = kasSummary.masuk - kasSummary.keluar;
+
+		const { results: kasRows } = await db
+			.prepare(
+				`SELECT id,
+					tanggal,
+					tipe,
+					kategori,
+					keterangan,
+					nominal,
+					created_at as createdAt
+				 FROM kas_masjid
+				 WHERE organization_id = ?
+				 ORDER BY tanggal DESC, created_at DESC
+				 LIMIT 30`
+			)
+			.bind(orgId)
+			.all<{
+				id: string;
+				tanggal: number;
+				tipe: string;
+				kategori: string;
+				keterangan: string | null;
+				nominal: number;
+				createdAt: number;
+			}>();
+
+		kasEntries = (kasRows ?? []) as typeof kasEntries;
+	}
+
 	return {
 		org,
 		programs,
@@ -179,6 +241,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		zakat,
 		qurban,
 		totals,
+		canManageKas,
+		kasSummary,
+		kasEntries,
 		currentUser: user
 	};
 };
@@ -341,6 +406,70 @@ export const actions: Actions = {
 				 VALUES (?, ?, ?, ?, ?, ?)`
 			)
 			.bind(crypto.randomUUID(), programId, jenisHewan, namaSohibulQurban, statusHewan, Date.now())
+			.run();
+
+		return { success: true };
+	},
+
+	addKas: async ({ request, locals, params }) => {
+		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
+		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+
+		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+		const role = locals.user.role ?? '';
+		if (!orgId || isSystemAdmin || !allowedRoles.has(role)) {
+			return fail(403, { error: 'Tidak memiliki akses' });
+		}
+
+		const org = await getOrganizationBySlug(locals.db, params.slug);
+		if (!org || org.id !== orgId) {
+			return fail(403, { error: 'Akses organisasi tidak sesuai' });
+		}
+		if (org.type !== 'masjid' && org.type !== 'musholla') {
+			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
+		}
+
+		await ensureUmmahTables(locals.db);
+
+		const data = await request.formData();
+		const tanggalRaw = `${data.get('tanggal') ?? ''}`.trim();
+		const tipe = `${data.get('tipe') ?? ''}`.trim();
+		const kategori = `${data.get('kategori') ?? ''}`.trim();
+		const keterangan = `${data.get('keterangan') ?? ''}`.trim();
+		const nominalRaw = `${data.get('nominal') ?? ''}`.trim();
+
+		const nominal = Number(nominalRaw);
+		const tanggalValue = Date.parse(`${tanggalRaw}T00:00:00`);
+
+		if (!tanggalRaw || !Number.isFinite(tanggalValue)) {
+			return fail(400, { error: 'Tanggal tidak valid' });
+		}
+		if (tipe !== 'masuk' && tipe !== 'keluar') {
+			return fail(400, { error: 'Tipe transaksi tidak valid' });
+		}
+		if (!kategori) {
+			return fail(400, { error: 'Kategori wajib diisi' });
+		}
+		if (!Number.isFinite(nominal) || nominal <= 0) {
+			return fail(400, { error: 'Nominal harus lebih dari 0' });
+		}
+
+		await locals.db
+			.prepare(
+				`INSERT INTO kas_masjid (id, organization_id, tanggal, tipe, kategori, keterangan, nominal, created_by, created_at)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+			)
+			.bind(
+				crypto.randomUUID(),
+				orgId,
+				tanggalValue,
+				tipe,
+				kategori,
+				keterangan || null,
+				nominal,
+				locals.user.id,
+				Date.now()
+			)
 			.run();
 
 		return { success: true };

@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getOrganizationBySlug } from '$lib/server/organizations';
+import { getOrgFinanceSummary } from '$lib/server/ummah';
 
 export const ssr = true;
 export const prerender = false;
@@ -16,5 +17,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, 'Masjid tidak ditemukan');
 	}
 
-	return { org, typePath: 'masjid' };
+	const finance = await getOrgFinanceSummary(db, org.id);
+	return { org, typePath: 'masjid', finance };
 };

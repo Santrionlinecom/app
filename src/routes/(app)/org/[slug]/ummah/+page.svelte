@@ -8,6 +8,7 @@
 		new Intl.NumberFormat('id-ID').format(value ?? 0);
 	const formatDate = (value: number) =>
 		new Date(value).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+	const formatCurrency = (value: number | null | undefined) => `Rp ${formatNumber(value ?? 0)}`;
 
 	const statusLabel: Record<string, string> = {
 		open: 'Open',
@@ -25,7 +26,13 @@
 		bagi: 'Bagi'
 	};
 
+	const kasTypeLabel: Record<string, string> = {
+		masuk: 'Pemasukan',
+		keluar: 'Pengeluaran'
+	};
+
 	const receiverDefault = data.currentUser?.username || data.currentUser?.email || '';
+	const orgLabel = data.org?.type === 'musholla' ? 'Musholla' : 'Masjid';
 
 	let zakatProgramId = data.activeProgramId || data.programs[0]?.id || '';
 	let qurbanProgramId = data.activeProgramId || data.programs[0]?.id || '';
@@ -68,6 +75,110 @@
 			<p class="text-xs text-slate-400">Dari semua transaksi</p>
 		</div>
 	</div>
+
+	{#if data.canManageKas}
+		<section class="grid gap-6 lg:grid-cols-2">
+			<div class="rounded-2xl border bg-white p-6 shadow-sm">
+				<h2 class="text-lg font-semibold text-slate-900">Kas {orgLabel}</h2>
+				<p class="text-xs text-slate-500">Catat pemasukan dan pengeluaran untuk laporan transparan.</p>
+				<div class="mt-4 grid gap-3 md:grid-cols-3">
+					<div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
+						<p class="text-xs uppercase text-emerald-700">Saldo</p>
+						<p class="text-lg font-bold text-emerald-700">{formatCurrency(data.kasSummary?.saldo)}</p>
+					</div>
+					<div class="rounded-xl border border-blue-100 bg-blue-50 p-3">
+						<p class="text-xs uppercase text-blue-700">Pemasukan</p>
+						<p class="text-lg font-bold text-blue-700">{formatCurrency(data.kasSummary?.masuk)}</p>
+					</div>
+					<div class="rounded-xl border border-amber-100 bg-amber-50 p-3">
+						<p class="text-xs uppercase text-amber-700">Pengeluaran</p>
+						<p class="text-lg font-bold text-amber-700">{formatCurrency(data.kasSummary?.keluar)}</p>
+					</div>
+				</div>
+
+				<form method="POST" action="?/addKas" class="mt-6 space-y-4" use:enhance={refreshOnSuccess}>
+					<div class="grid gap-3 md:grid-cols-2">
+						<input type="date" name="tanggal" class="input input-bordered w-full" required />
+						<select name="tipe" class="select select-bordered w-full" required>
+							<option value="masuk">Pemasukan</option>
+							<option value="keluar">Pengeluaran</option>
+						</select>
+						<div class="md:col-span-2">
+							<input
+								type="text"
+								name="kategori"
+								list="kategoriKas"
+								placeholder="Kategori (misal: infaq, operasional)"
+								class="input input-bordered w-full"
+								required
+							/>
+							<datalist id="kategoriKas">
+								<option value="Infaq"></option>
+								<option value="Zakat"></option>
+								<option value="Qurban"></option>
+								<option value="Operasional"></option>
+								<option value="Pembangunan"></option>
+								<option value="Santunan"></option>
+								<option value="Lainnya"></option>
+							</datalist>
+						</div>
+						<input
+							type="number"
+							name="nominal"
+							min="0"
+							placeholder="Nominal (rupiah)"
+							class="input input-bordered w-full"
+							required
+						/>
+						<textarea
+							name="keterangan"
+							rows="2"
+							placeholder="Keterangan singkat"
+							class="textarea textarea-bordered w-full md:col-span-2"
+						></textarea>
+					</div>
+					<button class="btn btn-primary w-full">Simpan Kas</button>
+				</form>
+			</div>
+
+			<div class="rounded-2xl border bg-white p-6 shadow-sm">
+				<div class="flex items-center justify-between">
+					<h2 class="text-lg font-semibold text-slate-900">Rekap Kas Terbaru</h2>
+					<span class="text-xs text-slate-400">{data.kasEntries.length} transaksi</span>
+				</div>
+				{#if data.kasEntries.length === 0}
+					<p class="mt-4 text-sm text-slate-500">Belum ada catatan kas.</p>
+				{:else}
+					<div class="mt-4 overflow-auto">
+						<table class="table table-zebra w-full text-sm">
+							<thead>
+								<tr>
+									<th>Tanggal</th>
+									<th>Kategori</th>
+									<th>Keterangan</th>
+									<th>Tipe</th>
+									<th>Nominal</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each data.kasEntries as row}
+									<tr>
+										<td>{formatDate(row.tanggal)}</td>
+										<td>{row.kategori}</td>
+										<td>{row.keterangan || '-'}</td>
+										<td>{kasTypeLabel[row.tipe] ?? row.tipe}</td>
+										<td class={row.tipe === 'masuk' ? 'text-emerald-600' : 'text-rose-600'}>
+											{row.tipe === 'masuk' ? '+' : '-'} {formatCurrency(row.nominal)}
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				{/if}
+			</div>
+		</section>
+	{/if}
 
 	<section class="grid gap-6 lg:grid-cols-2">
 		<div class="rounded-2xl border bg-white p-6 shadow-sm">

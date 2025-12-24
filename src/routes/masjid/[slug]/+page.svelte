@@ -1,5 +1,6 @@
 <script lang="ts">
 	import OrgDetailView from '$lib/components/org/OrgDetailView.svelte';
+	import OrgFinancePublic from '$lib/components/org/OrgFinancePublic.svelte';
 	export let data;
 
 	const orgName = data.org?.name ?? 'Masjid';
@@ -24,3 +25,4 @@
 </svelte:head>
 
 <OrgDetailView org={data.org} typePath={data.typePath} />
+<OrgFinancePublic org={data.org} finance={data.finance} />
