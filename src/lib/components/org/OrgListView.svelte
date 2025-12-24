@@ -6,20 +6,26 @@
 		id: string;
 		name: string;
 		slug: string;
+		status?: 'pending' | 'active';
 		city?: string | null;
 		address?: string | null;
 		contactPhone?: string | null;
 		thumbnailUrl?: string | null;
 	}> = [];
+
+	const formatStatus = (value?: 'pending' | 'active') => {
+		if (value === 'pending') return 'Menunggu verifikasi';
+		return 'Aktif';
+	};
 </script>
 
 <section class="max-w-6xl mx-auto py-10 px-4 space-y-6">
-	<header class="space-y-2 text-center">
+	<header class="space-y-3 text-center">
 		<p class="text-sm uppercase tracking-[0.3em] text-emerald-500">Santri Online</p>
-		<h1 class="text-3xl md:text-4xl font-bold text-slate-900">{title}</h1>
-		<p class="text-slate-600">{subtitle}</p>
-		<div class="pt-4">
-			<a class="btn btn-primary" href={`/${typePath}/daftar`}>Daftarkan {title}</a>
+		<h1 class="text-3xl md:text-4xl font-bold text-slate-900 leading-tight text-balance">{title}</h1>
+		<p class="text-sm sm:text-base text-slate-600">{subtitle}</p>
+		<div class="pt-2">
+			<a class="btn btn-primary w-full sm:w-auto" href={`/${typePath}/daftar`}>Daftarkan {title}</a>
 		</div>
 	</header>
 
@@ -43,9 +49,14 @@
 							</div>
 						{/if}
 					</div>
-					<div class="font-semibold text-slate-900">{org.name}</div>
+					<div class="flex flex-wrap items-center justify-between gap-2">
+						<div class="font-semibold text-slate-900 break-words">{org.name}</div>
+						<span class={`badge text-xs ${org.status === 'pending' ? 'badge-warning' : 'badge-success'}`}>
+							{formatStatus(org.status)}
+						</span>
+					</div>
 					{#if org.city || org.address}
-						<p class="mt-1 text-sm text-slate-600">{org.address || ''} {org.city || ''}</p>
+						<p class="mt-1 text-sm text-slate-600 break-words">{org.address || ''} {org.city || ''}</p>
 					{/if}
 					{#if org.contactPhone}
 						<p class="mt-2 text-xs text-slate-500">Kontak: {org.contactPhone}</p>

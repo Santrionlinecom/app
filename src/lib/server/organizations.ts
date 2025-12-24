@@ -4,6 +4,7 @@ import { ensureOrgMediaSchema } from '$lib/server/org-media';
 
 export type OrgType = 'pondok' | 'masjid' | 'musholla' | 'tpq' | 'rumah-tahfidz';
 export type OrgStatus = 'pending' | 'active';
+export type OrgStatusFilter = OrgStatus | 'all';
 export type OrgRole =
 	| 'admin'
 	| 'ustadz'
@@ -74,31 +75,30 @@ export const ensureUniqueSlug = async (db: D1Database, type: OrgType, baseSlug: 
 
 export const listOrganizations = async (
 	db: D1Database,
-	opts: { type: OrgType; status?: OrgStatus }
+	opts: { type: OrgType; status?: OrgStatusFilter }
 ) => {
 	await ensureOrgMediaSchema(db);
 	const status = opts.status ?? 'active';
-	const { results } = await db
-		.prepare(
-			`SELECT id, type, name, slug, status, address, city, contact_phone as contactPhone, created_at as createdAt,
-			 (SELECT url FROM org_media WHERE organization_id = organizations.id ORDER BY created_at DESC LIMIT 1) as thumbnailUrl
-			 FROM organizations
-			 WHERE type = ? AND status = ?
-			 ORDER BY created_at DESC`
-		)
-		.bind(opts.type, status)
-		.all<{
-			id: string;
-			type: OrgType;
-			name: string;
-			slug: string;
-			status: OrgStatus;
-			address: string | null;
-			city: string | null;
-			contactPhone: string | null;
-			createdAt: number;
-			thumbnailUrl: string | null;
-		}>();
+	const baseQuery = `SELECT id, type, name, slug, status, address, city, contact_phone as contactPhone, created_at as createdAt,
+		(SELECT url FROM org_media WHERE organization_id = organizations.id ORDER BY created_at DESC LIMIT 1) as thumbnailUrl
+		FROM organizations`;
+	const query =
+		status === 'all'
+			? `${baseQuery} WHERE type = ? ORDER BY created_at DESC`
+			: `${baseQuery} WHERE type = ? AND status = ? ORDER BY created_at DESC`;
+	const stmt = status === 'all' ? db.prepare(query).bind(opts.type) : db.prepare(query).bind(opts.type, status);
+	const { results } = await stmt.all<{
+		id: string;
+		type: OrgType;
+		name: string;
+		slug: string;
+		status: OrgStatus;
+		address: string | null;
+		city: string | null;
+		contactPhone: string | null;
+		createdAt: number;
+		thumbnailUrl: string | null;
+	}>();
 
 	return (results ?? []) as {
 		id: string;

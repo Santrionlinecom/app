@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		return { orgs: [] };
 	}
 
-	const orgs = await listOrganizations(db, { type: 'rumah-tahfidz', status: 'active' });
+	const orgs = await listOrganizations(db, { type: 'rumah-tahfidz', status: 'all' });
 	return {
 		orgs,
 		title: 'Rumah Tahfidz',
