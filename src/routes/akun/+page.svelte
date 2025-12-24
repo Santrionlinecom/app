@@ -5,6 +5,22 @@
 
 	const profile = data.profile;
 	const org = data.org;
+	const orgMediaRoles = new Set(['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara']);
+	const canManageOrgMedia = orgMediaRoles.has(profile?.role ?? '');
+
+	type OrgMediaItem = {
+		id: string;
+		url: string;
+		createdAt: number;
+		createdBy: string | null;
+	};
+
+	let orgMedia: OrgMediaItem[] = data.orgMedia ?? [];
+	let uploadingOrgMedia = false;
+	let orgMediaError = '';
+	let orgMediaSuccess = '';
+	let deletingMediaId: string | null = null;
+	let orgMediaInput: HTMLInputElement | null = null;
 
 	let orgType = 'pondok';
 	let orgName = '';
@@ -30,6 +46,80 @@
 		if (value === 'tpq') return 'TPQ';
 		if (value === 'rumah-tahfidz') return 'Rumah Tahfidz';
 		return value.charAt(0).toUpperCase() + value.slice(1);
+	};
+
+	const formatDate = (value: number) =>
+		new Date(value).toLocaleDateString('id-ID', {
+			day: '2-digit',
+			month: 'short',
+			year: 'numeric'
+		});
+
+	const handleOrgMediaUpload = async (event: Event) => {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (!file) return;
+		orgMediaError = '';
+		orgMediaSuccess = '';
+		uploadingOrgMedia = true;
+
+		try {
+			const form = new FormData();
+			form.append('file', file);
+			const uploadRes = await fetch('/api/upload', { method: 'POST', body: form });
+			if (!uploadRes.ok) {
+				throw new Error('Upload gagal');
+			}
+			const uploadData = await uploadRes.json();
+			const url = typeof uploadData?.url === 'string' ? uploadData.url : '';
+			if (!url) {
+				throw new Error('URL tidak tersedia');
+			}
+
+			const res = await fetch('/api/org/media', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ url })
+			});
+			if (!res.ok) {
+				const errData = await res.json().catch(() => ({}));
+				throw new Error(errData?.error || 'Gagal menyimpan media');
+			}
+			const data = await res.json();
+			if (data?.item) {
+				orgMedia = [data.item as OrgMediaItem, ...orgMedia];
+			}
+			orgMediaSuccess = 'Foto lembaga berhasil ditambahkan.';
+		} catch (err) {
+			console.error('Upload org media error:', err);
+			orgMediaError = 'Gagal mengunggah foto lembaga.';
+		} finally {
+			uploadingOrgMedia = false;
+			if (target) target.value = '';
+		}
+	};
+
+	const deleteOrgMedia = async (id: string) => {
+		if (!id) return;
+		if (!confirm('Hapus foto ini?')) return;
+		deletingMediaId = id;
+		orgMediaError = '';
+		orgMediaSuccess = '';
+
+		try {
+			const res = await fetch(`/api/org/media/${id}`, { method: 'DELETE' });
+			if (!res.ok) {
+				const errData = await res.json().catch(() => ({}));
+				throw new Error(errData?.error || 'Gagal menghapus media');
+			}
+			orgMedia = orgMedia.filter((item) => item.id !== id);
+			orgMediaSuccess = 'Foto lembaga dihapus.';
+		} catch (err) {
+			console.error('Delete org media error:', err);
+			orgMediaError = 'Gagal menghapus foto lembaga.';
+		} finally {
+			deletingMediaId = null;
+		}
 	};
 
 	$: if (!slugManual) {
@@ -173,6 +263,73 @@
 							<p>{org.status}</p>
 						</div>
 					</div>
+				</div>
+			{/if}
+
+			{#if org && canManageOrgMedia}
+				<div class="rounded-3xl border-2 border-slate-200 bg-white p-6 shadow-xl lg:col-span-2">
+					<div class="flex flex-wrap items-start justify-between gap-4">
+						<div>
+							<h2 class="text-2xl font-bold text-gray-900">Galeri Lembaga</h2>
+							<p class="text-sm text-gray-600">
+								Foto terbaru otomatis jadi thumbnail di listing lembaga.
+							</p>
+						</div>
+						<div class="flex items-center gap-3">
+							<button
+								type="button"
+								class="btn btn-sm btn-outline"
+								disabled={uploadingOrgMedia}
+								on:click={() => orgMediaInput?.click()}
+							>
+								{uploadingOrgMedia ? 'Mengunggah...' : 'Upload Foto'}
+							</button>
+							<input
+								class="hidden"
+								type="file"
+								accept="image/*"
+								on:change={handleOrgMediaUpload}
+								bind:this={orgMediaInput}
+							/>
+						</div>
+					</div>
+
+					{#if orgMediaError}
+						<div class="mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl text-sm text-red-800">
+							{orgMediaError}
+						</div>
+					{:else if orgMediaSuccess}
+						<div class="mt-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl text-sm text-green-800">
+							{orgMediaSuccess}
+						</div>
+					{/if}
+
+					{#if orgMedia.length === 0}
+						<div class="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+							Belum ada foto lembaga. Upload foto untuk ditampilkan di halaman publik.
+						</div>
+					{:else}
+						<div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+							{#each orgMedia as item}
+								<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+									<div class="aspect-video bg-slate-100">
+										<img src={item.url} alt="Foto lembaga" class="h-full w-full object-cover" loading="lazy" />
+									</div>
+									<div class="flex items-center justify-between gap-3 px-3 py-2 text-xs text-slate-500">
+										<span>{formatDate(item.createdAt)}</span>
+										<button
+											type="button"
+											class="btn btn-xs btn-ghost text-red-600"
+											on:click={() => deleteOrgMedia(item.id)}
+											disabled={deletingMediaId === item.id}
+										>
+											{deletingMediaId === item.id ? 'Menghapus...' : 'Hapus'}
+										</button>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
 				</div>
 			{/if}
 

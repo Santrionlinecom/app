@@ -6,9 +6,12 @@
 	const orgName = data.org?.name ?? 'Masjid';
 	const orgType = data.org?.type ?? data.typePath ?? 'masjid';
 	const addressText = data.org?.address || data.org?.city || 'alamat belum tersedia';
+	const mediaItems = data.media ?? [];
 	const description = `Profil lengkap ${orgName}, alamat di ${addressText}. Terdaftar resmi di SantriOnline.`;
 	const pageTitle = `${orgName} - ${orgType} | SantriOnline`;
-	const ogImage = 'https://app.santrionline.com/logo-santri.png';
+	const ogImage = mediaItems.length
+		? mediaItems[0].url
+		: 'https://app.santrionline.com/logo-santri.png';
 	const canonicalUrl = data.org?.slug
 		? `https://app.santrionline.com/${data.typePath}/${data.org.slug}`
 		: 'https://app.santrionline.com';
@@ -24,5 +27,5 @@
 	<meta property="og:image" content={ogImage} />
 </svelte:head>
 
-<OrgDetailView org={data.org} typePath={data.typePath} />
+<OrgDetailView org={data.org} typePath={data.typePath} media={data.media} />
 <OrgFinancePublic org={data.org} finance={data.finance} />

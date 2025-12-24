@@ -1,6 +1,9 @@
 <script lang="ts">
+	import OrgMediaSlider from '$lib/components/org/OrgMediaSlider.svelte';
+
 	export let org;
 	export let typePath = '';
+	export let media: Array<{ id: string; url: string }> = [];
 
 	const formatOrgType = (value?: string) => {
 		if (!value) return '-';
@@ -23,6 +26,8 @@
 			</span>
 		</div>
 	</header>
+
+	<OrgMediaSlider media={media} orgName={org?.name ?? ''} />
 
 	<div class="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
 		<h2 class="text-lg font-semibold text-slate-800">Informasi</h2>

@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getOrganizationBySlug } from '$lib/server/organizations';
+import { listOrgMedia } from '$lib/server/org-media';
 
 export const ssr = true;
 export const prerender = false;
@@ -16,5 +17,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, 'Pondok tidak ditemukan');
 	}
 
-	return { org, typePath: 'pondok' };
+	const media = await listOrgMedia(db, org.id);
+
+	return { org, typePath: 'pondok', media };
 };

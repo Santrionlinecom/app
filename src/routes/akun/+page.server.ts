@@ -7,6 +7,7 @@ import {
 	getOrganizationById,
 	slugify
 } from '$lib/server/organizations';
+import { listOrgMedia } from '$lib/server/org-media';
 import { ensureUserOptionalColumns } from '$lib/server/users';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -44,10 +45,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		?? null;
 
 	const org = profile?.orgId ? await getOrganizationById(db, profile.orgId) : null;
+	const orgMedia = org ? await listOrgMedia(db, org.id) : [];
 
 	return {
 		profile,
-		org
+		org,
+		orgMedia
 	};
 };
 

@@ -9,6 +9,7 @@
 		city?: string | null;
 		address?: string | null;
 		contactPhone?: string | null;
+		thumbnailUrl?: string | null;
 	}> = [];
 </script>
 
@@ -29,7 +30,19 @@
 	{:else}
 		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 			{#each orgs as org}
-				<a href={`/${typePath}/${org.slug}`} class="rounded-2xl border bg-white p-5 shadow-sm hover:shadow-md transition">
+				<a
+					href={`/${typePath}/${org.slug}`}
+					class="rounded-2xl border bg-white p-5 shadow-sm hover:shadow-md transition space-y-3"
+				>
+					<div class="aspect-video overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+						{#if org.thumbnailUrl}
+							<img src={org.thumbnailUrl} alt={`Foto ${org.name}`} class="h-full w-full object-cover" loading="lazy" />
+						{:else}
+							<div class="flex h-full items-center justify-center text-xs text-slate-400">
+								Belum ada foto
+							</div>
+						{/if}
+					</div>
 					<div class="font-semibold text-slate-900">{org.name}</div>
 					{#if org.city || org.address}
 						<p class="mt-1 text-sm text-slate-600">{org.address || ''} {org.city || ''}</p>

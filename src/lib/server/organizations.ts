@@ -1,5 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { generateId } from 'lucia';
+import { ensureOrgMediaSchema } from '$lib/server/org-media';
 
 export type OrgType = 'pondok' | 'masjid' | 'musholla' | 'tpq' | 'rumah-tahfidz';
 export type OrgStatus = 'pending' | 'active';
@@ -75,10 +76,12 @@ export const listOrganizations = async (
 	db: D1Database,
 	opts: { type: OrgType; status?: OrgStatus }
 ) => {
+	await ensureOrgMediaSchema(db);
 	const status = opts.status ?? 'active';
 	const { results } = await db
 		.prepare(
-			`SELECT id, type, name, slug, status, address, city, contact_phone as contactPhone, created_at as createdAt
+			`SELECT id, type, name, slug, status, address, city, contact_phone as contactPhone, created_at as createdAt,
+			 (SELECT url FROM org_media WHERE organization_id = organizations.id ORDER BY created_at DESC LIMIT 1) as thumbnailUrl
 			 FROM organizations
 			 WHERE type = ? AND status = ?
 			 ORDER BY created_at DESC`
@@ -94,6 +97,7 @@ export const listOrganizations = async (
 			city: string | null;
 			contactPhone: string | null;
 			createdAt: number;
+			thumbnailUrl: string | null;
 		}>();
 
 	return (results ?? []) as {
@@ -106,6 +110,7 @@ export const listOrganizations = async (
 		city: string | null;
 		contactPhone: string | null;
 		createdAt: number;
+		thumbnailUrl: string | null;
 	}[];
 };
 

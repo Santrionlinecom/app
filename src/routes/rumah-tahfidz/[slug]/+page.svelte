@@ -7,9 +7,12 @@
 	const orgType = data.org?.type ?? data.typePath ?? 'rumah-tahfidz';
 	const orgTypeLabel = orgType === 'rumah-tahfidz' ? 'Rumah Tahfidz' : orgType;
 	const addressText = data.org?.address || data.org?.city || 'alamat belum tersedia';
+	const mediaItems = data.media ?? [];
 	const description = `Profil lengkap ${orgName}, alamat di ${addressText}. Terdaftar resmi di SantriOnline.`;
 	const pageTitle = `${orgName} - ${orgTypeLabel} | SantriOnline`;
-	const ogImage = 'https://app.santrionline.com/logo-santri.png';
+	const ogImage = mediaItems.length
+		? mediaItems[0].url
+		: 'https://app.santrionline.com/logo-santri.png';
 	const canonicalUrl = data.org?.slug
 		? `https://app.santrionline.com/${data.typePath}/${data.org.slug}`
 		: 'https://app.santrionline.com';
@@ -25,5 +28,5 @@
 	<meta property="og:image" content={ogImage} />
 </svelte:head>
 
-<OrgDetailView org={data.org} typePath={data.typePath} />
+<OrgDetailView org={data.org} typePath={data.typePath} media={data.media} />
 <OrgEducationPublic org={data.org} />
