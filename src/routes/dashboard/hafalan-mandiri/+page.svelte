@@ -13,11 +13,12 @@ let notes = '';
 let murojaDate = new Date().toISOString().split('T')[0];
 let filterQuality = '';
 let checkedSurahs = new Set<number>(data.checkedSurahs || []);
-const juzSegments = data.juzSegments || [];
-const overallPercent = Math.min(
-	100,
-	Math.round(((data.stats.approvedAyah || 0) / (data.stats.totalAyah || 1)) * 10000) / 100
-);
+const totalAyah = data.stats.totalAyah || data.surahs.reduce((sum, s) => sum + s.totalAyah, 0);
+const surahAyahMap = new Map(data.surahs.map((s) => [s.number, s.totalAyah]));
+let checkedAyah = 0;
+let juzEquivalent = 0;
+let juzSegments: { index: number; fill: number }[] = [];
+let overallPercent = 0;
 let toggling = new Set<number>();
 
 	const qualityLabels: Record<string, string> = {
@@ -59,6 +60,18 @@ let toggling = new Set<number>();
 		: data.muroja;
 
 	$: selectedSurahData = data.surahs.find(s => s.number === parseInt(selectedSurah));
+	$: checkedAyah = Array.from(checkedSurahs).reduce(
+		(sum, num) => sum + (surahAyahMap.get(num) ?? 0),
+		0
+	);
+	$: juzEquivalent = totalAyah ? (checkedAyah / totalAyah) * 30 : 0;
+	$: juzSegments = Array.from({ length: 30 }, (_v, idx) => {
+		const filled = Math.min(Math.max(juzEquivalent - idx, 0), 1);
+		return { index: idx + 1, fill: Math.round(filled * 100) / 100 };
+	});
+	$: overallPercent = totalAyah
+		? Math.min(100, Math.round((checkedAyah / totalAyah) * 10000) / 100)
+		: 0;
 
 	const toggleSurah = async (surahNumber: number) => {
 		const currently = checkedSurahs.has(surahNumber);
@@ -135,7 +148,7 @@ let toggling = new Set<number>();
 	<div class="progress-card">
 		<div>
 			<p class="progress-title">Bagan Hafalan 30 Juz</p>
-			<p class="progress-sub">Estimasi setara juz dari ayat yang disetujui</p>
+			<p class="progress-sub">Estimasi setara juz dari checklist surah mandiri</p>
 		</div>
 		<div class="overall-ring" aria-label={`Progress keseluruhan ${overallPercent}%`}>
 			<div
