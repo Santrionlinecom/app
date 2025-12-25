@@ -11,6 +11,18 @@
 		if (value === 'rumah-tahfidz') return 'Rumah Tahfidz';
 		return value.charAt(0).toUpperCase() + value.slice(1);
 	};
+
+	const memberRoleByType: Record<string, string> = {
+		pondok: 'santri',
+		masjid: 'jamaah',
+		musholla: 'jamaah',
+		tpq: 'santri',
+		'rumah-tahfidz': 'santri'
+	};
+	const orgType = org?.type ?? typePath;
+	const memberRole = memberRoleByType[orgType] || 'anggota';
+	const memberLabel = memberRole === 'jamaah' ? 'Jamaah' : memberRole === 'santri' ? 'Santri' : 'Anggota';
+	const memberRefLink = org?.slug ? `/${typePath}/${org.slug}/daftar?ref=anggota` : '';
 </script>
 
 <section class="max-w-4xl mx-auto py-10 px-4 space-y-6">
@@ -39,7 +51,12 @@
 			<li>Slug: {org?.slug}</li>
 		</ul>
 		{#if org?.status === 'active'}
-			<a href={`/${typePath}/${org.slug}/daftar`} class="btn btn-primary">Daftar Anggota</a>
+			<div class="flex flex-wrap justify-center gap-2">
+				<a href={`/${typePath}/${org.slug}/daftar`} class="btn btn-primary">Daftar Anggota</a>
+				{#if memberRefLink}
+					<a href={memberRefLink} class="btn btn-outline">Link Pendaftaran {memberLabel}</a>
+				{/if}
+			</div>
 		{:else}
 			<p class="text-sm text-slate-500">Lembaga belum aktif, pendaftaran anggota belum dibuka.</p>
 		{/if}

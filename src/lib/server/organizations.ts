@@ -207,3 +207,26 @@ export const allowedRolesByType: Record<OrgType, OrgRole[]> = {
 	tpq: ['santri', 'ustadz', 'ustadzah'],
 	'rumah-tahfidz': ['santri', 'ustadz', 'ustadzah']
 };
+
+export const memberRoleByType: Record<OrgType, OrgRole> = {
+	pondok: 'santri',
+	masjid: 'jamaah',
+	musholla: 'jamaah',
+	tpq: 'santri',
+	'rumah-tahfidz': 'santri'
+};
+
+export const getMemberReferralRole = (type: OrgType, url?: URL) => {
+	if (!url) return null;
+	const refValue = (url.searchParams.get('ref') || '').toLowerCase();
+	const roleValue = (url.searchParams.get('role') || '').toLowerCase();
+	const defaultRole = memberRoleByType[type];
+	const referralFlags = ['anggota', 'member', 'jamaah', 'santri'];
+	if (referralFlags.includes(refValue)) {
+		return defaultRole;
+	}
+	if (roleValue && roleValue === defaultRole) {
+		return defaultRole;
+	}
+	return null;
+};

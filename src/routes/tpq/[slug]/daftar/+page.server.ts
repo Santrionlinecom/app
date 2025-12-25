@@ -1,12 +1,18 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { allowedRolesByType, getOrganizationBySlug } from '$lib/server/organizations';
+import { allowedRolesByType, getMemberReferralRole, getOrganizationBySlug } from '$lib/server/organizations';
 import { ensureUserOptionalColumns } from '$lib/server/users';
 import { initializeLucia } from '$lib/server/lucia';
 import { Scrypt } from '$lib/server/password';
 import { generateId } from 'lucia';
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+const roleLabel = (value: string) => {
+	if (value === 'ustadzah') return 'Ustadzah';
+	if (value === 'santri') return 'Santri';
+	return value.charAt(0).toUpperCase() + value.slice(1);
+};
+
+export const load: PageServerLoad = async ({ params, locals, url }) => {
 	if (!locals.db) {
 		throw error(500, 'Database tidak tersedia');
 	}
@@ -14,18 +20,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!org) {
 		throw error(404, 'TPQ tidak ditemukan');
 	}
+	const lockedRoleValue = getMemberReferralRole('tpq', url);
 
 	return {
 		org,
+		lockedRole: lockedRoleValue ? { value: lockedRoleValue, label: roleLabel(lockedRoleValue) } : null,
 		roles: allowedRolesByType.tpq.filter((role) => role !== 'ustadzah').map((role) => ({
 			value: role,
-			label: role === 'ustadz' ? 'Ustadz' : role.charAt(0).toUpperCase() + role.slice(1)
+			label: roleLabel(role)
 		}))
 	};
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals, cookies, params }) => {
+	default: async ({ request, locals, cookies, params, url }) => {
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
 		const org = await getOrganizationBySlug(db, params.slug, 'tpq');
@@ -42,13 +50,14 @@ export const actions: Actions = {
 		const password = formData.get('password');
 		const role = formData.get('role');
 		const gender = formData.get('gender');
+		const roleValue = getMemberReferralRole('tpq', url) ?? (typeof role === 'string' ? role : '');
 
 		if (
 			typeof name !== 'string' ||
 			typeof email !== 'string' ||
 			typeof password !== 'string' ||
-			typeof role !== 'string' ||
-			typeof gender !== 'string'
+			typeof gender !== 'string' ||
+			!roleValue
 		) {
 			return fail(400, { error: 'Semua kolom wajib diisi.' });
 		}
@@ -56,7 +65,7 @@ export const actions: Actions = {
 		if (!genderValue) {
 			return fail(400, { error: 'Jenis kelamin tidak valid.' });
 		}
-		if (!allowedRolesByType.tpq.includes(role as any)) {
+		if (!allowedRolesByType.tpq.includes(roleValue as any)) {
 			return fail(400, { error: 'Role tidak valid.' });
 		}
 		if (password.length < 6) {
@@ -69,11 +78,11 @@ export const actions: Actions = {
 		}
 
 		const normalizedRole =
-			role === 'ustadz' || role === 'ustadzah'
+			roleValue === 'ustadz' || roleValue === 'ustadzah'
 				? genderValue === 'wanita'
 					? 'ustadzah'
 					: 'ustadz'
-				: role;
+				: roleValue;
 
 		const userId = generateId(15);
 		const hashed = await new Scrypt().hash(password);

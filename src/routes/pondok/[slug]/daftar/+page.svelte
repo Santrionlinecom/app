@@ -8,4 +8,4 @@
 	<title>Daftar Pondok</title>
 </svelte:head>
 
-<OrgMemberRegisterView org={data.org} roles={data.roles} {form} />
+<OrgMemberRegisterView org={data.org} roles={data.roles} lockedRole={data.lockedRole} {form} />

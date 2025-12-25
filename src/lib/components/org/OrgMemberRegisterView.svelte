@@ -1,6 +1,7 @@
 <script lang="ts">
 	export let org;
 	export let roles: Array<{ value: string; label: string }> = [];
+	export let lockedRole: { value: string; label: string } | null = null;
 	export let form;
 </script>
 
@@ -48,11 +49,19 @@
 			<label class="label" for="role">
 				<span class="label-text font-medium">Peran</span>
 			</label>
-			<select id="role" name="role" class="select select-bordered" required>
-				{#each roles as role}
-					<option value={role.value}>{role.label}</option>
-				{/each}
-			</select>
+			{#if lockedRole}
+				<input type="hidden" name="role" value={lockedRole.value} />
+				<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+					<p class="font-semibold">{lockedRole.label}</p>
+					<p class="text-xs text-emerald-700">Peran otomatis dari link pendaftaran.</p>
+				</div>
+			{:else}
+				<select id="role" name="role" class="select select-bordered" required>
+					{#each roles as role}
+						<option value={role.value}>{role.label}</option>
+					{/each}
+				</select>
+			{/if}
 		</div>
 
 		{#if form?.error}
