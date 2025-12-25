@@ -19,7 +19,7 @@
 		'Vietnam'
 	];
 
-	const BASE_URL = 'https://emsifa.github.io/api-wilayah-indonesia';
+	const BASE_URL = 'https://www.emsifa.com/api-wilayah-indonesia/api';
 	const COUNTRY_URL = 'https://countriesnow.space/api/v0.1/countries/positions';
 	const CACHE_PREFIX = 'so_wilayah_';
 	const CACHE_TTL = 1000 * 60 * 60 * 24 * 30; // 30 hari

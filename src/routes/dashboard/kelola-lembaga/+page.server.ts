@@ -42,5 +42,41 @@ export const actions: Actions = {
 			.run();
 
 		return { success: true };
+	},
+	reject: async ({ request, locals }) => {
+		if (!locals.user || locals.user.role !== 'admin' || locals.user.orgId) {
+			return fail(403, { error: 'Tidak memiliki akses' });
+		}
+		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+
+		const formData = await request.formData();
+		const orgId = formData.get('orgId');
+		if (typeof orgId !== 'string' || !orgId) {
+			return fail(400, { error: 'Organisasi tidak valid' });
+		}
+
+		await locals.db!
+			.prepare('UPDATE organizations SET status = ? WHERE id = ?')
+			.bind('rejected', orgId)
+			.run();
+
+		return { success: true };
+	},
+	remove: async ({ request, locals }) => {
+		if (!locals.user || locals.user.role !== 'admin' || locals.user.orgId) {
+			return fail(403, { error: 'Tidak memiliki akses' });
+		}
+		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+
+		const formData = await request.formData();
+		const orgId = formData.get('orgId');
+		if (typeof orgId !== 'string' || !orgId) {
+			return fail(400, { error: 'Organisasi tidak valid' });
+		}
+
+		await locals.db!.prepare('DELETE FROM users WHERE org_id = ?').bind(orgId).run();
+		await locals.db!.prepare('DELETE FROM organizations WHERE id = ?').bind(orgId).run();
+
+		return { success: true };
 	}
 };

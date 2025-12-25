@@ -28,8 +28,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const memberPending = locals.user.orgStatus === 'pending';
 	const orgPending = org?.status === 'pending';
+	const orgRejected = org?.status === 'rejected';
 
-	if (!memberPending && !orgPending) {
+	if (!memberPending && !orgPending && !orgRejected) {
 		throw redirect(302, '/dashboard');
 	}
 
@@ -37,6 +38,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		user: locals.user,
 		org,
 		memberPending,
-		orgPending
+		orgPending,
+		orgRejected
 	};
 };

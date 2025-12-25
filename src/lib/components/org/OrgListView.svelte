@@ -6,15 +6,18 @@
 		id: string;
 		name: string;
 		slug: string;
-		status?: 'pending' | 'active';
+		status?: 'pending' | 'active' | 'rejected';
 		city?: string | null;
 		address?: string | null;
 		contactPhone?: string | null;
 		thumbnailUrl?: string | null;
 	}> = [];
 
-	const formatStatus = (value?: 'pending' | 'active') => {
+	const visibleOrgs = orgs.filter((org) => org.status !== 'rejected');
+
+	const formatStatus = (value?: 'pending' | 'active' | 'rejected') => {
 		if (value === 'pending') return 'Menunggu verifikasi';
+		if (value === 'rejected') return 'Ditolak';
 		return 'Aktif';
 	};
 </script>
@@ -29,13 +32,13 @@
 		</div>
 	</header>
 
-	{#if orgs.length === 0}
+	{#if visibleOrgs.length === 0}
 		<div class="rounded-2xl border bg-white p-6 text-center text-slate-600">
 			Belum ada lembaga aktif. Jadilah yang pertama mendaftar.
 		</div>
 	{:else}
 		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-			{#each orgs as org}
+			{#each visibleOrgs as org}
 				<a
 					href={`/${typePath}/${org.slug}`}
 					class="rounded-2xl border bg-white p-5 shadow-sm hover:shadow-md transition space-y-3"
@@ -51,7 +54,11 @@
 					</div>
 					<div class="flex flex-wrap items-center justify-between gap-2">
 						<div class="font-semibold text-slate-900 break-words">{org.name}</div>
-						<span class={`badge text-xs ${org.status === 'pending' ? 'badge-warning' : 'badge-success'}`}>
+						<span
+							class={`badge text-xs ${
+								org.status === 'pending' ? 'badge-warning' : org.status === 'rejected' ? 'badge-error' : 'badge-success'
+							}`}
+						>
 							{formatStatus(org.status)}
 						</span>
 					</div>

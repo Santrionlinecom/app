@@ -4,6 +4,7 @@
 	const org = data?.org;
 	const memberPending = data?.memberPending;
 	const orgPending = data?.orgPending;
+	const orgRejected = data?.orgRejected;
 </script>
 
 <svelte:head>
@@ -22,6 +23,11 @@
 		{#if orgPending}
 			<p class="text-sm text-slate-500">
 				Lembaga kamu masih dalam proses verifikasi admin sistem. Setelah aktif, profil akan tampil di halaman publik.
+			</p>
+		{/if}
+		{#if orgRejected}
+			<p class="text-sm text-red-600">
+				Pendaftaran lembaga kamu ditolak. Silakan perbarui data dan daftar ulang atau hubungi admin sistem.
 			</p>
 		{/if}
 		{#if memberPending}

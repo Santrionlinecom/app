@@ -3,7 +3,7 @@ import { generateId } from 'lucia';
 import { ensureOrgMediaSchema } from '$lib/server/org-media';
 
 export type OrgType = 'pondok' | 'masjid' | 'musholla' | 'tpq' | 'rumah-tahfidz';
-export type OrgStatus = 'pending' | 'active';
+export type OrgStatus = 'pending' | 'active' | 'rejected';
 export type OrgStatusFilter = OrgStatus | 'all';
 export type OrgRole =
 	| 'admin'
