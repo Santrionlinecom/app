@@ -202,11 +202,11 @@
 						></textarea>
 					</div>
 					<div class="flex flex-col gap-2 sm:flex-row">
-						<button class="btn btn-primary w-full">
+						<button class="btn btn-primary w-full sm:flex-1">
 							{kasId ? 'Perbarui Kas' : 'Simpan Kas'}
 						</button>
 						{#if kasId}
-							<button type="button" class="btn btn-outline w-full" on:click={resetKasForm}>
+							<button type="button" class="btn btn-outline w-full sm:flex-1" on:click={resetKasForm}>
 								Batal Edit
 							</button>
 						{/if}
