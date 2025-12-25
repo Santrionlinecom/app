@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getPendingSubmissions, getAllStudentsProgress, getSantriChecklist, getSantriStats, getDailySeries } from '$lib/server/progress';
-import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
+import { ensureOrgSchema, getOrgScope, getOrganizationById } from '$lib/server/organizations';
 import type { D1Database } from '@cloudflare/workers-types';
 import { SURAH_DATA } from '$lib/surah-data';
 
@@ -36,13 +36,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	const db = locals.db!;
-    const role = locals.user.role;
+	const role = locals.user.role;
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 	const scopedOrgId = isSystemAdmin ? null : orgId;
 	const orgProfile = orgId ? await getOrganizationById(db, orgId) : null;
 
-    // Load data based on user role
-    if (role === 'admin') {
+	// Load data based on user role
+	if (role === 'admin') {
 		// Admin: list all users + santri & surah options
 		const baseQuery = 'SELECT id, username, email, role, created_at FROM users';
 		const { results } = await (scopedOrgId
@@ -51,52 +51,72 @@ export const load: PageServerLoad = async ({ locals }) => {
 		).all<{ id: string; username: string | null; email: string; role: string; created_at: string }>();
 
 		const surahs = await fetchSurahs(db);
+		let orgs: Array<{
+			id: string;
+			type: string;
+			name: string;
+			slug: string;
+			status: string;
+			createdAt: number;
+		}> = [];
+		if (isSystemAdmin) {
+			await ensureOrgSchema(db);
+			const { results } = await db
+				.prepare(
+					`SELECT id, type, name, slug, status, created_at as createdAt
+					 FROM organizations
+					 ORDER BY created_at DESC`
+				)
+				.all();
+			orgs = (results ?? []) as typeof orgs;
+		}
 		return {
 			role,
 			currentUser: locals.user,
 			org: orgProfile,
 			users: (results ?? []) as {
 				id: string;
-                username: string | null;
-                email: string;
-                role: string;
-                created_at: string;
+				username: string | null;
+				email: string;
+				role: string;
+				created_at: string;
 			}[],
 			surahs,
+			orgs,
 			students: await getAllStudentsProgress(db, scopedOrgId),
 			pending: await getPendingSubmissions(db, scopedOrgId)
 		};
 	} else if (role === 'ustadz' || role === 'ustadzah') {
 		// Ustadz: pending submissions and student progress
-        const surahs = await fetchSurahs(db);
-        return {
-            role,
-            currentUser: locals.user,
+		const surahs = await fetchSurahs(db);
+		return {
+			role,
+			currentUser: locals.user,
 			org: orgProfile,
-            pending: await getPendingSubmissions(db, scopedOrgId),
-            students: await getAllStudentsProgress(db, scopedOrgId),
-            surahs
-        };
+			pending: await getPendingSubmissions(db, scopedOrgId),
+			students: await getAllStudentsProgress(db, scopedOrgId),
+			surahs
+		};
 	} else if (role === 'santri' || role === 'alumni') {
-        // Santri/Alumni: personal progress and checklist
-        const checklist = await getSantriChecklist(db, locals.user.id);
-        const stats = await getSantriStats(db, locals.user.id);
-        const series = await getDailySeries(db, locals.user.id, 7);
+		// Santri/Alumni: personal progress and checklist
+		const checklist = await getSantriChecklist(db, locals.user.id);
+		const stats = await getSantriStats(db, locals.user.id);
+		const series = await getDailySeries(db, locals.user.id, 7);
 
-        const totalAyah = checklist.reduce((sum, row) => sum + row.totalAyah, 0);
-        const percentage = totalAyah ? (stats.approved / totalAyah) * 100 : 0;
+		const totalAyah = checklist.reduce((sum, row) => sum + row.totalAyah, 0);
+		const percentage = totalAyah ? (stats.approved / totalAyah) * 100 : 0;
 
-        return {
-            role,
-            currentUser: locals.user,
+		return {
+			role,
+			currentUser: locals.user,
 			org: orgProfile,
-            checklist,
-            stats,
-            series,
-            percentage: Math.round(percentage * 100) / 100,
-            totalAyah: stats.approved // approved ayat count
-        };
-    }
+			checklist,
+			stats,
+			series,
+			percentage: Math.round(percentage * 100) / 100,
+			totalAyah: stats.approved // approved ayat count
+		};
+	}
 	// Role lainnya: tetap izinkan masuk dengan data kosong
 	return {
 		role,

@@ -30,6 +30,17 @@
 	const checklist = 'checklist' in data ? data.checklist ?? [] : [];
 	const stats = 'stats' in data ? data.stats : undefined;
 	const series = 'series' in data ? data.series ?? [] : [];
+	type OrgItem = {
+		id: string;
+		name: string;
+		slug: string;
+		status: string;
+		type?: string;
+		createdAt?: number | string | null;
+	};
+	const orgs = ('orgs' in data ? data.orgs ?? [] : []) as OrgItem[];
+	const pendingOrgs = orgs.filter((org) => org.status === 'pending');
+	const activeOrgs = orgs.filter((org) => org.status === 'active');
 
 	const normalizeRoleForCount = (role: string) => (role === 'ustadzah' ? 'ustadz' : role);
 	let roleCounter = { admin: 0, ustadz: 0, santri: 0 };
@@ -61,6 +72,12 @@
 		if (!val) return '-';
 		const d = new Date(val);
 		return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+	};
+	const formatOrgType = (value?: string) => {
+		if (!value) return '-';
+		if (value === 'tpq') return 'TPQ';
+		if (value === 'rumah-tahfidz') return 'Rumah Tahfidz';
+		return value.charAt(0).toUpperCase() + value.slice(1);
 	};
 
 	const assignSurah = async () => {
@@ -409,6 +426,71 @@
 
 	<!-- Right Column (1/3) -->
 	<div class="space-y-6">
+		{#if isSystemAdmin}
+			<!-- Kelola Lembaga -->
+			<div class="rounded-2xl border bg-white p-6 shadow-lg">
+				<div class="flex items-start justify-between mb-4">
+					<div>
+						<h2 class="text-lg font-bold text-gray-900">🏛️ Kelola Lembaga</h2>
+						<p class="text-xs text-gray-500">Ringkasan lembaga terdaftar</p>
+					</div>
+					<a href="/dashboard/kelola-lembaga" class="btn btn-xs btn-outline">Kelola</a>
+				</div>
+				<div class="grid grid-cols-2 gap-3">
+					<div class="rounded-xl border bg-amber-50 p-3">
+						<p class="text-xs font-semibold text-amber-700">Menunggu</p>
+						<p class="text-2xl font-bold text-amber-700">{pendingOrgs.length}</p>
+					</div>
+					<div class="rounded-xl border bg-emerald-50 p-3">
+						<p class="text-xs font-semibold text-emerald-700">Terdaftar</p>
+						<p class="text-2xl font-bold text-emerald-700">{activeOrgs.length}</p>
+					</div>
+				</div>
+				<div class="mt-4 space-y-4">
+					<div>
+						<div class="flex items-center justify-between text-xs font-semibold text-gray-600">
+							<span>Menunggu Persetujuan</span>
+							<span>{pendingOrgs.length}</span>
+						</div>
+						<div class="mt-2 space-y-2 max-h-40 overflow-auto">
+							{#if pendingOrgs.length === 0}
+								<p class="text-xs text-gray-500">Tidak ada lembaga menunggu persetujuan.</p>
+							{:else}
+								{#each pendingOrgs.slice(0, 5) as org}
+									<div class="rounded-lg border bg-amber-50/50 p-2">
+										<p class="text-sm font-semibold text-gray-900">{org.name}</p>
+										<p class="text-xs text-gray-600">{formatOrgType(org.type)} • {formatDate(org.createdAt)}</p>
+									</div>
+								{/each}
+							{/if}
+						</div>
+					</div>
+					<div>
+						<div class="flex items-center justify-between text-xs font-semibold text-gray-600">
+							<span>Lembaga Terdaftar</span>
+							<span>{activeOrgs.length}</span>
+						</div>
+						<div class="mt-2 space-y-2 max-h-40 overflow-auto">
+							{#if activeOrgs.length === 0}
+								<p class="text-xs text-gray-500">Belum ada lembaga aktif.</p>
+							{:else}
+								{#each activeOrgs.slice(0, 5) as org}
+									<div class="rounded-lg border bg-emerald-50/60 p-2">
+										<p class="text-sm font-semibold text-gray-900">{org.name}</p>
+										<p class="text-xs text-gray-600">{formatOrgType(org.type)} • {formatDate(org.createdAt)}</p>
+									</div>
+								{/each}
+							{/if}
+						</div>
+					</div>
+				</div>
+				{#if orgs.length > 0}
+					<a href="/dashboard/kelola-lembaga" class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800">
+						Lihat semua lembaga ->
+					</a>
+				{/if}
+			</div>
+		{/if}
 		{#if isUstadz || isAdmin}
 			<!-- Pending Setoran -->
 			<div class="rounded-2xl border bg-white p-6 shadow-lg">
