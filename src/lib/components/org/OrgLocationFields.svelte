@@ -19,7 +19,28 @@
 		'Vietnam'
 	];
 
-	const BASE_URL = 'https://www.emsifa.com/api-wilayah-indonesia/api';
+	const REGION_SOURCES = [
+		{
+			key: 'ibnux',
+			baseUrl: 'https://ibnux.github.io/data-indonesia',
+			paths: {
+				provinces: 'provinsi.json',
+				regencies: (id: string) => `kabupaten/${id}.json`,
+				districts: (id: string) => `kecamatan/${id}.json`,
+				villages: (id: string) => `kelurahan/${id}.json`
+			}
+		},
+		{
+			key: 'emsifa',
+			baseUrl: 'https://www.emsifa.com/api-wilayah-indonesia/api',
+			paths: {
+				provinces: 'provinces.json',
+				regencies: (id: string) => `regencies/${id}.json`,
+				districts: (id: string) => `districts/${id}.json`,
+				villages: (id: string) => `villages/${id}.json`
+			}
+		}
+	] as const;
 	const COUNTRY_URL = 'https://countriesnow.space/api/v0.1/countries/positions';
 	const CACHE_PREFIX = 'so_wilayah_';
 	const CACHE_TTL = 1000 * 60 * 60 * 24 * 30; // 30 hari
@@ -73,16 +94,90 @@
 		}
 	};
 
-	const fetchRegions = async (path: string) => {
-		const cacheKey = `${CACHE_PREFIX}${path}`;
-		const cached = getCache(cacheKey);
-		if (cached) return cached as Region[];
-		const res = await fetch(`${BASE_URL}/${path}`);
-		if (!res.ok) throw new Error('Gagal memuat data wilayah');
-		const data = (await res.json()) as Region[];
-		setCache(cacheKey, data);
-		return data;
+	const normalizeRegions = (rows: any[]) =>
+		rows
+			.map((row) => ({
+				id: `${row?.id ?? ''}`.trim(),
+				name: `${row?.name ?? row?.nama ?? ''}`.trim()
+			}))
+			.filter((row) => row.id && row.name);
+
+	const mergeRegions = (lists: Region[][]) => {
+		const seen = new Map<string, Region>();
+		for (const list of lists) {
+			for (const item of list) {
+				if (!item?.id || !item?.name) continue;
+				if (!seen.has(item.id)) {
+					seen.set(item.id, item);
+				}
+			}
+		}
+		return Array.from(seen.values());
 	};
+
+	const fetchRegions = async (candidates: { key: string; url: string }[]) => {
+		for (const candidate of candidates) {
+			const cacheKey = `${CACHE_PREFIX}${candidate.key}`;
+			const cached = getCache(cacheKey);
+			if (cached) return cached as Region[];
+		}
+
+		for (const candidate of candidates) {
+			try {
+				const res = await fetch(candidate.url);
+				if (!res.ok) continue;
+				const data = await res.json();
+				const rows = Array.isArray(data) ? data : [];
+				const normalized = normalizeRegions(rows);
+				if (!normalized.length) continue;
+				setCache(`${CACHE_PREFIX}${candidate.key}`, normalized);
+				return normalized as Region[];
+			} catch {
+				// fallback to next source
+			}
+		}
+
+		throw new Error('Gagal memuat data wilayah');
+	};
+
+	const fetchRegionsMerged = async (candidates: { key: string; url: string }[]) => {
+		const mergedKey = `${CACHE_PREFIX}merged:${candidates.map((c) => c.key).join('|')}`;
+		const cachedMerged = getCache(mergedKey);
+		if (cachedMerged) return cachedMerged as Region[];
+
+		const results = await Promise.all(
+			candidates.map(async (candidate) => {
+				const cacheKey = `${CACHE_PREFIX}${candidate.key}`;
+				const cached = getCache(cacheKey);
+				if (cached) return cached as Region[];
+				try {
+					const res = await fetch(candidate.url);
+					if (!res.ok) return [];
+					const data = await res.json();
+					const rows = Array.isArray(data) ? data : [];
+					const normalized = normalizeRegions(rows);
+					if (normalized.length) setCache(cacheKey, normalized);
+					return normalized;
+				} catch {
+					return [];
+				}
+			})
+		);
+
+		const merged = mergeRegions(results);
+		if (!merged.length) throw new Error('Gagal memuat data wilayah');
+		setCache(mergedKey, merged);
+		return merged;
+	};
+
+	const getRegionCandidates = (type: 'provinces' | 'regencies' | 'districts' | 'villages', id?: string) =>
+		REGION_SOURCES.map((source) => {
+			const path = typeof source.paths[type] === 'function' ? source.paths[type](id || '') : source.paths[type];
+			return {
+				key: `${source.key}:${type}:${id || 'all'}`,
+				url: `${source.baseUrl}/${path}`
+			};
+		});
 
 	const loadCountries = async () => {
 		if (loadingCountries) return;
@@ -112,7 +207,7 @@
 		loadingProvinces = true;
 		loadError = '';
 		try {
-			provinces = await fetchRegions('provinces.json');
+			provinces = await fetchRegions(getRegionCandidates('provinces'));
 		} catch (err) {
 			console.error(err);
 			loadError = 'Gagal memuat daftar provinsi.';
@@ -126,7 +221,7 @@
 		loadingRegencies = true;
 		loadError = '';
 		try {
-			regencies = await fetchRegions(`regencies/${id}.json`);
+			regencies = await fetchRegions(getRegionCandidates('regencies', id));
 		} catch (err) {
 			console.error(err);
 			loadError = 'Gagal memuat daftar kabupaten/kota.';
@@ -140,7 +235,7 @@
 		loadingDistricts = true;
 		loadError = '';
 		try {
-			districts = await fetchRegions(`districts/${id}.json`);
+			districts = await fetchRegions(getRegionCandidates('districts', id));
 		} catch (err) {
 			console.error(err);
 			loadError = 'Gagal memuat daftar kecamatan.';
@@ -154,7 +249,7 @@
 		loadingVillages = true;
 		loadError = '';
 		try {
-			villages = await fetchRegions(`villages/${id}.json`);
+			villages = await fetchRegionsMerged(getRegionCandidates('villages', id));
 		} catch (err) {
 			console.error(err);
 			loadError = 'Gagal memuat daftar kelurahan/desa.';
