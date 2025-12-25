@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 
 	export let data: PageData;
 
@@ -49,6 +50,15 @@
 
 	const confirmAction = (message: string) => (event: Event) => {
 		if (!confirm(message)) event.preventDefault();
+	};
+
+	const refreshOnSuccess = () => {
+		return async ({ result, update }: { result: { type: string }; update: () => Promise<void> }) => {
+			await update();
+			if (result.type === 'success') {
+				await invalidateAll();
+			}
+		};
 	};
 </script>
 
@@ -116,7 +126,7 @@
 								</td>
 								<td class="text-slate-600">{formatDate(org.createdAt)}</td>
 								<td>
-									<form method="POST" use:enhance class="flex flex-wrap gap-2">
+									<form method="POST" use:enhance={refreshOnSuccess} class="flex flex-wrap gap-2">
 										<input type="hidden" name="orgId" value={org.id} />
 										{#if org.status === 'pending'}
 											<button class="btn btn-xs btn-success text-white" formaction="?/approve">
