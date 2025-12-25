@@ -11,6 +11,7 @@ $: pathname = $page.url.pathname as string;
 const apkUrl = 'https://files.santrionline.com/Santrionline.apk';
 const installPromptKey = 'so_install_prompt_v1';
 let showInstallPopup = false;
+const translateScriptId = 'google-translate-script';
 
 const dismissInstallPopup = (persist = true) => {
 	showInstallPopup = false;
@@ -42,7 +43,34 @@ onMount(() => {
 	} catch {
 		showInstallPopup = true;
 	}
+	loadTranslateWidget();
 });
+
+const loadTranslateWidget = () => {
+	if (typeof window === 'undefined') return;
+	const w = window as unknown as {
+		googleTranslateElementInit?: () => void;
+		google?: { translate?: { TranslateElement: new (opts: any, id: string) => void } };
+		__soTranslateLoaded?: boolean;
+	};
+	if (w.__soTranslateLoaded) return;
+	w.__soTranslateLoaded = true;
+	w.googleTranslateElementInit = () => {
+		if (!document.getElementById('google_translate_element')) return;
+		if (!w.google?.translate?.TranslateElement) return;
+		new w.google.translate.TranslateElement(
+			{
+				pageLanguage: 'id'
+			},
+			'google_translate_element'
+		);
+	};
+	const script = document.createElement('script');
+	script.id = translateScriptId;
+	script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+	script.async = true;
+	document.head.appendChild(script);
+};
 
 const baseNav = [
 	{
@@ -103,6 +131,7 @@ const baseNav = [
 				<a href="/ulama" class:active={pathname === '/ulama'} class="text-base-content/60 hover:text-primary">Ulama</a>
 			</nav>
 			<div class="flex items-center gap-2">
+				<div id="google_translate_element" class="translate-slot hidden md:flex"></div>
 				{#if data.user}
 					<a href="/dashboard" class="btn btn-sm btn-ghost">Dashboard</a>
 					<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
@@ -244,5 +273,22 @@ const baseNav = [
 	}
 	.pb-safe {
 		padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+	}
+
+	:global(.translate-slot .goog-te-gadget) {
+		font-size: 0;
+	}
+
+	:global(.translate-slot .goog-te-gadget span) {
+		display: none;
+	}
+
+	:global(.translate-slot .goog-te-combo) {
+		border: 1px solid #e2e8f0;
+		border-radius: 0.5rem;
+		padding: 0.35rem 0.5rem;
+		font-size: 0.75rem;
+		background: #fff;
+		color: #0f172a;
 	}
 </style>

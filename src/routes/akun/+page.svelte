@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import OrgLocationFields from '$lib/components/org/OrgLocationFields.svelte';
 	export let data: PageData;
 	export let form: ActionData;
 
@@ -25,8 +26,6 @@
 	let orgType = 'pondok';
 	let orgName = '';
 	let orgSlug = '';
-	let orgAddress = '';
-	let orgCity = '';
 	let orgPhone = '';
 	let adminName = profile?.username ?? '';
 	const adminEmail = profile?.email ?? '';
@@ -199,13 +198,8 @@
 							<label for="org-phone" class="block text-sm font-semibold text-gray-700 mb-2">📞 Kontak WA/HP</label>
 							<input id="org-phone" name="orgPhone" class="input input-bordered w-full" bind:value={orgPhone} placeholder="+62812xxxx" />
 						</div>
-						<div>
-							<label for="org-address" class="block text-sm font-semibold text-gray-700 mb-2">📍 Alamat</label>
-							<input id="org-address" name="orgAddress" class="input input-bordered w-full" bind:value={orgAddress} />
-						</div>
-						<div>
-							<label for="org-city" class="block text-sm font-semibold text-gray-700 mb-2">🏙️ Kota/Kabupaten</label>
-							<input id="org-city" name="orgCity" class="input input-bordered w-full" bind:value={orgCity} />
+						<div class="md:col-span-2">
+							<OrgLocationFields />
 						</div>
 					</div>
 

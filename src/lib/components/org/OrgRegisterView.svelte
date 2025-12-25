@@ -1,4 +1,6 @@
 <script lang="ts">
+	import OrgLocationFields from '$lib/components/org/OrgLocationFields.svelte';
+
 	export let title = '';
 	export let typePath = '';
 	export let form;
@@ -53,20 +55,7 @@
 			</div>
 		</div>
 
-		<div class="grid gap-4 md:grid-cols-2">
-			<div class="form-control">
-				<label class="label" for="orgAddress">
-					<span class="label-text font-medium">Alamat</span>
-				</label>
-				<input id="orgAddress" name="orgAddress" class="input input-bordered" />
-			</div>
-			<div class="form-control">
-				<label class="label" for="orgCity">
-					<span class="label-text font-medium">Kota/Kabupaten</span>
-				</label>
-				<input id="orgCity" name="orgCity" class="input input-bordered" />
-			</div>
-		</div>
+		<OrgLocationFields />
 
 		<div class="form-control">
 			<label class="label" for="orgPhone">
