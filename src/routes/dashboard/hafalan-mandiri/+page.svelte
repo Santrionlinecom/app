@@ -153,7 +153,7 @@ let toggling = new Set<number>();
 		<div class="overall-ring" aria-label={`Progress keseluruhan ${overallPercent}%`}>
 			<div
 				class="ring"
-				style={`background: conic-gradient(#10b981 ${overallPercent}%, #e5e7eb 0);`}
+				style={`--percent: ${overallPercent};`}
 			>
 				<div class="ring-inner">
 					<div class="ring-value">{overallPercent}%</div>
@@ -166,7 +166,7 @@ let toggling = new Set<number>();
 				<div class="juz-pill">
 					<div
 						class="juz-circle"
-						style={`background: conic-gradient(#22c55e ${seg.fill * 100}%, #eef2ff 0);`}
+						style={`--fill: ${seg.fill * 100};`}
 						aria-label={`Juz ${seg.index} progres ${Math.round(seg.fill * 100)}%`}
 						title={`Juz ${seg.index} · ${Math.round(seg.fill * 100)}%`}
 					>
@@ -303,6 +303,18 @@ let toggling = new Set<number>();
 </div>
 
 <style>
+	@property --percent {
+		syntax: '<number>';
+		inherits: false;
+		initial-value: 0;
+	}
+
+	@property --fill {
+		syntax: '<number>';
+		inherits: false;
+		initial-value: 0;
+	}
+
 	.container {
 		max-width: 1200px;
 		margin: 0 auto;
@@ -456,7 +468,9 @@ let toggling = new Set<number>();
 		border-radius: 999px;
 		display: grid;
 		place-items: center;
+		background: conic-gradient(#10b981 calc(var(--percent) * 1%), #e5e7eb 0);
 		box-shadow: 0 10px 30px rgba(16, 185, 129, 0.12);
+		transition: --percent 0.6s ease;
 	}
 
 	.ring-inner {
@@ -500,6 +514,8 @@ let toggling = new Set<number>();
 		place-items: center;
 		font-weight: 700;
 		color: #0f172a;
+		background: conic-gradient(#22c55e calc(var(--fill) * 1%), #eef2ff 0);
+		transition: --fill 0.5s ease;
 	}
 
 	.checklist-card {
