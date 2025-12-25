@@ -67,7 +67,9 @@
 		kasKategori = row.kategori;
 		kasNominal = `${row.nominal}`;
 		kasKeterangan = row.keterangan ?? '';
-		kasFormRef?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+			kasFormRef?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
 	};
 
 	const resetKasForm = () => {
@@ -119,7 +121,7 @@
 
 	{#if data.canManageKas}
 		<section class="grid gap-6 lg:grid-cols-2">
-			<div class="rounded-2xl border bg-white p-6 shadow-sm">
+			<div class={`rounded-2xl border bg-white p-6 shadow-sm ${kasId ? 'lg:col-span-2' : ''}`}>
 				<h2 class="text-lg font-semibold text-slate-900">Kas {orgLabel}</h2>
 				<p class="text-xs text-slate-500">Catat pemasukan dan pengeluaran untuk laporan transparan.</p>
 				<div class="mt-4 grid gap-3 md:grid-cols-3">
@@ -212,7 +214,7 @@
 				</form>
 			</div>
 
-			<div class="rounded-2xl border bg-white p-6 shadow-sm">
+			<div class={`rounded-2xl border bg-white p-6 shadow-sm ${kasId ? 'lg:col-span-2' : ''}`}>
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold text-slate-900">Rekap Kas Terbaru</h2>
 					<span class="text-xs text-slate-400">{data.kasEntries.length} transaksi</span>
@@ -222,7 +224,11 @@
 				{:else}
 					<div class="mt-4 space-y-3 md:hidden">
 						{#each data.kasEntries as row}
-							<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+							<div
+								class={`rounded-xl border p-4 shadow-sm ${
+									kasId === row.id ? 'border-amber-300 bg-amber-50/60' : 'border-slate-200 bg-white'
+								}`}
+							>
 								<div class="flex items-center justify-between">
 									<p class="text-sm font-semibold text-slate-900">{formatDate(row.tanggal)}</p>
 									<span class={`badge ${row.tipe === 'masuk' ? 'badge-success' : 'badge-warning'}`}>
@@ -270,7 +276,7 @@
 							</thead>
 							<tbody>
 								{#each data.kasEntries as row}
-									<tr>
+									<tr class={kasId === row.id ? 'bg-amber-50' : ''}>
 										<td>{formatDate(row.tanggal)}</td>
 										<td>{row.kategori}</td>
 										<td>{row.keterangan || '-'}</td>
