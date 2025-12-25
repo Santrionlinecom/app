@@ -220,7 +220,43 @@
 				{#if data.kasEntries.length === 0}
 					<p class="mt-4 text-sm text-slate-500">Belum ada catatan kas.</p>
 				{:else}
-					<div class="mt-4 overflow-auto">
+					<div class="mt-4 space-y-3 md:hidden">
+						{#each data.kasEntries as row}
+							<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+								<div class="flex items-center justify-between">
+									<p class="text-sm font-semibold text-slate-900">{formatDate(row.tanggal)}</p>
+									<span class={`badge ${row.tipe === 'masuk' ? 'badge-success' : 'badge-warning'}`}>
+										{kasTypeLabel[row.tipe] ?? row.tipe}
+									</span>
+								</div>
+								<p class="mt-2 text-xs text-slate-500">{row.kategori}</p>
+								<p class="mt-1 text-xs text-slate-500">{row.keterangan || '-'}</p>
+								<p class={`mt-3 text-sm font-semibold ${row.tipe === 'masuk' ? 'text-emerald-600' : 'text-rose-600'}`}>
+									{row.tipe === 'masuk' ? '+' : '-'} {formatCurrency(row.nominal)}
+								</p>
+								<div class="mt-3 flex flex-wrap gap-2">
+									<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditKas(row)}>
+										Edit
+									</button>
+									<form method="POST" action="?/deleteKas" use:enhance={refreshOnSuccess}>
+										<input type="hidden" name="id" value={row.id} />
+										<button
+											type="submit"
+											class="btn btn-xs btn-ghost text-red-600"
+											on:click={(event) => {
+												if (!confirm('Hapus transaksi ini?')) {
+													event.preventDefault();
+												}
+											}}
+										>
+											Hapus
+										</button>
+									</form>
+								</div>
+							</div>
+						{/each}
+					</div>
+					<div class="mt-4 overflow-auto hidden md:block">
 						<table class="table table-zebra w-full text-sm">
 							<thead>
 								<tr>
@@ -430,7 +466,25 @@
 			{#if data.zakat.length === 0}
 				<p class="mt-4 text-sm text-slate-500">Belum ada transaksi zakat.</p>
 			{:else}
-				<div class="mt-4 overflow-auto">
+				<div class="mt-4 space-y-3 md:hidden">
+					{#each data.zakat as row}
+						<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+							<div class="flex items-center justify-between gap-2">
+								<p class="text-sm font-semibold text-slate-900">{row.namaMuzakki}</p>
+								<span class="text-xs text-slate-500">{formatDate(row.createdAt)}</span>
+							</div>
+							<p class="mt-2 text-xs text-slate-500">Program: {row.namaProgram}</p>
+							<p class="mt-1 text-xs text-slate-500">Jenis: {jenisLabel[row.jenisBayar] ?? row.jenisBayar}</p>
+							<p class="mt-3 text-sm font-semibold text-slate-900">
+								{row.jenisBayar === 'uang'
+									? `Rp ${formatNumber(row.nominal)}`
+									: `${formatNumber(row.nominal)} kg`}
+							</p>
+							<p class="mt-1 text-xs text-slate-500">Jiwa: {row.jumlahJiwa}</p>
+						</div>
+					{/each}
+				</div>
+				<div class="mt-4 overflow-auto hidden md:block">
 					<table class="table table-zebra w-full text-sm">
 						<thead>
 							<tr>
@@ -469,7 +523,22 @@
 		{#if data.qurban.length === 0}
 			<p class="mt-4 text-sm text-slate-500">Belum ada data qurban.</p>
 		{:else}
-			<div class="mt-4 overflow-auto">
+			<div class="mt-4 space-y-3 md:hidden">
+				{#each data.qurban as row}
+					<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+						<div class="flex items-center justify-between gap-2">
+							<p class="text-sm font-semibold text-slate-900">{row.namaSohibulQurban.join(', ')}</p>
+							<span class="text-xs text-slate-500">{formatDate(row.createdAt)}</span>
+						</div>
+						<p class="mt-2 text-xs text-slate-500">Program: {row.namaProgram}</p>
+						<p class="mt-1 text-xs text-slate-500">Jenis: {row.jenisHewan}</p>
+						<p class="mt-1 text-xs text-slate-500">
+							Status: {statusHewanLabel[row.statusHewan] ?? row.statusHewan}
+						</p>
+					</div>
+				{/each}
+			</div>
+			<div class="mt-4 overflow-auto hidden md:block">
 				<table class="table table-zebra w-full text-sm">
 					<thead>
 						<tr>
