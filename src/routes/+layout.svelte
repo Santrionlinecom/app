@@ -2,6 +2,8 @@
 import '../app.css';
 import { page } from '$app/stores';
 import { onMount } from 'svelte';
+import SearchableSelect from '$lib/components/SearchableSelect.svelte';
+import { LANGUAGE_OPTIONS } from '$lib/data/languages';
 
 export let data;
 
@@ -12,6 +14,8 @@ const apkUrl = 'https://files.santrionline.com/Santrionline.apk';
 const installPromptKey = 'so_install_prompt_v1';
 let showInstallPopup = false;
 const translateScriptId = 'google-translate-script';
+let selectedLanguage = '';
+let pendingLanguage = '';
 
 const dismissInstallPopup = (persist = true) => {
 	showInstallPopup = false;
@@ -64,12 +68,33 @@ const loadTranslateWidget = () => {
 			},
 			'google_translate_element'
 		);
+		if (pendingLanguage) {
+			setTranslateLanguage(pendingLanguage);
+			pendingLanguage = '';
+		}
 	};
 	const script = document.createElement('script');
 	script.id = translateScriptId;
 	script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
 	script.async = true;
 	document.head.appendChild(script);
+};
+
+const setTranslateLanguage = (lang: string) => {
+	const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+	if (!combo) {
+		pendingLanguage = lang;
+		return;
+	}
+	combo.value = lang;
+	combo.dispatchEvent(new Event('change'));
+};
+
+const handleLanguageChange = (event: CustomEvent<{ value: string }>) => {
+	selectedLanguage = event.detail.value;
+	if (selectedLanguage) {
+		setTranslateLanguage(selectedLanguage);
+	}
 };
 
 const baseNav = [
@@ -131,7 +156,19 @@ const baseNav = [
 				<a href="/ulama" class:active={pathname === '/ulama'} class="text-base-content/60 hover:text-primary">Ulama</a>
 			</nav>
 			<div class="flex items-center gap-2">
-				<div id="google_translate_element" class="translate-slot hidden md:flex"></div>
+				<div class="hidden md:flex items-center gap-2">
+					<SearchableSelect
+						options={LANGUAGE_OPTIONS}
+						bind:value={selectedLanguage}
+						placeholder="Pilih Bahasa"
+						searchPlaceholder="Cari bahasa..."
+						emptyText="Bahasa tidak ditemukan"
+						wrapperClass="w-48"
+						inputClass="text-xs h-9"
+						on:change={handleLanguageChange}
+					/>
+				</div>
+				<div id="google_translate_element" class="translate-slot hidden"></div>
 				{#if data.user}
 					<a href="/dashboard" class="btn btn-sm btn-ghost">Dashboard</a>
 					<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
