@@ -1,5 +1,6 @@
 <script lang="ts">
 	import OrgLocationFields from '$lib/components/org/OrgLocationFields.svelte';
+	import { page } from '$app/stores';
 
 	export let title = '';
 	export let typePath = '';
@@ -8,6 +9,8 @@
 	let orgName = '';
 	let orgSlug = '';
 	let slugManual = false;
+
+	const displayUser = (user: any) => user?.username || user?.email || 'Akun Anda';
 
 	const toSlug = (value: string) =>
 		value
@@ -21,6 +24,9 @@
 	$: if (!slugManual) {
 		orgSlug = toSlug(orgName);
 	}
+
+	$: currentUser = $page.data?.user ?? null;
+	$: isLoggedIn = !!currentUser;
 </script>
 
 <section class="max-w-3xl mx-auto py-10 px-4 space-y-6">
@@ -66,27 +72,43 @@
 
 		<div class="divider">Akun Admin Lembaga</div>
 
-		<div class="grid gap-4 md:grid-cols-2">
-			<div class="form-control">
-				<label class="label" for="adminName">
-					<span class="label-text font-medium">Nama Admin</span>
-				</label>
-				<input id="adminName" name="adminName" class="input input-bordered" required />
+		{#if isLoggedIn}
+			<div class="rounded-2xl border bg-emerald-50 p-4 text-sm text-emerald-900">
+				Akun admin akan menggunakan login saat ini: <strong>{displayUser(currentUser)}</strong>.
 			</div>
-			<div class="form-control">
-				<label class="label" for="adminEmail">
-					<span class="label-text font-medium">Email Admin</span>
-				</label>
-				<input id="adminEmail" name="adminEmail" type="email" class="input input-bordered" required />
+		{:else}
+			<div class="grid gap-4 md:grid-cols-2">
+				<div class="form-control">
+					<label class="label" for="adminName">
+						<span class="label-text font-medium">Nama Admin</span>
+					</label>
+					<input id="adminName" name="adminName" class="input input-bordered" required />
+				</div>
+				<div class="form-control">
+					<label class="label" for="adminEmail">
+						<span class="label-text font-medium">Email Admin</span>
+					</label>
+					<input id="adminEmail" name="adminEmail" type="email" class="input input-bordered" required />
+				</div>
 			</div>
-		</div>
 
-		<div class="form-control">
-			<label class="label" for="adminPassword">
-				<span class="label-text font-medium">Password Admin</span>
-			</label>
-			<input id="adminPassword" name="adminPassword" type="password" class="input input-bordered" minlength="6" required />
-		</div>
+			<div class="form-control">
+				<label class="label" for="adminPassword">
+					<span class="label-text font-medium">Password Admin</span>
+				</label>
+				<input id="adminPassword" name="adminPassword" type="password" class="input input-bordered" minlength="6" required />
+			</div>
+
+			<div class="rounded-2xl border bg-slate-50 p-4 text-sm text-slate-700">
+				<p class="font-semibold">Sudah punya akun? Login dulu agar data admin otomatis.</p>
+				<a
+					href="/auth/google"
+					class="btn btn-outline mt-3 w-full border-slate-300 text-slate-700 hover:bg-slate-100 normal-case"
+				>
+					Masuk dengan Google
+				</a>
+			</div>
+		{/if}
 
 		{#if form?.error}
 			<div class="alert alert-error text-sm">{form.error}</div>

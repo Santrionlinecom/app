@@ -25,17 +25,17 @@ export const actions: Actions = {
 		const adminName = formData.get('adminName');
 		const adminEmail = formData.get('adminEmail');
 		const adminPassword = formData.get('adminPassword');
+		const isLoggedIn = !!locals.user;
 
 		if (
 			typeof orgName !== 'string' ||
-			typeof adminName !== 'string' ||
-			typeof adminEmail !== 'string' ||
-			typeof adminPassword !== 'string'
+			(!isLoggedIn &&
+				(typeof adminName !== 'string' || typeof adminEmail !== 'string' || typeof adminPassword !== 'string'))
 		) {
 			return fail(400, { error: 'Semua kolom wajib diisi.' });
 		}
 
-		if (adminPassword.length < 6) {
+		if (!isLoggedIn && typeof adminPassword === 'string' && adminPassword.length < 6) {
 			return fail(400, { error: 'Password minimal 6 karakter.' });
 		}
 
@@ -44,9 +44,13 @@ export const actions: Actions = {
 			return fail(400, { error: 'Slug tidak valid.' });
 		}
 
-		const existing = await db.prepare('SELECT id FROM users WHERE email = ?').bind(adminEmail).first();
-		if (existing) {
-			return fail(400, { error: 'Email admin sudah terdaftar.' });
+		if (!isLoggedIn) {
+			const existing = await db.prepare('SELECT id FROM users WHERE email = ?').bind(adminEmail).first();
+			if (existing) {
+				return fail(400, { error: 'Email admin sudah terdaftar.' });
+			}
+		} else if (locals.user?.orgId) {
+			return fail(400, { error: 'Akun sudah terhubung ke lembaga.' });
 		}
 
 		const uniqueSlug = await ensureUniqueSlug(db, 'masjid', baseSlug);
@@ -59,23 +63,30 @@ export const actions: Actions = {
 			contactPhone: typeof orgPhone === 'string' ? orgPhone.trim() : ''
 		});
 
-		const userId = generateId(15);
-		const hashed = await new Scrypt().hash(adminPassword);
-		await db
-			.prepare(
-				`INSERT INTO users (id, username, email, password_hash, role, org_id, org_status, created_at)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-			)
-			.bind(userId, adminName.trim(), adminEmail.trim(), hashed, 'admin', orgId, 'active', Date.now())
-			.run();
+		if (isLoggedIn && locals.user) {
+			await db
+				.prepare('UPDATE users SET role = ?, org_id = ?, org_status = ? WHERE id = ?')
+				.bind('admin', orgId, 'active', locals.user.id)
+				.run();
+		} else {
+			const userId = generateId(15);
+			const hashed = await new Scrypt().hash(adminPassword as string);
+			await db
+				.prepare(
+					`INSERT INTO users (id, username, email, password_hash, role, org_id, org_status, created_at)
+					 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+				)
+				.bind(userId, (adminName as string).trim(), (adminEmail as string).trim(), hashed, 'admin', orgId, 'active', Date.now())
+				.run();
 
-		const lucia = initializeLucia(db);
-		const session = await lucia.createSession(userId, {});
-		const sessionCookie = lucia.createSessionCookie(session.id);
-		cookies.set(sessionCookie.name, sessionCookie.value, {
-			path: '/',
-			...sessionCookie.attributes
-		});
+			const lucia = initializeLucia(db);
+			const session = await lucia.createSession(userId, {});
+			const sessionCookie = lucia.createSessionCookie(session.id);
+			cookies.set(sessionCookie.name, sessionCookie.value, {
+				path: '/',
+				...sessionCookie.attributes
+			});
+		}
 
 		throw redirect(302, '/menunggu');
 	}
