@@ -59,17 +59,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 			status: string;
 			createdAt: number;
 		}> = [];
-		if (isSystemAdmin) {
-			await ensureOrgSchema(db);
-			const { results } = await db
-				.prepare(
-					`SELECT id, type, name, slug, status, created_at as createdAt
-					 FROM organizations
-					 ORDER BY created_at DESC`
-				)
-				.all();
-			orgs = (results ?? []) as typeof orgs;
-		}
+		await ensureOrgSchema(db);
+		const { results: orgResults } = await db
+			.prepare(
+				`SELECT id, type, name, slug, status, created_at as createdAt
+				 FROM organizations
+				 ORDER BY created_at DESC`
+			)
+			.all();
+		orgs = (orgResults ?? []) as typeof orgs;
 		return {
 			role,
 			currentUser: locals.user,

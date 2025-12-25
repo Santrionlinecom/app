@@ -4,7 +4,7 @@ import { ensureOrgSchema } from '$lib/server/organizations';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) throw redirect(302, '/auth');
-	if (locals.user.role !== 'admin' || locals.user.orgId) {
+	if (locals.user.role !== 'admin') {
 		throw redirect(302, '/dashboard');
 	}
 	if (!locals.db) throw redirect(302, '/dashboard');
@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	approve: async ({ request, locals }) => {
-		if (!locals.user || locals.user.role !== 'admin' || locals.user.orgId) {
+		if (!locals.user || locals.user.role !== 'admin') {
 			return fail(403, { error: 'Tidak memiliki akses' });
 		}
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
@@ -44,7 +44,7 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	reject: async ({ request, locals }) => {
-		if (!locals.user || locals.user.role !== 'admin' || locals.user.orgId) {
+		if (!locals.user || locals.user.role !== 'admin') {
 			return fail(403, { error: 'Tidak memiliki akses' });
 		}
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
@@ -63,7 +63,7 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	remove: async ({ request, locals }) => {
-		if (!locals.user || locals.user.role !== 'admin' || locals.user.orgId) {
+		if (!locals.user || locals.user.role !== 'admin') {
 			return fail(403, { error: 'Tidak memiliki akses' });
 		}
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });

@@ -19,7 +19,7 @@
 	};
 
 	const currentUser = 'currentUser' in data ? data.currentUser : null;
-	const isSystemAdmin = isAdmin && !currentUser?.orgId;
+	const canManageOrganizations = isAdmin;
 	const orgSlug = data.org?.slug;
 	const canManageUmmah =
 		!!orgSlug && !!currentUser?.orgId && (data.role === 'admin' || data.role === 'tamir' || data.role === 'bendahara');
@@ -185,7 +185,7 @@
 			<p class="relative text-sm font-medium opacity-90">Kelola Role</p>
 			<p class="relative mt-1 text-2xl font-bold">Users</p>
 		</a>
-		{#if isSystemAdmin}
+		{#if canManageOrganizations}
 			<a href="/dashboard/kelola-lembaga" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
 				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🏛️</div>
 				<p class="relative text-sm font-medium opacity-90">Kelola Lembaga</p>
@@ -426,7 +426,7 @@
 
 	<!-- Right Column (1/3) -->
 	<div class="space-y-6">
-		{#if isSystemAdmin}
+		{#if canManageOrganizations}
 			<!-- Kelola Lembaga -->
 			<div class="rounded-2xl border bg-white p-6 shadow-lg">
 				<div class="flex items-start justify-between mb-4">
