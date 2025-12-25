@@ -2,10 +2,11 @@ import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
-	if (locals.user?.orgId && locals.user.orgStatus === 'pending') {
+	const isAdmin = locals.user?.role === 'admin';
+	if (!isAdmin && locals.user?.orgId && locals.user.orgStatus === 'pending') {
 		throw redirect(302, '/menunggu');
 	}
-	if (locals.user?.orgId && locals.db) {
+	if (!isAdmin && locals.user?.orgId && locals.db) {
 		const org = await locals.db
 			.prepare('SELECT status FROM organizations WHERE id = ?')
 			.bind(locals.user.orgId)
