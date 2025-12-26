@@ -3,6 +3,12 @@
 	export let roles: Array<{ value: string; label: string }> = [];
 	export let lockedRole: { value: string; label: string } | null = null;
 	export let form;
+
+	const encodeValue = (value: string) => encodeURIComponent(value);
+	$: googleHref =
+		lockedRole && org?.slug && org?.type
+			? `/auth/google?mode=member&orgType=${encodeValue(org.type)}&orgSlug=${encodeValue(org.slug)}&role=${encodeValue(lockedRole.value)}`
+			: '';
 </script>
 
 <section class="max-w-3xl mx-auto py-10 px-4 space-y-6">
@@ -68,6 +74,11 @@
 			<div class="alert alert-error text-sm">{form.error}</div>
 		{/if}
 
-		<button class="btn btn-primary w-full">Daftar Anggota</button>
-	</form>
+	<button class="btn btn-primary w-full">Daftar Anggota</button>
+
+	{#if lockedRole && googleHref}
+		<div class="pt-4 text-center text-xs text-slate-500">atau</div>
+		<a href={googleHref} class="btn btn-outline w-full">Daftar dengan Google</a>
+	{/if}
+</form>
 </section>
