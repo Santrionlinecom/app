@@ -59,7 +59,7 @@ const getUserColumns = async (db: D1Database) => {
 const buildRedirectForRole = (role?: string | null) => {
 	if (!role) return '/akun';
 	const normalized = role.toLowerCase();
-	if (role === 'SUPER_ADMIN' || normalized === 'super_admin') return '/admin/dashboard';
+	if (role === 'SUPER_ADMIN' || normalized === 'super_admin') return '/admin/super/overview';
 	if (['ustadz', 'ustadzah', 'admin_lembaga', 'admin', 'tamir', 'bendahara'].includes(normalized)) {
 		return '/dashboard';
 	}

@@ -5,7 +5,10 @@ import type { Actions, PageServerLoad } from './$types';
 
 // Jika user sudah login, lempar ke dashboard
 export const load: PageServerLoad = async ({ locals }) => {
-	if (locals.user) throw redirect(302, '/dashboard');
+	if (locals.user) {
+		const target = locals.user.role === 'SUPER_ADMIN' ? '/admin/super/overview' : '/dashboard';
+		throw redirect(302, target);
+	}
 	return {};
 };
 
@@ -27,9 +30,9 @@ export const actions: Actions = {
 		try {
 			// 2. Cari user di database
 			const user = await db
-				.prepare('SELECT id, password_hash FROM users WHERE email = ?')
+				.prepare('SELECT id, password_hash, role FROM users WHERE email = ?')
 				.bind(email)
-				.first<{ id: string; password_hash: unknown }>();
+				.first<{ id: string; password_hash: unknown; role: string | null }>();
 
 			if (!user) {
 				return fail(400, { message: 'Email atau Password salah.' });
@@ -69,6 +72,8 @@ export const actions: Actions = {
 		}
 
 		// 6. Lempar ke Dashboard
-		throw redirect(302, '/dashboard');
+		const role = user.role ?? '';
+		const target = role === 'SUPER_ADMIN' ? '/admin/super/overview' : '/dashboard';
+		throw redirect(302, target);
 	}
 };

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+
 	export let org;
 	export let roles: Array<{ value: string; label: string }> = [];
 	export let lockedRole: { value: string; label: string } | null = null;
@@ -9,6 +11,19 @@
 		lockedRole && org?.slug && org?.type
 			? `/auth/google?mode=member&orgType=${encodeValue(org.type)}&orgSlug=${encodeValue(org.slug)}&role=${encodeValue(lockedRole.value)}`
 			: '';
+
+	onMount(() => {
+		if (!org?.slug || !org?.type) return;
+		const params = new URLSearchParams(window.location.search);
+		const ref = params.get('ref');
+		const role = params.get('role');
+		const source = ref || role || 'direct';
+		fetch('/api/traffic', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ orgSlug: org.slug, orgType: org.type, source })
+		}).catch(() => undefined);
+	});
 </script>
 
 <section class="max-w-3xl mx-auto py-10 px-4 space-y-6">

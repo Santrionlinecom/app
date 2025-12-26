@@ -3,7 +3,7 @@ import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) throw redirect(302, '/auth');
-	if (locals.user.role !== 'admin') throw redirect(302, '/dashboard');
+	if (locals.user.role !== 'SUPER_ADMIN') throw redirect(302, '/dashboard');
 
 	const baseQuery = `
 		SELECT id, username, email, role, gender, org_id as orgId, org_status as orgStatus, created_at 
@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	updateRole: async ({ request, locals }) => {
-		if (!locals.user || locals.user.role !== 'admin') {
+		if (!locals.user || locals.user.role !== 'SUPER_ADMIN') {
 			return fail(403, { error: 'Tidak memiliki akses' });
 		}
 
@@ -27,7 +27,17 @@ export const actions: Actions = {
 			return fail(400, { error: 'Data tidak lengkap' });
 		}
 
-		const validRoles = ['admin', 'ustadz', 'ustadzah', 'santri', 'alumni', 'jamaah', 'tamir', 'bendahara'];
+		const validRoles = [
+			'admin',
+			'ustadz',
+			'ustadzah',
+			'santri',
+			'alumni',
+			'jamaah',
+			'tamir',
+			'bendahara',
+			'SUPER_ADMIN'
+		];
 		if (!validRoles.includes(newRole)) {
 			return fail(400, { error: 'Role tidak valid' });
 		}
