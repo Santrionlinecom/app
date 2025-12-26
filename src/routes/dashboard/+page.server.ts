@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const orgProfile = orgId ? await getOrganizationById(db, orgId) : null;
 
 	// Load data based on user role
-	if (role === 'admin') {
+	if (role === 'admin' || role === 'SUPER_ADMIN') {
 		// Admin: list all users + santri & surah options
 		const baseQuery = 'SELECT id, username, email, role, created_at FROM users';
 		const { results } = await (scopedOrgId

@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	export let data: PageData;
 
+	const isSuperAdmin = data.role === 'SUPER_ADMIN';
 	const isAdmin = data.role === 'admin';
 	const isUstadz = data.role === 'ustadz' || data.role === 'ustadzah';
 	const isSantri = data.role === 'santri';
@@ -9,6 +10,7 @@
 	const isTamir = data.role === 'tamir';
 
 	const roleConfig = {
+		SUPER_ADMIN: { title: 'Super Admin Dashboard', gradient: 'from-slate-900 via-slate-800 to-slate-900', icon: '[SYS]' },
 		admin: { title: 'Admin Dashboard', gradient: 'from-purple-600 via-purple-500 to-indigo-600', icon: '👑' },
 		ustadz: { title: 'Ustadz Dashboard', gradient: 'from-emerald-600 via-teal-500 to-cyan-600', icon: '📚' },
 		ustadzah: { title: 'Ustadzah Dashboard', gradient: 'from-pink-600 via-rose-500 to-red-600', icon: '👩‍🏫' },
@@ -20,7 +22,7 @@
 	};
 
 	const currentUser = 'currentUser' in data ? data.currentUser : null;
-	const canManageOrganizations = isAdmin;
+	const canManageOrganizations = isSuperAdmin;
 	const orgSlug = data.org?.slug;
 	const memberLabelByType: Record<string, string> = {
 		pondok: 'Santri',
@@ -131,7 +133,20 @@
 			</div>
 		</div>
 		<div class="flex flex-wrap gap-3 mt-6">
-			{#if isAdmin}
+			{#if isSuperAdmin}
+				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+					<p class="text-xs opacity-80">Total Users</p>
+					<p class="text-2xl font-bold">{users.length}</p>
+				</div>
+				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+					<p class="text-xs opacity-80">Total Lembaga</p>
+					<p class="text-2xl font-bold">{orgs.length}</p>
+				</div>
+				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+					<p class="text-xs opacity-80">Menunggu</p>
+					<p class="text-2xl font-bold">{pendingOrgs.length}</p>
+				</div>
+			{:else if isAdmin}
 				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
 					<p class="text-xs opacity-80">Total Users</p>
 					<p class="text-2xl font-bold">{users.length}</p>
@@ -181,7 +196,23 @@
 
 <!-- Quick Actions -->
 <div class="mt-8 grid grid-cols-2 gap-4">
-	{#if canManageUmmah}
+	{#if isSuperAdmin}
+		<a href="/admin/super/overview" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 p-6 text-white shadow-lg transition hover:scale-105">
+			<div class="absolute -right-4 -top-4 text-6xl opacity-20">[SYS]</div>
+			<p class="relative text-sm font-medium opacity-90">Super Admin</p>
+			<p class="relative mt-1 text-2xl font-bold">Overview</p>
+		</a>
+		<a href="/dashboard/kelola-lembaga" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
+			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🏛️</div>
+			<p class="relative text-sm font-medium opacity-90">Kelola Lembaga</p>
+			<p class="relative mt-1 text-2xl font-bold">Global</p>
+		</a>
+		<a href="/dashboard/kelola-role" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 p-6 text-white shadow-lg transition hover:scale-105">
+			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🔐</div>
+			<p class="relative text-sm font-medium opacity-90">Kelola Role</p>
+			<p class="relative mt-1 text-2xl font-bold">Global</p>
+		</a>
+	{:else if canManageUmmah}
 		<a href={`/org/${orgSlug}/ummah`} class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-lime-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🧾</div>
 			<p class="relative text-sm font-medium opacity-90">Solusi Ummah</p>
@@ -189,18 +220,6 @@
 		</a>
 	{/if}
 	{#if isAdmin}
-		<a href="/dashboard/kelola-role" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🔐</div>
-			<p class="relative text-sm font-medium opacity-90">Kelola Role</p>
-			<p class="relative mt-1 text-2xl font-bold">Users</p>
-		</a>
-		{#if canManageOrganizations}
-			<a href="/dashboard/kelola-lembaga" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
-				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🏛️</div>
-				<p class="relative text-sm font-medium opacity-90">Kelola Lembaga</p>
-				<p class="relative mt-1 text-2xl font-bold">Lembaga</p>
-			</a>
-		{/if}
         <!-- Kelola Blog (Admin only) -->
         <a href="/admin/posts" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
             <div class="absolute -right-4 -top-4 text-6xl opacity-20">📝</div>
