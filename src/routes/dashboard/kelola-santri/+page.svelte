@@ -20,6 +20,8 @@
 	let searchQuery = '';
 	let filterRole = 'all';
 	let filterStatus = 'all';
+	let downloadingPdfId: string | null = null;
+	let canExport = false;
 	let form = {
 		username: '',
 		email: '',
@@ -30,6 +32,7 @@
 	$: if (!isAdminView && memberRole) {
 		form = { ...form, role: memberRole };
 	}
+	$: canExport = !isAdminView || !!scope?.memberRole;
 
 	$: filteredSantri = santri.filter(s => {
 		const matchSearch = !searchQuery || 
@@ -121,6 +124,34 @@
 		};
 		return classes[role as keyof typeof classes] || 'badge-ghost';
 	};
+
+	const canDownloadPdf = (role: string) => role === 'santri' || role === 'jamaah';
+
+	const downloadPdf = async (id: string, name: string) => {
+		if (downloadingPdfId) return;
+		downloadingPdfId = id;
+		try {
+			const res = await fetch(`/api/reports/anggota/${id}`);
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data?.message || 'Gagal mengunduh PDF');
+			}
+			const blob = await res.blob();
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			const safeName = (name || 'anggota').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+			link.href = url;
+			link.download = `laporan-${safeName || 'anggota'}.pdf`;
+			document.body.appendChild(link);
+			link.click();
+			link.remove();
+			URL.revokeObjectURL(url);
+		} catch (err) {
+			alert(err instanceof Error ? err.message : 'Gagal mengunduh PDF');
+		} finally {
+			downloadingPdfId = null;
+		}
+	};
 </script>
 
 <svelte:head>
@@ -211,6 +242,17 @@
 						<option value="pending">Pending</option>
 					</select>
 				</div>
+				{#if canExport}
+					<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4 rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40 px-4 py-3">
+						<div>
+							<div class="text-sm font-semibold text-emerald-700">Unduh laporan {memberLabel}</div>
+							<div class="text-xs text-emerald-700/80">Format CSV dapat dibuka di Excel atau Google Sheets.</div>
+						</div>
+						<a class="btn btn-sm btn-outline btn-success" href="/api/reports/anggota">
+							⬇️ Download Excel
+						</a>
+					</div>
+				{/if}
 
 				<div class="overflow-x-auto rounded-xl border">
 					<table class="table table-zebra">
@@ -264,6 +306,19 @@
 											{/if}
 										</td>
 										<td>
+											{#if canDownloadPdf(s.role)}
+												<button
+													class="btn btn-xs btn-outline mr-2"
+													on:click={() => downloadPdf(s.id, s.username || s.email)}
+													disabled={downloadingPdfId === s.id}
+												>
+													{#if downloadingPdfId === s.id}
+														<span class="loading loading-spinner loading-xs"></span>
+													{:else}
+														📄 PDF
+													{/if}
+												</button>
+											{/if}
 											{#if s.orgStatus === 'pending'}
 												<button
 													class="btn btn-xs btn-success text-white mr-2"

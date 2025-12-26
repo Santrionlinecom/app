@@ -30,16 +30,21 @@ export const load: PageServerLoad = async ({ locals }) => {
 		});
 
 		// Data hafalan resmi (approved)
-		const { results: hafalanResmi } = await db.prepare(`
-			SELECT surah_number, COUNT(*) as total_ayat, 
-			       SUM(CASE WHEN quality_status = 'lancar' THEN 1 ELSE 0 END) as lancar,
-			       SUM(CASE WHEN quality_status = 'kurang_lancar' THEN 1 ELSE 0 END) as kurang_lancar,
-			       SUM(CASE WHEN quality_status = 'belum_lancar' THEN 1 ELSE 0 END) as belum_lancar
+		const { results: hafalanResmi } = await db
+			.prepare(
+				`
+			SELECT surah_number, COUNT(*) as total_ayat,
+			       SUM(CASE WHEN quality_status IN ('hijau','lancar') THEN 1 ELSE 0 END) as lancar,
+			       SUM(CASE WHEN quality_status IN ('kuning','kurang_lancar') THEN 1 ELSE 0 END) as kurang_lancar,
+			       SUM(CASE WHEN quality_status IN ('merah','belum_lancar') THEN 1 ELSE 0 END) as belum_lancar
 			FROM hafalan_progress
 			WHERE user_id = ? AND status = 'disetujui'
 			GROUP BY surah_number
 			ORDER BY surah_number
-		`).bind(locals.user.id).all();
+		`
+			)
+			.bind(locals.user.id)
+			.all();
 
 		// Data muroja'ah mandiri
 		const { results: murojaStats } = await db.prepare(`
