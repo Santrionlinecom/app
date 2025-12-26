@@ -5,6 +5,7 @@ export const load: PageLoad = async ({ fetch }) => {
 	const data = res.ok ? await res.json() : { santri: [] };
 
 	return {
-		santri: Array.isArray(data.santri) ? data.santri : []
+		santri: Array.isArray(data.santri) ? data.santri : [],
+		scope: data.scope ?? null
 	};
 };

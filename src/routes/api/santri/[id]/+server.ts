@@ -1,9 +1,10 @@
 import { json, error } from '@sveltejs/kit';
 import { Scrypt } from '$lib/server/password';
-import { getOrgScope } from '$lib/server/organizations';
+import { ensureOrgSchema, getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'jamaah', 'tamir', 'bendahara', 'admin'] as const;
+const managerRoles = ['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
 
 const ensureAuth = (locals: App.Locals) => {
 	if (!locals.user) {
@@ -20,7 +21,7 @@ const normalizeUstadzRole = (role?: string, gender?: string | null) => {
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	ensureAuth(locals);
-	if (locals.user?.role !== 'admin') {
+	if (!locals.user?.role || !managerRoles.includes(locals.user.role as any)) {
 		throw error(403, 'Forbidden');
 	}
 	const db = locals.db!;
@@ -37,9 +38,26 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const targetGender = targetRows?.[0]?.gender;
 	const targetRole = targetRows?.[0]?.role;
 	const targetOrgId = targetRows?.[0]?.orgId ?? null;
+	const isAdmin = locals.user.role === 'admin';
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	let memberRole: string | null = null;
+	if (!isAdmin) {
+		if (!orgId) throw error(403, 'Organisasi belum ditentukan');
+		await ensureOrgSchema(db);
+		const org = await getOrganizationById(db, orgId);
+		memberRole = org?.type ? memberRoleByType[org.type] : null;
+		if (!memberRole) throw error(403, 'Role anggota tidak valid');
+	}
 	if (!isSystemAdmin && targetOrgId && targetOrgId !== orgId) {
 		throw error(403, 'Tidak boleh mengubah user lembaga lain');
+	}
+	if (!isAdmin) {
+		if (!targetOrgId || targetOrgId !== orgId) {
+			throw error(403, 'Tidak boleh mengubah user lembaga lain');
+		}
+		if (targetRole !== memberRole) {
+			throw error(403, 'Hanya boleh mengelola anggota lembaga');
+		}
 	}
 	const username = typeof body.username === 'string' ? body.username.trim() : undefined;
 	const email = typeof body.email === 'string' ? body.email.trim() : undefined;
@@ -53,6 +71,9 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
 	if (!username && !email && !role && !password && !orgStatus) {
 		throw error(400, 'Tidak ada data yang diubah');
+	}
+	if (!isAdmin && (username !== undefined || email !== undefined || role !== undefined || password !== undefined)) {
+		throw error(403, 'Tidak boleh mengubah data selain status');
 	}
 
 	let passwordHash: string | null = null;
@@ -112,7 +133,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
 	ensureAuth(locals);
-	if (locals.user?.role !== 'admin') {
+	if (!locals.user?.role || !managerRoles.includes(locals.user.role as any)) {
 		throw error(403, 'Forbidden');
 	}
 	const db = locals.db!;
@@ -120,14 +141,23 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 	const id = params.id;
 	if (!id) throw error(400, 'ID tidak valid');
 
+	const isAdmin = locals.user.role === 'admin';
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const target = await db
+		.prepare('SELECT org_id as orgId, role FROM users WHERE id = ?')
+		.bind(id)
+		.first<{ orgId: string | null; role?: string }>();
 	if (!isSystemAdmin) {
-		const target = await db
-			.prepare('SELECT org_id as orgId FROM users WHERE id = ?')
-			.bind(id)
-			.first<{ orgId: string | null }>();
-		if (target?.orgId && target.orgId !== orgId) {
+		if (!orgId || target?.orgId !== orgId) {
 			throw error(403, 'Tidak boleh menghapus user lembaga lain');
+		}
+	}
+	if (!isAdmin) {
+		await ensureOrgSchema(db);
+		const org = orgId ? await getOrganizationById(db, orgId) : null;
+		const memberRole = org?.type ? memberRoleByType[org.type] : null;
+		if (!memberRole || target?.role !== memberRole) {
+			throw error(403, 'Hanya boleh menghapus anggota lembaga');
 		}
 	}
 

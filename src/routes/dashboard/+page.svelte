@@ -6,6 +6,7 @@
 	const isUstadz = data.role === 'ustadz' || data.role === 'ustadzah';
 	const isSantri = data.role === 'santri';
 	const isAlumni = data.role === 'alumni';
+	const isTamir = data.role === 'tamir';
 
 	const roleConfig = {
 		admin: { title: 'Admin Dashboard', gradient: 'from-purple-600 via-purple-500 to-indigo-600', icon: '👑' },
@@ -282,6 +283,13 @@
 			<p class="relative mt-1 text-2xl font-bold">Lihat</p>
 		</a>
 	{:else}
+		{#if isTamir}
+			<a href="/dashboard/kelola-santri" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🧎‍♂️</div>
+				<p class="relative text-sm font-medium opacity-90">Kelola Jamaah</p>
+				<p class="relative mt-1 text-2xl font-bold">Anggota</p>
+			</a>
+		{/if}
 		<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
 			<p class="relative text-sm font-medium opacity-90">Pencapaian Hafalan</p>

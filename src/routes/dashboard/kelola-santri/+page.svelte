@@ -3,6 +3,16 @@
 
 	export let data;
 
+	let scope = data?.scope ?? null;
+	let isAdminView = scope?.isAdmin ?? false;
+	let memberRole = scope?.memberRole ?? 'santri';
+	let memberLabel = memberRole === 'jamaah' ? 'Jamaah' : 'Santri';
+
+	$: scope = data?.scope ?? null;
+	$: isAdminView = scope?.isAdmin ?? false;
+	$: memberRole = scope?.memberRole ?? 'santri';
+	$: memberLabel = memberRole === 'jamaah' ? 'Jamaah' : 'Santri';
+
 	let santri = Array.isArray(data.santri) ? structuredClone(data.santri) : [];
 	let loading = false;
 	let formMessage = '';
@@ -17,6 +27,10 @@
 		role: 'santri'
 	};
 
+	$: if (!isAdminView && memberRole) {
+		form = { ...form, role: memberRole };
+	}
+
 	$: filteredSantri = santri.filter(s => {
 		const matchSearch = !searchQuery || 
 			s.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -29,6 +43,7 @@
 	$: stats = {
 		total: santri.length,
 		santri: santri.filter(s => s.role === 'santri').length,
+		jamaah: santri.filter(s => s.role === 'jamaah').length,
 		ustadz: santri.filter(s => s.role === 'ustadz' || s.role === 'ustadzah').length,
 		admin: santri.filter(s => s.role === 'admin').length,
 		pending: santri.filter(s => (s.orgStatus || 'active') === 'pending').length
@@ -118,36 +133,53 @@
 		<div class="flex items-center justify-between">
 			<div>
 				<p class="text-xs uppercase tracking-[0.25em] text-white/80">Admin Panel</p>
-				<h1 class="mt-2 text-3xl font-bold">Kelola Santri</h1>
-				<p class="mt-1 text-sm text-white/90">Manajemen akun dan monitoring progres santri</p>
+				<h1 class="mt-2 text-3xl font-bold">Kelola {isAdminView ? 'Santri' : memberLabel}</h1>
+				<p class="mt-1 text-sm text-white/90">Manajemen akun anggota sesuai lembaga</p>
 			</div>
 			<div class="hidden md:block text-6xl opacity-20">👥</div>
 		</div>
 	</div>
 
 	<!-- Stats Cards -->
-	<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-		<div class="rounded-xl border bg-white p-4 shadow-sm">
-			<div class="text-2xl font-bold text-blue-600">{stats.total}</div>
-			<div class="text-sm text-slate-600">Total Pengguna</div>
+	{#if isAdminView}
+		<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+			<div class="rounded-xl border bg-white p-4 shadow-sm">
+				<div class="text-2xl font-bold text-blue-600">{stats.total}</div>
+				<div class="text-sm text-slate-600">Total Pengguna</div>
+			</div>
+			<div class="rounded-xl border bg-white p-4 shadow-sm">
+				<div class="text-2xl font-bold text-green-600">{stats.santri}</div>
+				<div class="text-sm text-slate-600">Santri</div>
+			</div>
+			<div class="rounded-xl border bg-white p-4 shadow-sm">
+				<div class="text-2xl font-bold text-cyan-600">{stats.ustadz}</div>
+				<div class="text-sm text-slate-600">Ustadz/ah</div>
+			</div>
+			<div class="rounded-xl border bg-white p-4 shadow-sm">
+				<div class="text-2xl font-bold text-red-600">{stats.admin}</div>
+				<div class="text-sm text-slate-600">Admin</div>
+			</div>
+			<div class="rounded-xl border bg-white p-4 shadow-sm">
+				<div class="text-2xl font-bold text-amber-600">{stats.pending}</div>
+				<div class="text-sm text-slate-600">Menunggu Approval</div>
+			</div>
 		</div>
-		<div class="rounded-xl border bg-white p-4 shadow-sm">
-			<div class="text-2xl font-bold text-green-600">{stats.santri}</div>
-			<div class="text-sm text-slate-600">Santri</div>
+	{:else}
+		<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+			<div class="rounded-xl border bg-white p-4 shadow-sm">
+				<div class="text-2xl font-bold text-blue-600">{stats.total}</div>
+				<div class="text-sm text-slate-600">Total Anggota</div>
+			</div>
+			<div class="rounded-xl border bg-white p-4 shadow-sm">
+				<div class="text-2xl font-bold text-green-600">{memberRole === 'jamaah' ? stats.jamaah : stats.santri}</div>
+				<div class="text-sm text-slate-600">{memberLabel}</div>
+			</div>
+			<div class="rounded-xl border bg-white p-4 shadow-sm">
+				<div class="text-2xl font-bold text-amber-600">{stats.pending}</div>
+				<div class="text-sm text-slate-600">Menunggu Approval</div>
+			</div>
 		</div>
-		<div class="rounded-xl border bg-white p-4 shadow-sm">
-			<div class="text-2xl font-bold text-cyan-600">{stats.ustadz}</div>
-			<div class="text-sm text-slate-600">Ustadz/ah</div>
-		</div>
-		<div class="rounded-xl border bg-white p-4 shadow-sm">
-			<div class="text-2xl font-bold text-red-600">{stats.admin}</div>
-			<div class="text-sm text-slate-600">Admin</div>
-		</div>
-		<div class="rounded-xl border bg-white p-4 shadow-sm">
-			<div class="text-2xl font-bold text-amber-600">{stats.pending}</div>
-			<div class="text-sm text-slate-600">Menunggu Approval</div>
-		</div>
-	</div>
+	{/if}
 
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 		<!-- Table Section -->
@@ -162,12 +194,16 @@
 					/>
 					<select class="select select-bordered w-full md:w-auto" bind:value={filterRole}>
 						<option value="all">Semua Role</option>
-						<option value="santri">Santri</option>
-						<option value="ustadz">Ustadz</option>
-						<option value="jamaah">Jamaah</option>
-						<option value="tamir">Ta'mir</option>
-						<option value="bendahara">Bendahara</option>
-						<option value="admin">Admin</option>
+						{#if isAdminView}
+							<option value="santri">Santri</option>
+							<option value="ustadz">Ustadz</option>
+							<option value="jamaah">Jamaah</option>
+							<option value="tamir">Ta'mir</option>
+							<option value="bendahara">Bendahara</option>
+							<option value="admin">Admin</option>
+						{:else}
+							<option value={memberRole}>{memberLabel}</option>
+						{/if}
 					</select>
 					<select class="select select-bordered w-full md:w-auto" bind:value={filterStatus}>
 						<option value="all">Semua Status</option>
@@ -259,7 +295,7 @@
 		<!-- Form Section -->
 		<div class="lg:col-span-1">
 			<div class="rounded-2xl border bg-white p-6 shadow-sm sticky top-4">
-				<h3 class="text-lg font-bold text-slate-800 mb-4">➕ Tambah Pengguna Baru</h3>
+				<h3 class="text-lg font-bold text-slate-800 mb-4">➕ Tambah {isAdminView ? 'Pengguna Baru' : memberLabel}</h3>
 				
 				<form on:submit|preventDefault={submit} class="space-y-4">
 					<div class="form-control">
@@ -308,13 +344,17 @@
 						<label class="label" for="role">
 							<span class="label-text font-medium">Role</span>
 						</label>
-						<select id="role" class="select select-bordered" bind:value={form.role}>
-							<option value="santri">🎓 Santri</option>
-							<option value="ustadz">👩‍🏫 Ustadz</option>
-							<option value="jamaah">🧎‍♂️ Jamaah</option>
-							<option value="tamir">🕌 Ta'mir</option>
-							<option value="bendahara">💰 Bendahara</option>
-							<option value="admin">⚙️ Admin</option>
+						<select id="role" class="select select-bordered" bind:value={form.role} disabled={!isAdminView}>
+							{#if isAdminView}
+								<option value="santri">🎓 Santri</option>
+								<option value="ustadz">👩‍🏫 Ustadz</option>
+								<option value="jamaah">🧎‍♂️ Jamaah</option>
+								<option value="tamir">🕌 Ta'mir</option>
+								<option value="bendahara">💰 Bendahara</option>
+								<option value="admin">⚙️ Admin</option>
+							{:else}
+								<option value={memberRole}>🎓 {memberLabel}</option>
+							{/if}
 						</select>
 					</div>
 

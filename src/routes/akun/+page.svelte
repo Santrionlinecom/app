@@ -42,6 +42,11 @@
 	};
 	$: memberLabel = org ? memberLabelByType[org.type] ?? 'Anggota' : 'Anggota';
 	$: shareLink = org ? `${baseUrl}/${org.type}/${org.slug}/daftar?ref=anggota` : '';
+	$: shareMessage =
+		org && shareLink
+			? `Untuk ${memberLabel.toLowerCase()} yang ingin mendaftar ke ${org.slug} gunakan link ini: ${shareLink}`
+			: '';
+	$: waShareLink = shareMessage ? `https://wa.me/?text=${encodeURIComponent(shareMessage)}` : '';
 
 	const copyShareLink = async () => {
 		if (!shareLink) return;
@@ -308,7 +313,14 @@
 								</a>
 								<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
 									<input class="input input-bordered w-full text-xs" value={shareLink} readonly />
-									<button type="button" class="btn btn-sm btn-outline" on:click={copyShareLink}>Copy Link</button>
+									<div class="flex gap-2">
+										<button type="button" class="btn btn-sm btn-outline" on:click={copyShareLink}>Copy Link</button>
+										{#if waShareLink}
+											<a href={waShareLink} class="btn btn-sm btn-success text-white" target="_blank" rel="noreferrer">
+												Share WA
+											</a>
+										{/if}
+									</div>
 								</div>
 								{#if copyMessage}
 									<p class="text-xs text-emerald-700">{copyMessage}</p>
