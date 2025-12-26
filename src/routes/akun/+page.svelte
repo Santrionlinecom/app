@@ -30,6 +30,46 @@
 	let adminName = profile?.username ?? '';
 	const adminEmail = profile?.email ?? '';
 	let slugManual = false;
+	let copyMessage = '';
+
+	const baseUrl = 'https://app.santrionline.com';
+	const memberLabelByType: Record<string, string> = {
+		pondok: 'Santri',
+		masjid: 'Jamaah',
+		musholla: 'Jamaah',
+		tpq: 'Santri',
+		'rumah-tahfidz': 'Santri'
+	};
+	$: memberLabel = org ? memberLabelByType[org.type] ?? 'Anggota' : 'Anggota';
+	$: shareLink = org ? `${baseUrl}/${org.type}/${org.slug}/daftar?ref=anggota` : '';
+
+	const copyShareLink = async () => {
+		if (!shareLink) return;
+		copyMessage = '';
+		try {
+			if (navigator?.clipboard?.writeText) {
+				await navigator.clipboard.writeText(shareLink);
+			} else {
+				const temp = document.createElement('textarea');
+				temp.value = shareLink;
+				temp.setAttribute('readonly', 'true');
+				temp.style.position = 'absolute';
+				temp.style.left = '-9999px';
+				document.body.appendChild(temp);
+				temp.select();
+				document.execCommand('copy');
+				document.body.removeChild(temp);
+			}
+			copyMessage = 'Link berhasil disalin.';
+		} catch (err) {
+			console.error('Copy link error:', err);
+			copyMessage = 'Gagal menyalin link. Silakan salin manual.';
+		} finally {
+			setTimeout(() => {
+				copyMessage = '';
+			}, 2500);
+		}
+	};
 
 	const toSlug = (value: string) =>
 		value
@@ -257,6 +297,25 @@
 							<p>{org.status}</p>
 						</div>
 					</div>
+					{#if shareLink}
+						<div class="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+							<p class="text-sm text-emerald-800 font-semibold">
+								Untuk {memberLabel.toLowerCase()} yang ingin mendaftar ke {org.slug} anda berikan link ini ke mereka.
+							</p>
+							<div class="mt-3 space-y-2">
+								<a href={shareLink} class="text-xs text-emerald-700 underline break-all" target="_blank" rel="noreferrer">
+									{shareLink}
+								</a>
+								<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+									<input class="input input-bordered w-full text-xs" value={shareLink} readonly />
+									<button type="button" class="btn btn-sm btn-outline" on:click={copyShareLink}>Copy Link</button>
+								</div>
+								{#if copyMessage}
+									<p class="text-xs text-emerald-700">{copyMessage}</p>
+								{/if}
+							</div>
+						</div>
+					{/if}
 				</div>
 			{/if}
 
