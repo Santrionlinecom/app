@@ -44,6 +44,16 @@
 	let kasNominal = '';
 	let kasKeterangan = '';
 	let kasFormRef: HTMLFormElement | null = null;
+	let exportStart = '';
+	let exportEnd = '';
+
+	const buildExportUrl = (type: string) => {
+		const params = new URLSearchParams();
+		params.set('type', type);
+		if (exportStart) params.set('start', exportStart);
+		if (exportEnd) params.set('end', exportEnd);
+		return `/api/reports/keuangan?${params.toString()}`;
+	};
 
 	const toDateInput = (value: number) => {
 		const date = new Date(value);
@@ -100,6 +110,40 @@
 		<h1 class="text-2xl md:text-3xl font-bold text-slate-900">Zakat &amp; Qurban - {data.org?.name}</h1>
 		<p class="text-sm text-slate-500">Kelola pencatatan zakat dan qurban untuk lembaga ini saja.</p>
 	</header>
+
+	<section class="rounded-2xl border bg-white p-5 shadow-sm">
+		<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+			<div>
+				<h2 class="text-lg font-semibold text-slate-900">Export Laporan Keuangan</h2>
+				<p class="text-xs text-slate-500">Unduh CSV untuk kas, zakat, atau qurban. Biarkan tanggal kosong untuk semua data.</p>
+			</div>
+			<div class="flex flex-wrap gap-2">
+				{#if data.canManageKas}
+					<a class="btn btn-sm btn-outline" href={buildExportUrl('kas')}>Download Kas</a>
+				{/if}
+				<a class="btn btn-sm btn-outline" href={buildExportUrl('zakat')}>Download Zakat</a>
+				<a class="btn btn-sm btn-outline" href={buildExportUrl('qurban')}>Download Qurban</a>
+			</div>
+		</div>
+		<div class="mt-4 grid gap-3 md:grid-cols-2">
+			<div>
+				<label class="text-xs font-medium text-slate-500">Tanggal Mulai</label>
+				<input
+					type="date"
+					class="input input-bordered w-full"
+					bind:value={exportStart}
+				/>
+			</div>
+			<div>
+				<label class="text-xs font-medium text-slate-500">Tanggal Akhir</label>
+				<input
+					type="date"
+					class="input input-bordered w-full"
+					bind:value={exportEnd}
+				/>
+			</div>
+		</div>
+	</section>
 
 	<div class="grid gap-4 md:grid-cols-3">
 		<div class="rounded-2xl border bg-white p-4 shadow-sm">
