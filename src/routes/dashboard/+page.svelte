@@ -22,6 +22,14 @@
 	const currentUser = 'currentUser' in data ? data.currentUser : null;
 	const canManageOrganizations = isAdmin;
 	const orgSlug = data.org?.slug;
+	const memberLabelByType: Record<string, string> = {
+		pondok: 'Santri',
+		masjid: 'Jamaah',
+		musholla: 'Jamaah',
+		tpq: 'Santri',
+		'rumah-tahfidz': 'Santri'
+	};
+	const orgMemberLabel = data.org?.type ? memberLabelByType[data.org.type] ?? 'Anggota' : 'Santri';
 	const canManageUmmah =
 		!!orgSlug && !!currentUser?.orgId && (data.role === 'admin' || data.role === 'tamir' || data.role === 'bendahara');
 	const users = ('users' in data ? data.users ?? [] : []).map(u => ({ ...u, role: u.role ?? 'santri' }));
@@ -243,7 +251,7 @@
         </a>
 		<a href="/dashboard/kelola-santri" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">👥</div>
-			<p class="relative text-sm font-medium opacity-90">Santri</p>
+			<p class="relative text-sm font-medium opacity-90">Kelola {orgMemberLabel}</p>
 			<p class="relative mt-1 text-2xl font-bold">{students.length}</p>
 		</a>
 		<a href="/dashboard/hafalan-belum-lancar" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 p-6 text-white shadow-lg transition hover:scale-105">
@@ -286,7 +294,7 @@
 		{#if isTamir}
 			<a href="/dashboard/kelola-santri" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
 				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🧎‍♂️</div>
-				<p class="relative text-sm font-medium opacity-90">Kelola Jamaah</p>
+				<p class="relative text-sm font-medium opacity-90">Kelola {orgMemberLabel}</p>
 				<p class="relative mt-1 text-2xl font-bold">Anggota</p>
 			</a>
 		{/if}
