@@ -37,26 +37,30 @@ export const logActivity = (
 	details: LogActivityDetails = {}
 ) => {
 	if (!db || !action) return;
-	const metadataValue = serializeMetadata(details.metadata);
-	const logPromise = db
-		.prepare(
-			`INSERT INTO system_logs (id, user_id, user_email, action, metadata, ip_address, created_at)
-			 VALUES (?, ?, ?, ?, ?, ?, ?)`
-		)
-		.bind(
-			generateId(15),
-			details.userId ?? null,
-			details.userEmail ?? null,
-			action,
-			metadataValue,
-			details.ipAddress ?? null,
-			Date.now()
-		)
-		.run();
+	try {
+		const metadataValue = serializeMetadata(details.metadata);
+		const logPromise = db
+			.prepare(
+				`INSERT INTO system_logs (id, user_id, user_email, action, metadata, ip_address, created_at)
+				 VALUES (?, ?, ?, ?, ?, ?, ?)`
+			)
+			.bind(
+				generateId(15),
+				details.userId ?? null,
+				details.userEmail ?? null,
+				action,
+				metadataValue,
+				details.ipAddress ?? null,
+				Date.now()
+			)
+			.run();
 
-	if (details.waitUntil) {
-		details.waitUntil(logPromise.catch(() => undefined));
-	} else {
-		void logPromise.catch(() => undefined);
+		if (details.waitUntil) {
+			details.waitUntil(logPromise.catch(() => undefined));
+		} else {
+			void logPromise.catch(() => undefined);
+		}
+	} catch {
+		// Logging must never break the main request flow.
 	}
 };
