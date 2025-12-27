@@ -1,19 +1,18 @@
 <script lang="ts">
   let { data } = $props();
 
-  let items = [];
-  let page = 1;
-  let limit = 10;
-  let totalPages = 1;
-
-  $: items = Array.isArray(data.items)
-    ? data.items
-    : Array.isArray(data.posts)
-      ? data.posts
-      : [];
-  $: page = Number(data.page ?? 1);
-  $: limit = Number(data.limit ?? 10);
-  $: totalPages = Math.max(1, Math.ceil((Number(data.totalCount ?? items.length) || 0) / (limit || 1)));
+  const items = $derived(() =>
+    Array.isArray(data.items)
+      ? data.items
+      : Array.isArray(data.posts)
+        ? data.posts
+        : []
+  );
+  const page = $derived(() => Number(data.page ?? 1));
+  const limit = $derived(() => Number(data.limit ?? 10));
+  const totalPages = $derived(() =>
+    Math.max(1, Math.ceil((Number(data.totalCount ?? items.length) || 0) / (limit || 1)))
+  );
 
   const formatDateTime = (ts: number | null | undefined) => {
     if (!ts) return '';
