@@ -18,6 +18,15 @@
 		const rate = (signups / clicks) * 100;
 		return `${rate.toFixed(1)}%`;
 	};
+
+	const orgLabel = (org) => `${org.name} (${orgTypeLabel[org.type] ?? org.type})`;
+	const orgsWithoutAdmin = (orgs) => orgs.filter((org) => !org.adminCount);
+	const hasOrgWithoutAdmin = (orgs) => orgs.some((org) => !org.adminCount);
+	const userLabel = (user) => {
+		const org = data.institutions?.find((item) => item.id === user.orgId);
+		const orgName = org ? org.name : null;
+		return `${user.username || user.email} • ${user.email}${orgName ? ` — ${orgName}` : ''}`;
+	};
 </script>
 
 <svelte:head>
@@ -170,6 +179,48 @@
 			<h2 class="text-lg font-semibold text-slate-900">Daftar Lembaga</h2>
 			<p class="text-xs text-slate-500">Gunakan ghost login untuk masuk ke dashboard lembaga.</p>
 		</div>
+		{#if hasOrgWithoutAdmin(data.institutions)}
+			<div class="grid gap-4 lg:grid-cols-2">
+				<form method="POST" action="?/assignExistingAdmin" class="rounded-xl border bg-slate-50 p-4">
+					<h3 class="text-sm font-semibold text-slate-900">Tetapkan Admin dari User Terdaftar</h3>
+					<p class="text-xs text-slate-500">Pilih user yang sudah ada untuk menjadi admin lembaga.</p>
+					<p class="text-xs text-slate-400">User akan dipindah ke lembaga yang dipilih.</p>
+					<div class="mt-3 grid gap-3">
+						<select name="orgId" class="select select-bordered" required>
+							<option value="">Pilih lembaga</option>
+							{#each orgsWithoutAdmin(data.institutions) as org}
+								<option value={org.id}>{orgLabel(org)}</option>
+							{/each}
+						</select>
+						<select name="userId" class="select select-bordered" required>
+							<option value="">Pilih user</option>
+							{#each data.availableUsers as user}
+								<option value={user.id}>{userLabel(user)}</option>
+							{/each}
+						</select>
+						<button class="btn btn-primary btn-sm" type="submit">Set Admin</button>
+					</div>
+				</form>
+				<form method="POST" action="?/createAdmin" class="rounded-xl border bg-slate-50 p-4">
+					<h3 class="text-sm font-semibold text-slate-900">Tambah Admin Baru</h3>
+					<p class="text-xs text-slate-500">Buat akun admin baru untuk lembaga tanpa admin.</p>
+					<div class="mt-3 grid gap-3">
+						<select name="orgId" class="select select-bordered" required>
+							<option value="">Pilih lembaga</option>
+							{#each orgsWithoutAdmin(data.institutions) as org}
+								<option value={org.id}>{orgLabel(org)}</option>
+							{/each}
+						</select>
+						<input name="name" class="input input-bordered" placeholder="Nama admin" required />
+						<input name="email" type="email" class="input input-bordered" placeholder="Email admin" required />
+						<input name="password" type="password" class="input input-bordered" placeholder="Password (min 6)" minlength="6" required />
+						<button class="btn btn-secondary btn-sm" type="submit">Buat Admin</button>
+					</div>
+				</form>
+			</div>
+		{:else}
+			<p class="text-xs text-slate-500">Semua lembaga sudah memiliki admin.</p>
+		{/if}
 		{#if data.institutions.length === 0}
 			<p class="text-sm text-slate-500">Belum ada lembaga terdaftar.</p>
 		{:else}

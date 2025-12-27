@@ -5,6 +5,7 @@ import { getOrganizationBySlug, memberRoleByType, type OrgType } from '$lib/serv
 import { generateId } from 'lucia';
 import { OAuth2RequestError } from 'arctic';
 import type { D1Database } from '@cloudflare/workers-types';
+import { env as privateEnv } from '$env/dynamic/private';
 
 type GoogleProfile = {
 	sub: string;
@@ -34,7 +35,19 @@ type UserRow = {
 
 type MemberContext = { orgId: string; role: string } | null;
 
-const SUPER_ADMIN_EMAIL = 'masyogikonline@gmail.com';
+const DEFAULT_SUPER_ADMIN_EMAIL = 'masyogikonline@gmail.com';
+
+const parseEmailList = (value?: string | null) =>
+	(value ?? '')
+		.split(/[,\s]+/)
+		.map((email) => email.trim().toLowerCase())
+		.filter(Boolean);
+
+const superAdminEmails = new Set(
+	parseEmailList(
+		privateEnv.SUPER_ADMIN_EMAILS ?? privateEnv.SUPER_ADMIN_EMAIL ?? DEFAULT_SUPER_ADMIN_EMAIL
+	)
+);
 
 const parseOAuthContext = (value?: string | null) => {
 	if (!value) return null;
@@ -136,7 +149,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch }) => {
 			throw error(400, 'Data Google tidak lengkap. Silakan coba lagi.');
 		}
 
-		const isSuperAdmin = email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+		const isSuperAdmin = superAdminEmails.has(email.toLowerCase());
 		const memberContext = await resolveMemberContext(db, oauthContext);
 		const columns = await getUserColumns(db);
 		const selectFields = ['id', 'email'];
