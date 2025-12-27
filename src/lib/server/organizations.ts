@@ -1,5 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { generateId } from 'lucia';
+import { isCommunityOrgType } from '$lib/server/utils';
 
 export type OrgType = 'pondok' | 'masjid' | 'musholla' | 'tpq' | 'rumah-tahfidz';
 export type OrgStatus = 'pending' | 'active' | 'rejected';
@@ -214,11 +215,14 @@ export const memberRoleByType: Record<OrgType, OrgRole> = {
 	'rumah-tahfidz': 'santri'
 };
 
+export const getDefaultMemberRole = (type?: string | null): OrgRole =>
+	isCommunityOrgType(type) ? 'jamaah' : 'santri';
+
 export const getMemberReferralRole = (type: OrgType, url?: URL) => {
 	if (!url) return null;
 	const refValue = (url.searchParams.get('ref') || '').toLowerCase();
 	const roleValue = (url.searchParams.get('role') || '').toLowerCase();
-	const defaultRole = memberRoleByType[type];
+	const defaultRole = getDefaultMemberRole(type);
 	const referralFlags = ['anggota', 'member', 'jamaah', 'santri'];
 	if (referralFlags.includes(refValue)) {
 		return defaultRole;

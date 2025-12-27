@@ -106,9 +106,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const orgType = orgProfile?.type ?? null;
 	const isEducationalOrg = isEducationalOrgType(orgType);
 	const isCommunityOrg = isCommunityOrgType(orgType);
+	const isCommunityMember = isCommunityOrg || role === 'jamaah';
 
 	const loadCommunityWidgets = async () => {
-		if (!isCommunityOrg || !orgId) {
+		if (!isCommunityMember || !orgId) {
 			return { finance: null, kasWeeklyIn: 0, communitySchedule: [] as CommunityScheduleItem[] };
 		}
 		try {
@@ -232,7 +233,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	}
 	// Role lainnya: tetap izinkan masuk dengan data kosong
-	const communityWidgets = isCommunityOrg ? await loadCommunityWidgets() : { finance: null, kasWeeklyIn: 0, communitySchedule: [] };
+	const communityWidgets = isCommunityMember
+		? await loadCommunityWidgets()
+		: { finance: null, kasWeeklyIn: 0, communitySchedule: [] };
 	return {
 		role,
 		currentUser: locals.user,

@@ -8,9 +8,10 @@
 	const isSantri = data.role === 'santri';
 	const isAlumni = data.role === 'alumni';
 	const isTamir = data.role === 'tamir';
-	const isEducationalOrg = data.isEducationalOrg ?? false;
+	const isJamaah = data.role === 'jamaah';
 	const isCommunityOrg = data.isCommunityOrg ?? false;
-	const showHafalan = isEducationalOrg || !isCommunityOrg;
+	const isCommunityMember = isCommunityOrg || isJamaah;
+	const showHafalan = !isCommunityMember;
 
 	const roleConfig = {
 		SUPER_ADMIN: { title: 'Super Admin Dashboard', gradient: 'from-slate-900 via-slate-800 to-slate-900', icon: '[SYS]' },
@@ -39,8 +40,8 @@
 		? data.org.type.toLowerCase().trim().replace(/_/g, '-').replace(/\s+/g, '-')
 		: null;
 	const orgMemberLabel = normalizedOrgType ? memberLabelByType[normalizedOrgType] ?? 'Anggota' : 'Santri';
-	const memberLabel = orgMemberLabel;
-	const memberRoleKey = isCommunityOrg ? 'jamaah' : 'santri';
+	const memberLabel = isCommunityMember ? 'Jamaah' : orgMemberLabel;
+	const memberRoleKey = isCommunityMember ? 'jamaah' : 'santri';
 	const canManageUmmah =
 		!!orgSlug && !!currentUser?.orgId && (data.role === 'admin' || data.role === 'tamir' || data.role === 'bendahara');
 	const users = ('users' in data ? data.users ?? [] : []).map(u => ({ ...u, role: u.role ?? memberRoleKey }));
@@ -155,7 +156,7 @@
 			</div>
 		</div>
 		<div class="flex flex-wrap gap-3 mt-6">
-			{#if isCommunityOrg}
+			{#if isCommunityMember}
 				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
 					<p class="text-xs opacity-80">Saldo Kas</p>
 					<p class="text-2xl font-bold">{formatCurrency(finance?.kas?.saldo ?? 0)}</p>
@@ -577,7 +578,7 @@
 				{/if}
 			</div>
 		{/if}
-		{#if isCommunityOrg}
+		{#if isCommunityMember}
 			<div class="rounded-2xl border bg-white p-6 shadow-lg">
 				<div class="flex items-start justify-between mb-4">
 					<div>

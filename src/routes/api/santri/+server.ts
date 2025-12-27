@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import { generateId } from 'lucia';
 import { Scrypt } from '$lib/server/password';
-import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
+import { getDefaultMemberRole, getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
 import { logActivity } from '$lib/server/activity-logs';
 
@@ -133,7 +133,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const username = typeof body.username === 'string' ? body.username.trim() : '';
 	const email = typeof body.email === 'string' ? body.email.trim() : '';
 	const password = typeof body.password === 'string' ? body.password : '';
-	const roleValue = typeof body.role === 'string' && allowedRoles.includes(body.role) ? body.role : 'santri';
+	const requestedRole =
+		typeof body.role === 'string' && allowedRoles.includes(body.role) ? body.role : null;
 	const genderRaw = typeof body.gender === 'string' ? body.gender.trim() : '';
 	const gender = genderRaw === 'pria' || genderRaw === 'wanita' ? genderRaw : null;
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
@@ -151,7 +152,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				: null
 			: orgId
 		: orgId;
-	const role = isAdmin ? roleValue : memberRole;
+	let targetOrgType = orgType;
+	if (targetOrgId && (targetOrgId !== orgId || !orgType)) {
+		const targetOrg = await getOrganizationById(db, targetOrgId);
+		targetOrgType = targetOrg?.type ?? null;
+	}
+	const defaultRole = getDefaultMemberRole(targetOrgType);
+	const role = isAdmin ? requestedRole ?? defaultRole : memberRole;
 
 	if (!targetOrgId) {
 		throw error(400, 'Organisasi belum ditentukan');

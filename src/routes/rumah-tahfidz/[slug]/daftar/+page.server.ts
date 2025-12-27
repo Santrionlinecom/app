@@ -1,6 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { allowedRolesByType, getMemberReferralRole, getOrganizationBySlug } from '$lib/server/organizations';
+import { allowedRolesByType, getDefaultMemberRole, getMemberReferralRole, getOrganizationBySlug } from '$lib/server/organizations';
 import { initializeLucia } from '$lib/server/lucia';
 import { Scrypt } from '$lib/server/password';
 import { generateId } from 'lucia';
@@ -50,14 +50,15 @@ export const actions: Actions = {
 		const password = formData.get('password');
 		const role = formData.get('role');
 		const gender = formData.get('gender');
-		const roleValue = getMemberReferralRole('rumah-tahfidz', url) ?? (typeof role === 'string' ? role : '');
+		const fallbackRole = getDefaultMemberRole('rumah-tahfidz');
+		const roleValue =
+			getMemberReferralRole('rumah-tahfidz', url) ?? (typeof role === 'string' ? role : '') || fallbackRole;
 
 		if (
 			typeof name !== 'string' ||
 			typeof email !== 'string' ||
 			typeof password !== 'string' ||
-			typeof gender !== 'string' ||
-			!roleValue
+			typeof gender !== 'string'
 		) {
 			return fail(400, { error: 'Semua kolom wajib diisi.' });
 		}
