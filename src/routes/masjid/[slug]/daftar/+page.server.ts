@@ -54,7 +54,7 @@ export const actions: Actions = {
 		const role = formData.get('role');
 		const gender = formData.get('gender');
 		const fallbackRole = getDefaultMemberRole('masjid');
-		const roleValue = getMemberReferralRole('masjid', url) ?? (typeof role === 'string' ? role : '') || fallbackRole;
+		const roleValue = (getMemberReferralRole('masjid', url) ?? (typeof role === 'string' ? role : '')) || fallbackRole;
 
 		if (
 			typeof name !== 'string' ||

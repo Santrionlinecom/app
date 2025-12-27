@@ -53,7 +53,7 @@ export const actions: Actions = {
 		const gender = formData.get('gender');
 		const fallbackRole = getDefaultMemberRole('rumah-tahfidz');
 		const roleValue =
-			getMemberReferralRole('rumah-tahfidz', url) ?? (typeof role === 'string' ? role : '') || fallbackRole;
+			(getMemberReferralRole('rumah-tahfidz', url) ?? (typeof role === 'string' ? role : '')) || fallbackRole;
 
 		if (
 			typeof name !== 'string' ||
