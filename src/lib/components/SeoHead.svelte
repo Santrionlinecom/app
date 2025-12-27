@@ -29,12 +29,6 @@
     keywords = null
   } = $props() as SeoHeadProps;
 
-  let canonical = '';
-  let absoluteImage = '';
-  let absolutePublisherLogo = '';
-  let safeDescription = '';
-  let jsonLd: Record<string, unknown> = {};
-
   const toAbsoluteUrl = (value: string, base?: string) => {
     if (!value) return value;
     if (value.startsWith('http://') || value.startsWith('https://')) return value;
@@ -46,11 +40,11 @@
     }
   };
 
-  $: canonical = toAbsoluteUrl(canonicalUrl);
-  $: absoluteImage = toAbsoluteUrl(imageUrl, canonical);
-  $: absolutePublisherLogo = toAbsoluteUrl(publisherLogoUrl, canonical);
-  $: safeDescription = description?.trim() || title;
-  $: jsonLd = {
+  const canonical = $derived(() => toAbsoluteUrl(canonicalUrl));
+  const absoluteImage = $derived(() => toAbsoluteUrl(imageUrl, canonical));
+  const absolutePublisherLogo = $derived(() => toAbsoluteUrl(publisherLogoUrl, canonical));
+  const safeDescription = $derived(() => description?.trim() || title);
+  const jsonLd = $derived(() => ({
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
     mainEntityOfPage: {
@@ -73,7 +67,7 @@
       }
     },
     description: safeDescription
-  };
+  }));
 </script>
 
 <svelte:head>
