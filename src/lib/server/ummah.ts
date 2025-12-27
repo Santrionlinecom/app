@@ -102,8 +102,6 @@ export type OrgFinanceSummary = {
 };
 
 export const getOrgFinanceSummary = async (db: D1Database, orgId: string): Promise<OrgFinanceSummary> => {
-	await ensureUmmahTables(db);
-
 	const { results: kasSummaryRows } = await db
 		.prepare(
 			`SELECT tipe,

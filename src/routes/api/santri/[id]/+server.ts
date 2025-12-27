@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { Scrypt } from '$lib/server/password';
-import { ensureOrgSchema, getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
+import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'jamaah', 'tamir', 'bendahara', 'admin'] as const;
@@ -43,7 +43,6 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	let memberRole: string | null = null;
 	if (!isAdmin) {
 		if (!orgId) throw error(403, 'Organisasi belum ditentukan');
-		await ensureOrgSchema(db);
 		const org = await getOrganizationById(db, orgId);
 		memberRole = org?.type ? memberRoleByType[org.type] : null;
 		if (!memberRole) throw error(403, 'Role anggota tidak valid');
@@ -153,7 +152,6 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		}
 	}
 	if (!isAdmin) {
-		await ensureOrgSchema(db);
 		const org = orgId ? await getOrganizationById(db, orgId) : null;
 		const memberRole = org?.type ? memberRoleByType[org.type] : null;
 		if (!memberRole || target?.role !== memberRole) {

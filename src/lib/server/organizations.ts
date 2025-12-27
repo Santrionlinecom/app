@@ -1,6 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { generateId } from 'lucia';
-import { ensureOrgMediaSchema } from '$lib/server/org-media';
 
 export type OrgType = 'pondok' | 'masjid' | 'musholla' | 'tpq' | 'rumah-tahfidz';
 export type OrgStatus = 'pending' | 'active' | 'rejected';
@@ -77,7 +76,6 @@ export const listOrganizations = async (
 	db: D1Database,
 	opts: { type: OrgType; status?: OrgStatusFilter }
 ) => {
-	await ensureOrgMediaSchema(db);
 	const status = opts.status ?? 'active';
 	const baseQuery = `SELECT id, type, name, slug, status, address, city, contact_phone as contactPhone, created_at as createdAt,
 		(SELECT url FROM org_media WHERE organization_id = organizations.id ORDER BY created_at DESC LIMIT 1) as thumbnailUrl

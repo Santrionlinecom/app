@@ -2,7 +2,7 @@ import { redirect, fail } from '@sveltejs/kit';
 import { getAllPosts, deletePost, updatePost } from '$lib/server/cms';
 import type { PageServerLoad, Actions } from './$types';
 
-export const load: PageServerLoad = async ({ locals, platform }) => {
+export const load: PageServerLoad = async ({ locals, platform, url }) => {
   if (!locals.user) throw redirect(302, '/login');
   if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah') {
     throw redirect(302, '/dashboard');
@@ -17,8 +17,17 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
     };
   }
 
-  const posts = await getAllPosts(db);
-  return { posts };
+  const page = Number(url.searchParams.get('page') ?? '1');
+  const limit = Number(url.searchParams.get('limit') ?? '10');
+  const result = await getAllPosts(db, { page, limit });
+  return {
+    posts: result.posts,
+    pagination: {
+      page: result.page,
+      limit: result.limit,
+      totalCount: result.totalCount
+    }
+  };
 };
 
 export const actions: Actions = {

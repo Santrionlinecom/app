@@ -14,22 +14,6 @@ const requireUser = (locals: App.Locals) => {
 	return { user: locals.user as NonNullable<App.Locals['user']>, db: locals.db! };
 };
 
-const ensureCalendarTable = async (db: D1Database) => {
-	await db.prepare(
-		`CREATE TABLE IF NOT EXISTS calendar_notes (
-			id TEXT PRIMARY KEY,
-			user_id TEXT NOT NULL REFERENCES users(id),
-			role TEXT,
-			title TEXT NOT NULL,
-			content TEXT,
-			event_date TEXT NOT NULL,
-			created_at INTEGER NOT NULL,
-			updated_at INTEGER NOT NULL
-		)`
-	).run();
-	await db.prepare('CREATE INDEX IF NOT EXISTS idx_calendar_notes_event_date ON calendar_notes(event_date)').run();
-};
-
 const fetchSchema = async (db: D1Database) => {
 	const { results } = (await db.prepare(`PRAGMA table_info('calendar_notes')`).all()) ?? {};
 	return (results ?? []) as { name: string; type: string }[];
@@ -44,8 +28,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		if (!start || !end) {
 			throw error(400, 'start dan end harus diisi (YYYY-MM-DD)');
 		}
-
-		await ensureCalendarTable(db);
 
 		const { orgId, isSystemAdmin } = getOrgScope(user);
 		const baseSelect = `SELECT cn.id,
@@ -96,7 +78,6 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			throw error(400, 'title dan eventDate wajib diisi');
 		}
 
-		await ensureCalendarTable(db);
 		const schema = await fetchSchema(db);
 		const idColumn = schema.find((c) => c.name === 'id');
 		const idIsInt = idColumn?.type?.toLowerCase().includes('int');

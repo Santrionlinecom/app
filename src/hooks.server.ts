@@ -1,6 +1,5 @@
 // src/hooks.server.ts
 import { initializeLucia } from '$lib/server/lucia';
-import { ensureOrgSchema } from '$lib/server/organizations';
 import type { Handle } from '@sveltejs/kit';
 import type { D1Database } from '@cloudflare/workers-types';
 
@@ -16,8 +15,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.locals.session = null;
 		return resolve(event);
 	}
-
-	await ensureOrgSchema(db as D1Database);
 
 	const lucia = initializeLucia(db);
 

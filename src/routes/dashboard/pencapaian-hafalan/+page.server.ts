@@ -1,8 +1,6 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getFlaggedHafalan } from '$lib/server/progress';
-import { ensureMurojaTable } from '$lib/server/calendar';
-import { ensureHafalanTable } from '$lib/server/hafalan';
 import { getOrgScope } from '$lib/server/organizations';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -19,9 +17,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 
 	try {
-		await ensureHafalanTable(db);
-		await ensureMurojaTable(db);
-
 		// Data setoran resmi
 		const flagged = await getFlaggedHafalan(db, {
 			currentUserId: locals.user.id,

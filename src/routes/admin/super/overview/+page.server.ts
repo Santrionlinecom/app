@@ -1,7 +1,5 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { ensureOrgSchema } from '$lib/server/organizations';
-import { ensureTrafficTable } from '$lib/server/traffic';
 
 const memberRoles = ['santri', 'jamaah'];
 
@@ -23,8 +21,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	}
 
 	const db = locals.db!;
-	await ensureOrgSchema(db);
-	await ensureTrafficTable(db);
 
 	const totalInstitutions = await countTable(db, 'organizations');
 	const totalUsers = await countTable(db, 'users');

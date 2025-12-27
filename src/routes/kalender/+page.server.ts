@@ -1,5 +1,4 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { ensureCalendarTable } from '$lib/server/calendar';
 import { getOrgScope } from '$lib/server/organizations';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -10,8 +9,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const isAdmin = locals.user.role === 'admin';
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 	const db = locals.db!;
-
-	await ensureCalendarTable(db);
 
 	// Admin melihat semua, user lain hanya miliknya
 	const query = isAdmin
@@ -40,8 +37,6 @@ export const actions: Actions = {
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 
 		const db = locals.db!;
-		await ensureCalendarTable(db);
-
 		const data = await request.formData();
 		const title = data.get('title') as string;
 		const content = data.get('content') as string;
@@ -72,8 +67,6 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
-		await ensureCalendarTable(db);
-
 		const data = await request.formData();
 		const id = data.get('id') as string;
 		const title = data.get('title') as string;
@@ -111,8 +104,6 @@ export const actions: Actions = {
 		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
-		await ensureCalendarTable(db);
-
 		const data = await request.formData();
 		const id = data.get('id') as string;
 

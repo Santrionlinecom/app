@@ -236,7 +236,6 @@ export const uploadCertificateToR2 = async (
 };
 
 export const listCertificatesForSantri = async (db: D1Database, santriId: string) => {
-    await ensureCertificateTable(db);
     const { results } =
         (await db
             .prepare(
@@ -248,7 +247,6 @@ export const listCertificatesForSantri = async (db: D1Database, santriId: string
 };
 
 export const getCertificateById = async (db: D1Database, id: string) => {
-    await ensureCertificateTable(db);
     return (
         (await db
             .prepare(
@@ -263,7 +261,6 @@ export const createCertificateRecord = async (
     db: D1Database,
     payload: Omit<CertificateRow, 'certificate_url'> & { certificate_url: string | null }
 ) => {
-    await ensureCertificateTable(db);
     await db
         .prepare(
             `INSERT INTO certificates (id, santri_id, ustadz_id, title, description, issued_at, duration_days, total_hifz_ayat, total_doa, total_sessions, certificate_url)

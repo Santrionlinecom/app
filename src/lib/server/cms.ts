@@ -15,7 +15,22 @@ export interface CmsPost {
   updated_at: number;
 }
 
-async function ensureCmsSchema(db: D1Database) {
+export type CmsPostPage = {
+  posts: CmsPost[];
+  totalCount: number;
+  page: number;
+  limit: number;
+};
+
+const normalizePagination = (page = 1, limit = 10) => {
+  const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+  const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 10;
+  const cappedLimit = Math.min(safeLimit, 100);
+  const offset = (safePage - 1) * cappedLimit;
+  return { page: safePage, limit: cappedLimit, offset };
+};
+
+export async function ensureCmsSchema(db: D1Database) {
   // Buat tabel jika belum ada, dan tambahkan kolom SEO jika belum ada
   // Catatan: D1 menggunakan SQLite, ALTER akan error jika kolom sudah ada — kita abaikan errornya
   // Tabel dasar (langsung termasuk kolom SEO agar idempotent)
@@ -65,42 +80,76 @@ async function ensureCmsSchema(db: D1Database) {
   }
 }
 
-export async function getAllPosts(db: D1Database): Promise<CmsPost[]> {
-  await ensureCmsSchema(db);
-  const { results } = await db.prepare('SELECT * FROM cms_posts ORDER BY created_at DESC').all();
-  return results as unknown as CmsPost[];
+export async function getAllPosts(
+  db: D1Database,
+  opts: { page?: number; limit?: number } = {}
+): Promise<CmsPostPage> {
+  const { page, limit, offset } = normalizePagination(opts.page, opts.limit);
+  const { results } = await db
+    .prepare('SELECT * FROM cms_posts ORDER BY created_at DESC LIMIT ? OFFSET ?')
+    .bind(limit, offset)
+    .all();
+  const countRow = await db
+    .prepare('SELECT COUNT(1) as totalCount FROM cms_posts')
+    .first<{ totalCount: number }>();
+  return {
+    posts: (results ?? []) as unknown as CmsPost[],
+    totalCount: Number(countRow?.totalCount ?? 0),
+    page,
+    limit
+  };
 }
 
-export async function getPublishedPosts(db: D1Database): Promise<CmsPost[]> {
-  await ensureCmsSchema(db);
+export async function getPublishedPosts(
+  db: D1Database,
+  opts: { page?: number; limit?: number } = {}
+): Promise<CmsPostPage> {
+  const { page, limit, offset } = normalizePagination(opts.page, opts.limit);
   // Coba query dengan kolom scheduled_at; jika DB lama belum punya kolom, fallback ke query sederhana
   try {
     const { results } = await db
       .prepare(
-        "SELECT * FROM cms_posts WHERE status = 'published' AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now')*1000) ORDER BY COALESCE(scheduled_at, created_at) DESC"
+        "SELECT * FROM cms_posts WHERE status = 'published' AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now')*1000) ORDER BY COALESCE(scheduled_at, created_at) DESC LIMIT ? OFFSET ?"
       )
+      .bind(limit, offset)
       .all();
-    return results as unknown as CmsPost[];
+    const countRow = await db
+      .prepare(
+        "SELECT COUNT(1) as totalCount FROM cms_posts WHERE status = 'published' AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now')*1000)"
+      )
+      .first<{ totalCount: number }>();
+    return {
+      posts: (results ?? []) as unknown as CmsPost[],
+      totalCount: Number(countRow?.totalCount ?? 0),
+      page,
+      limit
+    };
   } catch (_) {
     const { results } = await db
-      .prepare("SELECT * FROM cms_posts WHERE status = 'published' ORDER BY created_at DESC")
+      .prepare("SELECT * FROM cms_posts WHERE status = 'published' ORDER BY created_at DESC LIMIT ? OFFSET ?")
+      .bind(limit, offset)
       .all();
-    return results as unknown as CmsPost[];
+    const countRow = await db
+      .prepare("SELECT COUNT(1) as totalCount FROM cms_posts WHERE status = 'published'")
+      .first<{ totalCount: number }>();
+    return {
+      posts: (results ?? []) as unknown as CmsPost[],
+      totalCount: Number(countRow?.totalCount ?? 0),
+      page,
+      limit
+    };
   }
 }
 
 export async function getPostById(db: D1Database, id: string): Promise<CmsPost | null> {
-  await ensureCmsSchema(db);
   return await db.prepare('SELECT * FROM cms_posts WHERE id = ?').bind(id).first();
 }
 
 export async function getPostBySlug(db: D1Database, slug: string): Promise<CmsPost | null> {
-  await ensureCmsSchema(db);
   return await db.prepare('SELECT * FROM cms_posts WHERE slug = ?').bind(slug).first();
 }
 
 export async function createPost(db: D1Database, post: Omit<CmsPost, 'created_at' | 'updated_at'>): Promise<void> {
-  await ensureCmsSchema(db);
   const now = Date.now();
   await db
     .prepare(
@@ -124,7 +173,6 @@ export async function createPost(db: D1Database, post: Omit<CmsPost, 'created_at
 }
 
 export async function updatePost(db: D1Database, id: string, post: Partial<Omit<CmsPost, 'id' | 'created_at' | 'updated_at'>>): Promise<void> {
-  await ensureCmsSchema(db);
   const now = Date.now();
   const fields = Object.keys(post).map(k => `${k} = ?`).join(', ');
   await db.prepare(`UPDATE cms_posts SET ${fields}, updated_at = ? WHERE id = ?`)
@@ -132,6 +180,5 @@ export async function updatePost(db: D1Database, id: string, post: Partial<Omit<
 }
 
 export async function deletePost(db: D1Database, id: string): Promise<void> {
-  await ensureCmsSchema(db);
   await db.prepare('DELETE FROM cms_posts WHERE id = ?').bind(id).run();
 }

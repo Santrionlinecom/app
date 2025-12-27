@@ -23,6 +23,7 @@ declare global {
                 DB: D1Database;
                 VECTORIZE_INDEX: VectorizeIndex;
                 AI: Ai;
+                MIGRATE_SECRET?: string;
                 // Pastikan binding di wrangler.toml namanya "BUCKET"
                 // (Jika belum pakai R2, baris ini boleh dihapus atau biarkan saja)
                 BUCKET: R2Bucket; 

@@ -1,6 +1,5 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { ensureTrafficTable } from '$lib/server/traffic';
 import { getOrganizationBySlug, type OrgType } from '$lib/server/organizations';
 import { generateId } from 'lucia';
 
@@ -29,8 +28,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const source = sourceRaw || 'direct';
 	const now = Date.now();
-	await ensureTrafficTable(db);
-
 	await db
 		.prepare(
 			`INSERT INTO traffic_sources (id, organization_id, source, total_clicks, last_clicked, created_at)

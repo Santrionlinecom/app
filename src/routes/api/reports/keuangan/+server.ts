@@ -1,7 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { ensureOrgSchema, getOrgScope, getOrganizationById } from '$lib/server/organizations';
-import { ensureUmmahTables } from '$lib/server/ummah';
+import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
 
 const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
 
@@ -81,8 +80,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	}
 
 	const db = locals.db!;
-	await ensureOrgSchema(db);
-	await ensureUmmahTables(db);
 
 	const org = await getOrganizationById(db, orgId);
 	if (!org) {

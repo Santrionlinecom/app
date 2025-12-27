@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { initializeLucia } from '$lib/server/lucia';
 import { Scrypt } from '$lib/server/password';
-import { createOrganization, ensureOrgSchema, ensureUniqueSlug, slugify } from '$lib/server/organizations';
+import { createOrganization, ensureUniqueSlug, slugify } from '$lib/server/organizations';
 import { generateId } from 'lucia';
 
 export const load: PageServerLoad = async () => {
@@ -13,8 +13,6 @@ export const actions: Actions = {
 	default: async ({ request, locals, cookies }) => {
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
-
-		await ensureOrgSchema(db);
 
 		const formData = await request.formData();
 		const orgName = formData.get('orgName');

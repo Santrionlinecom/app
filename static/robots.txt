@@ -1,13 +1,5 @@
 User-agent: *
 Allow: /
-Allow: /pondok/
-Allow: /pondok/*
-Allow: /masjid/
-Allow: /masjid/*
-Allow: /musholla/
-Allow: /musholla/*
-Allow: /blog/
-Allow: /blog/*
 Disallow: /dashboard/
 Disallow: /dashboard/*
 Disallow: /admin/

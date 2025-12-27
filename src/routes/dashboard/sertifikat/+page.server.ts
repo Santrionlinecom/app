@@ -2,8 +2,7 @@ import { redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import {
     buildDownloadUrl,
-    collectCertificateStats,
-    ensureCertificateTable
+    collectCertificateStats
 } from '$lib/server/certificates';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -16,8 +15,6 @@ export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.db) {
         throw error(500, 'Database tidak tersedia');
     }
-
-    await ensureCertificateTable(locals.db!);
 
     const { results: santriRows } =
         (await locals.db!

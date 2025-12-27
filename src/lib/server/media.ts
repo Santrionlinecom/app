@@ -9,7 +9,7 @@ export interface MediaItem {
   created_at: number;
 }
 
-async function ensureMediaSchema(db: D1Database) {
+export async function ensureMediaSchema(db: D1Database) {
   await db
     .prepare(
       `CREATE TABLE IF NOT EXISTS media_library (
@@ -30,7 +30,6 @@ export async function recordMedia(
   db: D1Database,
   item: { filename: string; url: string; mime_type?: string | null; size?: number | null }
 ): Promise<void> {
-  await ensureMediaSchema(db);
   const now = Date.now();
   await db
     .prepare(
@@ -44,7 +43,6 @@ export async function listMedia(
   db: D1Database,
   { limit = 60, offset = 0 }: { limit?: number; offset?: number } = {}
 ): Promise<MediaItem[]> {
-  await ensureMediaSchema(db);
   const safeLimit = Math.max(1, Math.min(limit, 200));
   const safeOffset = Math.max(0, offset);
   const { results } = await db

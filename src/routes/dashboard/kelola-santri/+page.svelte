@@ -14,6 +14,8 @@
 	$: memberLabel = memberRole === 'jamaah' ? 'Jamaah' : 'Santri';
 
 	let santri = Array.isArray(data.santri) ? structuredClone(data.santri) : [];
+	let pagination = data?.pagination ?? { page: 1, limit: 10, totalCount: santri.length };
+	let remoteStats = data?.stats ?? null;
 	let loading = false;
 	let formMessage = '';
 	let formError = '';
@@ -43,23 +45,31 @@
 		return matchSearch && matchRole && matchStatus;
 	});
 
-	$: stats = {
-		total: santri.length,
-		santri: santri.filter(s => s.role === 'santri').length,
-		jamaah: santri.filter(s => s.role === 'jamaah').length,
-		ustadz: santri.filter(s => s.role === 'ustadz' || s.role === 'ustadzah').length,
-		admin: santri.filter(s => s.role === 'admin').length,
-		pending: santri.filter(s => (s.orgStatus || 'active') === 'pending').length
-	};
+	const deriveStats = (list) => ({
+		total: list.length,
+		santri: list.filter(s => s.role === 'santri').length,
+		jamaah: list.filter(s => s.role === 'jamaah').length,
+		ustadz: list.filter(s => s.role === 'ustadz' || s.role === 'ustadzah').length,
+		admin: list.filter(s => s.role === 'admin').length,
+		pending: list.filter(s => (s.orgStatus || 'active') === 'pending').length
+	});
+
+	$: stats = remoteStats ?? deriveStats(santri);
+	$: if (data?.pagination) pagination = data.pagination;
+	$: if (data?.stats) remoteStats = data.stats;
 
 	const resetForm = () => {
 		form = { username: '', email: '', password: '', role: 'santri' };
 	};
 
 	const refresh = async () => {
-		const res = await fetch('/api/santri');
+		const page = pagination?.page ?? 1;
+		const limit = pagination?.limit ?? 10;
+		const res = await fetch(`/api/santri?page=${page}&limit=${limit}`);
 		const result = res.ok ? await res.json() : { santri: [] };
 		santri = structuredClone(result.santri ?? []);
+		pagination = result.pagination ?? pagination;
+		remoteStats = result.stats ?? remoteStats;
 		await invalidate('/dashboard/kelola-santri');
 	};
 

@@ -1,6 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { ensureUmmahTables } from '$lib/server/ummah';
 import { getOrgScope, getOrganizationBySlug } from '$lib/server/organizations';
 
 const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
@@ -42,7 +41,6 @@ const parseSohibul = (value: string | null) => {
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { db, orgId, user, org } = await requireOrgContext(locals, params.slug);
-	await ensureUmmahTables(db);
 	const canManageKas = org.type === 'masjid' || org.type === 'musholla';
 
 	const { results: programRows } = await db
@@ -264,8 +262,6 @@ export const actions: Actions = {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
 
-		await ensureUmmahTables(locals.db);
-
 		const data = await request.formData();
 		const namaProgram = `${data.get('namaProgram') ?? ''}`.trim();
 		const tahunRaw = `${data.get('tahun') ?? ''}`.trim();
@@ -304,8 +300,6 @@ export const actions: Actions = {
 		if (!org || org.id !== orgId) {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
-
-		await ensureUmmahTables(locals.db);
 
 		const data = await request.formData();
 		const programId = `${data.get('programId') ?? ''}`.trim();
@@ -371,8 +365,6 @@ export const actions: Actions = {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
 
-		await ensureUmmahTables(locals.db);
-
 		const data = await request.formData();
 		const programId = `${data.get('programId') ?? ''}`.trim();
 		const jenisHewan = `${data.get('jenisHewan') ?? ''}`.trim();
@@ -428,8 +420,6 @@ export const actions: Actions = {
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
 		}
-
-		await ensureUmmahTables(locals.db);
 
 		const data = await request.formData();
 		const tanggalRaw = `${data.get('tanggal') ?? ''}`.trim();
@@ -493,8 +483,6 @@ export const actions: Actions = {
 			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
 		}
 
-		await ensureUmmahTables(locals.db);
-
 		const data = await request.formData();
 		const id = `${data.get('id') ?? ''}`.trim();
 		const tanggalRaw = `${data.get('tanggal') ?? ''}`.trim();
@@ -556,8 +544,6 @@ export const actions: Actions = {
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
 		}
-
-		await ensureUmmahTables(locals.db);
 
 		const data = await request.formData();
 		const id = `${data.get('id') ?? ''}`.trim();

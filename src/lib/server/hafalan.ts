@@ -44,3 +44,16 @@ export const ensureHafalanTable = async (db: D1Database) => {
 		.prepare('CREATE INDEX IF NOT EXISTS idx_hafalan_user_status ON hafalan_progress(user_id, status)')
 		.run();
 };
+
+export const ensureHafalanSurahChecksTable = async (db: D1Database) => {
+	await db
+		.prepare(
+			`CREATE TABLE IF NOT EXISTS hafalan_surah_checks (
+				user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+				surah_number INTEGER NOT NULL,
+				checked_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+				PRIMARY KEY (user_id, surah_number)
+			)`
+		)
+		.run();
+};

@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getPendingSubmissions, getAllStudentsProgress, getSantriChecklist, getSantriStats, getDailySeries } from '$lib/server/progress';
-import { ensureOrgSchema, getOrgScope, getOrganizationById } from '$lib/server/organizations';
+import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
 import type { D1Database } from '@cloudflare/workers-types';
 import { SURAH_DATA } from '$lib/surah-data';
 
@@ -59,7 +59,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 			status: string;
 			createdAt: number;
 		}> = [];
-		await ensureOrgSchema(db);
 		const { results: orgResults } = await db
 			.prepare(
 				`SELECT id, type, name, slug, status, created_at as createdAt

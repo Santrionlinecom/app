@@ -283,20 +283,6 @@ export const submitSurahForUser = async (
     }
 ) => {
     const status: HafalanStatus = params.status ?? 'setor';
-    // Pastikan kolom quality_status tersedia; jika gagal, kita fallback insert tanpa kolom itu
-    let hasQuality = false;
-    try {
-        const info = await db.prepare(`PRAGMA table_info('hafalan_progress')`).all<{ name: string }>();
-        hasQuality = (info?.results ?? []).some((c) => c.name === 'quality_status');
-        if (!hasQuality) {
-            await db.prepare(`ALTER TABLE hafalan_progress ADD COLUMN quality_status TEXT`).run();
-            const info2 = await db.prepare(`PRAGMA table_info('hafalan_progress')`).all<{ name: string }>();
-            hasQuality = (info2?.results ?? []).some((c) => c.name === 'quality_status');
-        }
-    } catch (err) {
-        console.warn('ensure quality_status column failed', err);
-        hasQuality = false;
-    }
 
     const queries = [
         'SELECT total_ayat as totalAyah FROM surah WHERE number = ?',
@@ -340,31 +326,21 @@ export const submitSurahForUser = async (
             .bind(params.userId, params.surahNumber, ayah)
             .run();
 
-        if (hasQuality) {
-            await db
-                .prepare(
-                    `INSERT INTO hafalan_progress (user_id, surah_number, ayah_number, status, tanggal_setor, tanggal_approve, quality_status)
-                     VALUES (?, ?, ?, ?, ?, ?, ?)`
-                )
-                .bind(
-                    params.userId,
-                    params.surahNumber,
-                    ayah,
-                    status,
-                    nowIso,
-                    status === 'disetujui' ? nowIso : null,
-                    params.qualityStatus ?? null
-                )
-                .run();
-        } else {
-            await db
-                .prepare(
-                    `INSERT INTO hafalan_progress (user_id, surah_number, ayah_number, status, tanggal_setor, tanggal_approve)
-                     VALUES (?, ?, ?, ?, ?, ?)`
-                )
-                .bind(params.userId, params.surahNumber, ayah, status, nowIso, status === 'disetujui' ? nowIso : null)
-                .run();
-        }
+        await db
+            .prepare(
+                `INSERT INTO hafalan_progress (user_id, surah_number, ayah_number, status, tanggal_setor, tanggal_approve, quality_status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`
+            )
+            .bind(
+                params.userId,
+                params.surahNumber,
+                ayah,
+                status,
+                nowIso,
+                status === 'disetujui' ? nowIso : null,
+                params.qualityStatus ?? null
+            )
+            .run();
     }
 };
 
@@ -412,14 +388,6 @@ export const getFlaggedHafalan = async (
     db: D1Database,
     opts: { currentUserId: string; role: 'admin' | 'ustadz' | 'santri'; userId?: string; orgId?: string | null }
 ) => {
-    let hasQuality = false;
-    try {
-        const info = await db.prepare(`PRAGMA table_info('hafalan_progress')`).all<{ name: string }>();
-        hasQuality = (info?.results ?? []).some((c) => c.name === 'quality_status');
-    } catch {
-        hasQuality = false;
-    }
-
     const conditions = ['1=1'];
     const params: (string | number | null)[] = [];
 
@@ -428,11 +396,7 @@ export const getFlaggedHafalan = async (
         conditions.push('hp.user_id = ?');
         params.push(targetUser);
     }
-    if (hasQuality) {
-        conditions.push("(hp.quality_status IN ('merah','kuning') OR hp.status = 'setor')");
-    } else {
-        conditions.push("hp.status = 'setor'");
-    }
+    conditions.push("(hp.quality_status IN ('merah','kuning') OR hp.status = 'setor')");
     if (opts.orgId) {
         conditions.push('u.org_id = ?');
         params.push(opts.orgId);

@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { ensureOrgSchema, getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
+import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
 
 const managerRoles = ['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
 
@@ -46,7 +46,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		throw error(403, 'Tidak boleh akses lembaga lain');
 	}
 
-	await ensureOrgSchema(db);
 	const org = await getOrganizationById(db, targetOrgId);
 	if (!org) {
 		throw error(404, 'Lembaga tidak ditemukan');

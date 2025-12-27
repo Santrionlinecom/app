@@ -28,7 +28,6 @@ export const ensureOrgMediaSchema = async (db: D1Database) => {
 };
 
 export const listOrgMedia = async (db: D1Database, orgId: string): Promise<OrgMediaItem[]> => {
-	await ensureOrgMediaSchema(db);
 	const { results } = await db
 		.prepare(
 			`SELECT id, organization_id as organizationId, url, created_by as createdBy, created_at as createdAt
@@ -46,7 +45,6 @@ export const addOrgMedia = async (
 	db: D1Database,
 	params: { orgId: string; url: string; createdBy?: string | null }
 ): Promise<OrgMediaItem> => {
-	await ensureOrgMediaSchema(db);
 	const id = crypto.randomUUID();
 	const createdAt = Date.now();
 	const createdBy = params.createdBy ?? null;
@@ -70,7 +68,6 @@ export const deleteOrgMedia = async (
 	db: D1Database,
 	params: { orgId: string; id: string }
 ): Promise<boolean> => {
-	await ensureOrgMediaSchema(db);
 	const result = await db
 		.prepare('DELETE FROM org_media WHERE id = ? AND organization_id = ?')
 		.bind(params.id, params.orgId)

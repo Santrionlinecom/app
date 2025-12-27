@@ -6,7 +6,6 @@ import {
     buildStorageKey,
     collectCertificateStats,
     createCertificateRecord,
-    ensureCertificateTable,
     formatIssuedAtLabel,
     listCertificatesForSantri,
     uploadCertificateToR2
@@ -98,8 +97,6 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
             throw error(403, 'Tidak boleh membuat sertifikat lembaga lain');
         }
     }
-
-    await ensureCertificateTable(locals.db!);
 
     const stats = await collectCertificateStats(locals.db!, targetSantri);
     if (stats.totalHifzAyat < minAyat || stats.totalSessions < minSessions) {

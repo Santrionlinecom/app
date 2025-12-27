@@ -1,46 +1,61 @@
 import type { RequestHandler } from './$types';
+import type { D1Database } from '@cloudflare/workers-types';
 
-const BASE_URL = 'https://app.santrionline.com';
-const allowedTypes = new Set(['pondok', 'masjid', 'musholla', 'tpq', 'rumah-tahfidz']);
-
-const toIsoDate = (value?: number | null) => {
-	if (!value) return null;
-	const date = new Date(value);
-	return Number.isNaN(date.getTime()) ? null : date.toISOString();
+type SitemapRow = {
+  slug: string;
+  updated_at: number;
+  created_at: number;
+  scheduled_at: number | null;
 };
 
-export const GET: RequestHandler = async ({ locals }) => {
-	const db = locals.db;
-	if (!db) {
-		return new Response('Database tidak tersedia', { status: 500 });
-	}
+const escapeXml = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 
-	const { results } = await db
-		.prepare(
-			`SELECT slug, type, created_at as createdAt
-			 FROM organizations
-			 WHERE status = 'active'`
-		)
-		.all<{ slug: string; type: string; createdAt: number }>();
+export const GET: RequestHandler = async ({ locals, platform, url }) => {
+  const db = (locals.db ?? platform?.env.DB) as D1Database | undefined;
+  if (!db) {
+    return new Response('Database not available', { status: 500 });
+  }
 
-	const urls = (results ?? [])
-		.filter((row) => allowedTypes.has(row.type))
-		.map((row) => {
-			const loc = `${BASE_URL}/${encodeURIComponent(row.type)}/${encodeURIComponent(row.slug)}`;
-			const lastmod = toIsoDate(row.createdAt);
-			return `  <url>\n    <loc>${loc}</loc>${lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : ''}\n  </url>`;
-		})
-		.join('\n');
+  const { results } = await db
+    .prepare(
+      "SELECT slug, updated_at, created_at, scheduled_at FROM cms_posts WHERE status = 'published' AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now')*1000) ORDER BY COALESCE(scheduled_at, created_at) DESC"
+    )
+    .all();
 
-	const body = `<?xml version="1.0" encoding="UTF-8"?>\n` +
-		`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-		`${urls}\n` +
-		`</urlset>`;
+  const rows = (results ?? []) as SitemapRow[];
+  const origin = url.origin.replace(/\/+$/, '');
 
-	return new Response(body, {
-		headers: {
-			'Content-Type': 'application/xml',
-			'Cache-Control': 'max-age=0, s-maxage=3600'
-		}
-	});
+  const urls = rows.map((row) => {
+    const lastmodTs = row.updated_at ?? row.scheduled_at ?? row.created_at;
+    const lastmod = lastmodTs ? new Date(lastmodTs).toISOString() : null;
+    const loc = new URL(`/blog/${row.slug}`, origin).toString();
+    return [
+      '  <url>',
+      `    <loc>${escapeXml(loc)}</loc>`,
+      lastmod ? `    <lastmod>${lastmod}</lastmod>` : '',
+      '  </url>'
+    ]
+      .filter(Boolean)
+      .join('\n');
+  });
+
+  const body = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...urls,
+    '</urlset>'
+  ].join('\n');
+
+  return new Response(body, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=0, s-maxage=600'
+    }
+  });
 };

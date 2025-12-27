@@ -1,7 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { allowedRolesByType, getMemberReferralRole, getOrganizationBySlug } from '$lib/server/organizations';
-import { ensureUserOptionalColumns } from '$lib/server/users';
 import { initializeLucia } from '$lib/server/lucia';
 import { Scrypt } from '$lib/server/password';
 import { generateId } from 'lucia';
@@ -88,7 +87,6 @@ export const actions: Actions = {
 
 		const userId = generateId(15);
 		const hashed = await new Scrypt().hash(password);
-		await ensureUserOptionalColumns(db);
 		await db
 			.prepare(
 				`INSERT INTO users (id, username, email, password_hash, role, gender, org_id, org_status, created_at)

@@ -2,7 +2,6 @@ import { redirect, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getGoogleOAuthClient, initializeLucia } from '$lib/server/lucia';
 import { getOrganizationBySlug, memberRoleByType, type OrgType } from '$lib/server/organizations';
-import { ensureUserOptionalColumns } from '$lib/server/users';
 import { generateId } from 'lucia';
 import { OAuth2RequestError } from 'arctic';
 import type { D1Database } from '@cloudflare/workers-types';
@@ -139,10 +138,6 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch }) => {
 
 		const isSuperAdmin = email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
 		const memberContext = await resolveMemberContext(db, oauthContext);
-		if (memberContext) {
-			await ensureUserOptionalColumns(db);
-		}
-
 		const columns = await getUserColumns(db);
 		const selectFields = ['id', 'email'];
 		if (columns.has('role')) selectFields.push('role');

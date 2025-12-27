@@ -13,22 +13,6 @@ const requireUser = (locals: App.Locals) => {
 	return { user: locals.user as NonNullable<App.Locals['user']>, db: locals.db! };
 };
 
-const ensureCalendarTable = async (db: D1Database) => {
-	await db.prepare(
-		`CREATE TABLE IF NOT EXISTS calendar_notes (
-			id TEXT PRIMARY KEY,
-			user_id TEXT NOT NULL REFERENCES users(id),
-			role TEXT,
-			title TEXT NOT NULL,
-			content TEXT,
-			event_date TEXT NOT NULL,
-			created_at INTEGER NOT NULL,
-			updated_at INTEGER NOT NULL
-		)`
-	).run();
-	await db.prepare('CREATE INDEX IF NOT EXISTS idx_calendar_notes_event_date ON calendar_notes(event_date)').run();
-};
-
 const canEdit = (user: NonNullable<App.Locals['user']>, ownerId: string) =>
 	user.role === 'admin' || user.id === ownerId;
 
@@ -64,7 +48,6 @@ const fetchNote = async (db: D1Database, id: string) => {
 export const PUT: RequestHandler = async ({ locals, params, request }) => {
 	try {
 		const { user, db } = requireUser(locals);
-		await ensureCalendarTable(db);
 		const note = await fetchNote(db, params.id);
 		if (!note) throw error(404, 'Note tidak ditemukan');
 		if (!canEdit(user, note.userId)) throw error(403, 'Tidak boleh mengedit');
@@ -111,7 +94,6 @@ export const PUT: RequestHandler = async ({ locals, params, request }) => {
 export const DELETE: RequestHandler = async ({ locals, params }) => {
 	try {
 		const { user, db } = requireUser(locals);
-		await ensureCalendarTable(db);
 		const note = await fetchNote(db, params.id);
 		if (!note) throw error(404, 'Note tidak ditemukan');
 		if (!canEdit(user, note.userId)) throw error(403, 'Tidak boleh menghapus');

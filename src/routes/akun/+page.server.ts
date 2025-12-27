@@ -2,13 +2,11 @@ import { fail, redirect } from '@sveltejs/kit';
 import { Scrypt } from '$lib/server/password';
 import {
 	createOrganization,
-	ensureOrgSchema,
 	ensureUniqueSlug,
 	getOrganizationById,
 	slugify
 } from '$lib/server/organizations';
 import { listOrgMedia } from '$lib/server/org-media';
-import { ensureUserOptionalColumns } from '$lib/server/users';
 import type { Actions, PageServerLoad } from './$types';
 
 const allowedOrgTypes = ['pondok', 'masjid', 'musholla', 'tpq', 'rumah-tahfidz'] as const;
@@ -23,8 +21,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	const { db, user } = { db: locals.db!, user: locals.user };
-	await ensureUserOptionalColumns(db);
-	await ensureOrgSchema(db);
 	const profile =
 		(await db
 			.prepare(
@@ -81,8 +77,6 @@ export const actions: Actions = {
 		const genderValue = gender === 'pria' || gender === 'wanita' ? gender : null;
 
 		try {
-			await ensureUserOptionalColumns(locals.db!);
-
 			await locals.db!
 				.prepare('UPDATE users SET username = ?, id = ?, gender = ? WHERE id = ?')
 				.bind(displayName.trim(), trimmedHandle, genderValue, locals.user.id)
@@ -124,8 +118,6 @@ export const actions: Actions = {
 			});
 		}
 
-		await ensureUserOptionalColumns(locals.db!);
-
 		await locals.db!
 			.prepare('UPDATE users SET whatsapp = ? WHERE id = ?')
 			.bind(sanitized, locals.user.id)
@@ -166,8 +158,6 @@ export const actions: Actions = {
 		if (!locals.db) return fail(500, { message: 'Database tidak tersedia', type: 'org' });
 
 		const db = locals.db!;
-		await ensureOrgSchema(db);
-		await ensureUserOptionalColumns(db);
 
 		if (locals.user.orgId) {
 			return fail(400, { message: 'Akun sudah terhubung ke lembaga.', type: 'org' });

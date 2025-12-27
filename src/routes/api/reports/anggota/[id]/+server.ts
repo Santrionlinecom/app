@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
-import { ensureOrgSchema, getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
+import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
 import { getSantriChecklist, getSantriStats } from '$lib/server/progress';
 import { SURAH_DATA } from '$lib/surah-data';
 
@@ -427,7 +427,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		throw error(400, 'Organisasi anggota tidak ditemukan');
 	}
 
-	await ensureOrgSchema(db);
 	const org = await getOrganizationById(db, target.orgId);
 	if (!org) {
 		throw error(404, 'Lembaga tidak ditemukan');

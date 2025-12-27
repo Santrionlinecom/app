@@ -1,6 +1,5 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { ensureOrgSchema } from '$lib/server/organizations';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -10,8 +9,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.db) {
 		throw redirect(302, '/auth');
 	}
-
-	await ensureOrgSchema(locals.db!);
 
 	const orgId = locals.user.orgId ?? null;
 	let org = null;

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SeoHead from '$lib/components/SeoHead.svelte';
   let { data } = $props();
 
   const formatDateTime = (ts: number | null | undefined) => {
@@ -6,6 +7,21 @@
     return new Date(ts).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
   };
 </script>
+
+<SeoHead
+  title={data.seo.title}
+  description={data.seo.description}
+  canonicalUrl={data.seo.canonicalUrl}
+  imageUrl={data.seo.imageUrl}
+  datePublished={data.seo.datePublished}
+  dateModified={data.seo.dateModified}
+  authorName={data.seo.authorName}
+  authorUrl={data.seo.authorUrl}
+  siteName={data.seo.siteName}
+  publisherName={data.seo.publisherName}
+  publisherLogoUrl={data.seo.publisherLogoUrl}
+  keywords={data.seo.keywords}
+/>
 
 <article class="container mx-auto p-4 max-w-3xl">
   <a href="/blog" class="btn btn-sm btn-ghost mb-4">← Back to Blog</a>

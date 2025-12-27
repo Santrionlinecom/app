@@ -1,6 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { ensureOrgSchema } from '$lib/server/organizations';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) throw redirect(302, '/auth');
@@ -9,7 +8,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 	if (!locals.db) throw redirect(302, '/dashboard');
 
-	await ensureOrgSchema(locals.db!);
 	const { results } = await locals.db!
 		.prepare(
 			`SELECT id, type, name, slug, status, address, city, contact_phone as contactPhone, created_at as createdAt

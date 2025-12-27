@@ -1,7 +1,6 @@
 import { redirect, fail, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { SURAH_DATA } from '$lib/surah-data';
-import { ensureCalendarTable, ensureMurojaTable } from '$lib/server/calendar';
 
 const allowedRoles = ['admin', 'ustadz', 'ustadzah', 'alumni'];
 const TOTAL_AYAH = SURAH_DATA.reduce((sum, s) => sum + s.totalAyah, 0);
@@ -19,9 +18,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const db = locals.db!;
 	const user = locals.user!;
-	await ensureMurojaTable(db);
-	await ensureCalendarTable(db);
-	await ensureHafalanSurahChecksTable(db!);
 
 	const { results: progress } = await db.prepare(`
 		SELECT surah_number, ayah_number, status, quality_status, notes, reviewed_at
@@ -80,10 +76,8 @@ export const actions: Actions = {
 			return fail(err?.status ?? 500, { error: err?.message ?? 'Tidak diizinkan' });
 		}
 
-		const db = locals.db!;
-		const user = locals.user!;
-		await ensureMurojaTable(db);
-		await ensureCalendarTable(db);
+	const db = locals.db!;
+	const user = locals.user!;
 
 		const data = await request.formData();
 		const surahNumber = parseInt(data.get('surahNumber') as string);
@@ -130,9 +124,8 @@ export const actions: Actions = {
 			return fail(err?.status ?? 500, { error: err?.message ?? 'Tidak diizinkan' });
 		}
 
-		const db = locals.db!;
-		const user = locals.user!;
-		await ensureMurojaTable(db);
+	const db = locals.db!;
+	const user = locals.user!;
 
 		const data = await request.formData();
 		const id = data.get('id') as string;
@@ -151,9 +144,8 @@ export const actions: Actions = {
 			return fail(err?.status ?? 500, { error: err?.message ?? 'Tidak diizinkan' });
 		}
 
-		const db = locals.db!;
-		const user = locals.user!;
-	await ensureHafalanSurahChecksTable(db!);
+	const db = locals.db!;
+	const user = locals.user!;
 
 		const data = await request.formData();
 		const surahNumber = parseInt(String(data.get('surahNumber') ?? ''), 10);
@@ -181,16 +173,3 @@ export const actions: Actions = {
 		return { success: true };
 	}
 };
-
-async function ensureHafalanSurahChecksTable(db: App.Locals['db']) {
-	await db!
-		.prepare(
-			`CREATE TABLE IF NOT EXISTS hafalan_surah_checks (
-        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        surah_number INTEGER NOT NULL,
-        checked_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
-        PRIMARY KEY (user_id, surah_number)
-      )`
-		)
-		.run();
-}
