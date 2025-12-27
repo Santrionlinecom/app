@@ -1,6 +1,13 @@
 <script lang="ts">
 	export let data;
 
+	const liveStats = data.liveStats ?? {
+		userOnline: 0,
+		registrationsToday: 0,
+		trafficSources: [],
+		recentActivities: []
+	};
+
 	const orgTypeLabel: Record<string, string> = {
 		pondok: 'Pondok',
 		masjid: 'Masjid',
@@ -13,10 +20,38 @@
 		new Intl.NumberFormat('id-ID').format(value ?? 0);
 	const formatDate = (value?: number | null) =>
 		value ? new Date(value).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
-	const toPercent = (signups: number, clicks: number) => {
-		if (!clicks) return '0%';
-		const rate = (signups / clicks) * 100;
-		return `${rate.toFixed(1)}%`;
+	const formatDateTime = (value?: number | null) =>
+		value
+			? new Date(value).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+			: '-';
+
+	const parseMetadata = (value?: string | null) => {
+		if (!value) return null;
+		try {
+			return JSON.parse(value);
+		} catch {
+			return null;
+		}
+	};
+
+	const actionLabel = (action: string) => {
+		const map: Record<string, string> = {
+			LOGIN: 'Login',
+			REGISTER: 'Register',
+			CLICK_WA: 'Klik WA',
+			VIEW_CERTIFICATE: 'Lihat Sertifikat'
+		};
+		if (map[action]) return map[action];
+		if (action.startsWith('CLICK_')) return `Klik ${action.slice(6).replace(/_/g, ' ')}`;
+		return action;
+	};
+
+	const activityLabel = (activity) => {
+		const actor = activity.username || activity.email || 'Pengunjung';
+		if (activity.action === 'LOGIN') return `${actor} login`;
+		if (activity.action === 'REGISTER') return `${actor} baru mendaftar`;
+		if (activity.action.startsWith('CLICK_')) return `${actor} ${actionLabel(activity.action).toLowerCase()}`;
+		return `${actor} melakukan ${actionLabel(activity.action).toLowerCase()}`;
 	};
 
 	const orgLabel = (org) => `${org.name} (${orgTypeLabel[org.type] ?? org.type})`;
@@ -63,66 +98,78 @@
 		</div>
 	</section>
 
-	<section class="grid gap-6 lg:grid-cols-2">
-		<div class="rounded-2xl border bg-white p-6 shadow-sm">
-			<h2 class="text-lg font-semibold text-slate-900">Top Institutions (Anggota Terbanyak)</h2>
-			<p class="text-xs text-slate-500">Peringkat berdasarkan jumlah santri/jamaah.</p>
-			{#if data.topInstitutions.length === 0}
-				<p class="mt-4 text-sm text-slate-500">Belum ada data lembaga.</p>
+	<section class="grid gap-4 lg:grid-cols-3">
+		<div class="rounded-2xl border bg-white p-4 shadow-sm">
+			<p class="text-xs uppercase text-slate-500">User Online (15 Menit)</p>
+			<p class="mt-2 text-3xl font-bold text-emerald-600">{formatNumber(liveStats.userOnline)}</p>
+			<p class="text-xs text-slate-500">Aktif berdasarkan log login</p>
+		</div>
+		<div class="rounded-2xl border bg-white p-4 shadow-sm">
+			<p class="text-xs uppercase text-slate-500">Registrasi Hari Ini</p>
+			<p class="mt-2 text-3xl font-bold text-blue-600">{formatNumber(liveStats.registrationsToday)}</p>
+			<p class="text-xs text-slate-500">User baru hari ini</p>
+		</div>
+		<div class="rounded-2xl border bg-white p-4 shadow-sm">
+			<p class="text-xs uppercase text-slate-500">Traffic Source</p>
+			{#if liveStats.trafficSources.length === 0}
+				<p class="mt-3 text-sm text-slate-500">Belum ada data klik.</p>
 			{:else}
-				<div class="mt-4 overflow-auto">
-					<table class="table table-zebra w-full text-sm">
-						<thead>
-							<tr>
-								<th>Nama</th>
-								<th>Tipe</th>
-								<th>Anggota</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each data.topInstitutions as org}
-								<tr>
-									<td class="font-medium text-slate-900">{org.name}</td>
-									<td>{orgTypeLabel[org.type] ?? org.type}</td>
-									<td class="text-right font-semibold">{formatNumber(org.totalMembers)}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
+				<div class="mt-3 space-y-2 text-sm">
+					{#each liveStats.trafficSources as source}
+						<div class="flex items-center justify-between">
+							<span class="text-slate-700">{actionLabel(source.action)}</span>
+							<span class="font-semibold text-slate-900">{formatNumber(source.total)}</span>
+						</div>
+					{/each}
 				</div>
 			{/if}
 		</div>
+	</section>
 
-		<div class="rounded-2xl border bg-white p-6 shadow-sm">
-			<h2 class="text-lg font-semibold text-slate-900">Traffic Source (Conversion Rate)</h2>
-			<p class="text-xs text-slate-500">Klik link pendaftaran vs anggota baru.</p>
-			{#if data.trafficSources.length === 0}
-				<p class="mt-4 text-sm text-slate-500">Belum ada data trafik.</p>
-			{:else}
-				<div class="mt-4 overflow-auto">
-					<table class="table table-zebra w-full text-sm">
-						<thead>
-							<tr>
-								<th>Lembaga</th>
-								<th>Clicks</th>
-								<th>Signups</th>
-								<th>Conversion</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each data.trafficSources as row}
-								<tr>
-									<td class="font-medium text-slate-900">{row.name}</td>
-									<td class="text-right">{formatNumber(row.clicks)}</td>
-									<td class="text-right">{formatNumber(row.signups)}</td>
-									<td class="text-right font-semibold">{toPercent(row.signups || 0, row.clicks || 0)}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
-			{/if}
+	<section class="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
+		<div>
+			<h2 class="text-lg font-semibold text-slate-900">Live Activity</h2>
+			<p class="text-xs text-slate-500">5 aktivitas terbaru dari sistem.</p>
 		</div>
+		{#if liveStats.recentActivities.length === 0}
+			<p class="text-sm text-slate-500">Belum ada aktivitas tercatat.</p>
+		{:else}
+			<div class="overflow-auto">
+				<table class="table table-zebra w-full text-sm">
+					<thead>
+						<tr>
+							<th>Aktivitas</th>
+							<th>Detail</th>
+							<th>Waktu</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each liveStats.recentActivities as activity}
+							{@const meta = parseMetadata(activity.metadata)}
+							<tr>
+								<td class="font-medium text-slate-900">{activityLabel(activity)}</td>
+								<td>
+									{#if activity.orgName}
+										<span>{activity.orgName} ({orgTypeLabel[activity.orgType] ?? activity.orgType})</span>
+									{:else}
+										{#if meta?.orgName}
+											<span>{meta.orgName}</span>
+										{:else if meta?.source}
+											<span class="text-slate-500">{meta.source}</span>
+										{:else if meta?.referrer}
+											<span class="text-slate-500">{meta.referrer}</span>
+										{:else}
+											<span class="text-slate-500">-</span>
+										{/if}
+									{/if}
+								</td>
+								<td>{formatDateTime(activity.createdAt)}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
 	</section>
 
 	<section class="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
@@ -181,18 +228,18 @@
 		</div>
 		{#if hasOrgWithoutAdmin(data.institutions)}
 			<div class="grid gap-4 lg:grid-cols-2">
-				<form method="POST" action="?/assignExistingAdmin" class="rounded-xl border bg-slate-50 p-4">
+				<form method="POST" action="?/assignExistingAdmin" class="min-w-0 rounded-xl border bg-slate-50 p-4">
 					<h3 class="text-sm font-semibold text-slate-900">Tetapkan Admin dari User Terdaftar</h3>
 					<p class="text-xs text-slate-500">Pilih user yang sudah ada untuk menjadi admin lembaga.</p>
 					<p class="text-xs text-slate-400">User akan dipindah ke lembaga yang dipilih.</p>
-					<div class="mt-3 grid gap-3">
-						<select name="orgId" class="select select-bordered" required>
+					<div class="mt-3 grid gap-3 min-w-0">
+						<select name="orgId" class="select select-bordered w-full min-w-0" required>
 							<option value="">Pilih lembaga</option>
 							{#each orgsWithoutAdmin(data.institutions) as org}
 								<option value={org.id}>{orgLabel(org)}</option>
 							{/each}
 						</select>
-						<select name="userId" class="select select-bordered" required>
+						<select name="userId" class="select select-bordered w-full min-w-0" required>
 							<option value="">Pilih user</option>
 							{#each data.availableUsers as user}
 								<option value={user.id}>{userLabel(user)}</option>
@@ -201,19 +248,26 @@
 						<button class="btn btn-primary btn-sm" type="submit">Set Admin</button>
 					</div>
 				</form>
-				<form method="POST" action="?/createAdmin" class="rounded-xl border bg-slate-50 p-4">
+				<form method="POST" action="?/createAdmin" class="min-w-0 rounded-xl border bg-slate-50 p-4">
 					<h3 class="text-sm font-semibold text-slate-900">Tambah Admin Baru</h3>
 					<p class="text-xs text-slate-500">Buat akun admin baru untuk lembaga tanpa admin.</p>
-					<div class="mt-3 grid gap-3">
-						<select name="orgId" class="select select-bordered" required>
+					<div class="mt-3 grid gap-3 min-w-0">
+						<select name="orgId" class="select select-bordered w-full min-w-0" required>
 							<option value="">Pilih lembaga</option>
 							{#each orgsWithoutAdmin(data.institutions) as org}
 								<option value={org.id}>{orgLabel(org)}</option>
 							{/each}
 						</select>
-						<input name="name" class="input input-bordered" placeholder="Nama admin" required />
-						<input name="email" type="email" class="input input-bordered" placeholder="Email admin" required />
-						<input name="password" type="password" class="input input-bordered" placeholder="Password (min 6)" minlength="6" required />
+						<input name="name" class="input input-bordered w-full min-w-0" placeholder="Nama admin" required />
+						<input name="email" type="email" class="input input-bordered w-full min-w-0" placeholder="Email admin" required />
+						<input
+							name="password"
+							type="password"
+							class="input input-bordered w-full min-w-0"
+							placeholder="Password (min 6)"
+							minlength="6"
+							required
+						/>
 						<button class="btn btn-secondary btn-sm" type="submit">Buat Admin</button>
 					</div>
 				</form>

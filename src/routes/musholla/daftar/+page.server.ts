@@ -4,6 +4,7 @@ import { initializeLucia } from '$lib/server/lucia';
 import { Scrypt } from '$lib/server/password';
 import { createOrganization, ensureUniqueSlug, slugify } from '$lib/server/organizations';
 import { generateId } from 'lucia';
+import { logActivity } from '$lib/server/activity-logs';
 
 export const load: PageServerLoad = async () => {
 	return {};
@@ -77,12 +78,24 @@ export const actions: Actions = {
 				.bind(userId, (adminName as string).trim(), (adminEmail as string).trim(), hashed, 'admin', orgId, 'active', Date.now())
 				.run();
 
+			await logActivity(db, {
+				userId,
+				action: 'REGISTER',
+				metadata: { orgId, orgName: orgName.trim(), orgType: 'musholla', source: 'musholla/daftar' }
+			});
+
 			const lucia = initializeLucia(db);
 			const session = await lucia.createSession(userId, {});
 			const sessionCookie = lucia.createSessionCookie(session.id);
 			cookies.set(sessionCookie.name, sessionCookie.value, {
 				path: '/',
 				...sessionCookie.attributes
+			});
+
+			await logActivity(db, {
+				userId,
+				action: 'LOGIN',
+				metadata: { method: 'password', source: 'musholla/daftar' }
 			});
 		}
 

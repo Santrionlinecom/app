@@ -3,6 +3,7 @@ import { generateId } from 'lucia';
 import { Scrypt } from '$lib/server/password';
 import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
+import { logActivity } from '$lib/server/activity-logs';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'jamaah', 'tamir', 'bendahara', 'admin'] as const;
 const managerRoles = ['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
@@ -197,6 +198,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				Date.now()
 			)
 			.run();
+		await logActivity(db, {
+			userId,
+			action: 'REGISTER',
+			metadata: {
+				orgId: targetOrgId,
+				role: normalizedRole,
+				createdBy: locals.user?.id ?? null,
+				source: 'api/santri'
+			}
+		});
 	} catch (err: any) {
 		if (err?.code === 'SQLITE_CONSTRAINT') {
 			throw error(400, 'Email sudah terdaftar');

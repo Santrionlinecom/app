@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { Scrypt } from '$lib/server/password';
 import { initializeLucia, getGoogleOAuthClient } from '$lib/server/lucia';
+import { logActivity } from '$lib/server/activity-logs';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.user) {
@@ -54,6 +55,12 @@ export const actions: Actions = {
 		cookies.set(sessionCookie.name, sessionCookie.value, {
 			path: '/',
 			...sessionCookie.attributes
+		});
+
+		await logActivity(db, {
+			userId: user.id,
+			action: 'LOGIN',
+			metadata: { method: 'password' }
 		});
 
 		throw redirect(302, '/dashboard');

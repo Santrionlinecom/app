@@ -6,6 +6,7 @@ import { generateId } from 'lucia';
 import { OAuth2RequestError } from 'arctic';
 import type { D1Database } from '@cloudflare/workers-types';
 import { env as privateEnv } from '$env/dynamic/private';
+import { logActivity } from '$lib/server/activity-logs';
 
 type GoogleProfile = {
 	sub: string;
@@ -177,6 +178,8 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch }) => {
 		let userId: string;
 		let finalRole = isSuperAdmin ? 'SUPER_ADMIN' : memberContext?.role ?? 'santri';
 
+		const isNewUser = !existingUser;
+
 		if (existingUser) {
 			userId = existingUser.id;
 			finalRole = existingUser.role ?? finalRole;
@@ -264,11 +267,26 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch }) => {
 				.prepare(`INSERT INTO users (${insertColumns.join(', ')}) VALUES (${insertColumns.map(() => '?').join(', ')})`)
 				.bind(...insertValues)
 				.run();
+
+			await logActivity(db, {
+				userId,
+				action: 'REGISTER',
+				metadata: {
+					method: 'google',
+					orgId: memberContext?.orgId ?? null,
+					role: finalRole
+				}
+			});
 		}
 
 		const session = await lucia.createSession(userId, {});
 		const sessionCookie = lucia.createSessionCookie(session.id);
 		cookies.set(sessionCookie.name, sessionCookie.value, { path: '/', ...sessionCookie.attributes });
+		await logActivity(db, {
+			userId,
+			action: 'LOGIN',
+			metadata: { method: 'google', isNew: isNewUser }
+		});
 		clearOauthCookies();
 
 		redirectTo = buildRedirectForRole(finalRole);

@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { initializeLucia } from '$lib/server/lucia';
 import { Scrypt } from '$lib/server/password'; // HANYA IMPORT SCRYPT (JANGAN ARGON2)
+import { logActivity } from '$lib/server/activity-logs';
 import type { Actions, PageServerLoad } from './$types';
 
 // Jika user sudah login, lempar ke dashboard
@@ -13,10 +14,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, platform, locals, cookies }) => {
-		const formData = await request.formData();
-		const email = formData.get('email');
-		const password = formData.get('password');
+		default: async ({ request, platform, locals, cookies }) => {
+			const formData = await request.formData();
+			const email = formData.get('email');
+			const password = formData.get('password');
 
 		// 1. Validasi Input
 		if (typeof email !== 'string' || typeof password !== 'string') {
@@ -27,16 +28,17 @@ export const actions: Actions = {
 		const db = locals.db ?? platform?.env.DB;
 		if (!db) return fail(500, { message: 'Database error: D1 tidak terhubung.' });
 
-		try {
-			// 2. Cari user di database
-			const user = await db
-				.prepare('SELECT id, password_hash, role FROM users WHERE email = ?')
-				.bind(email)
-				.first<{ id: string; password_hash: unknown; role: string | null }>();
+			let user: { id: string; password_hash: unknown; role: string | null } | null = null;
+			try {
+				// 2. Cari user di database
+				user = await db
+					.prepare('SELECT id, password_hash, role FROM users WHERE email = ?')
+					.bind(email)
+					.first<{ id: string; password_hash: unknown; role: string | null }>();
 
-			if (!user) {
-				return fail(400, { message: 'Email atau Password salah.' });
-			}
+				if (!user) {
+					return fail(400, { message: 'Email atau Password salah.' });
+				}
 
 			// 3. Cek Password Hash
 			const passwordHash =
@@ -56,24 +58,30 @@ export const actions: Actions = {
 				return fail(400, { message: 'Email atau Password salah.' });
 			}
 
-			// 5. Login Berhasil -> Buat Session
-			const lucia = initializeLucia(db);
-			const session = await lucia.createSession(user.id, {});
-			const sessionCookie = lucia.createSessionCookie(session.id);
-			
-			cookies.set(sessionCookie.name, sessionCookie.value, {
-				path: '/',
-				...sessionCookie.attributes
-			});
+				// 5. Login Berhasil -> Buat Session
+				const lucia = initializeLucia(db);
+				const session = await lucia.createSession(user.id, {});
+				const sessionCookie = lucia.createSessionCookie(session.id);
+				
+				cookies.set(sessionCookie.name, sessionCookie.value, {
+					path: '/',
+					...sessionCookie.attributes
+				});
 
-		} catch (e) {
-			console.error(e);
-			return fail(500, { message: 'Terjadi kesalahan server saat login.' });
+				await logActivity(db, {
+					userId: user.id,
+					action: 'LOGIN',
+					metadata: { method: 'password' }
+				});
+
+			} catch (e) {
+				console.error(e);
+				return fail(500, { message: 'Terjadi kesalahan server saat login.' });
+			}
+
+			// 6. Lempar ke Dashboard
+			const role = user?.role ?? '';
+			const target = role === 'SUPER_ADMIN' ? '/admin/super/overview' : '/dashboard';
+			throw redirect(302, target);
 		}
-
-		// 6. Lempar ke Dashboard
-		const role = user.role ?? '';
-		const target = role === 'SUPER_ADMIN' ? '/admin/super/overview' : '/dashboard';
-		throw redirect(302, target);
-	}
-};
+	};

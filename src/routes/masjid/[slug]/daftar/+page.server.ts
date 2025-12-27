@@ -4,6 +4,7 @@ import { allowedRolesByType, getMemberReferralRole, getOrganizationBySlug } from
 import { initializeLucia } from '$lib/server/lucia';
 import { Scrypt } from '$lib/server/password';
 import { generateId } from 'lucia';
+import { logActivity } from '$lib/server/activity-logs';
 
 const roleLabel = (value: string) => {
 	if (value === 'ustadzah') return 'Ustadzah';
@@ -105,12 +106,24 @@ export const actions: Actions = {
 			)
 			.run();
 
+		await logActivity(db, {
+			userId,
+			action: 'REGISTER',
+			metadata: { orgId: org.id, orgName: org.name, orgType: 'masjid', source: 'masjid/member' }
+		});
+
 		const lucia = initializeLucia(db);
 		const session = await lucia.createSession(userId, {});
 		const sessionCookie = lucia.createSessionCookie(session.id);
 		cookies.set(sessionCookie.name, sessionCookie.value, {
 			path: '/',
 			...sessionCookie.attributes
+		});
+
+		await logActivity(db, {
+			userId,
+			action: 'LOGIN',
+			metadata: { method: 'password', source: 'masjid/member' }
 		});
 
 		throw redirect(302, '/menunggu');

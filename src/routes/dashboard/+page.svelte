@@ -8,6 +8,9 @@
 	const isSantri = data.role === 'santri';
 	const isAlumni = data.role === 'alumni';
 	const isTamir = data.role === 'tamir';
+	const isEducationalOrg = data.isEducationalOrg ?? false;
+	const isCommunityOrg = data.isCommunityOrg ?? false;
+	const showHafalan = isEducationalOrg || !isCommunityOrg;
 
 	const roleConfig = {
 		SUPER_ADMIN: { title: 'Super Admin Dashboard', gradient: 'from-slate-900 via-slate-800 to-slate-900', icon: '[SYS]' },
@@ -26,21 +29,30 @@
 	const orgSlug = data.org?.slug;
 	const memberLabelByType: Record<string, string> = {
 		pondok: 'Santri',
+		'pondok-pesantren': 'Santri',
 		masjid: 'Jamaah',
 		musholla: 'Jamaah',
 		tpq: 'Santri',
 		'rumah-tahfidz': 'Santri'
 	};
-	const orgMemberLabel = data.org?.type ? memberLabelByType[data.org.type] ?? 'Anggota' : 'Santri';
+	const normalizedOrgType = data.org?.type
+		? data.org.type.toLowerCase().trim().replace(/_/g, '-').replace(/\s+/g, '-')
+		: null;
+	const orgMemberLabel = normalizedOrgType ? memberLabelByType[normalizedOrgType] ?? 'Anggota' : 'Santri';
+	const memberLabel = orgMemberLabel;
+	const memberRoleKey = isCommunityOrg ? 'jamaah' : 'santri';
 	const canManageUmmah =
 		!!orgSlug && !!currentUser?.orgId && (data.role === 'admin' || data.role === 'tamir' || data.role === 'bendahara');
-	const users = ('users' in data ? data.users ?? [] : []).map(u => ({ ...u, role: u.role ?? 'santri' }));
+	const users = ('users' in data ? data.users ?? [] : []).map(u => ({ ...u, role: u.role ?? memberRoleKey }));
 	const pending = 'pending' in data ? data.pending ?? [] : [];
 	const students = 'students' in data ? data.students ?? [] : [];
 	const surahs = 'surahs' in data ? data.surahs ?? [] : [];
 	const checklist = 'checklist' in data ? data.checklist ?? [] : [];
 	const stats = 'stats' in data ? data.stats : undefined;
 	const series = 'series' in data ? data.series ?? [] : [];
+	const finance = 'finance' in data ? data.finance ?? null : null;
+	const kasWeeklyIn = 'kasWeeklyIn' in data ? data.kasWeeklyIn ?? 0 : 0;
+	const communitySchedule = 'communitySchedule' in data ? data.communitySchedule ?? [] : [];
 	type OrgItem = {
 		id: string;
 		name: string;
@@ -54,16 +66,16 @@
 	const activeOrgs = orgs.filter((org) => org.status === 'active');
 
 	const normalizeRoleForCount = (role: string) => (role === 'ustadzah' ? 'ustadz' : role);
-	let roleCounter = { admin: 0, ustadz: 0, santri: 0 };
+	let roleCounter = { admin: 0, ustadz: 0, member: 0 };
 	$: roleCounter = users.reduce(
 		(acc, u) => {
-			const key = normalizeRoleForCount(u.role) as keyof typeof acc;
-			if (key in acc) {
-				acc[key] = (acc[key] ?? 0) + 1;
-			}
+			const key = normalizeRoleForCount(u.role);
+			if (key === 'admin') acc.admin = (acc.admin ?? 0) + 1;
+			if (key === 'ustadz') acc.ustadz = (acc.ustadz ?? 0) + 1;
+			if (key === memberRoleKey) acc.member = (acc.member ?? 0) + 1;
 			return acc;
 		},
-		{ admin: 0, ustadz: 0, santri: 0 }
+		{ admin: 0, ustadz: 0, member: 0 }
 	);
 
 	const approvedAyah = stats?.approved ?? 0;
@@ -84,11 +96,21 @@
 		const d = new Date(val);
 		return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 	};
+	const formatEventDate = (value?: string | null) => {
+		if (!value) return '-';
+		const d = new Date(value);
+		return isNaN(d.getTime()) ? value : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+	};
+	const formatNumber = (value?: number | null) => new Intl.NumberFormat('id-ID').format(value ?? 0);
+	const formatCurrency = (value?: number | null) =>
+		new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value ?? 0);
 	const formatOrgType = (value?: string) => {
 		if (!value) return '-';
-		if (value === 'tpq') return 'TPQ';
-		if (value === 'rumah-tahfidz') return 'Rumah Tahfidz';
-		return value.charAt(0).toUpperCase() + value.slice(1);
+		const normalized = value.toLowerCase().trim().replace(/_/g, '-');
+		if (normalized === 'tpq') return 'TPQ';
+		if (normalized === 'rumah-tahfidz') return 'Rumah Tahfidz';
+		if (normalized === 'pondok-pesantren' || normalized === 'pondok') return 'Pondok Pesantren';
+		return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 	};
 
 	const assignSurah = async () => {
@@ -133,7 +155,24 @@
 			</div>
 		</div>
 		<div class="flex flex-wrap gap-3 mt-6">
-			{#if isSuperAdmin}
+			{#if isCommunityOrg}
+				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+					<p class="text-xs opacity-80">Saldo Kas</p>
+					<p class="text-2xl font-bold">{formatCurrency(finance?.kas?.saldo ?? 0)}</p>
+				</div>
+				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+					<p class="text-xs opacity-80">Masuk Minggu Ini</p>
+					<p class="text-2xl font-bold">{formatCurrency(kasWeeklyIn)}</p>
+				</div>
+				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+					<p class="text-xs opacity-80">Zakat (Jiwa)</p>
+					<p class="text-2xl font-bold">{formatNumber(finance?.zakat?.jiwa ?? 0)}</p>
+				</div>
+				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+					<p class="text-xs opacity-80">Qurban</p>
+					<p class="text-2xl font-bold">{formatNumber(finance?.qurban?.total ?? 0)}</p>
+				</div>
+			{:else if isSuperAdmin}
 				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
 					<p class="text-xs opacity-80">Total Users</p>
 					<p class="text-2xl font-bold">{users.length}</p>
@@ -160,8 +199,8 @@
 					<p class="text-2xl font-bold">{roleCounter.ustadz}</p>
 				</div>
 				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
-					<p class="text-xs opacity-80">Santri</p>
-					<p class="text-2xl font-bold">{roleCounter.santri}</p>
+					<p class="text-xs opacity-80">{memberLabel}</p>
+					<p class="text-2xl font-bold">{roleCounter.member}</p>
 				</div>
 			{:else if isUstadz}
 				<div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
@@ -228,40 +267,44 @@
         </a>
 		<a href="/dashboard/kelola-santri" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">👥</div>
-			<p class="relative text-sm font-medium opacity-90">Kelola Santri</p>
-			<p class="relative mt-1 text-2xl font-bold">{roleCounter.santri}</p>
+			<p class="relative text-sm font-medium opacity-90">Kelola {memberLabel}</p>
+			<p class="relative mt-1 text-2xl font-bold">{roleCounter.member}</p>
 		</a>
-		<a href="/dashboard/review-setoran" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📋</div>
-			<p class="relative text-sm font-medium opacity-90">Review Setoran</p>
-			<p class="relative mt-1 text-2xl font-bold">{pending.length}</p>
-		</a>
-		<a href="/dashboard/hafalan-belum-lancar" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500 to-pink-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">⚠️</div>
-			<p class="relative text-sm font-medium opacity-90">Belum Lancar</p>
-			<p class="relative mt-1 text-2xl font-bold">Monitor</p>
-		</a>
-		<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
-			<p class="relative text-sm font-medium opacity-90">Pencapaian Hafalan</p>
-			<p class="relative mt-1 text-2xl font-bold">{approvedAyah}</p>
-		</a>
-		<a href="/dashboard/sertifikat" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📜</div>
-			<p class="relative text-sm font-medium opacity-90">Sertifikat</p>
-			<p class="relative mt-1 text-2xl font-bold">Kelola</p>
-		</a>
+		{#if showHafalan}
+			<a href="/dashboard/review-setoran" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">📋</div>
+				<p class="relative text-sm font-medium opacity-90">Review Setoran</p>
+				<p class="relative mt-1 text-2xl font-bold">{pending.length}</p>
+			</a>
+			<a href="/dashboard/hafalan-belum-lancar" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500 to-pink-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">⚠️</div>
+				<p class="relative text-sm font-medium opacity-90">Belum Lancar</p>
+				<p class="relative mt-1 text-2xl font-bold">Monitor</p>
+			</a>
+			<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
+				<p class="relative text-sm font-medium opacity-90">Pencapaian Hafalan</p>
+				<p class="relative mt-1 text-2xl font-bold">{approvedAyah}</p>
+			</a>
+			<a href="/dashboard/sertifikat" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">📜</div>
+				<p class="relative text-sm font-medium opacity-90">Sertifikat</p>
+				<p class="relative mt-1 text-2xl font-bold">Kelola</p>
+			</a>
+		{/if}
 		<a href="/kalender" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-500 to-pink-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📅</div>
 			<p class="relative text-sm font-medium opacity-90">Kalender</p>
 			<p class="relative mt-1 text-2xl font-bold">Semua</p>
 		</a>
 	{:else if isUstadz}
-		<a href="/dashboard/review-setoran" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">✅</div>
-			<p class="relative text-sm font-medium opacity-90">Review Setoran</p>
-			<p class="relative mt-1 text-2xl font-bold">{pending.length}</p>
-		</a>
+		{#if showHafalan}
+			<a href="/dashboard/review-setoran" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">✅</div>
+				<p class="relative text-sm font-medium opacity-90">Review Setoran</p>
+				<p class="relative mt-1 text-2xl font-bold">{pending.length}</p>
+			</a>
+		{/if}
         <!-- Kelola Blog (Ustadz) -->
         <a href="/admin/posts" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 p-6 text-white shadow-lg transition hover:scale-105">
             <div class="absolute -right-4 -top-4 text-6xl opacity-20">📝</div>
@@ -273,42 +316,48 @@
 			<p class="relative text-sm font-medium opacity-90">Kelola {orgMemberLabel}</p>
 			<p class="relative mt-1 text-2xl font-bold">{students.length}</p>
 		</a>
-		<a href="/dashboard/hafalan-belum-lancar" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📊</div>
-			<p class="relative text-sm font-medium opacity-90">Monitoring</p>
-			<p class="relative mt-1 text-2xl font-bold">Progres</p>
-		</a>
-		<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
-			<p class="relative text-sm font-medium opacity-90">Pencapaian Hafalan</p>
-			<p class="relative mt-1 text-2xl font-bold">{approvedAyah}</p>
-		</a>
-		<a href="/dashboard/sertifikat" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🏆</div>
-			<p class="relative text-sm font-medium opacity-90">Sertifikat</p>
-			<p class="relative mt-1 text-2xl font-bold">Terbitkan</p>
-		</a>
+		{#if showHafalan}
+			<a href="/dashboard/hafalan-belum-lancar" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">📊</div>
+				<p class="relative text-sm font-medium opacity-90">Monitoring</p>
+				<p class="relative mt-1 text-2xl font-bold">Progres</p>
+			</a>
+			<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
+				<p class="relative text-sm font-medium opacity-90">Pencapaian Hafalan</p>
+				<p class="relative mt-1 text-2xl font-bold">{approvedAyah}</p>
+			</a>
+			<a href="/dashboard/sertifikat" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🏆</div>
+				<p class="relative text-sm font-medium opacity-90">Sertifikat</p>
+				<p class="relative mt-1 text-2xl font-bold">Terbitkan</p>
+			</a>
+		{/if}
 	{:else if isAlumni}
-		<a href="/dashboard/hafalan-mandiri" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📖</div>
-			<p class="relative text-sm font-medium opacity-90">Hafalan Mandiri</p>
-			<p class="relative mt-1 text-2xl font-bold">Muroja'ah</p>
-		</a>
+		{#if showHafalan}
+			<a href="/dashboard/hafalan-mandiri" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">📖</div>
+				<p class="relative text-sm font-medium opacity-90">Hafalan Mandiri</p>
+				<p class="relative mt-1 text-2xl font-bold">Muroja'ah</p>
+			</a>
+		{/if}
 		<a href="/kalender" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📅</div>
 			<p class="relative text-sm font-medium opacity-90">Kalender</p>
 			<p class="relative mt-1 text-2xl font-bold">Jadwal</p>
 		</a>
-		<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
-			<p class="relative text-sm font-medium opacity-90">Pencapaian</p>
-			<p class="relative mt-1 text-2xl font-bold">{approvedAyah}</p>
-		</a>
-		<a href="/dashboard/sertifikat" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📜</div>
-			<p class="relative text-sm font-medium opacity-90">Sertifikat</p>
-			<p class="relative mt-1 text-2xl font-bold">Lihat</p>
-		</a>
+		{#if showHafalan}
+			<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
+				<p class="relative text-sm font-medium opacity-90">Pencapaian</p>
+				<p class="relative mt-1 text-2xl font-bold">{approvedAyah}</p>
+			</a>
+			<a href="/dashboard/sertifikat" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">📜</div>
+				<p class="relative text-sm font-medium opacity-90">Sertifikat</p>
+				<p class="relative mt-1 text-2xl font-bold">Lihat</p>
+			</a>
+		{/if}
 	{:else}
 		{#if isTamir}
 			<a href="/dashboard/kelola-santri" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
@@ -317,36 +366,38 @@
 				<p class="relative mt-1 text-2xl font-bold">Anggota</p>
 			</a>
 		{/if}
-		<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
-			<p class="relative text-sm font-medium opacity-90">Pencapaian Hafalan</p>
-			<p class="relative mt-1 text-2xl font-bold">{approvedAyah}</p>
-		</a>
 		<a href="/kalender" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📅</div>
 			<p class="relative text-sm font-medium opacity-90">Kalender</p>
 			<p class="relative mt-1 text-2xl font-bold">Jadwal</p>
 		</a>
-		<a href="/dashboard/setoran-hari-ini" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📥</div>
-			<p class="relative text-sm font-medium opacity-90">Setoran Hari Ini</p>
-			<p class="relative mt-1 text-2xl font-bold">{stats?.todayApproved ?? 0}</p>
-		</a>
-		<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
-			<p class="relative text-sm font-medium opacity-90">Pencapaian</p>
-			<p class="relative mt-1 text-2xl font-bold">{approvedAyah}</p>
-		</a>
-		<a href="/dashboard/halaqoh" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🕋</div>
-			<p class="relative text-sm font-medium opacity-90">Halaqoh</p>
-			<p class="relative mt-1 text-2xl font-bold">Jadwal</p>
-		</a>
-		<a href="/dashboard/ujian-tahfidz" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 text-white shadow-lg transition hover:scale-105">
-			<div class="absolute -right-4 -top-4 text-6xl opacity-20">📝</div>
-			<p class="relative text-sm font-medium opacity-90">Ujian</p>
-			<p class="relative mt-1 text-2xl font-bold">Tahfidz</p>
-		</a>
+		{#if showHafalan}
+			<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
+				<p class="relative text-sm font-medium opacity-90">Pencapaian Hafalan</p>
+				<p class="relative mt-1 text-2xl font-bold">{approvedAyah}</p>
+			</a>
+			<a href="/dashboard/setoran-hari-ini" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">📥</div>
+				<p class="relative text-sm font-medium opacity-90">Setoran Hari Ini</p>
+				<p class="relative mt-1 text-2xl font-bold">{stats?.todayApproved ?? 0}</p>
+			</a>
+			<a href="/dashboard/pencapaian-hafalan" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🎯</div>
+				<p class="relative text-sm font-medium opacity-90">Pencapaian</p>
+				<p class="relative mt-1 text-2xl font-bold">{approvedAyah}</p>
+			</a>
+			<a href="/dashboard/halaqoh" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">🕋</div>
+				<p class="relative text-sm font-medium opacity-90">Halaqoh</p>
+				<p class="relative mt-1 text-2xl font-bold">Jadwal</p>
+			</a>
+			<a href="/dashboard/ujian-tahfidz" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">📝</div>
+				<p class="relative text-sm font-medium opacity-90">Ujian</p>
+				<p class="relative mt-1 text-2xl font-bold">Tahfidz</p>
+			</a>
+		{/if}
 	{/if}
 </div>
 
@@ -354,7 +405,7 @@
 <div class="mt-8 grid gap-6 lg:grid-cols-3">
 	<!-- Left Column (2/3) -->
 	<div class="space-y-6 lg:col-span-2">
-		{#if isAdmin || isUstadz}
+		{#if (isAdmin || isUstadz) && showHafalan}
 			<!-- Quick Assign -->
 			<div class="rounded-2xl border bg-white p-6 shadow-lg">
 				<h2 class="text-xl font-bold text-gray-900 mb-4">⚡ Setor Cepat</h2>
@@ -393,7 +444,7 @@
 			</div>
 		{/if}
 
-		{#if isSantri}
+		{#if isSantri && showHafalan}
 			<!-- Progress Chart -->
 			<div class="rounded-2xl border bg-white p-6 shadow-lg">
 				<h2 class="text-xl font-bold text-gray-900 mb-4">📊 Progress Hafalan</h2>
@@ -432,7 +483,7 @@
 			</div>
 		{/if}
 
-		{#if isUstadz}
+		{#if isUstadz && showHafalan}
 			<!-- Top Santri -->
 			<div class="rounded-2xl border bg-white p-6 shadow-lg">
 				<h2 class="text-xl font-bold text-gray-900 mb-4">🏆 Top Santri</h2>
@@ -526,7 +577,82 @@
 				{/if}
 			</div>
 		{/if}
-		{#if isUstadz || isAdmin}
+		{#if isCommunityOrg}
+			<div class="rounded-2xl border bg-white p-6 shadow-lg">
+				<div class="flex items-start justify-between mb-4">
+					<div>
+						<h2 class="text-lg font-bold text-gray-900">🕌 Kas Masjid</h2>
+						<p class="text-xs text-gray-500">Saldo & pemasukan minggu ini</p>
+					</div>
+					{#if finance?.kas?.updatedAt}
+						<span class="text-xs text-gray-500">Update: {formatDate(finance.kas.updatedAt)}</span>
+					{/if}
+				</div>
+				<div class="grid grid-cols-2 gap-3">
+					<div class="rounded-xl border bg-emerald-50 p-3">
+						<p class="text-xs font-semibold text-emerald-700">Saldo</p>
+						<p class="text-xl font-bold text-emerald-700">{formatCurrency(finance?.kas?.saldo ?? 0)}</p>
+					</div>
+					<div class="rounded-xl border bg-blue-50 p-3">
+						<p class="text-xs font-semibold text-blue-700">Masuk Minggu Ini</p>
+						<p class="text-xl font-bold text-blue-700">{formatCurrency(kasWeeklyIn)}</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="rounded-2xl border bg-white p-6 shadow-lg">
+				<div class="flex items-start justify-between mb-4">
+					<div>
+						<h2 class="text-lg font-bold text-gray-900">🤲 Program Amal</h2>
+						<p class="text-xs text-gray-500">Zakat / Qurban / Infaq</p>
+					</div>
+					{#if canManageUmmah}
+						<a href={`/org/${orgSlug}/ummah`} class="btn btn-xs btn-outline">Kelola</a>
+					{/if}
+				</div>
+				<div class="grid grid-cols-3 gap-3">
+					<div class="rounded-xl border bg-emerald-50 p-3">
+						<p class="text-xs font-semibold text-emerald-700">Zakat</p>
+						<p class="text-lg font-bold text-emerald-700">{formatNumber(finance?.zakat?.jiwa ?? 0)} jiwa</p>
+						<p class="text-[10px] text-emerald-700/80">{formatCurrency(finance?.zakat?.uang ?? 0)} / {formatNumber(finance?.zakat?.beras ?? 0)} kg</p>
+					</div>
+					<div class="rounded-xl border bg-amber-50 p-3">
+						<p class="text-xs font-semibold text-amber-700">Qurban</p>
+						<p class="text-lg font-bold text-amber-700">{formatNumber(finance?.qurban?.total ?? 0)} hewan</p>
+						<p class="text-[10px] text-amber-700/80">Status aktif: {formatNumber(finance?.qurban?.status?.hidup ?? 0)}</p>
+					</div>
+					<div class="rounded-xl border bg-cyan-50 p-3">
+						<p class="text-xs font-semibold text-cyan-700">Infaq</p>
+						<p class="text-lg font-bold text-cyan-700">{formatCurrency(finance?.kas?.masuk ?? 0)}</p>
+						<p class="text-[10px] text-cyan-700/80">Kas masuk</p>
+					</div>
+				</div>
+			</div>
+
+			{#if communitySchedule.length}
+				<div class="rounded-2xl border bg-white p-6 shadow-lg">
+					<div class="flex items-start justify-between mb-4">
+						<div>
+							<h2 class="text-lg font-bold text-gray-900">🗓️ Jadwal Sholat & Kajian</h2>
+							<p class="text-xs text-gray-500">Agenda terdekat</p>
+						</div>
+						<a href="/kalender" class="btn btn-xs btn-outline">Kalender</a>
+					</div>
+					<div class="space-y-2">
+						{#each communitySchedule as item}
+							<div class="rounded-lg border bg-gray-50 p-3">
+								<p class="text-sm font-semibold text-gray-900">{item.title}</p>
+								<p class="text-xs text-gray-600">{formatEventDate(item.eventDate)}</p>
+								{#if item.content}
+									<p class="text-xs text-gray-500 mt-1">{item.content}</p>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+		{/if}
+		{#if (isUstadz || isAdmin) && showHafalan}
 			<!-- Pending Setoran -->
 			<div class="rounded-2xl border bg-white p-6 shadow-lg">
 				<div class="flex items-center justify-between mb-4">
@@ -549,7 +675,7 @@
 			</div>
 		{/if}
 
-		{#if isSantri}
+		{#if isSantri && showHafalan}
 			<!-- Stats Cards -->
 			<div class="space-y-3">
 				<div class="rounded-2xl border bg-gradient-to-br from-blue-50 to-indigo-50 p-4">

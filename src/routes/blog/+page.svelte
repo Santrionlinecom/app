@@ -1,73 +1,98 @@
 <script lang="ts">
-  let { data } = $props();
+	let { data } = $props();
 
-  const items = $derived(() =>
-    Array.isArray(data.items)
-      ? data.items
-      : Array.isArray(data.posts)
-        ? data.posts
-        : []
-  );
-  const page = $derived(() => Number(data.page ?? 1));
-  const limit = $derived(() => Number(data.limit ?? 10));
-  const totalPages = $derived(() =>
-    Math.max(1, Math.ceil((Number(data.totalCount ?? items.length) || 0) / (limit || 1)))
-  );
+	const items = $derived(() =>
+		Array.isArray(data.items) ? data.items : Array.isArray(data.posts) ? data.posts : []
+	);
+	const page = $derived(() => Number(data.page ?? data.pagination?.page ?? 1));
+	const limit = $derived(() => Number(data.limit ?? data.pagination?.limit ?? 10));
+	const totalCount = $derived(() =>
+		Number(data.totalCount ?? data.pagination?.totalCount ?? items.length)
+	);
+	const totalPages = $derived(() => Math.max(1, Math.ceil(totalCount / (limit || 1))));
+	const prevPage = $derived(() => Math.max(1, page - 1));
+	const nextPage = $derived(() => Math.min(totalPages, page + 1));
 
-  const formatDateTime = (ts: number | null | undefined) => {
-    if (!ts) return '';
-    return new Date(ts).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-  };
+	const formatDateTime = (ts: number | null | undefined) => {
+		if (!ts) return '';
+		return new Date(ts).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+	};
 </script>
 
-<div class="container mx-auto p-4 max-w-4xl">
-  <h1 class="text-4xl font-bold mb-8">Blog</h1>
+<div class="space-y-8">
+	<section class="rounded-3xl border bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 text-white shadow-xl">
+		<p class="text-xs uppercase tracking-[0.35em] text-white/60">Santri Online</p>
+		<h1 class="mt-2 text-3xl font-bold md:text-4xl">Blog &amp; Inspirasi</h1>
+		<p class="mt-2 text-sm text-white/80 max-w-2xl">
+			Kumpulan artikel, kisah, dan pembahasan seputar pesantren, masjid, dan kehidupan santri.
+		</p>
+	</section>
 
-  <div class="space-y-6">
-    {#each items as post}
-      <article class="card bg-base-200">
-        {#if post.thumbnail_url}
-          <img src={post.thumbnail_url} alt={`Thumbnail ${post.title}`} class="w-full h-56 object-cover rounded-t" loading="lazy" />
-        {/if}
-        <div class="card-body">
-          <h2 class="card-title">
-            <a href={`/blog/${post.slug}`} class="hover:underline">{post.title}</a>
-          </h2>
-          <p class="text-xs text-base-content/60">
-            {formatDateTime(post.scheduled_at ?? post.created_at)}
-          </p>
-          {#if post.excerpt}
-            <p class="text-base-content/70">{post.excerpt}</p>
-          {/if}
-          <div class="card-actions justify-end">
-            <a href={`/blog/${post.slug}`} class="btn btn-sm btn-primary">Read More</a>
-          </div>
-        </div>
-      </article>
-    {/each}
-  </div>
+	<section>
+		{#if items.length === 0}
+			<div class="rounded-2xl border bg-white p-6 text-sm text-slate-500">
+				Belum ada artikel yang dipublikasikan.
+			</div>
+		{:else}
+			<div class="grid gap-6 md:grid-cols-2">
+				{#each items as post}
+					<article class="group overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+						<a href={`/blog/${post.slug}`} class="block">
+							{#if post.thumbnail_url}
+								<img
+									src={post.thumbnail_url}
+									alt={`Thumbnail ${post.title}`}
+									class="h-48 w-full object-cover transition duration-300 group-hover:scale-105"
+									loading="lazy"
+								/>
+							{:else}
+								<div class="h-48 w-full bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200"></div>
+							{/if}
+						</a>
+						<div class="p-5">
+							<p class="text-xs uppercase tracking-[0.25em] text-slate-400">Artikel</p>
+							<h2 class="mt-2 text-lg font-semibold text-slate-900">
+								<a href={`/blog/${post.slug}`} class="transition hover:text-emerald-600">
+									{post.title}
+								</a>
+							</h2>
+							<p class="mt-1 text-xs text-slate-500">
+								{formatDateTime(post.scheduled_at ?? post.created_at)}
+							</p>
+							{#if post.excerpt}
+								<p class="mt-3 text-sm text-slate-600">{post.excerpt}</p>
+							{/if}
+							<div class="mt-4 flex items-center justify-end">
+								<a href={`/blog/${post.slug}`} class="btn btn-sm btn-ghost">Baca selengkapnya</a>
+							</div>
+						</div>
+					</article>
+				{/each}
+			</div>
+		{/if}
+	</section>
 
-  <div class="mt-8 flex flex-col items-center gap-2">
-    <div class="join">
-      <a
-        class="btn btn-sm join-item"
-        class:btn-disabled={page <= 1}
-        href={`?page=${page - 1}`}
-        aria-disabled={page <= 1}
-        tabindex={page <= 1 ? -1 : 0}
-      >
-        Prev
-      </a>
-      <a
-        class="btn btn-sm join-item"
-        class:btn-disabled={page >= totalPages}
-        href={`?page=${page + 1}`}
-        aria-disabled={page >= totalPages}
-        tabindex={page >= totalPages ? -1 : 0}
-      >
-        Next
-      </a>
-    </div>
-    <p class="text-sm text-base-content/70">Halaman {page} dari {totalPages}</p>
-  </div>
+	<div class="flex flex-col items-center gap-2">
+		<div class="join">
+			<a
+				class="btn btn-sm join-item"
+				class:btn-disabled={page <= 1}
+				href={`?page=${prevPage}`}
+				aria-disabled={page <= 1}
+				tabindex={page <= 1 ? -1 : 0}
+			>
+				Prev
+			</a>
+			<a
+				class="btn btn-sm join-item"
+				class:btn-disabled={page >= totalPages}
+				href={`?page=${nextPage}`}
+				aria-disabled={page >= totalPages}
+				tabindex={page >= totalPages ? -1 : 0}
+			>
+				Next
+			</a>
+		</div>
+		<p class="text-sm text-base-content/70">Halaman {page} dari {totalPages}</p>
+	</div>
 </div>

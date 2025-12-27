@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { generateId } from 'lucia';
 import { Scrypt } from '$lib/server/password';
 import { getOrganizationById } from '$lib/server/organizations';
+import { logActivity } from '$lib/server/activity-logs';
 
 const memberRoles = ['santri', 'jamaah'];
 
@@ -12,6 +13,14 @@ const countTable = async (db: App.Locals['db'], table: string) => {
 		return Number(row?.total ?? 0);
 	} catch {
 		return 0;
+	}
+};
+
+const safeActivityQuery = async <T>(fn: () => Promise<T>, fallback: T): Promise<T> => {
+	try {
+		return await fn();
+	} catch {
+		return fallback;
 	}
 };
 
@@ -32,25 +41,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		(await countTable(db, 'transaksi_zakat')) +
 		(await countTable(db, 'data_qurban')) +
 		(await countTable(db, 'kas_masjid'));
-
-	const { results: topRows } = await db
-		.prepare(
-			`SELECT o.id, o.name, o.type, o.slug,
-				SUM(CASE WHEN u.role IN (${memberRoles.map(() => '?').join(',')}) THEN 1 ELSE 0 END) as totalMembers
-			 FROM organizations o
-			 LEFT JOIN users u ON u.org_id = o.id
-			 GROUP BY o.id
-			 ORDER BY totalMembers DESC
-			 LIMIT 10`
-		)
-		.bind(...memberRoles)
-		.all<{
-			id: string;
-			name: string;
-			type: string;
-			slug: string;
-			totalMembers: number | null;
-		}>();
 
 	const { results: orgRows } = await db
 		.prepare(
@@ -112,49 +102,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		searchResults = results ?? [];
 	}
 
-	let trafficRows: Array<{
-		id: string;
-		name: string;
-		type: string;
-		slug: string;
-		clicks: number | null;
-		signups: number | null;
-	}> = [];
-	try {
-		const { results } = await db
-			.prepare(
-				`SELECT o.id, o.name, o.type, o.slug,
-					COALESCE(tc.clicks, 0) as clicks,
-					COALESCE(ts.signups, 0) as signups
-				 FROM organizations o
-				 LEFT JOIN (
-					SELECT organization_id, SUM(total_clicks) as clicks
-					FROM traffic_sources
-					GROUP BY organization_id
-				 ) tc ON tc.organization_id = o.id
-				 LEFT JOIN (
-					SELECT org_id, COUNT(*) as signups
-					FROM users
-					WHERE role IN (${memberRoles.map(() => '?').join(',')})
-					GROUP BY org_id
-				 ) ts ON ts.org_id = o.id
-				 ORDER BY clicks DESC
-				 LIMIT 10`
-			)
-			.bind(...memberRoles)
-			.all<{
-				id: string;
-				name: string;
-				type: string;
-				slug: string;
-				clicks: number | null;
-				signups: number | null;
-			}>();
-		trafficRows = results ?? [];
-	} catch {
-		trafficRows = [];
-	}
-
 	const { results: candidateUsers } = await db
 		.prepare(
 			`SELECT id, username, email, role, org_id as orgId, created_at as createdAt
@@ -172,18 +119,105 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			createdAt: number;
 		}>();
 
+	const now = Date.now();
+	const fifteenMinutesAgo = now - 15 * 60 * 1000;
+	const startOfDay = new Date();
+	startOfDay.setHours(0, 0, 0, 0);
+
+	const userOnline = await safeActivityQuery(async () => {
+		const row = await db
+			.prepare(
+				`SELECT COUNT(DISTINCT user_id) as total
+				 FROM activity_logs
+				 WHERE action = 'LOGIN' AND created_at >= ?`
+			)
+			.bind(fifteenMinutesAgo)
+			.first<{ total: number | null }>();
+		return Number(row?.total ?? 0);
+	}, 0);
+
+	const registrationsToday = await safeActivityQuery(async () => {
+		const row = await db
+			.prepare(
+				`SELECT COUNT(1) as total
+				 FROM activity_logs
+				 WHERE action = 'REGISTER' AND created_at >= ?`
+			)
+			.bind(startOfDay.getTime())
+			.first<{ total: number | null }>();
+		return Number(row?.total ?? 0);
+	}, 0);
+
+	const trafficSources = await safeActivityQuery(async () => {
+		const { results } = await db
+			.prepare(
+				`SELECT action, COUNT(1) as total, MAX(created_at) as lastSeen
+				 FROM activity_logs
+				 WHERE action LIKE 'CLICK_%'
+				 GROUP BY action
+				 ORDER BY total DESC
+				 LIMIT 5`
+			)
+			.all<{ action: string; total: number | null; lastSeen: number | null }>();
+		return (results ?? []).map((row) => ({
+			action: row.action,
+			total: Number(row.total ?? 0),
+			lastSeen: row.lastSeen ?? null
+		}));
+	}, [] as Array<{ action: string; total: number; lastSeen: number | null }>);
+
+	const recentActivities = await safeActivityQuery(async () => {
+		const { results } = await db
+			.prepare(
+				`SELECT al.id, al.user_id as userId, al.action, al.metadata, al.created_at as createdAt,
+					u.username, u.email,
+					o.name as orgName, o.type as orgType
+				 FROM activity_logs al
+				 LEFT JOIN users u ON u.id = al.user_id
+				 LEFT JOIN organizations o ON o.id = u.org_id
+				 ORDER BY al.created_at DESC
+				 LIMIT 5`
+			)
+			.all<{
+				id: string;
+				userId: string | null;
+				action: string;
+				metadata: string | null;
+				createdAt: number;
+				username: string | null;
+				email: string | null;
+				orgName: string | null;
+				orgType: string | null;
+			}>();
+		return results ?? [];
+	}, [] as Array<{
+		id: string;
+		userId: string | null;
+		action: string;
+		metadata: string | null;
+		createdAt: number;
+		username: string | null;
+		email: string | null;
+		orgName: string | null;
+		orgType: string | null;
+	}>);
+
 	return {
 		stats: {
 			totalInstitutions,
 			totalUsers,
 			totalTransactions
 		},
-		topInstitutions: topRows ?? [],
+		liveStats: {
+			userOnline,
+			registrationsToday,
+			trafficSources,
+			recentActivities
+		},
 		institutions: orgRows ?? [],
 		availableUsers: candidateUsers ?? [],
 		searchQuery,
-		searchResults,
-		trafficSources: trafficRows ?? []
+		searchResults
 	};
 };
 
@@ -291,6 +325,12 @@ export const actions: Actions = {
 			)
 			.bind(userId, name.trim(), email.trim(), hashed, 'admin', orgId, 'active', Date.now())
 			.run();
+
+		await logActivity(db!, {
+			userId,
+			action: 'REGISTER',
+			metadata: { orgId, role: 'admin', createdBy: locals.user?.id ?? null, source: 'super-admin/create-admin' }
+		});
 
 		return { success: true };
 	}
