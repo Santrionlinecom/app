@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { initializeLucia } from '$lib/server/lucia';
 import { Scrypt } from '$lib/server/password'; // HANYA IMPORT SCRYPT (JANGAN ARGON2)
 import { logActivity } from '$lib/server/activity-logs';
+import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import type { Actions, PageServerLoad } from './$types';
 
 // Jika user sudah login, lempar ke dashboard
@@ -72,6 +73,13 @@ export const actions: Actions = {
 					userId: user.id,
 					action: 'LOGIN',
 					metadata: { method: 'password' }
+				});
+				logSystemActivity(db, 'LOGIN', {
+					userId: user.id,
+					userEmail: email,
+					ipAddress: getRequestIp(request),
+					metadata: { method: 'password' },
+					waitUntil: platform?.context?.waitUntil
 				});
 
 			} catch (e) {

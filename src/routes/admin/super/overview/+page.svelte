@@ -2,7 +2,7 @@
 	export let data;
 
 	const liveStats = data.liveStats ?? {
-		userOnline: 0,
+		loginsToday: 0,
 		registrationsToday: 0,
 		trafficSources: [],
 		recentActivities: []
@@ -38,6 +38,7 @@
 		const map: Record<string, string> = {
 			LOGIN: 'Login',
 			REGISTER: 'Register',
+			VIEW_PAGE: 'Lihat Halaman',
 			CLICK_WA: 'Klik WA',
 			VIEW_CERTIFICATE: 'Lihat Sertifikat'
 		};
@@ -46,13 +47,7 @@
 		return action;
 	};
 
-	const activityLabel = (activity) => {
-		const actor = activity.username || activity.email || 'Pengunjung';
-		if (activity.action === 'LOGIN') return `${actor} login`;
-		if (activity.action === 'REGISTER') return `${actor} baru mendaftar`;
-		if (activity.action.startsWith('CLICK_')) return `${actor} ${actionLabel(activity.action).toLowerCase()}`;
-		return `${actor} melakukan ${actionLabel(activity.action).toLowerCase()}`;
-	};
+	const actorLabel = (activity) => activity.username || activity.userEmail || activity.email || 'Pengunjung';
 
 	const orgLabel = (org) => `${org.name} (${orgTypeLabel[org.type] ?? org.type})`;
 	const orgsWithoutAdmin = (orgs) => orgs.filter((org) => !org.adminCount);
@@ -100,14 +95,14 @@
 
 	<section class="grid gap-4 lg:grid-cols-3">
 		<div class="rounded-2xl border bg-white p-4 shadow-sm">
-			<p class="text-xs uppercase text-slate-500">User Online (15 Menit)</p>
-			<p class="mt-2 text-3xl font-bold text-emerald-600">{formatNumber(liveStats.userOnline)}</p>
-			<p class="text-xs text-slate-500">Aktif berdasarkan log login</p>
+			<p class="text-xs uppercase text-slate-500">User Login Hari Ini</p>
+			<p class="mt-2 text-3xl font-bold text-emerald-600">{formatNumber(liveStats.loginsToday)}</p>
+			<p class="text-xs text-slate-500">Total login hari ini</p>
 		</div>
 		<div class="rounded-2xl border bg-white p-4 shadow-sm">
-			<p class="text-xs uppercase text-slate-500">Registrasi Hari Ini</p>
+			<p class="text-xs uppercase text-slate-500">User Baru Hari Ini</p>
 			<p class="mt-2 text-3xl font-bold text-blue-600">{formatNumber(liveStats.registrationsToday)}</p>
-			<p class="text-xs text-slate-500">User baru hari ini</p>
+			<p class="text-xs text-slate-500">Pendaftaran hari ini</p>
 		</div>
 		<div class="rounded-2xl border bg-white p-4 shadow-sm">
 			<p class="text-xs uppercase text-slate-500">Traffic Source</p>
@@ -128,8 +123,8 @@
 
 	<section class="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
 		<div>
-			<h2 class="text-lg font-semibold text-slate-900">Live Activity</h2>
-			<p class="text-xs text-slate-500">5 aktivitas terbaru dari sistem.</p>
+			<h2 class="text-lg font-semibold text-slate-900">Live Traffic</h2>
+			<p class="text-xs text-slate-500">10 aktivitas terbaru dari sistem.</p>
 		</div>
 		{#if liveStats.recentActivities.length === 0}
 			<p class="text-sm text-slate-500">Belum ada aktivitas tercatat.</p>
@@ -138,29 +133,24 @@
 				<table class="table table-zebra w-full text-sm">
 					<thead>
 						<tr>
-							<th>Aktivitas</th>
-							<th>Detail</th>
-							<th>Waktu</th>
+							<th>Siapa</th>
+							<th>Ngapain</th>
+							<th>Kapan</th>
 						</tr>
 					</thead>
 					<tbody>
 						{#each liveStats.recentActivities as activity}
 							{@const meta = parseMetadata(activity.metadata)}
 							<tr>
-								<td class="font-medium text-slate-900">{activityLabel(activity)}</td>
+								<td class="font-medium text-slate-900">{actorLabel(activity)}</td>
 								<td>
-									{#if activity.orgName}
-										<span>{activity.orgName} ({orgTypeLabel[activity.orgType] ?? activity.orgType})</span>
-									{:else}
-										{#if meta?.orgName}
-											<span>{meta.orgName}</span>
-										{:else if meta?.source}
-											<span class="text-slate-500">{meta.source}</span>
-										{:else if meta?.referrer}
-											<span class="text-slate-500">{meta.referrer}</span>
-										{:else}
-											<span class="text-slate-500">-</span>
-										{/if}
+									<div class="font-medium text-slate-900">{actionLabel(activity.action)}</div>
+									{#if meta?.path}
+										<div class="text-xs text-slate-500">{meta.path}</div>
+									{:else if meta?.source}
+										<div class="text-xs text-slate-500">{meta.source}</div>
+									{:else if meta?.orgName}
+										<div class="text-xs text-slate-500">{meta.orgName}</div>
 									{/if}
 								</td>
 								<td>{formatDateTime(activity.createdAt)}</td>

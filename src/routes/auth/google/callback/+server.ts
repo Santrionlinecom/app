@@ -7,6 +7,7 @@ import { OAuth2RequestError } from 'arctic';
 import type { D1Database } from '@cloudflare/workers-types';
 import { env as privateEnv } from '$env/dynamic/private';
 import { logActivity } from '$lib/server/activity-logs';
+import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 
 type GoogleProfile = {
 	sub: string;
@@ -101,9 +102,10 @@ const resolveMemberContext = async (
 	return { orgId: org.id, role: expectedRole };
 };
 
-export const GET: RequestHandler = async ({ url, cookies, locals, fetch }) => {
+export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request, platform }) => {
 	const db = locals.db;
 	if (!db) throw error(500, 'Database tidak tersedia');
+	const ipAddress = getRequestIp(request);
 
 	const lucia = initializeLucia(db);
 	const google = getGoogleOAuthClient(url.origin);
@@ -277,6 +279,13 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch }) => {
 					role: finalRole
 				}
 			});
+			logSystemActivity(db, 'REGISTER', {
+				userId,
+				userEmail: email,
+				ipAddress,
+				metadata: { method: 'google', orgId: memberContext?.orgId ?? null, role: finalRole },
+				waitUntil: platform?.context?.waitUntil
+			});
 		}
 
 		const session = await lucia.createSession(userId, {});
@@ -286,6 +295,13 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch }) => {
 			userId,
 			action: 'LOGIN',
 			metadata: { method: 'google', isNew: isNewUser }
+		});
+		logSystemActivity(db, 'LOGIN', {
+			userId,
+			userEmail: email,
+			ipAddress,
+			metadata: { method: 'google', isNew: isNewUser },
+			waitUntil: platform?.context?.waitUntil
 		});
 		clearOauthCookies();
 

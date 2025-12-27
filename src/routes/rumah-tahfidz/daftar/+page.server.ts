@@ -5,13 +5,14 @@ import { Scrypt } from '$lib/server/password';
 import { createOrganization, ensureUniqueSlug, slugify } from '$lib/server/organizations';
 import { generateId } from 'lucia';
 import { logActivity } from '$lib/server/activity-logs';
+import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 
 export const load: PageServerLoad = async () => {
 	return {};
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals, cookies }) => {
+	default: async ({ request, locals, cookies, platform }) => {
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
 
@@ -82,6 +83,13 @@ export const actions: Actions = {
 				userId,
 				action: 'REGISTER',
 				metadata: { orgId, orgName: orgName.trim(), orgType: 'rumah-tahfidz', source: 'rumah-tahfidz/daftar' }
+			});
+			logSystemActivity(db, 'REGISTER', {
+				userId,
+				userEmail: (adminEmail as string).trim(),
+				ipAddress: getRequestIp(request),
+				metadata: { orgId, orgName: orgName.trim(), orgType: 'rumah-tahfidz', role: 'admin', source: 'rumah-tahfidz/daftar' },
+				waitUntil: platform?.context?.waitUntil
 			});
 
 			const lucia = initializeLucia(db);

@@ -16,7 +16,7 @@ const countTable = async (db: App.Locals['db'], table: string) => {
 	}
 };
 
-const safeActivityQuery = async <T>(fn: () => Promise<T>, fallback: T): Promise<T> => {
+const safeLogQuery = async <T>(fn: () => Promise<T>, fallback: T): Promise<T> => {
 	try {
 		return await fn();
 	} catch {
@@ -119,28 +119,26 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			createdAt: number;
 		}>();
 
-	const now = Date.now();
-	const fifteenMinutesAgo = now - 15 * 60 * 1000;
 	const startOfDay = new Date();
 	startOfDay.setHours(0, 0, 0, 0);
 
-	const userOnline = await safeActivityQuery(async () => {
+	const loginsToday = await safeLogQuery(async () => {
 		const row = await db
 			.prepare(
 				`SELECT COUNT(DISTINCT user_id) as total
-				 FROM activity_logs
+				 FROM system_logs
 				 WHERE action = 'LOGIN' AND created_at >= ?`
 			)
-			.bind(fifteenMinutesAgo)
+			.bind(startOfDay.getTime())
 			.first<{ total: number | null }>();
 		return Number(row?.total ?? 0);
 	}, 0);
 
-	const registrationsToday = await safeActivityQuery(async () => {
+	const registrationsToday = await safeLogQuery(async () => {
 		const row = await db
 			.prepare(
 				`SELECT COUNT(1) as total
-				 FROM activity_logs
+				 FROM system_logs
 				 WHERE action = 'REGISTER' AND created_at >= ?`
 			)
 			.bind(startOfDay.getTime())
@@ -148,11 +146,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		return Number(row?.total ?? 0);
 	}, 0);
 
-	const trafficSources = await safeActivityQuery(async () => {
+	const trafficSources = await safeLogQuery(async () => {
 		const { results } = await db
 			.prepare(
 				`SELECT action, COUNT(1) as total, MAX(created_at) as lastSeen
-				 FROM activity_logs
+				 FROM system_logs
 				 WHERE action LIKE 'CLICK_%'
 				 GROUP BY action
 				 ORDER BY total DESC
@@ -166,40 +164,39 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		}));
 	}, [] as Array<{ action: string; total: number; lastSeen: number | null }>);
 
-	const recentActivities = await safeActivityQuery(async () => {
+	const recentActivities = await safeLogQuery(async () => {
 		const { results } = await db
 			.prepare(
-				`SELECT al.id, al.user_id as userId, al.action, al.metadata, al.created_at as createdAt,
-					u.username, u.email,
-					o.name as orgName, o.type as orgType
-				 FROM activity_logs al
-				 LEFT JOIN users u ON u.id = al.user_id
-				 LEFT JOIN organizations o ON o.id = u.org_id
-				 ORDER BY al.created_at DESC
-				 LIMIT 5`
+				`SELECT sl.id, sl.user_id as userId, sl.user_email as userEmail, sl.action, sl.metadata,
+					sl.ip_address as ipAddress, sl.created_at as createdAt,
+					u.username, u.email
+				 FROM system_logs sl
+				 LEFT JOIN users u ON u.id = sl.user_id
+				 ORDER BY sl.created_at DESC
+				 LIMIT 10`
 			)
 			.all<{
 				id: string;
 				userId: string | null;
+				userEmail: string | null;
 				action: string;
 				metadata: string | null;
+				ipAddress: string | null;
 				createdAt: number;
 				username: string | null;
 				email: string | null;
-				orgName: string | null;
-				orgType: string | null;
 			}>();
 		return results ?? [];
 	}, [] as Array<{
 		id: string;
 		userId: string | null;
+		userEmail: string | null;
 		action: string;
 		metadata: string | null;
+		ipAddress: string | null;
 		createdAt: number;
 		username: string | null;
 		email: string | null;
-		orgName: string | null;
-		orgType: string | null;
 	}>);
 
 	return {
@@ -209,7 +206,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			totalTransactions
 		},
 		liveStats: {
-			userOnline,
+			loginsToday,
 			registrationsToday,
 			trafficSources,
 			recentActivities

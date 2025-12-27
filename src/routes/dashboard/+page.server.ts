@@ -6,6 +6,7 @@ import type { D1Database } from '@cloudflare/workers-types';
 import { SURAH_DATA } from '$lib/surah-data';
 import { getOrgFinanceSummary } from '$lib/server/ummah';
 import { isCommunityOrgType, isEducationalOrgType } from '$lib/server/utils';
+import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 
 const fetchSurahs = async (db: D1Database) => {
 	// Coba beberapa variasi kolom agar tidak error jika skema lama berbeda (prioritas pakai "nama","total_ayat")
@@ -93,13 +94,20 @@ const fetchCommunitySchedule = async (
 	return results ?? [];
 };
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, request, platform }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth');
 	}
 
 	const db = locals.db!;
 	const role = locals.user.role;
+	logSystemActivity(db, 'VIEW_PAGE', {
+		userId: locals.user.id,
+		userEmail: locals.user.email ?? null,
+		ipAddress: getRequestIp(request),
+		metadata: { path: '/dashboard', role },
+		waitUntil: platform?.context?.waitUntil
+	});
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 	const scopedOrgId = isSystemAdmin ? null : orgId;
 	const orgProfile = orgId ? await getOrganizationById(db, orgId) : null;

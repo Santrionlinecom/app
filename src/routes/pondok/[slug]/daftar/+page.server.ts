@@ -5,6 +5,7 @@ import { initializeLucia } from '$lib/server/lucia';
 import { Scrypt } from '$lib/server/password';
 import { generateId } from 'lucia';
 import { logActivity } from '$lib/server/activity-logs';
+import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 
 const roleLabel = (value: string) => {
 	if (value === 'ustadzah') return 'Ustadzah';
@@ -33,7 +34,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals, cookies, params, url }) => {
+	default: async ({ request, locals, cookies, params, url, platform }) => {
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
 		const org = await getOrganizationBySlug(db, params.slug, 'pondok');
@@ -108,6 +109,13 @@ export const actions: Actions = {
 			userId,
 			action: 'REGISTER',
 			metadata: { orgId: org.id, orgName: org.name, orgType: 'pondok', source: 'pondok/member' }
+		});
+		logSystemActivity(db, 'REGISTER', {
+			userId,
+			userEmail: email.trim(),
+			ipAddress: getRequestIp(request),
+			metadata: { orgId: org.id, orgName: org.name, orgType: 'pondok', role: normalizedRole, source: 'pondok/member' },
+			waitUntil: platform?.context?.waitUntil
 		});
 
 		const lucia = initializeLucia(db);

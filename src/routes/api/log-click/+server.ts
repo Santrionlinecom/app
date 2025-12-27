@@ -1,8 +1,9 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { logActivity } from '$lib/server/activity-logs';
+import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 
-export const POST: RequestHandler = async ({ request, locals, url }) => {
+export const POST: RequestHandler = async ({ request, locals, url, platform }) => {
 	if (!locals.db) {
 		throw error(500, 'Database tidak tersedia');
 	}
@@ -34,6 +35,13 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
 		userId: locals.user?.id ?? null,
 		action: actionRaw.toUpperCase(),
 		metadata
+	});
+	logSystemActivity(locals.db, actionRaw.toUpperCase(), {
+		userId: locals.user?.id ?? null,
+		userEmail: locals.user?.email ?? null,
+		ipAddress: getRequestIp(request),
+		metadata,
+		waitUntil: platform?.context?.waitUntil
 	});
 
 	return json({ ok: true });
