@@ -252,6 +252,13 @@
 			<p class="relative text-sm font-medium opacity-90">Kelola Role</p>
 			<p class="relative mt-1 text-2xl font-bold">Global</p>
 		</a>
+		{#if showHafalan}
+			<a href="/dashboard/hafalan-mandiri" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 p-6 text-white shadow-lg transition hover:scale-105">
+				<div class="absolute -right-4 -top-4 text-6xl opacity-20">📖</div>
+				<p class="relative text-sm font-medium opacity-90">Hafalan Mandiri</p>
+				<p class="relative mt-1 text-2xl font-bold">Muroja'ah</p>
+			</a>
+		{/if}
 	{:else if canManageUmmah}
 		<a href={`/org/${orgSlug}/ummah`} class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-lime-600 p-6 text-white shadow-lg transition hover:scale-105">
 			<div class="absolute -right-4 -top-4 text-6xl opacity-20">🧾</div>
