@@ -14,6 +14,14 @@ export type OrgRole =
 	| 'tamir'
 	| 'bendahara';
 
+export type PublicOrgMember = {
+	id: string;
+	username: string | null;
+	role: string | null;
+	orgStatus: string | null;
+	createdAt: number | null;
+};
+
 const addColumn = async (db: D1Database, name: string, type: string) => {
 	try {
 		await db.prepare(`ALTER TABLE users ADD COLUMN ${name} ${type}`).run();
@@ -231,4 +239,25 @@ export const getMemberReferralRole = (type: OrgType, url?: URL) => {
 		return defaultRole;
 	}
 	return null;
+};
+
+export const listPublicOrgMembers = async (db: D1Database, orgId: string) => {
+	const { results } = await db
+		.prepare(
+			`SELECT id,
+				username,
+				role,
+				org_status as orgStatus,
+				created_at as createdAt
+			 FROM users
+			 WHERE org_id = ?
+			   AND (org_status IS NULL OR org_status = 'active')
+			   AND role IS NOT NULL
+			   AND role != 'SUPER_ADMIN'
+			 ORDER BY created_at ASC`
+		)
+		.bind(orgId)
+		.all<PublicOrgMember>();
+
+	return (results ?? []) as PublicOrgMember[];
 };

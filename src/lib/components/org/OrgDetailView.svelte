@@ -4,6 +4,12 @@
 	export let org;
 	export let typePath = '';
 	export let media: Array<{ id: string; url: string }> = [];
+	export let members: Array<{
+		id: string;
+		username: string | null;
+		role: string | null;
+		orgStatus?: string | null;
+	}> = [];
 
 	const formatOrgType = (value?: string) => {
 		if (!value) return '-';
@@ -23,6 +29,47 @@
 	const memberRole = memberRoleByType[orgType] || 'anggota';
 	const memberLabel = memberRole === 'jamaah' ? 'Jamaah' : memberRole === 'santri' ? 'Santri' : 'Anggota';
 	const memberRefLink = org?.slug ? `/${typePath}/${org.slug}/daftar?ref=anggota` : '';
+
+	const roleLabels: Record<string, string> = {
+		admin: 'Admin',
+		ustadz: 'Ustadz',
+		ustadzah: 'Ustadzah',
+		tamir: "Ta'mir",
+		bendahara: 'Bendahara',
+		santri: 'Santri',
+		jamaah: 'Jamaah',
+		alumni: 'Alumni'
+	};
+	const roleOrder = ['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara', 'santri', 'jamaah', 'alumni'];
+	const normalizeRole = (value?: string | null) => (value ?? '').toLowerCase();
+	const displayMemberName = (member: { id: string; username: string | null }) => member.username || member.id;
+	let groupedMembers: Array<{ role: string; label: string; items: typeof members }> = [];
+
+	$: groupedMembers = (() => {
+		const buckets = new Map<string, typeof members>();
+		for (const member of members ?? []) {
+			const roleKey = normalizeRole(member.role);
+			if (!roleKey) continue;
+			const list = buckets.get(roleKey) ?? [];
+			list.push(member);
+			buckets.set(roleKey, list);
+		}
+
+		const ordered: Array<{ role: string; label: string; items: typeof members }> = [];
+		for (const role of roleOrder) {
+			const list = buckets.get(role);
+			if (list?.length) {
+				ordered.push({ role, label: roleLabels[role] ?? role, items: list });
+				buckets.delete(role);
+			}
+		}
+		for (const [role, list] of buckets.entries()) {
+			if (list?.length) {
+				ordered.push({ role, label: roleLabels[role] ?? role, items: list });
+			}
+		}
+		return ordered;
+	})();
 </script>
 
 <section class="max-w-4xl mx-auto py-10 px-4 space-y-6">
@@ -61,4 +108,32 @@
 			<p class="text-sm text-slate-500">Lembaga belum aktif, pendaftaran anggota belum dibuka.</p>
 		{/if}
 	</div>
+
+	{#if groupedMembers.length}
+		<div class="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
+			<h2 class="text-lg font-semibold text-slate-800">Struktur & Link Bio</h2>
+			{#each groupedMembers as group}
+				<div class="space-y-2">
+					<div class="flex items-center justify-between gap-2">
+						<p class="text-sm font-semibold text-slate-700">{group.label}</p>
+						<span class="text-xs text-slate-500">{group.items.length} orang</span>
+					</div>
+					<div class="flex flex-wrap gap-2">
+						{#each group.items as member}
+							<a
+								href={`/u/${member.id}`}
+								class="badge badge-outline text-xs transition hover:border-emerald-600 hover:bg-emerald-600 hover:text-white"
+							>
+								{displayMemberName(member)}
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
+	{:else}
+		<div class="rounded-2xl border border-dashed bg-white p-6 text-sm text-slate-500">
+			Belum ada data struktur lembaga.
+		</div>
+	{/if}
 </section>

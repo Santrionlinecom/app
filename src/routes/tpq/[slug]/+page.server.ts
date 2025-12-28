@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { getOrganizationBySlug } from '$lib/server/organizations';
+import { getOrganizationBySlug, listPublicOrgMembers } from '$lib/server/organizations';
 import { listOrgMedia } from '$lib/server/org-media';
 
 export const ssr = true;
@@ -19,5 +19,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const media = await listOrgMedia(db, org.id);
 
-	return { org, typePath: 'tpq', media };
+	const members = await listPublicOrgMembers(db, org.id);
+
+	return { org, typePath: 'tpq', media, members };
 };

@@ -31,8 +31,10 @@
 	const adminEmail = profile?.email ?? '';
 	let slugManual = false;
 	let copyMessage = '';
+	let bioCopyMessage = '';
 
 	const baseUrl = 'https://app.santrionline.com';
+	$: bioLink = profile?.id ? `${baseUrl}/u/${profile.id}` : '';
 	const memberLabelByType: Record<string, string> = {
 		pondok: 'Santri',
 		masjid: 'Jamaah',
@@ -47,6 +49,34 @@
 			? `Untuk ${memberLabel.toLowerCase()} yang ingin mendaftar ke ${org.slug} gunakan link ini: ${shareLink}`
 			: '';
 	$: waShareLink = shareMessage ? `https://wa.me/?text=${encodeURIComponent(shareMessage)}` : '';
+
+	const copyBioLink = async () => {
+		if (!bioLink) return;
+		bioCopyMessage = '';
+		try {
+			if (navigator?.clipboard?.writeText) {
+				await navigator.clipboard.writeText(bioLink);
+			} else {
+				const temp = document.createElement('textarea');
+				temp.value = bioLink;
+				temp.setAttribute('readonly', 'true');
+				temp.style.position = 'absolute';
+				temp.style.left = '-9999px';
+				document.body.appendChild(temp);
+				temp.select();
+				document.execCommand('copy');
+				document.body.removeChild(temp);
+			}
+			bioCopyMessage = 'Link bio berhasil disalin.';
+		} catch (err) {
+			console.error('Copy bio link error:', err);
+			bioCopyMessage = 'Gagal menyalin link bio.';
+		} finally {
+			setTimeout(() => {
+				bioCopyMessage = '';
+			}, 2500);
+		}
+	};
 
 	const copyShareLink = async () => {
 		if (!shareLink) return;
@@ -198,6 +228,27 @@
 				</div>
 			</div>
 		</div>
+
+		{#if bioLink}
+			<div class="rounded-3xl border-2 border-slate-200 bg-white p-6 shadow-xl mb-8">
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div>
+						<h2 class="text-2xl font-bold text-gray-900">Link Bio Publik</h2>
+						<p class="text-sm text-gray-600">Tautan ini menampilkan peran Anda di lembaga.</p>
+					</div>
+					<a class="btn btn-outline btn-sm" href={bioLink} target="_blank" rel="noopener">
+						Buka Link
+					</a>
+				</div>
+				<div class="mt-4 flex flex-col gap-2 md:flex-row">
+					<input class="input input-bordered w-full" readonly value={bioLink} />
+					<button class="btn btn-primary" type="button" on:click={copyBioLink}>Salin Link</button>
+				</div>
+				{#if bioCopyMessage}
+					<p class="mt-2 text-sm text-emerald-600">{bioCopyMessage}</p>
+				{/if}
+			</div>
+		{/if}
 
 		<!-- Forms Grid -->
 		<div class="grid gap-6 lg:grid-cols-2">

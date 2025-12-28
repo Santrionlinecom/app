@@ -27,5 +27,5 @@
 	<meta property="og:image" content={ogImage} />
 </svelte:head>
 
-<OrgDetailView org={data.org} typePath={data.typePath} media={data.media} />
+<OrgDetailView org={data.org} typePath={data.typePath} media={data.media} members={data.members} />
 <OrgFinancePublic org={data.org} finance={data.finance} />
