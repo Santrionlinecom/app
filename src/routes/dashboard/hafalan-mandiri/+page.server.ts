@@ -2,13 +2,23 @@ import { redirect, fail, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { SURAH_DATA } from '$lib/surah-data';
 
-const allowedRoles = ['admin', 'ustadz', 'ustadzah', 'alumni', 'SUPER_ADMIN'];
+const allowedRoles = [
+	'admin',
+	'ustadz',
+	'ustadzah',
+	'alumni',
+	'SUPER_ADMIN',
+	'santri',
+	'jamaah',
+	'tamir',
+	'bendahara'
+];
 const TOTAL_AYAH = SURAH_DATA.reduce((sum, s) => sum + s.totalAyah, 0);
 
 const assertAllowed = (locals: App.Locals) => {
 	if (!locals.user) throw redirect(302, '/auth');
 	if (!allowedRoles.includes(locals.user.role)) {
-		throw error(403, 'Fitur ini khusus untuk super admin, admin, ustadz/ustadzah, atau alumni.');
+		throw error(403, 'Fitur ini tersedia untuk semua akun.');
 	}
 	if (!locals.db) throw error(500, 'Database tidak tersedia');
 };
