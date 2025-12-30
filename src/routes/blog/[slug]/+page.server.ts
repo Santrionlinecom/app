@@ -35,7 +35,7 @@ export const load: PageServerLoad = async ({ params, platform, url }) => {
       authorUrl: `${origin}/tentang`,
       siteName: 'Santri Online',
       publisherName: 'Santri Online',
-      publisherLogoUrl: `${origin}/pwa-192x192.png`,
+      publisherLogoUrl: `${origin}/icons/icon-192.png`,
       keywords: post.seo_keyword
     }
   };

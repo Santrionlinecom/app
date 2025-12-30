@@ -25,7 +25,7 @@
     authorUrl = null,
     siteName = 'Santri Online',
     publisherName = 'Santri Online',
-    publisherLogoUrl = '/pwa-192x192.png',
+    publisherLogoUrl = '/icons/icon-192.png',
     keywords = null
   } = $props() as SeoHeadProps;
 

@@ -15,7 +15,14 @@ export default defineConfig({
 		sveltekit(),
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
-			includeAssets: ['favicon.ico', 'robots.txt', 'pwa-192x192.png', 'pwa-512x512.png'],
+			includeAssets: [
+				'favicon.ico',
+				'robots.txt',
+				'icons/icon-48.png',
+				'icons/icon-192.png',
+				'icons/icon-512.png',
+				'icons/apple-touch-icon.png'
+			],
 			manifest: {
 				name: 'Santri Online',
 				short_name: 'SantriOnline',
@@ -29,13 +36,19 @@ export default defineConfig({
 				categories: ['education', 'productivity', 'lifestyle'],
 				icons: [
 					{
-						src: '/pwa-192x192.png',
+						src: '/icons/icon-48.png',
+						sizes: '48x48',
+						type: 'image/png',
+						purpose: 'any'
+					},
+					{
+						src: '/icons/icon-192.png',
 						sizes: '192x192',
 						type: 'image/png',
 						purpose: 'any maskable'
 					},
 					{
-						src: '/pwa-512x512.png',
+						src: '/icons/icon-512.png',
 						sizes: '512x512',
 						type: 'image/png',
 						purpose: 'any maskable'
