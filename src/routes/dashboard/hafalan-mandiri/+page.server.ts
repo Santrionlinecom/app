@@ -1,6 +1,7 @@
 import { redirect, fail, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { SURAH_DATA } from '$lib/surah-data';
+import { ensureHafalanSurahChecksTable } from '$lib/server/hafalan';
 
 const allowedRoles = [
 	'admin',
@@ -43,11 +44,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 		LIMIT 30
 	`).bind(user.id).all();
 
-	const { results: checkedSurahs } =
-		(await db
-			.prepare('SELECT surah_number FROM hafalan_surah_checks WHERE user_id = ?')
-			.bind(user.id)
-			.all<{ surah_number: number }>()) ?? {};
+	let checkedSurahs: { surah_number: number }[] = [];
+	try {
+		const { results } =
+			(await db
+				.prepare('SELECT surah_number FROM hafalan_surah_checks WHERE user_id = ?')
+				.bind(user.id)
+				.all<{ surah_number: number }>()) ?? {};
+		checkedSurahs = results ?? [];
+	} catch (err: any) {
+		const message = `${err?.message ?? err}`;
+		if (!message.includes('no such table: hafalan_surah_checks')) {
+			throw err;
+		}
+	}
 
 	const approvedAyah =
 		progress?.filter((p: any) => p.status === 'disetujui')?.length ?? 0;
@@ -71,7 +81,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		muroja: muroja || [],
 		stats,
 		surahs: SURAH_DATA,
-		checkedSurahs: (checkedSurahs ?? []).map((s: { surah_number: number }) => s.surah_number),
+		checkedSurahs: checkedSurahs.map((s: { surah_number: number }) => s.surah_number),
 		juzSegments,
 		juzEquivalent
 	};
@@ -165,6 +175,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Surah tidak valid' });
 		}
 
+		await ensureHafalanSurahChecksTable(db);
 		if (checked) {
 			await db
 				.prepare(

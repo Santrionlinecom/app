@@ -5,7 +5,7 @@ import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/
 import { getSantriChecklist, getSantriStats } from '$lib/server/progress';
 import { SURAH_DATA } from '$lib/surah-data';
 
-const managerRoles = ['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
+const managerRoles = ['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
 const TOTAL_AYAH = 6236;
 
 const ensureAuth = (locals: App.Locals) => {

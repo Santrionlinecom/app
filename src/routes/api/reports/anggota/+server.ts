@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
 
-const managerRoles = ['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
+const managerRoles = ['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
 
 const ensureAuth = (locals: App.Locals) => {
 	if (!locals.user) {

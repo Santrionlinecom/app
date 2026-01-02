@@ -200,7 +200,7 @@ export const createOrganization = async (
 
 export const getOrgScope = (user: { role?: string; orgId?: string | null }) => {
 	const orgId = user?.orgId ?? null;
-	const isSystemAdmin = user?.role === 'SUPER_ADMIN';
+	const isSystemAdmin = user?.role === 'SUPER_ADMIN' || (user?.role === 'admin' && !orgId);
 	return { orgId, isSystemAdmin };
 };
 

@@ -4,7 +4,7 @@ import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/
 import type { RequestHandler } from './$types';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'jamaah', 'tamir', 'bendahara', 'admin'] as const;
-const managerRoles = ['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
+const managerRoles = ['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
 
 const ensureAuth = (locals: App.Locals) => {
 	if (!locals.user) {
@@ -38,7 +38,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const targetGender = targetRows?.[0]?.gender;
 	const targetRole = targetRows?.[0]?.role;
 	const targetOrgId = targetRows?.[0]?.orgId ?? null;
-	const isAdmin = locals.user.role === 'admin';
+	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 	let memberRole: string | null = null;
 	if (!isAdmin) {
@@ -140,7 +140,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 	const id = params.id;
 	if (!id) throw error(400, 'ID tidak valid');
 
-	const isAdmin = locals.user.role === 'admin';
+	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 	const target = await db
 		.prepare('SELECT org_id as orgId, role FROM users WHERE id = ?')

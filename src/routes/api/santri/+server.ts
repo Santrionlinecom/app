@@ -6,7 +6,7 @@ import type { RequestHandler } from './$types';
 import { logActivity } from '$lib/server/activity-logs';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'jamaah', 'tamir', 'bendahara', 'admin'] as const;
-const managerRoles = ['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
+const managerRoles = ['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
 
 const ensureAuth = (locals: App.Locals) => {
 	if (!locals.user) {
@@ -32,7 +32,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const page = Number(url.searchParams.get('page') ?? '1');
 	const limit = Number(url.searchParams.get('limit') ?? '10');
 	const pagination = normalizePagination(page, limit);
-	const isAdmin = locals.user.role === 'admin';
+	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 	let orgType: string | null = null;
 	let memberRole: string | null = null;
@@ -128,7 +128,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const db = locals.db!;
 	if (!db) throw error(500, 'Database tidak tersedia');
 	const body = await request.json().catch(() => ({}));
-	const isAdmin = locals.user.role === 'admin';
+	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
 
 	const username = typeof body.username === 'string' ? body.username.trim() : '';
 	const email = typeof body.email === 'string' ? body.email.trim() : '';
