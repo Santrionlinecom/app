@@ -175,12 +175,22 @@ export const markHafalanStatus = async (
         .run();
 };
 
-export const getPendingSubmissions = async (db: D1Database, orgId?: string | null) => {
+export const getPendingSubmissions = async (
+    db: D1Database,
+    opts?: { orgId?: string | null; ustadzId?: string | null }
+) => {
     const conditions = ["hp.status = 'setor'"];
     const params: (string | number)[] = [];
-    if (orgId) {
+    const joins = ['JOIN users u ON u.id = hp.user_id'];
+
+    if (opts?.orgId) {
         conditions.push('u.org_id = ?');
-        params.push(orgId);
+        params.push(opts.orgId);
+    }
+    if (opts?.ustadzId) {
+        joins.push('JOIN santri_ustadz su ON su.santri_id = hp.user_id');
+        conditions.push('su.ustadz_id = ?');
+        params.push(opts.ustadzId);
     }
 
     const { results } = await db
@@ -192,7 +202,7 @@ export const getPendingSubmissions = async (db: D1Database, orgId?: string | nul
                     hp.tanggal_setor as tanggalSetor,
                     u.email
              FROM hafalan_progress hp
-             JOIN users u ON u.id = hp.user_id
+             ${joins.join('\n             ')}
              WHERE ${conditions.join(' AND ')}
              ORDER BY hp.tanggal_setor ASC`
         )
@@ -344,13 +354,22 @@ export const submitSurahForUser = async (
     }
 };
 
-export const getAllStudentsProgress = async (db: D1Database, orgId?: string | null) => {
+export const getAllStudentsProgress = async (
+    db: D1Database,
+    opts?: { orgId?: string | null; ustadzId?: string | null }
+) => {
     try {
         const conditions = ["u.role = 'santri'"];
         const params: (string | number)[] = [];
-        if (orgId) {
+        const joins = ['LEFT JOIN hafalan_progress hp ON hp.user_id = u.id'];
+        if (opts?.orgId) {
             conditions.push('u.org_id = ?');
-            params.push(orgId);
+            params.push(opts.orgId);
+        }
+        if (opts?.ustadzId) {
+            joins.push('JOIN santri_ustadz su ON su.santri_id = u.id');
+            conditions.push('su.ustadz_id = ?');
+            params.push(opts.ustadzId);
         }
 
         const { results } = await db
@@ -358,7 +377,7 @@ export const getAllStudentsProgress = async (db: D1Database, orgId?: string | nu
                 `SELECT u.id, u.email, u.username,
                     COUNT(CASE WHEN hp.status = 'disetujui' THEN 1 END) as approvedAyah
              FROM users u
-             LEFT JOIN hafalan_progress hp ON hp.user_id = u.id
+             ${joins.join('\n             ')}
              WHERE ${conditions.join(' AND ')}
              GROUP BY u.id, u.email, u.username`
             )

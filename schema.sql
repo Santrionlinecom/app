@@ -69,6 +69,16 @@ CREATE TABLE IF NOT EXISTS org_media (
 );
 CREATE INDEX IF NOT EXISTS idx_org_media_org ON org_media(organization_id, created_at DESC);
 
+-- Relasi santri memilih ustadz/ustadzah
+CREATE TABLE IF NOT EXISTS santri_ustadz (
+  santri_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  ustadz_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  org_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  assigned_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+);
+CREATE INDEX IF NOT EXISTS idx_santri_ustadz_ustadz ON santri_ustadz(ustadz_id);
+CREATE INDEX IF NOT EXISTS idx_santri_ustadz_org ON santri_ustadz(org_id);
+
 -- PERUBAHAN DI SINI (Lucia v3 Format)
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,

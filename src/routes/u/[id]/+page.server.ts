@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getOrganizationById } from '$lib/server/organizations';
+import { hasAssignedSantri } from '$lib/server/santri-ustadz';
 
 type PublicProfile = {
 	id: string;
@@ -43,9 +44,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	const org = profile.orgId ? await getOrganizationById(db, profile.orgId) : null;
+	const extraRoles: string[] = [];
+	if (profile.role === 'admin') {
+		const hasSantri = await hasAssignedSantri(db, profile.id);
+		if (hasSantri) {
+			extraRoles.push(profile.gender === 'wanita' ? 'ustadzah' : 'ustadz');
+		}
+	}
 
 	return {
 		profile,
-		org
+		org,
+		extraRoles
 	};
 };

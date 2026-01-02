@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getPendingSubmissions, getAllStudentsProgress, getSantriChecklist, getSantriStats, getDailySeries } from '$lib/server/progress';
+import { getSantriTeacherId, listOrgTeachers } from '$lib/server/santri-ustadz';
 import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
 import type { D1Database } from '@cloudflare/workers-types';
 import { SURAH_DATA } from '$lib/surah-data';
@@ -190,8 +191,8 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			...basePayload,
 			surahs,
 			orgs,
-			students: await getAllStudentsProgress(db, scopedOrgId),
-			pending: await getPendingSubmissions(db, scopedOrgId)
+			students: await getAllStudentsProgress(db, { orgId: scopedOrgId }),
+			pending: await getPendingSubmissions(db, { orgId: scopedOrgId })
 		};
 	} else if (role === 'ustadz' || role === 'ustadzah') {
 		// Ustadz: pending submissions and student progress
@@ -214,8 +215,8 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			org: orgProfile,
 			isEducationalOrg,
 			isCommunityOrg,
-			pending: await getPendingSubmissions(db, scopedOrgId),
-			students: await getAllStudentsProgress(db, scopedOrgId),
+			pending: await getPendingSubmissions(db, { orgId: scopedOrgId, ustadzId: locals.user.id }),
+			students: await getAllStudentsProgress(db, { orgId: scopedOrgId, ustadzId: locals.user.id }),
 			surahs
 		};
 	} else if (role === 'santri' || role === 'alumni') {
@@ -223,6 +224,10 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 		const checklist = await getSantriChecklist(db, locals.user.id);
 		const stats = await getSantriStats(db, locals.user.id);
 		const series = await getDailySeries(db, locals.user.id, 7);
+		const teacherOptions =
+			role === 'santri' && isEducationalOrg && orgId ? await listOrgTeachers(db, orgId) : [];
+		const selectedTeacherId =
+			role === 'santri' && isEducationalOrg && orgId ? await getSantriTeacherId(db, locals.user.id) : null;
 
 		const totalAyah = checklist.reduce((sum, row) => sum + row.totalAyah, 0);
 		const percentage = totalAyah ? (stats.approved / totalAyah) * 100 : 0;
@@ -237,7 +242,9 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			stats,
 			series,
 			percentage: Math.round(percentage * 100) / 100,
-			totalAyah: stats.approved // approved ayat count
+			totalAyah: stats.approved, // approved ayat count
+			teacherOptions,
+			selectedTeacherId
 		};
 	}
 	// Role lainnya: tetap izinkan masuk dengan data kosong

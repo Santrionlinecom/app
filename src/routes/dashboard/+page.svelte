@@ -14,6 +14,7 @@
 	const showHafalan = !isCommunityMember;
 	const hafalanMandiriRoles = ['admin', 'ustadz', 'ustadzah', 'alumni', 'SUPER_ADMIN', 'santri', 'jamaah', 'tamir', 'bendahara'];
 	const canHafalanMandiri = hafalanMandiriRoles.includes(data.role);
+	const canChooseTeacher = isSantri && showHafalan && (data.isEducationalOrg ?? false);
 
 	const roleConfig = {
 		SUPER_ADMIN: { title: 'Super Admin Dashboard', gradient: 'from-slate-900 via-slate-800 to-slate-900', icon: '[SYS]' },
@@ -56,6 +57,12 @@
 	const finance = 'finance' in data ? data.finance ?? null : null;
 	const kasWeeklyIn = 'kasWeeklyIn' in data ? data.kasWeeklyIn ?? 0 : 0;
 	const communitySchedule = 'communitySchedule' in data ? data.communitySchedule ?? [] : [];
+	const teacherOptionsRaw = 'teacherOptions' in data ? data.teacherOptions ?? [] : [];
+	const teacherOptions = Array.isArray(teacherOptionsRaw) ? teacherOptionsRaw : [];
+	let selectedTeacherId = 'selectedTeacherId' in data ? data.selectedTeacherId ?? '' : '';
+	let teacherChoice = selectedTeacherId;
+	let teacherMessage = '';
+	let teacherLoading = false;
 	type OrgItem = {
 		id: string;
 		name: string;
@@ -92,8 +99,24 @@
 	let assignQuality = '';
 	let assignMessage = '';
 	let assignLoading = false;
+	let selectedTeacher: any = null;
 
 	const displayName = (u: any) => u?.username || u?.email || 'User';
+	const teacherRoleLabels: Record<string, string> = {
+		admin: 'Admin',
+		ustadz: 'Ustadz',
+		ustadzah: 'Ustadzah'
+	};
+	const teacherDisplayName = (teacher: any) => teacher?.username || teacher?.email || 'Ustadz';
+	const teacherBadges = (teacher: any) => {
+		if (!teacher) return [];
+		if (teacher.role === 'admin') {
+			const genderLabel = teacher.gender === 'wanita' ? 'Ustadzah' : 'Ustadz';
+			return ['Admin', genderLabel];
+		}
+		return [teacherRoleLabels[teacher.role] ?? 'Ustadz'];
+	};
+	$: selectedTeacher = teacherOptions.find((teacher: any) => teacher.id === selectedTeacherId) ?? null;
 	const formatDate = (val?: any) => {
 		if (!val) return '-';
 		const d = new Date(val);
@@ -137,6 +160,32 @@
 			assignMessage = '❌ Terjadi kesalahan';
 		} finally {
 			assignLoading = false;
+		}
+	};
+
+	const saveTeacherChoice = async () => {
+		if (!teacherChoice) {
+			teacherMessage = 'Pilih ustadz terlebih dulu';
+			return;
+		}
+		teacherLoading = true;
+		teacherMessage = '';
+		try {
+			const res = await fetch('/api/ustadz', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ ustadzId: teacherChoice })
+			});
+			const result = await res.json();
+			if (!res.ok) {
+				throw new Error(result?.message ?? 'Gagal menyimpan ustadz');
+			}
+			selectedTeacherId = teacherChoice;
+			teacherMessage = 'Ustadz pembimbing tersimpan';
+		} catch (err) {
+			teacherMessage = err instanceof Error ? err.message : 'Gagal menyimpan ustadz';
+		} finally {
+			teacherLoading = false;
 		}
 	};
 </script>
@@ -679,6 +728,52 @@
 		{/if}
 
 		{#if isSantri && showHafalan}
+			{#if canChooseTeacher}
+				<div class="rounded-2xl border bg-white p-6 shadow-lg">
+					<div>
+						<h2 class="text-lg font-bold text-gray-900">Ustadz Pembimbing</h2>
+						<p class="text-xs text-gray-500">Pilih ustadz/ustadzah sesuai lembaga Anda.</p>
+					</div>
+					{#if selectedTeacher}
+						<div class="mt-3 rounded-xl border bg-slate-50 p-3">
+							<p class="text-sm font-semibold text-gray-900">{teacherDisplayName(selectedTeacher)}</p>
+							<div class="mt-2 flex flex-wrap gap-2">
+								{#each teacherBadges(selectedTeacher) as badge}
+									<span class="badge badge-outline">{badge}</span>
+								{/each}
+							</div>
+						</div>
+					{/if}
+					<div class="mt-4 space-y-2">
+						<label class="text-xs font-medium text-gray-600">Pilih Ustadz</label>
+						<div class="flex flex-col gap-3 md:flex-row md:items-center">
+							<select class="select select-bordered flex-1" bind:value={teacherChoice}>
+								<option value="">Pilih ustadz/ustadzah</option>
+								{#each teacherOptions as teacher}
+									<option value={teacher.id}>
+										{teacherDisplayName(teacher)} ({teacherBadges(teacher).join(' / ')})
+									</option>
+								{/each}
+							</select>
+							<button
+								class="btn btn-primary"
+								on:click={saveTeacherChoice}
+								disabled={teacherLoading || !teacherChoice || teacherChoice === selectedTeacherId}
+							>
+								{teacherLoading ? 'Menyimpan...' : 'Simpan'}
+							</button>
+						</div>
+						{#if !teacherOptions.length}
+							<p class="text-xs text-gray-500">Belum ada ustadz/ustadzah aktif di lembaga ini.</p>
+						{/if}
+						{#if teacherMessage}
+							<p class="text-xs {teacherMessage.includes('tersimpan') ? 'text-emerald-600' : 'text-red-600'}">
+								{teacherMessage}
+							</p>
+						{/if}
+					</div>
+				</div>
+			{/if}
 			<!-- Stats Cards -->
 			<div class="space-y-3">
 				<div class="rounded-2xl border bg-gradient-to-br from-blue-50 to-indigo-50 p-4">

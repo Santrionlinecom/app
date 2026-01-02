@@ -3,6 +3,7 @@
 
 	const profile = data.profile;
 	const org = data.org;
+	const extraRoles = Array.isArray(data.extraRoles) ? data.extraRoles : [];
 
 	const roleLabels: Record<string, string> = {
 		SUPER_ADMIN: 'Super Admin',
@@ -24,7 +25,12 @@
 	};
 
 	const displayName = profile?.username || profile?.id || 'Profil';
-	const roleLabel = roleLabels[profile?.role ?? ''] ?? profile?.role ?? 'Pengguna';
+	const roleKeys = [profile?.role, ...extraRoles].filter(Boolean) as string[];
+	const uniqueRoleKeys = Array.from(new Set(roleKeys));
+	const roleLabelList = uniqueRoleKeys.length
+		? uniqueRoleKeys.map((role) => roleLabels[role] ?? role)
+		: ['Pengguna'];
+	const roleLabel = roleLabelList.length ? roleLabelList.join(' & ') : 'Pengguna';
 	const orgLink = org?.slug && org?.type ? `/${org.type}/${org.slug}` : null;
 	const avatarEmoji = profile?.gender === 'wanita' ? '👩' : profile?.gender === 'pria' ? '👨' : '👤';
 
@@ -49,7 +55,9 @@
 				<div class="space-y-1">
 					<h1 class="text-2xl font-bold text-slate-900">{displayName}</h1>
 					<div class="flex flex-wrap items-center gap-2 text-sm text-slate-600">
-						<span class="badge badge-outline">{roleLabel}</span>
+						{#each roleLabelList as label}
+							<span class="badge badge-outline">{label}</span>
+						{/each}
 						{#if org}
 							<span class="badge badge-ghost">{formatOrgType(org.type)}</span>
 						{/if}
@@ -62,6 +70,9 @@
 			<div class="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm">
 				<h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">Peran</h2>
 				<p class="mt-2 text-lg font-semibold text-slate-900">{roleLabel}</p>
+				{#if roleLabelList.length > 1}
+					<p class="mt-1 text-sm text-slate-500">Multi peran di lembaga ini.</p>
+				{/if}
 				{#if profile?.orgStatus}
 					<p class="mt-1 text-sm text-slate-500">Status lembaga: {profile.orgStatus}</p>
 				{/if}

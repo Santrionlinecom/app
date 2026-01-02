@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { submitSurahForUser } from '$lib/server/progress';
+import { isTeacherForSantri } from '$lib/server/santri-ustadz';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ locals, request }) => {
@@ -26,6 +27,15 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
 	if (!userId || typeof surahNumber !== 'number') {
 		throw error(400, 'userId dan surahNumber wajib diisi');
+	}
+	if (locals.user.role === 'ustadz' || locals.user.role === 'ustadzah') {
+		const allowed = await isTeacherForSantri(locals.db!, {
+			santriId: userId,
+			ustadzId: locals.user.id
+		});
+		if (!allowed) {
+			throw error(403, 'Santri belum memilih ustadz ini');
+		}
 	}
 	if (locals.user.role === 'admin' && !locals.user.orgId) {
 		// system admin boleh semua
