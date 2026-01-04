@@ -46,6 +46,13 @@
 	let kasFormRef: HTMLFormElement | null = null;
 	let exportStart = '';
 	let exportEnd = '';
+	let tarawihId = '';
+	let tarawihUrut = data.nextTarawihUrut ? `${data.nextTarawihUrut}` : '';
+	let tarawihHari = '';
+	let tarawihTanggal = '';
+	let tarawihImam = '';
+	let tarawihBilal = '';
+	let tarawihFormRef: HTMLFormElement | null = null;
 
 	const buildExportUrl = (type: string) => {
 		const params = new URLSearchParams();
@@ -89,6 +96,34 @@
 		kasKategori = '';
 		kasNominal = '';
 		kasKeterangan = '';
+	};
+
+	const startEditTarawih = (row: {
+		id: string;
+		urut: number;
+		hari: string;
+		tanggal: string;
+		imam: string;
+		bilal: string | null;
+	}) => {
+		tarawihId = row.id;
+		tarawihUrut = `${row.urut}`;
+		tarawihHari = row.hari;
+		tarawihTanggal = row.tanggal;
+		tarawihImam = row.imam;
+		tarawihBilal = row.bilal ?? '';
+		if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+			tarawihFormRef?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	};
+
+	const resetTarawihForm = () => {
+		tarawihId = '';
+		tarawihUrut = data.nextTarawihUrut ? `${data.nextTarawihUrut}` : '';
+		tarawihHari = '';
+		tarawihTanggal = '';
+		tarawihImam = '';
+		tarawihBilal = '';
 	};
 
 	const refreshOnSuccess = () => {
@@ -162,6 +197,183 @@
 			<p class="text-xs text-slate-400">Dari semua transaksi</p>
 		</div>
 	</div>
+
+	{#if data.canManageTarawih}
+		<section class="grid gap-6 lg:grid-cols-2">
+			<div class="rounded-2xl border bg-white p-6 shadow-sm">
+				<h2 class="text-lg font-semibold text-slate-900">Jadwal Imam Tarawih</h2>
+				<p class="text-xs text-slate-500">Atur jadwal imam dan bilal untuk malam tarawih.</p>
+				<form
+					method="POST"
+					action={tarawihId ? '?/updateTarawih' : '?/addTarawih'}
+					class="mt-4 space-y-4"
+					use:enhance={refreshOnSuccess}
+					bind:this={tarawihFormRef}
+				>
+					{#if tarawihId}
+						<input type="hidden" name="id" value={tarawihId} />
+						<div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+							Sedang mengedit jadwal. Simpan untuk memperbarui atau batalkan untuk kembali input baru.
+						</div>
+					{/if}
+					<div class="grid gap-3 md:grid-cols-2">
+						<input
+							type="number"
+							name="urut"
+							min="1"
+							placeholder="No."
+							class="input input-bordered w-full"
+							bind:value={tarawihUrut}
+							required
+						/>
+						<input
+							type="text"
+							name="hari"
+							list="tarawihHariList"
+							placeholder="Hari (misal: Kamis)"
+							class="input input-bordered w-full"
+							bind:value={tarawihHari}
+							required
+						/>
+						<input
+							type="text"
+							name="tanggal"
+							placeholder="Tanggal (misal: 1 Ramadhan)"
+							class="input input-bordered w-full"
+							bind:value={tarawihTanggal}
+							required
+						/>
+						<input
+							type="text"
+							name="imam"
+							placeholder="Nama imam"
+							class="input input-bordered w-full"
+							bind:value={tarawihImam}
+							required
+						/>
+						<input
+							type="text"
+							name="bilal"
+							placeholder="Nama bilal (opsional)"
+							class="input input-bordered w-full md:col-span-2"
+							bind:value={tarawihBilal}
+						/>
+					</div>
+					<datalist id="tarawihHariList">
+						<option value="Senin"></option>
+						<option value="Selasa"></option>
+						<option value="Rabu"></option>
+						<option value="Kamis"></option>
+						<option value="Jumat"></option>
+						<option value="Sabtu"></option>
+						<option value="Minggu"></option>
+					</datalist>
+					<div class="flex flex-col gap-2 sm:flex-row">
+						<button class="btn btn-primary w-full sm:flex-1">
+							{tarawihId ? 'Perbarui Jadwal' : 'Tambah Jadwal'}
+						</button>
+						{#if tarawihId}
+							<button type="button" class="btn btn-outline w-full sm:flex-1" on:click={resetTarawihForm}>
+								Batal Edit
+							</button>
+						{/if}
+					</div>
+				</form>
+			</div>
+
+			<div class="rounded-2xl border bg-white p-6 shadow-sm">
+				<div class="flex items-center justify-between">
+					<h2 class="text-lg font-semibold text-slate-900">Daftar Jadwal Tarawih</h2>
+					<span class="text-xs text-slate-400">{data.tarawihSchedule.length} malam</span>
+				</div>
+				{#if data.tarawihSchedule.length === 0}
+					<p class="mt-4 text-sm text-slate-500">Belum ada jadwal tarawih.</p>
+				{:else}
+					<div class="mt-4 space-y-3 md:hidden">
+						{#each data.tarawihSchedule as row}
+							<div
+								class={`rounded-xl border p-4 shadow-sm ${
+									tarawihId === row.id ? 'border-amber-300 bg-amber-50/60' : 'border-slate-200 bg-white'
+								}`}
+							>
+								<div class="flex items-center justify-between">
+									<p class="text-sm font-semibold text-slate-900">{row.urut}. {row.hari}</p>
+									<span class="text-xs text-slate-500">{row.tanggal}</span>
+								</div>
+								<p class="mt-2 text-xs text-slate-500">Imam: {row.imam}</p>
+								<p class="mt-1 text-xs text-slate-500">Bilal: {row.bilal || '-'}</p>
+								<div class="mt-3 flex flex-wrap gap-2">
+									<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditTarawih(row)}>
+										Edit
+									</button>
+									<form method="POST" action="?/deleteTarawih" use:enhance={refreshOnSuccess}>
+										<input type="hidden" name="id" value={row.id} />
+										<button
+											type="submit"
+											class="btn btn-xs btn-ghost text-red-600"
+											on:click={(event) => {
+												if (!confirm('Hapus jadwal ini?')) {
+													event.preventDefault();
+												}
+											}}
+										>
+											Hapus
+										</button>
+									</form>
+								</div>
+							</div>
+						{/each}
+					</div>
+					<div class="mt-4 overflow-auto hidden md:block">
+						<table class="table table-zebra w-full text-sm">
+							<thead>
+								<tr>
+									<th>No</th>
+									<th>Hari</th>
+									<th>Tanggal</th>
+									<th>Imam</th>
+									<th>Bilal</th>
+									<th>Aksi</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each data.tarawihSchedule as row}
+									<tr class={tarawihId === row.id ? 'bg-amber-50' : ''}>
+										<td>{row.urut}</td>
+										<td>{row.hari}</td>
+										<td>{row.tanggal}</td>
+										<td>{row.imam}</td>
+										<td>{row.bilal || '-'}</td>
+										<td>
+											<div class="flex flex-wrap gap-2">
+												<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditTarawih(row)}>
+													Edit
+												</button>
+												<form method="POST" action="?/deleteTarawih" use:enhance={refreshOnSuccess}>
+													<input type="hidden" name="id" value={row.id} />
+													<button
+														type="submit"
+														class="btn btn-xs btn-ghost text-red-600"
+														on:click={(event) => {
+															if (!confirm('Hapus jadwal ini?')) {
+																event.preventDefault();
+															}
+														}}
+													>
+														Hapus
+													</button>
+												</form>
+											</div>
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				{/if}
+			</div>
+		</section>
+	{/if}
 
 	{#if data.canManageKas}
 		<section class="grid gap-6 lg:grid-cols-2">

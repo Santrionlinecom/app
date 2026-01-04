@@ -1,6 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { getOrgScope, getOrganizationBySlug } from '$lib/server/organizations';
+import { listTarawihSchedule, type TarawihScheduleRow } from '$lib/server/tarawih';
 
 const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
 
@@ -42,6 +43,7 @@ const parseSohibul = (value: string | null) => {
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { db, orgId, user, org } = await requireOrgContext(locals, params.slug);
 	const canManageKas = org.type === 'masjid' || org.type === 'musholla';
+	const canManageTarawih = canManageKas;
 
 	const { results: programRows } = await db
 		.prepare(
@@ -232,6 +234,18 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		kasEntries = (kasRows ?? []) as typeof kasEntries;
 	}
 
+	let tarawihSchedule: TarawihScheduleRow[] = [];
+	let nextTarawihUrut = 1;
+
+	if (canManageTarawih) {
+		tarawihSchedule = await listTarawihSchedule(db, orgId);
+		for (const row of tarawihSchedule) {
+			if (row.urut >= nextTarawihUrut) {
+				nextTarawihUrut = row.urut + 1;
+			}
+		}
+	}
+
 	return {
 		org,
 		programs,
@@ -240,8 +254,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		qurban,
 		totals,
 		canManageKas,
+		canManageTarawih,
 		kasSummary,
 		kasEntries,
+		tarawihSchedule,
+		nextTarawihUrut,
 		currentUser: user
 	};
 };
@@ -558,6 +575,166 @@ export const actions: Actions = {
 
 		if ((result?.meta?.changes ?? 0) === 0) {
 			return fail(404, { error: 'Transaksi tidak ditemukan' });
+		}
+
+		return { success: true };
+	},
+
+	addTarawih: async ({ request, locals, params }) => {
+		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
+		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+
+		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+		const role = locals.user.role ?? '';
+		if (!orgId || isSystemAdmin || !allowedRoles.has(role)) {
+			return fail(403, { error: 'Tidak memiliki akses' });
+		}
+
+		const org = await getOrganizationBySlug(locals.db, params.slug);
+		if (!org || org.id !== orgId) {
+			return fail(403, { error: 'Akses organisasi tidak sesuai' });
+		}
+		if (org.type !== 'masjid' && org.type !== 'musholla') {
+			return fail(400, { error: 'Jadwal tarawih hanya untuk masjid atau musholla' });
+		}
+
+		const data = await request.formData();
+		const urutRaw = `${data.get('urut') ?? ''}`.trim();
+		const hari = `${data.get('hari') ?? ''}`.trim();
+		const tanggal = `${data.get('tanggal') ?? ''}`.trim();
+		const imam = `${data.get('imam') ?? ''}`.trim();
+		const bilal = `${data.get('bilal') ?? ''}`.trim();
+
+		const urut = Number(urutRaw);
+		if (!Number.isFinite(urut) || urut < 1 || !Number.isInteger(urut)) {
+			return fail(400, { error: 'Nomor urut harus angka bulat' });
+		}
+		if (!hari || !tanggal || !imam) {
+			return fail(400, { error: 'Data jadwal belum lengkap' });
+		}
+
+		const existing = await locals.db
+			.prepare('SELECT id FROM jadwal_tarawih WHERE organization_id = ? AND urut = ?')
+			.bind(orgId, Math.floor(urut))
+			.first<{ id: string }>();
+		if (existing) {
+			return fail(400, { error: 'Nomor urut sudah digunakan' });
+		}
+
+		await locals.db
+			.prepare(
+				`INSERT INTO jadwal_tarawih (id, organization_id, urut, hari, tanggal, imam, bilal, created_by, created_at)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+			)
+			.bind(
+				crypto.randomUUID(),
+				orgId,
+				Math.floor(urut),
+				hari,
+				tanggal,
+				imam,
+				bilal || null,
+				locals.user.id,
+				Date.now()
+			)
+			.run();
+
+		return { success: true };
+	},
+
+	updateTarawih: async ({ request, locals, params }) => {
+		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
+		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+
+		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+		const role = locals.user.role ?? '';
+		if (!orgId || isSystemAdmin || !allowedRoles.has(role)) {
+			return fail(403, { error: 'Tidak memiliki akses' });
+		}
+
+		const org = await getOrganizationBySlug(locals.db, params.slug);
+		if (!org || org.id !== orgId) {
+			return fail(403, { error: 'Akses organisasi tidak sesuai' });
+		}
+		if (org.type !== 'masjid' && org.type !== 'musholla') {
+			return fail(400, { error: 'Jadwal tarawih hanya untuk masjid atau musholla' });
+		}
+
+		const data = await request.formData();
+		const id = `${data.get('id') ?? ''}`.trim();
+		const urutRaw = `${data.get('urut') ?? ''}`.trim();
+		const hari = `${data.get('hari') ?? ''}`.trim();
+		const tanggal = `${data.get('tanggal') ?? ''}`.trim();
+		const imam = `${data.get('imam') ?? ''}`.trim();
+		const bilal = `${data.get('bilal') ?? ''}`.trim();
+
+		if (!id) {
+			return fail(400, { error: 'Jadwal tidak ditemukan' });
+		}
+
+		const urut = Number(urutRaw);
+		if (!Number.isFinite(urut) || urut < 1 || !Number.isInteger(urut)) {
+			return fail(400, { error: 'Nomor urut harus angka bulat' });
+		}
+		if (!hari || !tanggal || !imam) {
+			return fail(400, { error: 'Data jadwal belum lengkap' });
+		}
+
+		const existing = await locals.db
+			.prepare('SELECT id FROM jadwal_tarawih WHERE organization_id = ? AND urut = ?')
+			.bind(orgId, Math.floor(urut))
+			.first<{ id: string }>();
+		if (existing && existing.id !== id) {
+			return fail(400, { error: 'Nomor urut sudah digunakan' });
+		}
+
+		const result = await locals.db
+			.prepare(
+				`UPDATE jadwal_tarawih
+				 SET urut = ?, hari = ?, tanggal = ?, imam = ?, bilal = ?, updated_at = ?
+				 WHERE id = ? AND organization_id = ?`
+			)
+			.bind(Math.floor(urut), hari, tanggal, imam, bilal || null, Date.now(), id, orgId)
+			.run();
+
+		if ((result?.meta?.changes ?? 0) === 0) {
+			return fail(404, { error: 'Jadwal tidak ditemukan' });
+		}
+
+		return { success: true };
+	},
+
+	deleteTarawih: async ({ request, locals, params }) => {
+		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
+		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+
+		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+		const role = locals.user.role ?? '';
+		if (!orgId || isSystemAdmin || !allowedRoles.has(role)) {
+			return fail(403, { error: 'Tidak memiliki akses' });
+		}
+
+		const org = await getOrganizationBySlug(locals.db, params.slug);
+		if (!org || org.id !== orgId) {
+			return fail(403, { error: 'Akses organisasi tidak sesuai' });
+		}
+		if (org.type !== 'masjid' && org.type !== 'musholla') {
+			return fail(400, { error: 'Jadwal tarawih hanya untuk masjid atau musholla' });
+		}
+
+		const data = await request.formData();
+		const id = `${data.get('id') ?? ''}`.trim();
+		if (!id) {
+			return fail(400, { error: 'Jadwal tidak valid' });
+		}
+
+		const result = await locals.db
+			.prepare('DELETE FROM jadwal_tarawih WHERE id = ? AND organization_id = ?')
+			.bind(id, orgId)
+			.run();
+
+		if ((result?.meta?.changes ?? 0) === 0) {
+			return fail(404, { error: 'Jadwal tidak ditemukan' });
 		}
 
 		return { success: true };
