@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 
-	export type SelectOption = {
+	type SelectOption = {
 		value: string;
 		label: string;
 		emoji?: string;

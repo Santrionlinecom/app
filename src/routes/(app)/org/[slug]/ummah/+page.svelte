@@ -162,16 +162,18 @@
 		</div>
 		<div class="mt-4 grid gap-3 md:grid-cols-2">
 			<div>
-				<label class="text-xs font-medium text-slate-500">Tanggal Mulai</label>
+				<label class="text-xs font-medium text-slate-500" for="export-start-date">Tanggal Mulai</label>
 				<input
+					id="export-start-date"
 					type="date"
 					class="input input-bordered w-full"
 					bind:value={exportStart}
 				/>
 			</div>
 			<div>
-				<label class="text-xs font-medium text-slate-500">Tanggal Akhir</label>
+				<label class="text-xs font-medium text-slate-500" for="export-end-date">Tanggal Akhir</label>
 				<input
+					id="export-end-date"
 					type="date"
 					class="input input-bordered w-full"
 					bind:value={exportEnd}

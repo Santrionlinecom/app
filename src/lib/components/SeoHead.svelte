@@ -1,73 +1,56 @@
 <script lang="ts">
-  type SeoHeadProps = {
-    title: string;
-    description?: string | null;
-    canonicalUrl: string;
-    imageUrl: string;
-    datePublished: string;
-    dateModified: string;
-    authorName: string;
-    authorUrl?: string | null;
-    siteName?: string;
-    publisherName?: string;
-    publisherLogoUrl?: string;
-    keywords?: string | null;
-  };
+	export let title: string;
+	export let description: string | null = null;
+	export let canonicalUrl: string;
+	export let imageUrl: string;
+	export let datePublished: string;
+	export let dateModified: string;
+	export let authorName: string;
+	export let authorUrl: string | null = null;
+	export let siteName = 'Santri Online';
+	export let publisherName = 'Santri Online';
+	export let publisherLogoUrl = '/icons/icon-192.png';
+	export let keywords: string | null = null;
 
-  let {
-    title,
-    description = null,
-    canonicalUrl,
-    imageUrl,
-    datePublished,
-    dateModified,
-    authorName,
-    authorUrl = null,
-    siteName = 'Santri Online',
-    publisherName = 'Santri Online',
-    publisherLogoUrl = '/icons/icon-192.png',
-    keywords = null
-  } = $props() as SeoHeadProps;
+	const toAbsoluteUrl = (value: string, base?: string) => {
+		if (!value) return value;
+		if (value.startsWith('http://') || value.startsWith('https://')) return value;
+		if (!base) return value;
+		try {
+			return new URL(value, base).toString();
+		} catch {
+			return value;
+		}
+	};
 
-  const toAbsoluteUrl = (value: string, base?: string) => {
-    if (!value) return value;
-    if (value.startsWith('http://') || value.startsWith('https://')) return value;
-    if (!base) return value;
-    try {
-      return new URL(value, base).toString();
-    } catch {
-      return value;
-    }
-  };
-
-  const canonical = $derived(() => toAbsoluteUrl(canonicalUrl));
-  const absoluteImage = $derived(() => toAbsoluteUrl(imageUrl, canonical));
-  const absolutePublisherLogo = $derived(() => toAbsoluteUrl(publisherLogoUrl, canonical));
-  const safeDescription = $derived(() => description?.trim() || title);
-  const jsonLd = $derived(() => ({
-    '@context': 'https://schema.org',
-    '@type': 'NewsArticle',
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': canonical
-    },
-    headline: title,
-    image: [absoluteImage],
-    datePublished,
-    dateModified,
-    author: authorUrl
-      ? { '@type': 'Person', name: authorName, url: authorUrl }
-      : { '@type': 'Person', name: authorName },
-    publisher: {
-      '@type': 'Organization',
-      name: publisherName,
-      logo: {
-        '@type': 'ImageObject',
-        url: absolutePublisherLogo
-      }
-    },
-    description: safeDescription
-  }));
+	$: canonical = toAbsoluteUrl(canonicalUrl);
+	$: absoluteImage = toAbsoluteUrl(imageUrl, canonical);
+	$: absolutePublisherLogo = toAbsoluteUrl(publisherLogoUrl, canonical);
+	$: safeDescription = description?.trim() || title;
+	$: jsonLd = ({
+		'@context': 'https://schema.org',
+		'@type': 'NewsArticle',
+		mainEntityOfPage: {
+			'@type': 'WebPage',
+			'@id': canonical
+		},
+		headline: title,
+		image: [absoluteImage],
+		datePublished,
+		dateModified,
+		author: authorUrl
+			? { '@type': 'Person', name: authorName, url: authorUrl }
+			: { '@type': 'Person', name: authorName },
+		publisher: {
+			'@type': 'Organization',
+			name: publisherName,
+			logo: {
+				'@type': 'ImageObject',
+				url: absolutePublisherLogo
+			}
+		},
+		description: safeDescription
+	});
 </script>
 
 <svelte:head>

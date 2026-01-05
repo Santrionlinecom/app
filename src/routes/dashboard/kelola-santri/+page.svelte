@@ -1,7 +1,17 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
+	import type { PageData } from './$types';
 
-	export let data;
+	type MemberRow = {
+		id: string;
+		username: string | null;
+		email: string | null;
+		role: string;
+		orgStatus?: string | null;
+		createdAt?: number | null;
+	};
+
+	export let data: PageData;
 
 	let scope = data?.scope ?? null;
 	let isAdminView = scope?.isAdmin ?? false;
@@ -13,7 +23,9 @@
 	$: memberRole = scope?.memberRole ?? 'santri';
 	$: memberLabel = memberRole === 'jamaah' ? 'Jamaah' : 'Santri';
 
-	let santri = Array.isArray(data.santri) ? structuredClone(data.santri) : [];
+	let santri: MemberRow[] = Array.isArray(data.santri)
+		? structuredClone(data.santri as MemberRow[])
+		: [];
 	let pagination = data?.pagination ?? { page: 1, limit: 10, totalCount: santri.length };
 	let remoteStats = data?.stats ?? null;
 	let loading = false;
@@ -36,7 +48,7 @@
 	}
 	$: canExport = !isAdminView || !!scope?.memberRole;
 
-	$: filteredSantri = santri.filter(s => {
+	$: filteredSantri = santri.filter((s: MemberRow) => {
 		const matchSearch = !searchQuery || 
 			s.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			s.email?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -45,13 +57,13 @@
 		return matchSearch && matchRole && matchStatus;
 	});
 
-	const deriveStats = (list) => ({
+	const deriveStats = (list: MemberRow[]) => ({
 		total: list.length,
-		santri: list.filter(s => s.role === 'santri').length,
-		jamaah: list.filter(s => s.role === 'jamaah').length,
-		ustadz: list.filter(s => s.role === 'ustadz' || s.role === 'ustadzah').length,
-		admin: list.filter(s => s.role === 'admin').length,
-		pending: list.filter(s => (s.orgStatus || 'active') === 'pending').length
+		santri: list.filter((s: MemberRow) => s.role === 'santri').length,
+		jamaah: list.filter((s: MemberRow) => s.role === 'jamaah').length,
+		ustadz: list.filter((s: MemberRow) => s.role === 'ustadz' || s.role === 'ustadzah').length,
+		admin: list.filter((s: MemberRow) => s.role === 'admin').length,
+		pending: list.filter((s: MemberRow) => (s.orgStatus || 'active') === 'pending').length
 	});
 
 	$: stats = remoteStats ?? deriveStats(santri);
@@ -137,7 +149,7 @@
 
 	const canDownloadPdf = (role: string) => role === 'santri' || role === 'jamaah';
 
-	const downloadPdf = async (id: string, name: string) => {
+	const downloadPdf = async (id: string, name?: string | null) => {
 		if (downloadingPdfId) return;
 		downloadingPdfId = id;
 		try {

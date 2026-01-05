@@ -64,12 +64,13 @@ const parseSohibul = (value: string | null) => {
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	ensureAuth(locals);
-	const role = locals.user?.role ?? '';
+	const user = locals.user!;
+	const role = user.role ?? '';
 	if (!allowedRoles.has(role)) {
 		throw error(403, 'Tidak memiliki akses');
 	}
 
-	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const { orgId, isSystemAdmin } = getOrgScope(user);
 	if (!orgId || isSystemAdmin) {
 		throw error(403, 'Organisasi belum ditentukan');
 	}

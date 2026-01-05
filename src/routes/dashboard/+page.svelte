@@ -745,9 +745,9 @@
 						</div>
 					{/if}
 					<div class="mt-4 space-y-2">
-						<label class="text-xs font-medium text-gray-600">Pilih Ustadz</label>
+						<label class="text-xs font-medium text-gray-600" for="teacher-choice">Pilih Ustadz</label>
 						<div class="flex flex-col gap-3 md:flex-row md:items-center">
-							<select class="select select-bordered flex-1" bind:value={teacherChoice}>
+							<select id="teacher-choice" class="select select-bordered flex-1" bind:value={teacherChoice}>
 								<option value="">Pilih ustadz/ustadzah</option>
 								{#each teacherOptions as teacher}
 									<option value={teacher.id}>

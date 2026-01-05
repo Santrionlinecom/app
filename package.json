@@ -49,11 +49,14 @@
     "@tiptap/starter-kit": "^3.13.0",
     "arctic": "^1.9.2",
     "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.45.1",
     "lucia": "^3.2.2",
     "oslo": "^1.2.1",
     "page-flip": "^2.0.7",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^5.4.449",
-    "scrypt-js": "^3.0.1"
+    "scrypt-js": "^3.0.1",
+    "sveltekit-superforms": "^2.29.1",
+    "zod": "^4.3.5"
   }
 }

@@ -537,8 +537,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
 	const dateStamp = new Date().toISOString().slice(0, 10);
 	const filename = `laporan-${memberRole}-${slugify(target.username || target.email)}-${dateStamp}.pdf`;
-
-	return new Response(pdfBytes, {
+	const pdfBuffer = Uint8Array.from(pdfBytes).buffer;
+	return new Response(pdfBuffer, {
 		headers: {
 			'Content-Type': 'application/pdf',
 			'Content-Disposition': `attachment; filename="${filename}"`

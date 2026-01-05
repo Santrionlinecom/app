@@ -1,5 +1,11 @@
 <script lang="ts">
-	export let data;
+	import type { PageData } from './$types';
+
+	export let data: PageData;
+
+	type Institution = PageData['institutions'][number];
+	type AvailableUser = PageData['availableUsers'][number];
+	type ActivityRow = PageData['liveStats']['recentActivities'][number];
 
 	const liveStats = data.liveStats ?? {
 		loginsToday: 0,
@@ -47,12 +53,14 @@
 		return action;
 	};
 
-	const actorLabel = (activity) => activity.username || activity.userEmail || activity.email || 'Pengunjung';
+	const actorLabel = (activity: ActivityRow) =>
+		activity.username || activity.userEmail || activity.email || 'Pengunjung';
 
-	const orgLabel = (org) => `${org.name} (${orgTypeLabel[org.type] ?? org.type})`;
-	const orgsWithoutAdmin = (orgs) => orgs.filter((org) => !org.adminCount);
-	const hasOrgWithoutAdmin = (orgs) => orgs.some((org) => !org.adminCount);
-	const userLabel = (user) => {
+	const orgTypeName = (value?: string | null) => (value ? orgTypeLabel[value] ?? value : '-');
+	const orgLabel = (org: Institution) => `${org.name} (${orgTypeLabel[org.type] ?? org.type})`;
+	const orgsWithoutAdmin = (orgs: Institution[]) => orgs.filter((org) => !org.adminCount);
+	const hasOrgWithoutAdmin = (orgs: Institution[]) => orgs.some((org) => !org.adminCount);
+	const userLabel = (user: AvailableUser) => {
 		const org = data.institutions?.find((item) => item.id === user.orgId);
 		const orgName = org ? org.name : null;
 		return `${user.username || user.email} • ${user.email}${orgName ? ` — ${orgName}` : ''}`;
@@ -199,7 +207,7 @@
 									<td class="font-medium text-slate-900">{user.username || '-'}</td>
 									<td>{user.email}</td>
 									<td>{user.role}</td>
-									<td>{user.orgName ? `${user.orgName} (${orgTypeLabel[user.orgType] ?? user.orgType})` : '-'}</td>
+									<td>{user.orgName ? `${user.orgName} (${orgTypeName(user.orgType)})` : '-'}</td>
 								</tr>
 							{/each}
 						</tbody>

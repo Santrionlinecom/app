@@ -1,6 +1,8 @@
 <script lang="ts">
+  import type { PageData } from './$types';
   import SeoHead from '$lib/components/SeoHead.svelte';
-  let { data } = $props();
+
+  export let data: PageData;
 
   const formatDateTime = (ts: number | null | undefined) => {
     if (!ts) return '';

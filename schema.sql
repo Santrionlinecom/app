@@ -10,7 +10,9 @@ CREATE TABLE IF NOT EXISTS users (
   gender TEXT, -- 'pria' atau 'wanita'
   whatsapp TEXT,
   balance INTEGER NOT NULL DEFAULT 0,
-  role TEXT NOT NULL DEFAULT 'santri',
+  role TEXT NOT NULL DEFAULT 'ustadz',
+  work_status TEXT CHECK (work_status IN ('freelance', 'owner', 'employee')),
+  expertise TEXT,
   org_id TEXT,
   org_status TEXT NOT NULL DEFAULT 'active',
   googleId TEXT,

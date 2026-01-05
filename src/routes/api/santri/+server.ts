@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import { generateId } from 'lucia';
 import { Scrypt } from '$lib/server/password';
 import { getDefaultMemberRole, getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
+import type { OrgType } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
 import { logActivity } from '$lib/server/activity-logs';
 
@@ -34,7 +35,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const pagination = normalizePagination(page, limit);
 	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
-	let orgType: string | null = null;
+	let orgType: OrgType | null = null;
 	let memberRole: string | null = null;
 	if (orgId) {
 		const org = await getOrganizationById(db, orgId);
@@ -138,7 +139,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const genderRaw = typeof body.gender === 'string' ? body.gender.trim() : '';
 	const gender = genderRaw === 'pria' || genderRaw === 'wanita' ? genderRaw : null;
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
-	let orgType: string | null = null;
+	let orgType: OrgType | null = null;
 	let memberRole: string | null = null;
 	if (orgId) {
 		const org = await getOrganizationById(db, orgId);
@@ -152,7 +153,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				: null
 			: orgId
 		: orgId;
-	let targetOrgType = orgType;
+	let targetOrgType: OrgType | null = orgType;
 	if (targetOrgId && (targetOrgId !== orgId || !orgType)) {
 		const targetOrg = await getOrganizationById(db, targetOrgId);
 		targetOrgType = targetOrg?.type ?? null;

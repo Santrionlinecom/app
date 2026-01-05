@@ -1,17 +1,15 @@
 <script lang="ts">
-	let { data } = $props();
+	import type { PageData } from './$types';
 
-	const items = $derived(() =>
-		Array.isArray(data.items) ? data.items : Array.isArray(data.posts) ? data.posts : []
-	);
-	const page = $derived(() => Number(data.page ?? data.pagination?.page ?? 1));
-	const limit = $derived(() => Number(data.limit ?? data.pagination?.limit ?? 10));
-	const totalCount = $derived(() =>
-		Number(data.totalCount ?? data.pagination?.totalCount ?? items().length)
-	);
-	const totalPages = $derived(() => Math.max(1, Math.ceil(totalCount() / (limit() || 1))));
-	const prevPage = $derived(() => Math.max(1, page() - 1));
-	const nextPage = $derived(() => Math.min(totalPages(), page() + 1));
+	export let data: PageData;
+
+	$: items = Array.isArray(data.items) ? data.items : [];
+	$: page = Number(data.page ?? 1);
+	$: limit = Number(data.limit ?? 10);
+	$: totalCount = Number(data.totalCount ?? items.length);
+	$: totalPages = Math.max(1, Math.ceil(totalCount / (limit || 1)));
+	$: prevPage = Math.max(1, page - 1);
+	$: nextPage = Math.min(totalPages, page + 1);
 
 	const formatDateTime = (ts: number | null | undefined) => {
 		if (!ts) return '';
@@ -29,13 +27,13 @@
 	</section>
 
 	<section>
-		{#if items().length === 0}
+		{#if items.length === 0}
 			<div class="rounded-2xl border bg-white p-6 text-sm text-slate-500">
 				Belum ada artikel yang dipublikasikan.
 			</div>
 		{:else}
 			<div class="grid gap-6 md:grid-cols-2">
-				{#each items() as post}
+				{#each items as post}
 					<article class="group overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
 						<a href={`/blog/${post.slug}`} class="block">
 							{#if post.thumbnail_url}
@@ -76,23 +74,23 @@
 		<div class="join">
 			<a
 				class="btn btn-sm join-item"
-				class:btn-disabled={page() <= 1}
-				href={`?page=${prevPage()}`}
-				aria-disabled={page() <= 1}
-				tabindex={page() <= 1 ? -1 : 0}
+				class:btn-disabled={page <= 1}
+				href={`?page=${prevPage}`}
+				aria-disabled={page <= 1}
+				tabindex={page <= 1 ? -1 : 0}
 			>
 				Prev
 			</a>
 			<a
 				class="btn btn-sm join-item"
-				class:btn-disabled={page() >= totalPages()}
-				href={`?page=${nextPage()}`}
-				aria-disabled={page() >= totalPages()}
-				tabindex={page() >= totalPages() ? -1 : 0}
+				class:btn-disabled={page >= totalPages}
+				href={`?page=${nextPage}`}
+				aria-disabled={page >= totalPages}
+				tabindex={page >= totalPages ? -1 : 0}
 			>
 				Next
 			</a>
 		</div>
-		<p class="text-sm text-base-content/70">Halaman {page()} dari {totalPages()}</p>
+		<p class="text-sm text-base-content/70">Halaman {page} dari {totalPages}</p>
 	</div>
 </div>

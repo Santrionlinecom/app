@@ -101,15 +101,16 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 	}
 
 	const db = locals.db!;
-	const role = locals.user.role;
+	const user = locals.user;
+	const role = user.role;
 	logSystemActivity(db, 'VIEW_PAGE', {
-		userId: locals.user.id,
-		userEmail: locals.user.email ?? null,
+		userId: user.id,
+		userEmail: user.email ?? null,
 		ipAddress: getRequestIp(request),
 		metadata: { path: '/dashboard', role },
 		waitUntil: platform?.context?.waitUntil
 	});
-	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const { orgId, isSystemAdmin } = getOrgScope(user);
 	const scopedOrgId = isSystemAdmin ? null : orgId;
 	const orgProfile = orgId ? await getOrganizationById(db, orgId) : null;
 	const orgType = orgProfile?.type ?? null;
@@ -125,7 +126,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			const [finance, kasWeeklyIn, communitySchedule] = await Promise.all([
 				getOrgFinanceSummary(db, orgId),
 				fetchKasWeeklyIn(db, orgId),
-				fetchCommunitySchedule(db, locals.user, orgId, isSystemAdmin)
+				fetchCommunitySchedule(db, user, orgId, isSystemAdmin)
 			]);
 			return { finance, kasWeeklyIn, communitySchedule };
 		} catch (err) {
