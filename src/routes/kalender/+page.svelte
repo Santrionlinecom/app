@@ -3,8 +3,25 @@
 	import { page } from '$app/stores';
 
 	type CalendarCell = { date: Date; inMonth: boolean };
-	type CalendarNote = { id: string; userId: string; role: string; title: string; content: string; eventDate: string; createdAt: number; updatedAt: number };
+	type CalendarNote = {
+		id: string;
+		userId: string;
+		role: string | null;
+		title: string;
+		content: string | null;
+		eventDate: string;
+		createdAt: number;
+		updatedAt: number;
+		orgId?: string | null;
+		orgName?: string | null;
+		orgSlug?: string | null;
+		orgType?: string | null;
+	};
+	type OrgOption = { id: string; label: string; count: number };
 	type HafalanPoint = { date: string; total: number; hijau: number; kuning: number; merah: number };
+
+	const ORG_ALL = 'all';
+	const ORG_NONE = 'none';
 
 	const pasaranCycle = ['Legi', 'Pahing', 'Pon', 'Wage', 'Kliwon'];
 	const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
@@ -49,6 +66,9 @@
 	let editId: string | null = null;
 	let savingNote = false;
 	let dailyMap: Record<string, HafalanPoint> = {};
+	let filteredNotesByDate: Record<string, CalendarNote[]> = {};
+	let selectedOrg = ORG_ALL;
+	let orgOptions: OrgOption[] = [];
 	let currentUser: any = null;
 
 	$: currentUser = $page.data.user;
@@ -61,6 +81,57 @@
 		const diffDays = Math.round((utc - baseline) / 86400000);
 		return pasaranCycle[((diffDays + 3) % 5 + 5) % 5];
 	};
+
+	const getOrgLabel = (note: CalendarNote) => note.orgName ?? note.orgSlug ?? 'Lembaga';
+
+	const buildOrgOptions = (notes: Record<string, CalendarNote[]>) => {
+		const map = new Map<string, OrgOption>();
+		let noneCount = 0;
+		for (const list of Object.values(notes)) {
+			for (const note of list) {
+				if (note.orgId) {
+					const existing = map.get(note.orgId);
+					if (existing) {
+						existing.count += 1;
+					} else {
+						map.set(note.orgId, { id: note.orgId, label: getOrgLabel(note), count: 1 });
+					}
+				} else {
+					noneCount += 1;
+				}
+			}
+		}
+		const options = Array.from(map.values()).sort((a, b) => {
+			if (b.count !== a.count) return b.count - a.count;
+			return a.label.localeCompare(b.label);
+		});
+		if (noneCount > 0) options.push({ id: ORG_NONE, label: 'Tanpa lembaga', count: noneCount });
+		return options;
+	};
+
+	const filterNotesByOrg = (notes: Record<string, CalendarNote[]>, orgId: string) => {
+		if (orgId === ORG_ALL) return notes;
+		const filtered: Record<string, CalendarNote[]> = {};
+		for (const [date, list] of Object.entries(notes)) {
+			const kept = list.filter((note) => {
+				if (orgId === ORG_NONE) return !note.orgId;
+				return note.orgId === orgId;
+			});
+			if (kept.length) filtered[date] = kept;
+		}
+		return filtered;
+	};
+
+	$: orgOptions = buildOrgOptions(notesByDate);
+	$: filteredNotesByDate = filterNotesByOrg(notesByDate, selectedOrg);
+	$: {
+		const optionIds = new Set(orgOptions.map((option) => option.id));
+		if (selectedOrg === ORG_NONE && !optionIds.has(ORG_NONE)) {
+			selectedOrg = ORG_ALL;
+		} else if (selectedOrg !== ORG_ALL && selectedOrg !== ORG_NONE && !optionIds.has(selectedOrg)) {
+			selectedOrg = ORG_ALL;
+		}
+	}
 
 	function buildWeeks(monthDate: Date) {
 		const start = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
@@ -104,7 +175,6 @@
 	};
 
 	const loadNotesForMonth = async (monthDate: Date) => {
-		if (!currentUser) return;
 		const start = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
 		const end = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
 		try {
@@ -173,11 +243,20 @@
 
 	const startEdit = (note: CalendarNote) => {
 		formTitle = note.title;
-		formContent = note.content;
+		formContent = note.content ?? '';
 		editId = note.id;
 	};
 
-	const canEdit = (note: CalendarNote) => currentUser && (currentUser.role === 'admin' || currentUser.id === note.userId);
+	const isSystemAdmin = (user: any) =>
+		user?.role === 'SUPER_ADMIN' || (user?.role === 'admin' && !user?.orgId);
+
+	const canEdit = (note: CalendarNote) => {
+		if (!currentUser) return false;
+		if (currentUser.id === note.userId) return true;
+		if (currentUser.role !== 'admin' && currentUser.role !== 'SUPER_ADMIN') return false;
+		if (isSystemAdmin(currentUser)) return true;
+		return !!note.orgId && note.orgId === currentUser.orgId;
+	};
 </script>
 
 <svelte:head>
@@ -215,11 +294,25 @@
 		</div>
 
 		<!-- Calendar -->
-		<div class="rounded-2xl md:rounded-3xl border-2 border-white bg-white/80 backdrop-blur-sm p-3 md:p-6 shadow-2xl">
-			<div class="flex items-center justify-between mb-4 md:mb-6">
-				<h2 class="text-xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-					{gregMonthFormatter.format(viewMonth)}
-				</h2>
+	<div class="rounded-2xl md:rounded-3xl border-2 border-white bg-white/80 backdrop-blur-sm p-3 md:p-6 shadow-2xl">
+		<div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
+			<h2 class="text-xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+				{gregMonthFormatter.format(viewMonth)}
+			</h2>
+			<div class="flex flex-wrap items-center gap-2 md:gap-3">
+				<div class="flex items-center gap-2">
+					<label for="org-filter" class="text-xs md:text-sm text-gray-600">Filter lembaga</label>
+					<select
+						id="org-filter"
+						class="select select-bordered select-sm bg-white"
+						bind:value={selectedOrg}
+					>
+						<option value={ORG_ALL}>Semua lembaga</option>
+						{#each orgOptions as option}
+							<option value={option.id}>{option.label} ({option.count})</option>
+						{/each}
+					</select>
+				</div>
 				<div class="flex gap-1 md:gap-2">
 					<button class="btn btn-circle btn-xs md:btn-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:scale-110 transition" on:click={() => setMonth(-1)}>←</button>
 					<button class="btn btn-xs md:btn-sm bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:scale-105 transition" on:click={() => { viewMonth = new Date(today.getFullYear(), today.getMonth(), 1); weeks = buildWeeks(viewMonth); selectedDate = new Date(today); }}>
@@ -228,6 +321,7 @@
 					<button class="btn btn-circle btn-xs md:btn-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:scale-110 transition" on:click={() => setMonth(1)}>→</button>
 				</div>
 			</div>
+		</div>
 
 			<!-- Days Header -->
 			<div class="grid grid-cols-7 gap-1 md:gap-2 mb-2 md:mb-4">
@@ -271,7 +365,7 @@
 								<div class="text-center">
 									<div class="text-[8px] font-semibold text-purple-600 leading-none">{pasaranFor(cell.date)}</div>
 									<div class="flex justify-center gap-0.5 mt-0.5">
-										{#if notesByDate[toISODate(cell.date)]?.length}
+										{#if filteredNotesByDate[toISODate(cell.date)]?.length}
 											<div class="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
 										{/if}
 										{#if dailyMap[toISODate(cell.date)]?.total}
@@ -298,7 +392,7 @@
 								<div class="absolute bottom-1 left-1 right-1 text-center">
 									<div class="text-[9px] md:text-xs font-semibold text-purple-600">{pasaranFor(cell.date)}</div>
 									<div class="flex justify-center gap-0.5 md:gap-1 mt-0.5">
-										{#if notesByDate[toISODate(cell.date)]?.length}
+										{#if filteredNotesByDate[toISODate(cell.date)]?.length}
 											<div class="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
 										{/if}
 										{#if dailyMap[toISODate(cell.date)]?.total}
@@ -385,24 +479,21 @@
 				<!-- Notes List -->
 				<div>
 					<h4 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-						📝 Catatan ({notesByDate[toISODate(noteModalDate)]?.length || 0})
+						📝 Catatan ({filteredNotesByDate[toISODate(noteModalDate)]?.length || 0})
 					</h4>
-					{#if !currentUser}
-						<div class="rounded-2xl bg-gradient-to-r from-blue-100 to-purple-100 p-4 text-center border-2 border-blue-300">
-							<p class="text-sm text-gray-700 mb-3">Login untuk melihat dan menambah catatan</p>
-							<div class="flex gap-2 justify-center">
-								<a href="/auth" class="btn btn-sm bg-white">Login</a>
-								<a href="/register" class="btn btn-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white">Daftar</a>
-							</div>
-						</div>
-					{:else if notesByDate[toISODate(noteModalDate)]?.length}
+					{#if filteredNotesByDate[toISODate(noteModalDate)]?.length}
 						<div class="space-y-2 max-h-60 overflow-auto">
-							{#each notesByDate[toISODate(noteModalDate)] as note}
+							{#each filteredNotesByDate[toISODate(noteModalDate)] as note}
 								<div class="rounded-xl border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4">
 									<div class="flex items-start justify-between mb-2">
 										<div>
 											<p class="font-bold text-gray-900">{note.title}</p>
-											<p class="text-xs text-gray-600">{note.role}</p>
+											<p class="text-xs text-gray-600">
+												<span>{note.role || 'pengunjung'}</span>
+												{#if note.orgName}
+													<span> - {note.orgName}</span>
+												{/if}
+											</p>
 										</div>
 										{#if canEdit(note)}
 											<div class="flex gap-2">
@@ -417,6 +508,15 @@
 						</div>
 					{:else}
 						<p class="text-center text-gray-500 py-8">Belum ada catatan</p>
+					{/if}
+					{#if !currentUser}
+						<div class="mt-4 rounded-2xl bg-gradient-to-r from-blue-100 to-purple-100 p-4 text-center border-2 border-blue-300">
+							<p class="text-sm text-gray-700 mb-3">Login untuk menambah atau mengedit catatan</p>
+							<div class="flex gap-2 justify-center">
+								<a href="/auth" class="btn btn-sm bg-white">Login</a>
+								<a href="/register" class="btn btn-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white">Daftar</a>
+							</div>
+						</div>
 					{/if}
 				</div>
 

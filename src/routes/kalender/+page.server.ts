@@ -1,13 +1,20 @@
-import { redirect, fail } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import { getOrgScope } from '$lib/server/organizations';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (!locals.user) throw redirect(302, '/auth');
-	if (!locals.db) throw redirect(302, '/auth');
+	const currentUser = locals.user ?? null;
+	if (!locals.db || !currentUser) {
+		return {
+			notes: [],
+			tasks: [],
+			isAdmin: false,
+			currentUser
+		};
+	}
 
-	const isAdmin = locals.user.role === 'admin';
-	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const isAdmin = currentUser.role === 'admin' || currentUser.role === 'SUPER_ADMIN';
+	const { orgId, isSystemAdmin } = getOrgScope(currentUser);
 	const db = locals.db!;
 
 	// Admin melihat semua, user lain hanya miliknya
@@ -27,7 +34,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		notes: results || [],
 		tasks: [],
 		isAdmin,
-		currentUser: locals.user
+		currentUser
 	};
 };
 
@@ -79,13 +86,13 @@ export const actions: Actions = {
 
 		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
 		// Pastikan user hanya bisa update miliknya sendiri (kecuali admin)
-		const condition = locals.user.role === 'admin'
+		const condition = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN'
 			? isSystemAdmin
 				? 'WHERE id = ?'
 				: 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
 			: 'WHERE id = ? AND user_id = ?';
 
-		const params = locals.user.role === 'admin'
+		const params = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN'
 			? isSystemAdmin
 				? [title, content || '', eventDate, Date.now(), id]
 				: [title, content || '', eventDate, Date.now(), id, orgId]
@@ -108,13 +115,13 @@ export const actions: Actions = {
 		const id = data.get('id') as string;
 
 		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
-		const condition = locals.user.role === 'admin'
+		const condition = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN'
 			? isSystemAdmin
 				? 'WHERE id = ?'
 				: 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
 			: 'WHERE id = ? AND user_id = ?';
 
-		const params = locals.user.role === 'admin'
+		const params = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN'
 			? isSystemAdmin
 				? [id]
 				: [id, orgId]

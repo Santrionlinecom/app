@@ -2,16 +2,19 @@ import { json, error } from '@sveltejs/kit';
 import { generateId } from 'lucia';
 import type { RequestHandler } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
-import { getOrgScope } from '$lib/server/organizations';
+
+const requireDb = (locals: App.Locals) => {
+	if (!locals.db) {
+		throw error(500, 'Database not available');
+	}
+	return locals.db!;
+};
 
 const requireUser = (locals: App.Locals) => {
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
 	}
-	if (!locals.db) {
-		throw error(500, 'Database not available');
-	}
-	return { user: locals.user as NonNullable<App.Locals['user']>, db: locals.db! };
+	return { user: locals.user as NonNullable<App.Locals['user']>, db: requireDb(locals) };
 };
 
 const fetchSchema = async (db: D1Database) => {
@@ -21,7 +24,7 @@ const fetchSchema = async (db: D1Database) => {
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	try {
-		const { db, user } = requireUser(locals);
+		const db = requireDb(locals);
 		const start = url.searchParams.get('start');
 		const end = url.searchParams.get('end');
 
@@ -29,7 +32,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			throw error(400, 'start dan end harus diisi (YYYY-MM-DD)');
 		}
 
-		const { orgId, isSystemAdmin } = getOrgScope(user);
 		const baseSelect = `SELECT cn.id,
 					        cn.user_id as userId,
 					        cn.role,
@@ -37,23 +39,18 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 					        cn.content,
 					        cn.event_date as eventDate,
 					        cn.created_at as createdAt,
-					        cn.updated_at as updatedAt
-					   FROM calendar_notes cn`;
+					        cn.updated_at as updatedAt,
+					        u.org_id as orgId,
+					        o.name as orgName,
+					        o.slug as orgSlug,
+					        o.type as orgType
+					   FROM calendar_notes cn
+					   LEFT JOIN users u ON u.id = cn.user_id
+					   LEFT JOIN organizations o ON o.id = u.org_id`;
 		const conditions = ['cn.event_date BETWEEN ? AND ?'];
 		const params: (string | number)[] = [start, end];
 
-		let query = `${baseSelect} WHERE ${conditions.join(' AND ')}`;
-		if (user.role === 'admin') {
-			if (!isSystemAdmin) {
-				query = `${baseSelect} JOIN users u ON u.id = cn.user_id WHERE ${conditions.join(
-					' AND '
-				)} AND u.org_id = ?`;
-				params.push(orgId ?? '');
-			}
-		} else {
-			query = `${baseSelect} WHERE ${conditions.join(' AND ')} AND cn.user_id = ?`;
-			params.push(user.id);
-		}
+		const query = `${baseSelect} WHERE ${conditions.join(' AND ')}`;
 
 		const { results } = (await db.prepare(`${query} ORDER BY cn.event_date ASC, cn.created_at ASC`).bind(...params).all()) ?? {};
 
@@ -106,6 +103,13 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 				.run();
 		}
 
+		const orgMeta = user.orgId
+			? await db
+					.prepare('SELECT name as orgName, slug as orgSlug, type as orgType FROM organizations WHERE id = ?')
+					.bind(user.orgId)
+					.first<{ orgName: string | null; orgSlug: string | null; orgType: string | null }>()
+			: null;
+
 		return json({
 			note: {
 				id: insertedId,
@@ -115,7 +119,11 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 				content,
 				eventDate,
 				createdAt: now,
-				updatedAt: now
+				updatedAt: now,
+				orgId: user.orgId ?? null,
+				orgName: orgMeta?.orgName ?? null,
+				orgSlug: orgMeta?.orgSlug ?? null,
+				orgType: orgMeta?.orgType ?? null
 			}
 		});
 	} catch (err: any) {

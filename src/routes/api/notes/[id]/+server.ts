@@ -14,33 +14,43 @@ const requireUser = (locals: App.Locals) => {
 };
 
 const canEdit = (user: NonNullable<App.Locals['user']>, ownerId: string) =>
-	user.role === 'admin' || user.id === ownerId;
+	user.role === 'admin' || user.role === 'SUPER_ADMIN' || user.id === ownerId;
 
 const fetchNote = async (db: D1Database, id: string) => {
 	return (
 		(await db
 			.prepare(
-				`SELECT id,
-				        user_id as userId,
-				        role,
-				        title,
-				        content,
-				        event_date as eventDate,
-				        created_at as createdAt,
-				        updated_at as updatedAt
-				   FROM calendar_notes
-				  WHERE id = ?`
+				`SELECT cn.id,
+				        cn.user_id as userId,
+				        cn.role,
+				        cn.title,
+				        cn.content,
+				        cn.event_date as eventDate,
+				        cn.created_at as createdAt,
+				        cn.updated_at as updatedAt,
+				        u.org_id as orgId,
+				        o.name as orgName,
+				        o.slug as orgSlug,
+				        o.type as orgType
+				   FROM calendar_notes cn
+				   LEFT JOIN users u ON u.id = cn.user_id
+				   LEFT JOIN organizations o ON o.id = u.org_id
+				  WHERE cn.id = ?`
 			)
 			.bind(id)
 			.first<{
 				id: string;
 				userId: string;
-				role: string;
+				role: string | null;
 				title: string;
 				content: string | null;
 				eventDate: string;
 				createdAt: number;
 				updatedAt: number;
+				orgId: string | null;
+				orgName: string | null;
+				orgSlug: string | null;
+				orgType: string | null;
 			}>()) ?? null
 	);
 };

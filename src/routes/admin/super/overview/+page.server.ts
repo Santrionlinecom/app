@@ -169,7 +169,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			.prepare(
 				`SELECT sl.id, sl.user_id as userId, sl.user_email as userEmail, sl.action, sl.metadata,
 					sl.ip_address as ipAddress, sl.created_at as createdAt,
-					u.username, u.email
+					u.username, u.email, u.role
 				 FROM system_logs sl
 				 LEFT JOIN users u ON u.id = sl.user_id
 				 ORDER BY sl.created_at DESC
@@ -185,6 +185,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				createdAt: number;
 				username: string | null;
 				email: string | null;
+				role: string | null;
 			}>();
 		return results ?? [];
 	}, [] as Array<{
@@ -197,6 +198,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		createdAt: number;
 		username: string | null;
 		email: string | null;
+		role: string | null;
 	}>);
 
 	return {
