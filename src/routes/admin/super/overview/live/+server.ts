@@ -1,4 +1,5 @@
 import { json, error } from '@sveltejs/kit';
+import { ensureSystemLogsTable } from '$lib/server/system-logs';
 import type { RequestHandler } from './$types';
 
 const resolveRangeMs = (range: string) => {
@@ -27,6 +28,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	}
 
 	const db = locals.db;
+	await ensureSystemLogsTable(db);
 	const roleFilter = (url.searchParams.get('role') || 'all').trim();
 	const actionFilter = (url.searchParams.get('action') || 'all').trim();
 	const rangeFilter = (url.searchParams.get('range') || '24h').trim();

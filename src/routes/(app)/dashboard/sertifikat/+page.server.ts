@@ -4,17 +4,23 @@ import {
     buildDownloadUrl,
     collectCertificateStats
 } from '$lib/server/certificates';
+import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import { getOrganizationById } from '$lib/server/organizations';
 
 export const load: PageServerLoad = async ({ locals }) => {
-    if (!locals.user) {
-        throw redirect(302, '/auth');
-    }
-    if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah') {
+    const user = assertLoggedIn({ locals });
+    if (user.role !== 'admin' && user.role !== 'ustadz' && user.role !== 'ustadzah') {
         throw redirect(302, '/dashboard');
     }
     if (!locals.db) {
         throw error(500, 'Database tidak tersedia');
     }
+    const orgId = assertOrgMember(user);
+    const org = await getOrganizationById(locals.db, orgId);
+    if (!org) {
+        throw error(404, 'Lembaga tidak ditemukan');
+    }
+    assertFeature(org.type, user.role, 'raport');
 
     const { results: santriRows } =
         (await locals.db!
@@ -37,7 +43,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     const selectedStats = firstSantriId ? await collectCertificateStats(locals.db!, firstSantriId) : null;
 
     return {
-        role: locals.user.role,
+        role: user.role,
         santri: (santriRows ?? []).map((row: { id: string; username: string | null; email: string | null }) => ({
             ...row,
             label: row.username || row.email || row.id

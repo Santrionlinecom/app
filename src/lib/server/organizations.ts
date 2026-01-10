@@ -1,18 +1,11 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { generateId } from 'lucia';
 import { isCommunityOrgType } from '$lib/server/utils';
+import { allowedRolesByType, isSystemAdmin, type OrgRole, type OrgType } from '$lib/server/auth/rbac';
 
-export type OrgType = 'pondok' | 'masjid' | 'musholla' | 'tpq' | 'rumah-tahfidz';
+export type { OrgRole, OrgType };
 export type OrgStatus = 'pending' | 'active' | 'rejected';
 export type OrgStatusFilter = OrgStatus | 'all';
-export type OrgRole =
-	| 'admin'
-	| 'ustadz'
-	| 'ustadzah'
-	| 'santri'
-	| 'jamaah'
-	| 'tamir'
-	| 'bendahara';
 
 export type PublicOrgMember = {
 	id: string;
@@ -200,20 +193,13 @@ export const createOrganization = async (
 
 export const getOrgScope = (user: { role?: string; orgId?: string | null }) => {
 	const orgId = user?.orgId ?? null;
-	const isSystemAdmin = user?.role === 'SUPER_ADMIN' || (user?.role === 'admin' && !orgId);
-	return { orgId, isSystemAdmin };
+	return { orgId, isSystemAdmin: isSystemAdmin(user?.role) };
 };
 
 export const canManageOrg = (user: { role?: string; orgId?: string | null }) =>
 	user?.role === 'admin' && !!user.orgId;
 
-export const allowedRolesByType: Record<OrgType, OrgRole[]> = {
-	pondok: ['santri', 'ustadz', 'ustadzah'],
-	masjid: ['jamaah', 'tamir', 'bendahara', 'ustadz', 'ustadzah'],
-	musholla: ['jamaah', 'tamir', 'bendahara', 'ustadz', 'ustadzah'],
-	tpq: ['santri', 'ustadz', 'ustadzah'],
-	'rumah-tahfidz': ['santri', 'ustadz', 'ustadzah']
-};
+export { allowedRolesByType };
 
 export const memberRoleByType: Record<OrgType, OrgRole> = {
 	pondok: 'santri',

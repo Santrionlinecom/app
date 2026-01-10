@@ -40,9 +40,12 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const targetOrgId = targetRows?.[0]?.orgId ?? null;
 	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	if (isAdmin && !isSystemAdmin && !orgId) {
+		throw error(403, 'Akun belum terhubung ke lembaga.');
+	}
 	let memberRole: string | null = null;
 	if (!isAdmin) {
-		if (!orgId) throw error(403, 'Organisasi belum ditentukan');
+		if (!orgId) throw error(403, 'Akun belum terhubung ke lembaga.');
 		const org = await getOrganizationById(db, orgId);
 		memberRole = org?.type ? memberRoleByType[org.type] : null;
 		if (!memberRole) throw error(403, 'Role anggota tidak valid');
@@ -142,6 +145,9 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
 	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	if (isAdmin && !isSystemAdmin && !orgId) {
+		throw error(403, 'Akun belum terhubung ke lembaga.');
+	}
 	const target = await db
 		.prepare('SELECT org_id as orgId, role FROM users WHERE id = ?')
 		.bind(id)

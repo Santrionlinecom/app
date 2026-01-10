@@ -11,36 +11,39 @@ import {
     uploadCertificateToR2
 } from '$lib/server/certificates';
 import { generateId } from 'lucia';
+import { assertFeature, assertLoggedIn, assertOrgMember, isSystemAdmin } from '$lib/server/auth/rbac';
+import { getOrganizationById } from '$lib/server/organizations';
 
 const ensureAuth = (locals: App.Locals) => {
-    if (!locals.user) {
-        throw error(401, 'Unauthorized');
-    }
+    const user = assertLoggedIn({ locals });
     if (!locals.db) {
         throw error(500, 'Database tidak tersedia');
     }
+    return user;
 };
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-    ensureAuth(locals);
+    const user = ensureAuth(locals);
+    const orgId = assertOrgMember(user);
+    const org = await getOrganizationById(locals.db!, orgId);
+    if (!org) {
+        throw error(404, 'Lembaga tidak ditemukan');
+    }
+    assertFeature(org.type, user.role, 'raport');
     const targetId =
-        locals.user?.role === 'santri'
-            ? locals.user.id
-            : url.searchParams.get('userId') || locals.user?.id;
+        user.role === 'santri' ? user.id : url.searchParams.get('userId') || user.id;
 
     const withStats = url.searchParams.get('withStats') === '1';
 
     if (!targetId) {
         throw error(400, 'userId wajib diisi');
     }
-    if (locals.user?.role === 'admin' && !locals.user.orgId) {
-        // system admin boleh semua
-    } else if (locals.user?.orgId) {
+    if (!isSystemAdmin(user.role)) {
         const target = await locals.db!
             .prepare('SELECT org_id as orgId FROM users WHERE id = ?')
             .bind(targetId)
             .first<{ orgId: string | null }>();
-        if (target?.orgId && target.orgId !== locals.user.orgId) {
+        if (target?.orgId && target.orgId !== orgId) {
             throw error(403, 'Tidak boleh mengakses sertifikat lembaga lain');
         }
     }
@@ -60,11 +63,17 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 };
 
 export const POST: RequestHandler = async ({ locals, request, platform }) => {
-    ensureAuth(locals);
+    const user = ensureAuth(locals);
     const bucket = platform?.env?.BUCKET;
     if (!bucket) {
         throw error(500, 'Storage R2 tidak tersedia');
     }
+    const orgId = assertOrgMember(user);
+    const org = await getOrganizationById(locals.db!, orgId);
+    if (!org) {
+        throw error(404, 'Lembaga tidak ditemukan');
+    }
+    assertFeature(org.type, user.role, 'raport');
 
     const body = await request.json().catch(() => ({}));
 
@@ -73,27 +82,25 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
     const minAyat = typeof body.minAyat === 'number' ? body.minAyat : 30;
     const minSessions = typeof body.minSessions === 'number' ? body.minSessions : 8;
     const targetSantri =
-        locals.user?.role === 'santri'
-            ? locals.user.id
+        user.role === 'santri'
+            ? user.id
             : typeof body.userId === 'string'
               ? body.userId
-              : locals.user?.id;
+              : user.id;
 
     if (!targetSantri) {
         throw error(400, 'userId santri wajib diisi');
     }
 
-    if (locals.user?.role === 'santri' && targetSantri !== locals.user.id) {
+    if (user.role === 'santri' && targetSantri !== user.id) {
         throw error(403, 'Santri hanya bisa membuat sertifikat untuk dirinya sendiri');
     }
-    if (locals.user?.role === 'admin' && !locals.user.orgId) {
-        // system admin boleh semua
-    } else if (locals.user?.orgId) {
+    if (!isSystemAdmin(user.role)) {
         const target = await locals.db!
             .prepare('SELECT org_id as orgId FROM users WHERE id = ?')
             .bind(targetSantri)
             .first<{ orgId: string | null }>();
-        if (target?.orgId && target.orgId !== locals.user.orgId) {
+        if (target?.orgId && target.orgId !== orgId) {
             throw error(403, 'Tidak boleh membuat sertifikat lembaga lain');
         }
     }
@@ -119,17 +126,17 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
 
     // Tentukan ustadz yang tercantum di sertifikat
     let ustadzId: string | null =
-        locals.user?.role === 'ustadz' || locals.user?.role === 'ustadzah' || locals.user?.role === 'admin'
-            ? locals.user.id
+        user.role === 'ustadz' || user.role === 'ustadzah' || user.role === 'admin'
+            ? user.id
             : null;
     if (!ustadzId && typeof body.ustadzId === 'string') {
         ustadzId = body.ustadzId;
     }
     let ustadzName =
-        locals.user?.role === 'ustadz' || locals.user?.role === 'ustadzah' || locals.user?.role === 'admin'
-            ? locals.user.username || locals.user.email
+        user.role === 'ustadz' || user.role === 'ustadzah' || user.role === 'admin'
+            ? user.username || user.email
             : 'Ustadz Pembimbing';
-    if (ustadzId && (!ustadzName || ustadzId !== locals.user?.id)) {
+    if (ustadzId && (!ustadzName || ustadzId !== user?.id)) {
         const ustadzRow = await locals.db!
             .prepare('SELECT username, email FROM users WHERE id = ?')
             .bind(ustadzId)

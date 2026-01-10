@@ -2,6 +2,8 @@ import { json, error } from '@sveltejs/kit';
 import { generateId } from 'lucia';
 import type { RequestHandler } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
+import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
+import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
 
 const requireDb = (locals: App.Locals) => {
 	if (!locals.db) {
@@ -11,10 +13,8 @@ const requireDb = (locals: App.Locals) => {
 };
 
 const requireUser = (locals: App.Locals) => {
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-	return { user: locals.user as NonNullable<App.Locals['user']>, db: requireDb(locals) };
+	const user = assertLoggedIn({ locals });
+	return { user: user as NonNullable<App.Locals['user']>, db: requireDb(locals) };
 };
 
 const fetchSchema = async (db: D1Database) => {
@@ -24,13 +24,20 @@ const fetchSchema = async (db: D1Database) => {
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	try {
-		const db = requireDb(locals);
+		const { db, user } = requireUser(locals);
 		const start = url.searchParams.get('start');
 		const end = url.searchParams.get('end');
 
 		if (!start || !end) {
 			throw error(400, 'start dan end harus diisi (YYYY-MM-DD)');
 		}
+		const orgId = assertOrgMember(user);
+		const org = await getOrganizationById(db, orgId);
+		if (!org) {
+			throw error(404, 'Lembaga tidak ditemukan');
+		}
+		assertFeature(org.type, user.role, 'kalender');
+		const { isSystemAdmin } = getOrgScope(user);
 
 		const baseSelect = `SELECT cn.id,
 					        cn.user_id as userId,
@@ -49,6 +56,15 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 					   LEFT JOIN organizations o ON o.id = u.org_id`;
 		const conditions = ['cn.event_date BETWEEN ? AND ?'];
 		const params: (string | number)[] = [start, end];
+		if (!isSystemAdmin) {
+			if (user.role === 'admin') {
+				conditions.push('u.org_id = ?');
+				params.push(orgId);
+			} else {
+				conditions.push('cn.user_id = ?');
+				params.push(user.id);
+			}
+		}
 
 		const query = `${baseSelect} WHERE ${conditions.join(' AND ')}`;
 
@@ -64,6 +80,12 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 export const POST: RequestHandler = async ({ locals, request }) => {
 	try {
 		const { db, user } = requireUser(locals);
+		const orgId = assertOrgMember(user);
+		const org = await getOrganizationById(db, orgId);
+		if (!org) {
+			throw error(404, 'Lembaga tidak ditemukan');
+		}
+		assertFeature(org.type, user.role, 'kalender');
 		const body = await request.json().catch(() => ({}));
 		const { title, content = '', eventDate } = body as {
 			title?: string;

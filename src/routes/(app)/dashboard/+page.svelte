@@ -3,11 +3,9 @@
 
 	export let data: PageData;
 
-	type InstitutionType = 'PESANTREN' | 'MASJID';
-
-	let institutionType: InstitutionType = 'PESANTREN';
-	$: institutionType = (data?.institution_type ?? 'PESANTREN') as InstitutionType;
-	$: isPesantren = institutionType === 'PESANTREN';
+	const orgType = data?.org?.type ?? null;
+	const isEducationalOrg =
+		orgType === 'pondok' || orgType === 'tpq' || orgType === 'rumah-tahfidz';
 
 	const hafalanSeries = [22, 35, 28, 48, 55, 42, 60];
 	const hafalanMax = Math.max(...hafalanSeries, 1);
@@ -45,7 +43,7 @@
 		<div class="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur">
 			<p class="text-xs uppercase tracking-[0.3em] text-slate-400">Institution mode</p>
 			<h2 class="app-title mt-2 text-2xl font-semibold text-slate-900">
-				{isPesantren ? 'Pesantren Overview' : 'Masjid Overview'}
+				{isEducationalOrg ? 'Pendidikan Overview' : 'Masjid Overview'}
 			</h2>
 			<p class="mt-2 text-sm text-slate-600">
 				Ringkasan cepat aktivitas harian untuk tim operasional.
@@ -94,7 +92,7 @@
 		</div>
 	</section>
 
-	{#if isPesantren}
+	{#if isEducationalOrg}
 		<section class="grid grid-cols-1 gap-6 xl:grid-cols-3">
 			<div class="fade-in rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur xl:col-span-2" style="animation-delay: 120ms;">
 				<div class="flex items-center justify-between">

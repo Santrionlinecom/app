@@ -247,8 +247,7 @@
 		editId = note.id;
 	};
 
-	const isSystemAdmin = (user: any) =>
-		user?.role === 'SUPER_ADMIN' || (user?.role === 'admin' && !user?.orgId);
+	const isSystemAdmin = (user: any) => user?.role === 'SUPER_ADMIN';
 
 	const canEdit = (note: CalendarNote) => {
 		if (!currentUser) return false;

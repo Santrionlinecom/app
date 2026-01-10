@@ -1,13 +1,12 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
+import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
 
 const managerRoles = ['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
 
 const ensureAuth = (locals: App.Locals) => {
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
+	return assertLoggedIn({ locals });
 };
 
 const escapeCsv = (value: unknown) => {
@@ -26,15 +25,16 @@ const formatDate = (value?: number | string | null) => {
 };
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-	ensureAuth(locals);
-	if (!locals.user?.role || !managerRoles.includes(locals.user.role as any)) {
+	const user = ensureAuth(locals);
+	if (!user?.role || !managerRoles.includes(user.role as any)) {
 		throw error(403, 'Forbidden');
 	}
 
 	const db = locals.db!;
 	if (!db) throw error(500, 'Database tidak tersedia');
 
-	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const orgId = assertOrgMember(user);
+	const { isSystemAdmin } = getOrgScope(user);
 	const requestOrgId = url.searchParams.get('orgId');
 	const targetOrgId = isSystemAdmin ? requestOrgId ?? orgId : orgId;
 
@@ -50,6 +50,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	if (!org) {
 		throw error(404, 'Lembaga tidak ditemukan');
 	}
+	assertFeature(org.type, user.role, 'raport');
 
 	const memberRole = memberRoleByType[org.type];
 	const { results } = await db

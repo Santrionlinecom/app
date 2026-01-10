@@ -1,30 +1,35 @@
 import { json, error } from '@sveltejs/kit';
+import { assertFeature, assertLoggedIn, assertOrgMember, isSystemAdmin, type OrgRole } from '$lib/server/auth/rbac';
+import { getOrganizationById } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
 
-type Role = 'admin' | 'ustadz' | 'ustadzah' | 'santri';
+type Role = Extract<OrgRole, 'admin' | 'ustadz' | 'ustadzah' | 'santri'>;
 
 const canSeeAll = (role: Role) => role === 'admin' || role === 'ustadz' || role === 'ustadzah';
-const isSystemAdmin = (user: App.Locals['user']) => user?.role === 'admin' && !user?.orgId;
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-	if (!locals.user) throw error(401, 'Unauthorized');
+	const user = assertLoggedIn({ locals });
 	if (!locals.db) throw error(500, 'DB not available');
 
-	const reqRole = locals.user.role as Role;
-	const defaultUserId = locals.user.id;
-	const requesterOrgId = locals.user.orgId ?? null;
+	const orgId = assertOrgMember(user);
+	const org = await getOrganizationById(locals.db, orgId);
+	if (!org) throw error(404, 'Lembaga tidak ditemukan');
+	assertFeature(org.type, user.role, 'hafalan');
+
+	const reqRole = user.role as Role;
+	const defaultUserId = user.id;
 
 	const targetUserId = url.searchParams.get('userId');
 	const daysParam = url.searchParams.get('days');
 	const days = daysParam ? Math.max(1, Math.min(60, Number(daysParam))) : 30;
 
 	const userId = canSeeAll(reqRole) && targetUserId ? targetUserId : defaultUserId;
-	if (targetUserId && !isSystemAdmin(locals.user)) {
+	if (targetUserId && !isSystemAdmin(user.role)) {
 		const target = await locals.db!
 			.prepare('SELECT org_id as orgId FROM users WHERE id = ?')
 			.bind(targetUserId)
 			.first<{ orgId: string | null }>();
-		if (target?.orgId && requesterOrgId && target.orgId !== requesterOrgId) {
+		if (target?.orgId && target.orgId !== orgId) {
 			throw error(403, 'Tidak boleh mengakses data lembaga lain');
 		}
 	}

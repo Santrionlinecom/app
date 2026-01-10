@@ -1,7 +1,9 @@
-import { redirect, fail, error } from '@sveltejs/kit';
+import { fail, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { SURAH_DATA } from '$lib/surah-data';
 import { ensureHafalanSurahChecksTable } from '$lib/server/hafalan';
+import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import { getOrganizationById } from '$lib/server/organizations';
 
 const allowedRoles = [
 	'admin',
@@ -16,17 +18,20 @@ const allowedRoles = [
 ];
 const TOTAL_AYAH = SURAH_DATA.reduce((sum, s) => sum + s.totalAyah, 0);
 
-const assertAllowed = (locals: App.Locals) => {
-	if (!locals.user) throw redirect(302, '/auth');
-	if (!allowedRoles.includes(locals.user.role)) {
+const assertAllowed = async (locals: App.Locals) => {
+	const user = assertLoggedIn({ locals });
+	if (!allowedRoles.includes(user.role)) {
 		throw error(403, 'Fitur ini tersedia untuk semua akun.');
 	}
 	if (!locals.db) throw error(500, 'Database tidak tersedia');
+	const orgId = assertOrgMember(user);
+	const org = await getOrganizationById(locals.db, orgId);
+	if (!org) throw error(404, 'Lembaga tidak ditemukan');
+	assertFeature(org.type, user.role, 'hafalan');
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
-	assertAllowed(locals);
-
+	await assertAllowed(locals);
 	const db = locals.db!;
 	const user = locals.user!;
 
@@ -90,14 +95,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	addMuroja: async ({ request, locals }) => {
 		try {
-			assertAllowed(locals);
+			await assertAllowed(locals);
 		} catch (err: any) {
 			if (err?.status === 302) throw err;
 			return fail(err?.status ?? 500, { error: err?.message ?? 'Tidak diizinkan' });
 		}
 
-	const db = locals.db!;
-	const user = locals.user!;
+		const db = locals.db!;
+		const user = locals.user!;
 
 		const data = await request.formData();
 		const surahNumber = parseInt(data.get('surahNumber') as string);
@@ -138,14 +143,14 @@ export const actions: Actions = {
 
 	deleteMuroja: async ({ request, locals }) => {
 		try {
-			assertAllowed(locals);
+			await assertAllowed(locals);
 		} catch (err: any) {
 			if (err?.status === 302) throw err;
 			return fail(err?.status ?? 500, { error: err?.message ?? 'Tidak diizinkan' });
 		}
 
-	const db = locals.db!;
-	const user = locals.user!;
+		const db = locals.db!;
+		const user = locals.user!;
 
 		const data = await request.formData();
 		const id = data.get('id') as string;
@@ -158,14 +163,14 @@ export const actions: Actions = {
 
 	toggleSurah: async ({ request, locals }) => {
 		try {
-			assertAllowed(locals);
+			await assertAllowed(locals);
 		} catch (err: any) {
 			if (err?.status === 302) throw err;
 			return fail(err?.status ?? 500, { error: err?.message ?? 'Tidak diizinkan' });
 		}
 
-	const db = locals.db!;
-	const user = locals.user!;
+		const db = locals.db!;
+		const user = locals.user!;
 
 		const data = await request.formData();
 		const surahNumber = parseInt(String(data.get('surahNumber') ?? ''), 10);

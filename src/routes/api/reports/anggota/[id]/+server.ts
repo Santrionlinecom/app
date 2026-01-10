@@ -4,15 +4,12 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
 import { getSantriChecklist, getSantriStats } from '$lib/server/progress';
 import { SURAH_DATA } from '$lib/surah-data';
+import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
 
 const managerRoles = ['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
 const TOTAL_AYAH = 6236;
 
-const ensureAuth = (locals: App.Locals) => {
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-};
+const ensureAuth = (locals: App.Locals) => assertLoggedIn({ locals });
 
 const formatDate = (value?: string | number | null, opts?: Intl.DateTimeFormatOptions) => {
 	if (!value) return '-';
@@ -403,13 +400,14 @@ const buildMemberReportPdf = async (params: {
 };
 
 export const GET: RequestHandler = async ({ params, locals }) => {
-	ensureAuth(locals);
-	if (!locals.user?.role || !managerRoles.includes(locals.user.role as any)) {
+	const user = ensureAuth(locals);
+	if (!user?.role || !managerRoles.includes(user.role as any)) {
 		throw error(403, 'Forbidden');
 	}
 
 	const db = locals.db!;
 	if (!db) throw error(500, 'Database tidak tersedia');
+	const orgId = assertOrgMember(user);
 	const targetId = params.id;
 	if (!targetId) throw error(400, 'ID tidak valid');
 
@@ -431,14 +429,15 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	if (!org) {
 		throw error(404, 'Lembaga tidak ditemukan');
 	}
+	assertFeature(org.type, user.role, 'raport');
 
-	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const { isSystemAdmin } = getOrgScope(user);
 	const memberRole = memberRoleByType[org.type];
 	const targetRole = target.role;
-	const isAdmin = locals.user.role === 'admin';
+	const isAdmin = user.role === 'admin';
 
 	if (!isSystemAdmin) {
-		if (!orgId || orgId !== target.orgId) {
+		if (orgId !== target.orgId) {
 			throw error(403, 'Tidak boleh mengakses lembaga lain');
 		}
 		if (!isAdmin && targetRole !== memberRole) {

@@ -1,16 +1,15 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
-import { getOrgScope } from '$lib/server/organizations';
+import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
+import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
 
 const requireUser = (locals: App.Locals) => {
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
+	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
 		throw error(500, 'Database not available');
 	}
-	return { user: locals.user as NonNullable<App.Locals['user']>, db: locals.db! };
+	return { user: user as NonNullable<App.Locals['user']>, db: locals.db! };
 };
 
 const canEdit = (user: NonNullable<App.Locals['user']>, ownerId: string) =>
@@ -58,10 +57,14 @@ const fetchNote = async (db: D1Database, id: string) => {
 export const PUT: RequestHandler = async ({ locals, params, request }) => {
 	try {
 		const { user, db } = requireUser(locals);
+		const orgId = assertOrgMember(user);
+		const org = await getOrganizationById(db, orgId);
+		if (!org) throw error(404, 'Lembaga tidak ditemukan');
+		assertFeature(org.type, user.role, 'kalender');
 		const note = await fetchNote(db, params.id);
 		if (!note) throw error(404, 'Note tidak ditemukan');
 		if (!canEdit(user, note.userId)) throw error(403, 'Tidak boleh mengedit');
-		const { orgId, isSystemAdmin } = getOrgScope(user);
+		const { isSystemAdmin } = getOrgScope(user);
 		if (user.role === 'admin' && !isSystemAdmin) {
 			const ownerOrg = await db
 				.prepare('SELECT org_id as orgId FROM users WHERE id = ?')
@@ -104,10 +107,14 @@ export const PUT: RequestHandler = async ({ locals, params, request }) => {
 export const DELETE: RequestHandler = async ({ locals, params }) => {
 	try {
 		const { user, db } = requireUser(locals);
+		const orgId = assertOrgMember(user);
+		const org = await getOrganizationById(db, orgId);
+		if (!org) throw error(404, 'Lembaga tidak ditemukan');
+		assertFeature(org.type, user.role, 'kalender');
 		const note = await fetchNote(db, params.id);
 		if (!note) throw error(404, 'Note tidak ditemukan');
 		if (!canEdit(user, note.userId)) throw error(403, 'Tidak boleh menghapus');
-		const { orgId, isSystemAdmin } = getOrgScope(user);
+		const { isSystemAdmin } = getOrgScope(user);
 		if (user.role === 'admin' && !isSystemAdmin) {
 			const ownerOrg = await db
 				.prepare('SELECT org_id as orgId FROM users WHERE id = ?')

@@ -1,10 +1,11 @@
 import { fail } from '@sveltejs/kit';
-import { getOrgScope } from '$lib/server/organizations';
+import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
+import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const currentUser = locals.user ?? null;
-	if (!locals.db || !currentUser) {
+	const currentUser = assertLoggedIn({ locals });
+	if (!locals.db) {
 		return {
 			notes: [],
 			tasks: [],
@@ -12,9 +13,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 			currentUser
 		};
 	}
+	const orgId = assertOrgMember(currentUser);
+	const org = await getOrganizationById(locals.db, orgId);
+	if (!org) {
+		return {
+			notes: [],
+			tasks: [],
+			isAdmin: false,
+			currentUser
+		};
+	}
+	assertFeature(org.type, currentUser.role, 'kalender');
 
 	const isAdmin = currentUser.role === 'admin' || currentUser.role === 'SUPER_ADMIN';
-	const { orgId, isSystemAdmin } = getOrgScope(currentUser);
+	const { isSystemAdmin } = getOrgScope(currentUser);
 	const db = locals.db!;
 
 	// Admin melihat semua, user lain hanya miliknya
@@ -28,7 +40,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		? isSystemAdmin
 			? await db.prepare(query).all()
 			: await db.prepare(query).bind(orgId).all()
-		: await db.prepare(query).bind(locals.user.id).all();
+		: await db.prepare(query).bind(currentUser.id).all();
 
 	return {
 		notes: results || [],
@@ -40,8 +52,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	addNote: async ({ request, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
+		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		const orgId = assertOrgMember(user);
+		const org = await getOrganizationById(locals.db, orgId);
+		if (!org) return fail(404, { error: 'Lembaga tidak ditemukan' });
+		assertFeature(org.type, user.role, 'kalender');
 
 		const db = locals.db!;
 		const data = await request.formData();
@@ -58,8 +74,8 @@ export const actions: Actions = {
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		`).bind(
 			crypto.randomUUID(),
-			locals.user.id,
-			locals.user.role,
+			user.id,
+			user.role,
 			title,
 			content || '',
 			eventDate,
@@ -71,9 +87,13 @@ export const actions: Actions = {
 	},
 
 	updateNote: async ({ request, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
+		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
+		const orgId = assertOrgMember(user);
+		const org = await getOrganizationById(db, orgId);
+		if (!org) return fail(404, { error: 'Lembaga tidak ditemukan' });
+		assertFeature(org.type, user.role, 'kalender');
 		const data = await request.formData();
 		const id = data.get('id') as string;
 		const title = data.get('title') as string;
@@ -84,19 +104,19 @@ export const actions: Actions = {
 			return fail(400, { error: 'Data tidak lengkap' });
 		}
 
-		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+		const { isSystemAdmin } = getOrgScope(user);
 		// Pastikan user hanya bisa update miliknya sendiri (kecuali admin)
-		const condition = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN'
+		const condition = user.role === 'admin' || user.role === 'SUPER_ADMIN'
 			? isSystemAdmin
 				? 'WHERE id = ?'
 				: 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
 			: 'WHERE id = ? AND user_id = ?';
 
-		const params = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN'
+		const params = user.role === 'admin' || user.role === 'SUPER_ADMIN'
 			? isSystemAdmin
 				? [title, content || '', eventDate, Date.now(), id]
 				: [title, content || '', eventDate, Date.now(), id, orgId]
-			: [title, content || '', eventDate, Date.now(), id, locals.user.id];
+			: [title, content || '', eventDate, Date.now(), id, user.id];
 
 		await db.prepare(`
 			UPDATE calendar_notes 
@@ -108,24 +128,28 @@ export const actions: Actions = {
 	},
 
 	deleteNote: async ({ request, locals }) => {
-		if (!locals.user) return fail(401, { error: 'Tidak terautentikasi' });
+		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
+		const orgId = assertOrgMember(user);
+		const org = await getOrganizationById(db, orgId);
+		if (!org) return fail(404, { error: 'Lembaga tidak ditemukan' });
+		assertFeature(org.type, user.role, 'kalender');
 		const data = await request.formData();
 		const id = data.get('id') as string;
 
-		const { orgId, isSystemAdmin } = getOrgScope(locals.user);
-		const condition = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN'
+		const { isSystemAdmin } = getOrgScope(user);
+		const condition = user.role === 'admin' || user.role === 'SUPER_ADMIN'
 			? isSystemAdmin
 				? 'WHERE id = ?'
 				: 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
 			: 'WHERE id = ? AND user_id = ?';
 
-		const params = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN'
+		const params = user.role === 'admin' || user.role === 'SUPER_ADMIN'
 			? isSystemAdmin
 				? [id]
 				: [id, orgId]
-			: [id, locals.user.id];
+			: [id, user.id];
 
 		await db.prepare(`DELETE FROM calendar_notes ${condition}`).bind(...params).run();
 

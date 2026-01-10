@@ -1,25 +1,31 @@
-import { redirect, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getFlaggedHafalan } from '$lib/server/progress';
-import { getOrgScope } from '$lib/server/organizations';
+import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
+import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (!locals.user) {
-		throw redirect(302, '/auth');
-	}
+	const user = assertLoggedIn({ locals });
 
 	if (!locals.db) {
 		throw error(500, 'Database tidak tersedia');
 	}
 
-	const role = locals.user.role as any;
+	const orgId = assertOrgMember(user);
+	const org = await getOrganizationById(locals.db, orgId);
+	if (!org) {
+		throw error(404, 'Lembaga tidak ditemukan');
+	}
+	assertFeature(org.type, user.role, 'hafalan');
+
+	const role = user.role as any;
 	const db = locals.db!;
-	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const { isSystemAdmin } = getOrgScope(user);
 
 	try {
 		// Data setoran resmi
 		const flagged = await getFlaggedHafalan(db, {
-			currentUserId: locals.user.id,
+			currentUserId: user.id,
 			role: role === 'alumni' ? 'santri' : role,
 			orgId: isSystemAdmin ? null : orgId
 		});
@@ -38,7 +44,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			ORDER BY surah_number
 		`
 			)
-			.bind(locals.user.id)
+			.bind(user.id)
 			.all();
 
 		// Data muroja'ah mandiri
@@ -50,7 +56,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				SUM(CASE WHEN quality = 'belum_lancar' THEN 1 ELSE 0 END) as belum_lancar
 			FROM muroja_tracking
 			WHERE user_id = ?
-		`).bind(locals.user.id).all();
+		`).bind(user.id).all();
 
 		// Muroja'ah per surah
 		const { results: murojaPerSurah } = await db.prepare(`
@@ -60,7 +66,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			WHERE user_id = ?
 			GROUP BY surah_number
 			ORDER BY surah_number
-		`).bind(locals.user.id).all();
+		`).bind(user.id).all();
 
 		return {
 			role,

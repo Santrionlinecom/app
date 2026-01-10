@@ -1,19 +1,35 @@
 import { json, error } from '@sveltejs/kit';
 import { updateUserRole } from '$lib/server/progress';
+import { isSystemAdmin, type OrgRole } from '$lib/server/auth/rbac';
 import type { RequestHandler } from './$types';
+
+const allowedRoles: OrgRole[] = [
+	'admin',
+	'ustadz',
+	'ustadzah',
+	'santri',
+	'alumni',
+	'jamaah',
+	'tamir',
+	'bendahara'
+];
 
 export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
 	}
-	if (locals.user.role !== 'admin') {
+	const currentRole = locals.user.role ?? '';
+	if (currentRole !== 'admin' && !isSystemAdmin(currentRole)) {
 		throw error(403, 'Forbidden');
 	}
-	const isSystemAdmin = locals.user.role === 'admin' && !locals.user.orgId;
+	const systemAdmin = isSystemAdmin(currentRole);
 	const body = await request.json().catch(() => ({}));
-	const { action, userId, role } = body as { action?: string; userId?: string; role?: string };
+	const { action, userId, role: nextRole } = body as { action?: string; userId?: string; role?: string };
 	if (!userId) throw error(400, 'userId wajib diisi');
-	if (!isSystemAdmin) {
+	if (!systemAdmin) {
+		if (!locals.user.orgId) {
+			throw error(403, 'Akun belum terhubung ke lembaga.');
+		}
 		const target = await locals.db!
 			.prepare('SELECT org_id as orgId FROM users WHERE id = ?')
 			.bind(userId)
@@ -34,13 +50,13 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	}
 
 	if (action === 'role') {
-		if (!role || !['admin', 'ustadz', 'ustadzah', 'santri', 'alumni', 'jamaah', 'tamir', 'bendahara'].includes(role)) {
+		if (!nextRole || !allowedRoles.includes(nextRole as OrgRole)) {
 			throw error(400, 'Role tidak valid');
 		}
-		if (userId === locals.user.id && role !== 'admin') {
+		if (userId === locals.user.id && nextRole !== 'admin') {
 			throw error(400, 'Tidak boleh menurunkan peran admin sendiri');
 		}
-		await updateUserRole(locals.db!, { id: userId, role });
+		await updateUserRole(locals.db!, { id: userId, role: nextRole });
 		return json({ ok: true });
 	}
 

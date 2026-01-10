@@ -35,6 +35,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const pagination = normalizePagination(page, limit);
 	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	if (isAdmin && !isSystemAdmin && !orgId) {
+		throw error(403, 'Akun belum terhubung ke lembaga.');
+	}
 	let orgType: OrgType | null = null;
 	let memberRole: string | null = null;
 	if (orgId) {
@@ -49,13 +52,13 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 	if (isAdmin) {
 		if (!isSystemAdmin) {
-			if (!orgId) throw error(400, 'Organisasi belum ditentukan');
+			if (!orgId) throw error(403, 'Akun belum terhubung ke lembaga.');
 			conditions.push('org_id = ?');
 			params.push(orgId);
 		}
 	} else {
 		if (!orgId || !memberRole) {
-			throw error(403, 'Organisasi belum ditentukan');
+			throw error(403, 'Akun belum terhubung ke lembaga.');
 		}
 		conditions.push('org_id = ?');
 		params.push(orgId);
@@ -139,6 +142,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const genderRaw = typeof body.gender === 'string' ? body.gender.trim() : '';
 	const gender = genderRaw === 'pria' || genderRaw === 'wanita' ? genderRaw : null;
 	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	if (isAdmin && !isSystemAdmin && !orgId) {
+		throw error(403, 'Akun belum terhubung ke lembaga.');
+	}
 	let orgType: OrgType | null = null;
 	let memberRole: string | null = null;
 	if (orgId) {
@@ -162,7 +168,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const role = isAdmin ? requestedRole ?? defaultRole : memberRole;
 
 	if (!targetOrgId) {
-		throw error(400, 'Organisasi belum ditentukan');
+		throw error(403, 'Akun belum terhubung ke lembaga.');
 	}
 	if (!isAdmin && !role) {
 		throw error(403, 'Role tidak valid');

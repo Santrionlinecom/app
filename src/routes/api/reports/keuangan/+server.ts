@@ -1,16 +1,16 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
+import { getOrganizationById } from '$lib/server/organizations';
+import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
 
 const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
 
 const ensureAuth = (locals: App.Locals) => {
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
+	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
 		throw error(500, 'Database tidak tersedia');
 	}
+	return user;
 };
 
 const escapeCsv = (value: unknown) => {
@@ -63,17 +63,13 @@ const parseSohibul = (value: string | null) => {
 };
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-	ensureAuth(locals);
-	const user = locals.user!;
+	const user = ensureAuth(locals);
 	const role = user.role ?? '';
 	if (!allowedRoles.has(role)) {
 		throw error(403, 'Tidak memiliki akses');
 	}
 
-	const { orgId, isSystemAdmin } = getOrgScope(user);
-	if (!orgId || isSystemAdmin) {
-		throw error(403, 'Organisasi belum ditentukan');
-	}
+	const orgId = assertOrgMember(user);
 
 	const type = `${url.searchParams.get('type') ?? ''}`.trim();
 	if (!type || !['kas', 'zakat', 'qurban'].includes(type)) {
@@ -86,6 +82,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	if (!org) {
 		throw error(404, 'Lembaga tidak ditemukan');
 	}
+	const featureKey = type === 'kas' ? 'kas_masjid' : 'zakat_infaq';
+	assertFeature(org.type, user.role, featureKey);
 
 	const { startTs, endTs, startRaw, endRaw } = parseDateRange(url);
 	const params: Array<string | number> = [];

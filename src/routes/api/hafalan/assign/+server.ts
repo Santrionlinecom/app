@@ -1,17 +1,23 @@
 import { json, error } from '@sveltejs/kit';
 import { submitSurahForUser } from '$lib/server/progress';
 import { isTeacherForSantri } from '$lib/server/santri-ustadz';
+import { assertFeature, assertLoggedIn, assertOrgMember, isSystemAdmin } from '$lib/server/auth/rbac';
+import { getOrganizationById } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ locals, request }) => {
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
+	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
 		throw error(500, 'DB not available');
 	}
+	const orgId = assertOrgMember(user);
+	const org = await getOrganizationById(locals.db, orgId);
+	if (!org) {
+		throw error(404, 'Lembaga tidak ditemukan');
+	}
+	assertFeature(org.type, user.role, 'setoran');
 	// Hanya admin atau ustadz/ustadzah yang boleh assign setoran
-	if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah') {
+	if (user.role !== 'admin' && user.role !== 'ustadz' && user.role !== 'ustadzah') {
 		throw error(403, 'Forbidden');
 	}
 
@@ -28,23 +34,21 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!userId || typeof surahNumber !== 'number') {
 		throw error(400, 'userId dan surahNumber wajib diisi');
 	}
-	if (locals.user.role === 'ustadz' || locals.user.role === 'ustadzah') {
+	if (user.role === 'ustadz' || user.role === 'ustadzah') {
 		const allowed = await isTeacherForSantri(locals.db!, {
 			santriId: userId,
-			ustadzId: locals.user.id
+			ustadzId: user.id
 		});
 		if (!allowed) {
 			throw error(403, 'Santri belum memilih ustadz ini');
 		}
 	}
-	if (locals.user.role === 'admin' && !locals.user.orgId) {
-		// system admin boleh semua
-	} else {
+	if (!isSystemAdmin(user.role)) {
 		const target = await locals.db!
 			.prepare('SELECT org_id as orgId FROM users WHERE id = ?')
 			.bind(userId)
 			.first<{ orgId: string | null }>();
-		if (!target?.orgId || target.orgId !== locals.user.orgId) {
+		if (!target?.orgId || target.orgId !== orgId) {
 			throw error(403, 'Tidak boleh mengelola santri lembaga lain');
 		}
 	}

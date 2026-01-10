@@ -13,6 +13,7 @@ import { ensureCmsSchema } from '$lib/server/cms';
 import { ensureMediaSchema } from '$lib/server/media';
 import { ensureSantriUstadzSchema } from '$lib/server/santri-ustadz';
 import { ensureTarawihScheduleTable } from '$lib/server/tarawih';
+import { ensureSystemLogsTable } from '$lib/server/system-logs';
 
 const assertAuthorized = (locals: App.Locals, secret: string | undefined, token: string | null) => {
 	if (!locals.user || (locals.user.role !== 'admin' && locals.user.role !== 'SUPER_ADMIN')) {
@@ -42,6 +43,7 @@ export const POST: RequestHandler = async ({ locals, platform, request, url }) =
 	await ensureCertificateTable(db);
 	await ensureSantriUstadzSchema(db);
 	await ensureTrafficTable(db);
+	await ensureSystemLogsTable(db);
 	await ensureUmmahTables(db);
 	await ensureTarawihScheduleTable(db);
 	await ensureChatTable(db);

@@ -4,12 +4,35 @@
 
 	export let data: LayoutData;
 
-	type InstitutionType = 'PESANTREN' | 'MASJID';
+	type FeatureKey =
+		| 'hafalan'
+		| 'setoran'
+		| 'ujian'
+		| 'raport'
+		| 'kas_masjid'
+		| 'zakat_infaq'
+		| 'jadwal_kegiatan'
+		| 'kalender';
 
-	let institutionType: InstitutionType = 'PESANTREN';
-	$: institutionType = (data?.institution_type ?? 'PESANTREN') as InstitutionType;
+	const orgType = data?.org?.type ?? null;
+	const isCommunityOrg = orgType === 'masjid' || orgType === 'musholla';
+	const featureAccess = data?.featureAccess ?? {};
+	const orgLabelMap: Record<string, string> = {
+		pondok: 'Pondok',
+		tpq: 'TPQ',
+		'rumah-tahfidz': 'Rumah Tahfidz',
+		masjid: 'Masjid',
+		musholla: 'Musholla'
+	};
 
-	const baseItems = [
+	type MenuItem = {
+		label: string;
+		href: string;
+		icon: string;
+		feature?: FeatureKey;
+	};
+
+	const baseItems: MenuItem[] = [
 		{
 			label: 'Dashboard',
 			href: '/dashboard',
@@ -17,11 +40,12 @@
 		}
 	];
 
-	const pesantrenItems = [
+	const pesantrenItems: MenuItem[] = [
 		{
 			label: 'Akademik',
 			href: '/akademik',
-			icon: 'M3.5 7.5l8.5-4 8.5 4-8.5 4-8.5-4zm1.5 5.5l7 3.25 7-3.25v5.5l-7 3.25-7-3.25v-5.5z'
+			icon: 'M3.5 7.5l8.5-4 8.5 4-8.5 4-8.5-4zm1.5 5.5l7 3.25 7-3.25v5.5l-7 3.25-7-3.25v-5.5z',
+			feature: 'setoran'
 		},
 		{
 			label: 'Santri',
@@ -31,15 +55,17 @@
 		{
 			label: 'Hafalan',
 			href: '/dashboard/hafalan-mandiri',
-			icon: 'M6 4h9l3 3v13a1 1 0 01-1 1H6a1 1 0 01-1-1V5a1 1 0 011-1zm8 0v4h4'
+			icon: 'M6 4h9l3 3v13a1 1 0 01-1 1H6a1 1 0 01-1-1V5a1 1 0 011-1zm8 0v4h4',
+			feature: 'hafalan'
 		}
 	];
 
-	const masjidItems = [
+	const masjidItems: MenuItem[] = [
 		{
 			label: 'Keuangan',
 			href: '/keuangan',
-			icon: 'M4 7h16M4 12h10M4 17h7M15 12h5a2 2 0 012 2v5a2 2 0 01-2 2h-5a2 2 0 01-2-2v-5a2 2 0 012-2z'
+			icon: 'M4 7h16M4 12h10M4 17h7M15 12h5a2 2 0 012 2v5a2 2 0 01-2 2h-5a2 2 0 01-2-2v-5a2 2 0 012-2z',
+			feature: 'kas_masjid'
 		},
 		{
 			label: 'Jamaah',
@@ -49,11 +75,12 @@
 		{
 			label: 'Aset',
 			href: '/dashboard/kelola-lembaga',
-			icon: 'M4 10.5L12 6l8 4.5v8.5a1 1 0 01-1 1H5a1 1 0 01-1-1v-8.5z'
+			icon: 'M4 10.5L12 6l8 4.5v8.5a1 1 0 01-1 1H5a1 1 0 01-1-1v-8.5z',
+			feature: 'kas_masjid'
 		}
 	];
 
-	const footerItems = [
+	const footerItems: MenuItem[] = [
 		{
 			label: 'Settings',
 			href: '/akun',
@@ -61,10 +88,13 @@
 		}
 	];
 
+	const featureAllowed = (item: MenuItem) =>
+		!item.feature || Boolean((featureAccess as Record<string, boolean>)[item.feature]);
+
 	let menuItems = [...baseItems, ...footerItems];
 	$: menuItems = [
 		...baseItems,
-		...(institutionType === 'PESANTREN' ? pesantrenItems : masjidItems),
+		...(isCommunityOrg ? masjidItems : pesantrenItems).filter(featureAllowed),
 		...footerItems
 	];
 
@@ -76,11 +106,12 @@
 	};
 
 	const displayName = data?.user?.username || data?.user?.email || 'Guest';
+	const orgLabel = orgType ? orgLabelMap[orgType] ?? orgType : 'Lembaga';
 </script>
 
 <svelte:head>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 	<link
 		rel="stylesheet"
 		href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap"
@@ -102,7 +133,7 @@
 					<p class="text-xs uppercase tracking-[0.3em] text-slate-500">Institution Hub</p>
 				</div>
 				<span class="rounded-full bg-teal-100 px-3 py-1 text-[11px] font-semibold text-teal-700">
-					{institutionType === 'PESANTREN' ? 'Pesantren' : 'Masjid'}
+					{orgLabel}
 				</span>
 			</div>
 
@@ -154,7 +185,10 @@
 					<div class="hidden rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-500 md:block">
 						{displayName}
 					</div>
-					<button class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm">
+					<button
+						class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm"
+						aria-label="Buka menu akun"
+					>
 						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M6 9l6 6 6-6" />
 						</svg>
@@ -170,7 +204,16 @@
 
 	{#if sidebarOpen}
 		<div class="fixed inset-0 z-40 md:hidden">
-			<div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" on:click={() => (sidebarOpen = false)}></div>
+			<div
+				class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
+				role="button"
+				tabindex="0"
+				on:click={() => (sidebarOpen = false)}
+				on:keydown={(event) => {
+					if (event.key === 'Enter' || event.key === ' ') sidebarOpen = false;
+				}}
+				aria-label="Tutup navigasi"
+			></div>
 			<aside class="absolute left-0 top-0 h-full w-72 bg-white px-6 py-8 shadow-2xl">
 				<div class="flex items-center justify-between">
 					<p class="app-title text-lg font-semibold">SantriOnline</p>
@@ -207,7 +250,7 @@
 					style="border: 1px solid var(--app-accent-soft); background: var(--app-accent-wash); color: var(--app-accent);"
 				>
 					<p class="font-semibold">Institution mode</p>
-					<p class="mt-1">Currently showing menus for {institutionType === 'PESANTREN' ? 'Pesantren' : 'Masjid'}.</p>
+					<p class="mt-1">Currently showing menus for {orgLabel}.</p>
 				</div>
 			</aside>
 		</div>

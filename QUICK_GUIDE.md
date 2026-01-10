@@ -1,5 +1,11 @@
 # Quick Guide - Fitur Hafalan Mandiri & Kalender
 
+## 🔐 Aturan Akses Fitur (RBAC)
+
+- **Lembaga Pendidikan** (pondok, TPQ, rumah tahfidz): fitur akademik **aktif** → hafalan, setoran, ujian, raport/sertifikat.
+- **Lembaga Sosial** (masjid, musholla): fitur keumatan **aktif** → kas masjid, zakat/infaq, jadwal kegiatan, kalender.
+- Akses yang tidak sesuai tipe lembaga akan **ditolak server-side (403)**.
+
 ## 🚀 Quick Start
 
 ### Untuk Santri/Alumni
@@ -26,8 +32,12 @@
 
 | Fitur | URL | Akses |
 |-------|-----|-------|
-| Hafalan Mandiri | `/dashboard/hafalan-mandiri` | Semua user |
-| Kalender | `/kalender` | Semua user |
+| Hafalan Mandiri | `/dashboard/hafalan-mandiri` | Pendidikan (pondok/TPQ/rumah tahfidz) |
+| Setoran & Review | `/dashboard/setoran-hari-ini`, `/dashboard/review-setoran` | Pendidikan |
+| Ujian Tahfidz | `/dashboard/ujian-tahfidz` | Pendidikan |
+| Raport & Sertifikat | `/dashboard/pencapaian-hafalan`, `/dashboard/sertifikat` | Pendidikan |
+| Kalender | `/kalender` | Masjid/Musholla |
+| Keuangan Ummah | `/keuangan`, `/org/[slug]/ummah` | Masjid/Musholla |
 | Kelola Role | `/dashboard/kelola-role` | Admin only |
 
 ---
