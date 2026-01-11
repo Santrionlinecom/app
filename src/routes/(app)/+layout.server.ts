@@ -3,34 +3,42 @@ import type { LayoutServerLoad } from './$types';
 import { getOrganizationById } from '$lib/server/organizations';
 import {
 	assertLoggedIn,
-	assertOrgMember,
 	assertOrgRoleAllowed,
 	canAccessFeature
 } from '$lib/server/auth/rbac';
 
-export const load: LayoutServerLoad = async ({ locals }) => {
+export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
 		throw error(500, 'Database tidak tersedia');
 	}
 
-	const orgId = assertOrgMember(user);
-	const org = await getOrganizationById(locals.db, orgId);
-	if (!org) {
-		throw error(404, 'Lembaga tidak ditemukan');
+	const isDashboardRoute = url.pathname === '/dashboard' || url.pathname.startsWith('/dashboard/');
+	const orgId = user.orgId ?? null;
+	let org = null;
+
+	if (orgId) {
+		org = await getOrganizationById(locals.db, orgId);
+		if (!org && !isDashboardRoute) {
+			throw error(404, 'Lembaga tidak ditemukan');
+		}
+	} else if (!isDashboardRoute) {
+		throw error(403, 'Akun belum terhubung ke lembaga.');
 	}
 
-	assertOrgRoleAllowed(org.type, user.role);
+	if (org) {
+		assertOrgRoleAllowed(org.type, user.role);
+	}
 
 	const featureAccess = {
-		hafalan: canAccessFeature(org.type, user.role, 'hafalan'),
-		setoran: canAccessFeature(org.type, user.role, 'setoran'),
-		ujian: canAccessFeature(org.type, user.role, 'ujian'),
-		raport: canAccessFeature(org.type, user.role, 'raport'),
-		kas_masjid: canAccessFeature(org.type, user.role, 'kas_masjid'),
-		zakat_infaq: canAccessFeature(org.type, user.role, 'zakat_infaq'),
-		jadwal_kegiatan: canAccessFeature(org.type, user.role, 'jadwal_kegiatan'),
-		kalender: canAccessFeature(org.type, user.role, 'kalender')
+		hafalan: canAccessFeature(org?.type ?? null, user.role, 'hafalan'),
+		setoran: canAccessFeature(org?.type ?? null, user.role, 'setoran'),
+		ujian: canAccessFeature(org?.type ?? null, user.role, 'ujian'),
+		raport: canAccessFeature(org?.type ?? null, user.role, 'raport'),
+		kas_masjid: canAccessFeature(org?.type ?? null, user.role, 'kas_masjid'),
+		zakat_infaq: canAccessFeature(org?.type ?? null, user.role, 'zakat_infaq'),
+		jadwal_kegiatan: canAccessFeature(org?.type ?? null, user.role, 'jadwal_kegiatan'),
+		kalender: canAccessFeature(org?.type ?? null, user.role, 'kalender')
 	};
 
 	return {

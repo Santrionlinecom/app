@@ -47,6 +47,7 @@ export const listOrgTeachers = async (db: D1Database, orgId: string): Promise<Or
 };
 
 export const getSantriTeacherId = async (db: D1Database, santriId: string) => {
+	await ensureSantriUstadzSchema(db);
 	const row = await db
 		.prepare('SELECT ustadz_id as ustadzId FROM santri_ustadz WHERE santri_id = ?')
 		.bind(santriId)
@@ -58,6 +59,7 @@ export const assignSantriTeacher = async (
 	db: D1Database,
 	params: { santriId: string; ustadzId: string; orgId: string }
 ): Promise<SantriUstadzAssignment> => {
+	await ensureSantriUstadzSchema(db);
 	const assignedAt = Date.now();
 	await db
 		.prepare(
@@ -83,6 +85,7 @@ export const isTeacherForSantri = async (
 	db: D1Database,
 	params: { santriId: string; ustadzId: string }
 ) => {
+	await ensureSantriUstadzSchema(db);
 	const row = await db
 		.prepare('SELECT 1 FROM santri_ustadz WHERE santri_id = ? AND ustadz_id = ? LIMIT 1')
 		.bind(params.santriId, params.ustadzId)
@@ -91,6 +94,7 @@ export const isTeacherForSantri = async (
 };
 
 export const hasAssignedSantri = async (db: D1Database, ustadzId: string) => {
+	await ensureSantriUstadzSchema(db);
 	const row = await db
 		.prepare('SELECT 1 FROM santri_ustadz WHERE ustadz_id = ? LIMIT 1')
 		.bind(ustadzId)

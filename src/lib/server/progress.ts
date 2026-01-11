@@ -1,10 +1,11 @@
 // src/lib/server/progress.ts
 
 // PERBAIKAN: Ganti Argon2id dengan Scrypt agar kompatibel dengan Cloudflare
-import { Scrypt } from '$lib/server/password'; 
+import { Scrypt } from '$lib/server/password';
 import { generateId } from 'lucia';
 import type { D1Database } from '@cloudflare/workers-types';
 import { SURAH_DATA } from '$lib/surah-data';
+import { ensureSantriUstadzSchema } from '$lib/server/santri-ustadz';
 
 export type HafalanStatus = 'belum' | 'setor' | 'disetujui';
 export type QualityStatus = 'merah' | 'kuning' | 'hijau';
@@ -179,6 +180,9 @@ export const getPendingSubmissions = async (
     db: D1Database,
     opts?: { orgId?: string | null; ustadzId?: string | null }
 ) => {
+    if (opts?.ustadzId) {
+        await ensureSantriUstadzSchema(db);
+    }
     const conditions = ["hp.status = 'setor'"];
     const params: (string | number)[] = [];
     const joins = ['JOIN users u ON u.id = hp.user_id'];
@@ -359,6 +363,9 @@ export const getAllStudentsProgress = async (
     opts?: { orgId?: string | null; ustadzId?: string | null }
 ) => {
     try {
+        if (opts?.ustadzId) {
+            await ensureSantriUstadzSchema(db);
+        }
         const conditions = ["u.role = 'santri'"];
         const params: (string | number)[] = [];
         const joins = ['LEFT JOIN hafalan_progress hp ON hp.user_id = u.id'];

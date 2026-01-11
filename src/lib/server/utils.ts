@@ -1,4 +1,4 @@
-const normalizeOrgType = (value?: string | null) => {
+export const normalizeOrgType = (value?: string | null) => {
 	if (!value) return '';
 	const normalized = value.toLowerCase().trim().replace(/_/g, '-').replace(/\s+/g, '-');
 	if (normalized === 'pondok-pesantren') return 'pondok';

@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import { isCommunityOrgType, isEducationalOrgType } from '$lib/server/utils';
+import { isCommunityOrgType, isEducationalOrgType, normalizeOrgType } from '$lib/server/utils';
 
 export type SystemRole = 'SUPER_ADMIN';
 export type OrgType = 'pondok' | 'masjid' | 'musholla' | 'tpq' | 'rumah-tahfidz';
@@ -91,10 +91,14 @@ export const assertOrgMember = (user: { orgId?: string | null }) => {
 export const assertOrgRoleAllowed = (orgType: OrgType, role?: string | null) => {
 	if (isSystemAdmin(role)) return;
 	const normalized = normalizeRole(role);
+	const normalizedOrgType = normalizeOrgType(orgType);
 	if (!normalized || normalized === 'SUPER_ADMIN') {
 		throw error(403, 'Role tidak valid untuk lembaga ini.');
 	}
-	if (!allowedRolesByType[orgType]?.includes(normalized)) {
+	if (!normalizedOrgType || !(normalizedOrgType in allowedRolesByType)) {
+		throw error(403, 'Role tidak diizinkan untuk lembaga ini.');
+	}
+	if (!allowedRolesByType[normalizedOrgType as OrgType]?.includes(normalized)) {
 		throw error(403, 'Role tidak diizinkan untuk lembaga ini.');
 	}
 };

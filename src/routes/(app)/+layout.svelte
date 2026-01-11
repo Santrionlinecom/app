@@ -17,6 +17,7 @@
 	const orgType = data?.org?.type ?? null;
 	const isCommunityOrg = orgType === 'masjid' || orgType === 'musholla';
 	const featureAccess = data?.featureAccess ?? {};
+	const hasOrg = Boolean(data?.org);
 	const orgLabelMap: Record<string, string> = {
 		pondok: 'Pondok',
 		tpq: 'TPQ',
@@ -92,11 +93,13 @@
 		!item.feature || Boolean((featureAccess as Record<string, boolean>)[item.feature]);
 
 	let menuItems = [...baseItems, ...footerItems];
-	$: menuItems = [
-		...baseItems,
-		...(isCommunityOrg ? masjidItems : pesantrenItems).filter(featureAllowed),
-		...footerItems
-	];
+	$: menuItems = hasOrg
+		? [
+				...baseItems,
+				...(isCommunityOrg ? masjidItems : pesantrenItems).filter(featureAllowed),
+				...footerItems
+			]
+		: [...baseItems, ...footerItems];
 
 	let sidebarOpen = false;
 
