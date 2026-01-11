@@ -18,6 +18,7 @@
 	const isCommunityOrg = orgType === 'masjid' || orgType === 'musholla';
 	const featureAccess = data?.featureAccess ?? {};
 	const hasOrg = Boolean(data?.org);
+	const isSuperAdmin = data?.user?.role === 'SUPER_ADMIN';
 	const orgLabelMap: Record<string, string> = {
 		pondok: 'Pondok',
 		tpq: 'TPQ',
@@ -36,7 +37,7 @@
 	const baseItems: MenuItem[] = [
 		{
 			label: 'Dashboard',
-			href: '/dashboard',
+			href: isSuperAdmin ? '/admin/super/overview' : '/dashboard',
 			icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z'
 		}
 	];

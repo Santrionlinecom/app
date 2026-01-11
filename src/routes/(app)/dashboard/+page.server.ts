@@ -99,6 +99,9 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth');
 	}
+	if (locals.user.role === 'SUPER_ADMIN') {
+		throw redirect(302, '/admin/super/overview');
+	}
 
 	const db = locals.db!;
 	const user = locals.user;
