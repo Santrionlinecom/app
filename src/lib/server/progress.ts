@@ -180,54 +180,59 @@ export const getPendingSubmissions = async (
     db: D1Database,
     opts?: { orgId?: string | null; ustadzId?: string | null }
 ) => {
-    if (opts?.ustadzId) {
-        await ensureSantriUstadzSchema(db);
-    }
-    const conditions = ["hp.status = 'setor'"];
-    const params: (string | number)[] = [];
-    const joins = ['JOIN users u ON u.id = hp.user_id'];
+    try {
+        if (opts?.ustadzId) {
+            await ensureSantriUstadzSchema(db);
+        }
+        const conditions = ["hp.status = 'setor'"];
+        const params: (string | number)[] = [];
+        const joins = ['JOIN users u ON u.id = hp.user_id'];
 
-    if (opts?.orgId) {
-        conditions.push('u.org_id = ?');
-        params.push(opts.orgId);
-    }
-    if (opts?.ustadzId) {
-        joins.push('JOIN santri_ustadz su ON su.santri_id = hp.user_id');
-        conditions.push('su.ustadz_id = ?');
-        params.push(opts.ustadzId);
-    }
+        if (opts?.orgId) {
+            conditions.push('u.org_id = ?');
+            params.push(opts.orgId);
+        }
+        if (opts?.ustadzId) {
+            joins.push('JOIN santri_ustadz su ON su.santri_id = hp.user_id');
+            conditions.push('su.ustadz_id = ?');
+            params.push(opts.ustadzId);
+        }
 
-    const { results } = await db
-        .prepare(
-            `SELECT hp.id,
-                    hp.user_id as userId,
-                    hp.surah_number as surahNumber,
-                    hp.ayah_number as ayahNumber,
-                    hp.tanggal_setor as tanggalSetor,
-                    u.email
-             FROM hafalan_progress hp
-             ${joins.join('\n             ')}
-             WHERE ${conditions.join(' AND ')}
-             ORDER BY hp.tanggal_setor ASC`
-        )
-        .bind(...params)
-        .all<{
+        const { results } = await db
+            .prepare(
+                `SELECT hp.id,
+                        hp.user_id as userId,
+                        hp.surah_number as surahNumber,
+                        hp.ayah_number as ayahNumber,
+                        hp.tanggal_setor as tanggalSetor,
+                        u.email
+                 FROM hafalan_progress hp
+                 ${joins.join('\n             ')}
+                 WHERE ${conditions.join(' AND ')}
+                 ORDER BY hp.tanggal_setor ASC`
+            )
+            .bind(...params)
+            .all<{
+                id: number;
+                userId: string;
+                surahNumber: number;
+                ayahNumber: number;
+                tanggalSetor: string;
+                email: string;
+            }>();
+
+        return (results ?? []) as {
             id: number;
             userId: string;
             surahNumber: number;
             ayahNumber: number;
             tanggalSetor: string;
             email: string;
-        }>();
-
-    return (results ?? []) as {
-        id: number;
-        userId: string;
-        surahNumber: number;
-        ayahNumber: number;
-        tanggalSetor: string;
-        email: string;
-    }[];
+        }[];
+    } catch (error) {
+        console.error('Error in getPendingSubmissions:', error);
+        return [];
+    }
 };
 
 export const updateSubmissionStatus = async (
