@@ -1,51 +1,14 @@
 import { fail } from '@sveltejs/kit';
-import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
-import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import { assertLoggedIn } from '$lib/server/auth/rbac';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const currentUser = assertLoggedIn({ locals });
-	if (!locals.db) {
-		return {
-			notes: [],
-			tasks: [],
-			isAdmin: false,
-			currentUser
-		};
-	}
-	const orgId = assertOrgMember(currentUser);
-	const org = await getOrganizationById(locals.db, orgId);
-	if (!org) {
-		return {
-			notes: [],
-			tasks: [],
-			isAdmin: false,
-			currentUser
-		};
-	}
-	assertFeature(org.type, currentUser.role, 'kalender');
-
-	const isAdmin = currentUser.role === 'admin' || currentUser.role === 'SUPER_ADMIN';
-	const { isSystemAdmin } = getOrgScope(currentUser);
-	const db = locals.db!;
-
-	// Admin melihat semua, user lain hanya miliknya
-	const query = isAdmin
-		? isSystemAdmin
-			? 'SELECT * FROM calendar_notes ORDER BY event_date DESC'
-			: `SELECT cn.* FROM calendar_notes cn JOIN users u ON u.id = cn.user_id WHERE u.org_id = ? ORDER BY cn.event_date DESC`
-		: 'SELECT * FROM calendar_notes WHERE user_id = ? ORDER BY event_date DESC';
-
-	const { results } = isAdmin
-		? isSystemAdmin
-			? await db.prepare(query).all()
-			: await db.prepare(query).bind(orgId).all()
-		: await db.prepare(query).bind(currentUser.id).all();
-
+	const currentUser = locals.user ?? null;
+	const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'SUPER_ADMIN';
 	return {
-		notes: results || [],
+		notes: [],
 		tasks: [],
-		isAdmin,
+		isAdmin: Boolean(isAdmin),
 		currentUser
 	};
 };
@@ -54,10 +17,6 @@ export const actions: Actions = {
 	addNote: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
-		const orgId = assertOrgMember(user);
-		const org = await getOrganizationById(locals.db, orgId);
-		if (!org) return fail(404, { error: 'Lembaga tidak ditemukan' });
-		assertFeature(org.type, user.role, 'kalender');
 
 		const db = locals.db!;
 		const data = await request.formData();
@@ -90,10 +49,6 @@ export const actions: Actions = {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
-		const orgId = assertOrgMember(user);
-		const org = await getOrganizationById(db, orgId);
-		if (!org) return fail(404, { error: 'Lembaga tidak ditemukan' });
-		assertFeature(org.type, user.role, 'kalender');
 		const data = await request.formData();
 		const id = data.get('id') as string;
 		const title = data.get('title') as string;
@@ -104,19 +59,23 @@ export const actions: Actions = {
 			return fail(400, { error: 'Data tidak lengkap' });
 		}
 
-		const { isSystemAdmin } = getOrgScope(user);
-		// Pastikan user hanya bisa update miliknya sendiri (kecuali admin)
-		const condition = user.role === 'admin' || user.role === 'SUPER_ADMIN'
-			? isSystemAdmin
-				? 'WHERE id = ?'
-				: 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
-			: 'WHERE id = ? AND user_id = ?';
+		const isSuperAdmin = user.role === 'SUPER_ADMIN';
+		const isAdmin = user.role === 'admin' || isSuperAdmin;
+		const condition = isSuperAdmin
+			? 'WHERE id = ?'
+			: user.role === 'admin'
+				? user.orgId
+					? 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
+					: 'WHERE id = ? AND user_id = ?'
+				: 'WHERE id = ? AND user_id = ?';
 
-		const params = user.role === 'admin' || user.role === 'SUPER_ADMIN'
-			? isSystemAdmin
-				? [title, content || '', eventDate, Date.now(), id]
-				: [title, content || '', eventDate, Date.now(), id, orgId]
-			: [title, content || '', eventDate, Date.now(), id, user.id];
+		const params = isSuperAdmin
+			? [title, content || '', eventDate, Date.now(), id]
+			: user.role === 'admin'
+				? user.orgId
+					? [title, content || '', eventDate, Date.now(), id, user.orgId]
+					: [title, content || '', eventDate, Date.now(), id, user.id]
+				: [title, content || '', eventDate, Date.now(), id, user.id];
 
 		await db.prepare(`
 			UPDATE calendar_notes 
@@ -131,25 +90,25 @@ export const actions: Actions = {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
-		const orgId = assertOrgMember(user);
-		const org = await getOrganizationById(db, orgId);
-		if (!org) return fail(404, { error: 'Lembaga tidak ditemukan' });
-		assertFeature(org.type, user.role, 'kalender');
 		const data = await request.formData();
 		const id = data.get('id') as string;
 
-		const { isSystemAdmin } = getOrgScope(user);
-		const condition = user.role === 'admin' || user.role === 'SUPER_ADMIN'
-			? isSystemAdmin
-				? 'WHERE id = ?'
-				: 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
-			: 'WHERE id = ? AND user_id = ?';
+		const isSuperAdmin = user.role === 'SUPER_ADMIN';
+		const condition = isSuperAdmin
+			? 'WHERE id = ?'
+			: user.role === 'admin'
+				? user.orgId
+					? 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
+					: 'WHERE id = ? AND user_id = ?'
+				: 'WHERE id = ? AND user_id = ?';
 
-		const params = user.role === 'admin' || user.role === 'SUPER_ADMIN'
-			? isSystemAdmin
-				? [id]
-				: [id, orgId]
-			: [id, user.id];
+		const params = isSuperAdmin
+			? [id]
+			: user.role === 'admin'
+				? user.orgId
+					? [id, user.orgId]
+					: [id, user.id]
+				: [id, user.id];
 
 		await db.prepare(`DELETE FROM calendar_notes ${condition}`).bind(...params).run();
 
