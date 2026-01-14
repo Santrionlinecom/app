@@ -8,6 +8,21 @@
 	type AvailableUser = PageData['availableUsers'][number];
 	type ActivityRow = PageData['liveStats']['recentActivities'][number];
 	type LiveActivity = ActivityRow & { role?: string | null };
+	type TypeSummary = {
+		type: string;
+		totalInstitutions: number;
+		activeInstitutions: number;
+		pendingInstitutions: number;
+		rejectedInstitutions: number;
+		adminCount: number;
+		santriCount: number;
+		alumniCount: number;
+		jamaahCount: number;
+		ustadzCount: number;
+		ustadzahCount: number;
+		tamirCount: number;
+		bendaharaCount: number;
+	};
 
 	let liveStats = data.liveStats ?? {
 		loginsToday: 0,
@@ -64,6 +79,44 @@
 		'rumah-tahfidz': 'Rumah Tahfidz'
 	};
 
+	const orgTypeOrder = ['pondok', 'tpq', 'rumah-tahfidz', 'masjid', 'musholla'] as const;
+	type OrgTypeKey = (typeof orgTypeOrder)[number];
+	const orgTypeConfig: Record<
+		OrgTypeKey,
+		{ label: string; group: 'education' | 'community'; tone: string; accent: string }
+	> = {
+		pondok: {
+			label: 'Pondok Pesantren',
+			group: 'education',
+			tone: 'from-emerald-400/80 to-teal-500/80',
+			accent: 'text-emerald-700'
+		},
+		tpq: {
+			label: 'TPQ',
+			group: 'education',
+			tone: 'from-sky-400/80 to-cyan-500/80',
+			accent: 'text-sky-700'
+		},
+		'rumah-tahfidz': {
+			label: 'Rumah Tahfidz',
+			group: 'education',
+			tone: 'from-indigo-400/80 to-blue-500/80',
+			accent: 'text-indigo-700'
+		},
+		masjid: {
+			label: 'Masjid',
+			group: 'community',
+			tone: 'from-amber-400/80 to-orange-500/80',
+			accent: 'text-amber-700'
+		},
+		musholla: {
+			label: 'Musholla',
+			group: 'community',
+			tone: 'from-rose-400/80 to-pink-500/80',
+			accent: 'text-rose-700'
+		}
+	};
+
 	const formatNumber = (value: number | null | undefined) =>
 		new Intl.NumberFormat('id-ID').format(value ?? 0);
 	const formatDate = (value?: number | null) =>
@@ -107,6 +160,22 @@
 		const orgName = org ? org.name : null;
 		return `${user.username || user.email} • ${user.email}${orgName ? ` — ${orgName}` : ''}`;
 	};
+
+	const emptySummary = (type: OrgTypeKey): TypeSummary => ({
+		type,
+		totalInstitutions: 0,
+		activeInstitutions: 0,
+		pendingInstitutions: 0,
+		rejectedInstitutions: 0,
+		adminCount: 0,
+		santriCount: 0,
+		alumniCount: 0,
+		jamaahCount: 0,
+		ustadzCount: 0,
+		ustadzahCount: 0,
+		tamirCount: 0,
+		bendaharaCount: 0
+	});
 
 	const statusBadgeClass = (status?: string | null) => {
 		switch ((status ?? '').toLowerCase()) {
@@ -157,6 +226,65 @@
 			tone: 'text-rose-700'
 		}
 	];
+
+	type InstitutionCard = {
+		type: OrgTypeKey;
+		label: string;
+		group: 'education' | 'community';
+		totalInstitutions: number;
+		activeInstitutions: number;
+		pendingInstitutions: number;
+		rejectedInstitutions: number;
+		primaryLabel: string;
+		primaryCount: number;
+		staffLabel: string;
+		staffCount: number;
+		adminCount: number;
+		tone: string;
+		accent: string;
+		alumniCount: number;
+	};
+
+	let institutionCards: InstitutionCard[] = [];
+	let educationCards: InstitutionCard[] = [];
+	let communityCards: InstitutionCard[] = [];
+	$: {
+		const rows = data.institutionSummary ?? [];
+		institutionCards = orgTypeOrder.map((type) => {
+			const row =
+				rows.find((item) => item.type === type) ??
+				emptySummary(type);
+			const config = orgTypeConfig[type];
+			const isCommunity = config.group === 'community';
+			const primaryLabel = isCommunity ? 'Jamaah' : 'Santri';
+			const primaryCount = isCommunity ? row.jamaahCount : row.santriCount;
+			const staffLabel = isCommunity ? 'Pengurus' : 'Pengajar';
+			const staffCount = isCommunity
+				? row.tamirCount + row.bendaharaCount
+				: row.ustadzCount + row.ustadzahCount;
+
+			return {
+				type,
+				label: config.label,
+				group: config.group,
+				totalInstitutions: row.totalInstitutions,
+				activeInstitutions: row.activeInstitutions,
+				pendingInstitutions: row.pendingInstitutions,
+				rejectedInstitutions: row.rejectedInstitutions,
+				primaryLabel,
+				primaryCount,
+				staffLabel,
+				staffCount,
+				adminCount: row.adminCount,
+				tone: config.tone,
+				accent: config.accent,
+				alumniCount: row.alumniCount
+			};
+		});
+
+		educationCards = institutionCards.filter((card) => card.group === 'education');
+		communityCards = institutionCards.filter((card) => card.group === 'community');
+	}
 
 	const toQuery = () => {
 		const params = new URLSearchParams();
@@ -264,6 +392,104 @@
 				</div>
 			</div>
 		{/each}
+	</section>
+
+	<section class="grid gap-6 lg:grid-cols-2">
+		<div class="reveal rounded-3xl border border-white/80 bg-white/80 p-6 shadow-lg backdrop-blur" style="animation-delay: 90ms;">
+			<div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+				<div>
+					<h2 class="section-title text-xl font-semibold text-slate-900">Lembaga Pendidikan</h2>
+					<p class="text-xs text-slate-500">Pondok, TPQ, dan Rumah Tahfidz terpisah dari lembaga jamaah.</p>
+				</div>
+				<a href="#institution-list" class="text-xs font-semibold text-emerald-700 hover:text-emerald-800">
+					Lihat daftar lembaga
+				</a>
+			</div>
+			<div class="mt-5 grid gap-4 md:grid-cols-3">
+				{#each educationCards as card}
+					<a
+						href="#institution-list"
+						class="group rounded-3xl border border-white/70 bg-white/70 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+					>
+						<div class="flex items-start justify-between">
+							<div>
+								<p class="text-[11px] uppercase tracking-[0.3em] text-slate-400">{card.label}</p>
+								<p class={`mt-2 text-2xl font-semibold ${card.accent}`}>{formatNumber(card.totalInstitutions)}</p>
+								<p class="text-xs text-slate-500">
+									Aktif {formatNumber(card.activeInstitutions)} • Pending {formatNumber(card.pendingInstitutions)}
+								</p>
+							</div>
+							<div class={`h-10 w-10 rounded-2xl bg-gradient-to-br ${card.tone}`}></div>
+						</div>
+						<div class="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-500">
+							<div>
+								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">{card.primaryLabel}</p>
+								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.primaryCount)}</p>
+							</div>
+							<div>
+								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">{card.staffLabel}</p>
+								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.staffCount)}</p>
+							</div>
+							<div>
+								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Admin</p>
+								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.adminCount)}</p>
+							</div>
+						</div>
+						{#if card.alumniCount}
+							<p class="mt-2 text-xs text-slate-400">Alumni {formatNumber(card.alumniCount)}</p>
+						{/if}
+					</a>
+				{/each}
+			</div>
+		</div>
+
+		<div class="reveal rounded-3xl border border-white/80 bg-white/80 p-6 shadow-lg backdrop-blur" style="animation-delay: 140ms;">
+			<div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+				<div>
+					<h2 class="section-title text-xl font-semibold text-slate-900">Lembaga Jamaah</h2>
+					<p class="text-xs text-slate-500">Masjid dan musholla fokus jamaah, tidak bercampur santri.</p>
+				</div>
+				<a href="#institution-list" class="text-xs font-semibold text-emerald-700 hover:text-emerald-800">
+					Lihat daftar lembaga
+				</a>
+			</div>
+			<div class="mt-5 grid gap-4 md:grid-cols-2">
+				{#each communityCards as card}
+					<a
+						href="#institution-list"
+						class="group rounded-3xl border border-white/70 bg-white/70 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+					>
+						<div class="flex items-start justify-between">
+							<div>
+								<p class="text-[11px] uppercase tracking-[0.3em] text-slate-400">{card.label}</p>
+								<p class={`mt-2 text-2xl font-semibold ${card.accent}`}>{formatNumber(card.totalInstitutions)}</p>
+								<p class="text-xs text-slate-500">
+									Aktif {formatNumber(card.activeInstitutions)} • Pending {formatNumber(card.pendingInstitutions)}
+								</p>
+							</div>
+							<div class={`h-10 w-10 rounded-2xl bg-gradient-to-br ${card.tone}`}></div>
+						</div>
+						<div class="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-500">
+							<div>
+								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">{card.primaryLabel}</p>
+								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.primaryCount)}</p>
+							</div>
+							<div>
+								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">{card.staffLabel}</p>
+								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.staffCount)}</p>
+							</div>
+							<div>
+								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Admin</p>
+								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.adminCount)}</p>
+							</div>
+						</div>
+						{#if card.rejectedInstitutions}
+							<p class="mt-2 text-xs text-rose-600">Ditolak {formatNumber(card.rejectedInstitutions)}</p>
+						{/if}
+					</a>
+				{/each}
+			</div>
+		</div>
 	</section>
 
 	<section class="grid gap-6 lg:grid-cols-3">
@@ -515,7 +741,11 @@
 		{/if}
 	</section>
 
-	<section class="reveal rounded-3xl border border-white/80 bg-white/80 p-6 shadow-lg backdrop-blur" style="animation-delay: 200ms;">
+	<section
+		id="institution-list"
+		class="reveal rounded-3xl border border-white/80 bg-white/80 p-6 shadow-lg backdrop-blur"
+		style="animation-delay: 200ms;"
+	>
 		<div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
 			<div>
 				<h2 class="section-title text-xl font-semibold text-slate-900">Daftar Lembaga</h2>

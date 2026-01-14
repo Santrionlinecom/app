@@ -65,6 +65,58 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			adminCount: number | null;
 		}>();
 
+	const { results: typeSummaryRows } = await db
+		.prepare(
+			`SELECT o.type as type,
+				COUNT(DISTINCT o.id) as totalInstitutions,
+				COUNT(DISTINCT CASE WHEN o.status = 'active' THEN o.id END) as activeInstitutions,
+				COUNT(DISTINCT CASE WHEN o.status = 'pending' THEN o.id END) as pendingInstitutions,
+				COUNT(DISTINCT CASE WHEN o.status = 'rejected' THEN o.id END) as rejectedInstitutions,
+				SUM(CASE WHEN u.role = 'admin' THEN 1 ELSE 0 END) as adminCount,
+				SUM(CASE WHEN u.role = 'santri' THEN 1 ELSE 0 END) as santriCount,
+				SUM(CASE WHEN u.role = 'alumni' THEN 1 ELSE 0 END) as alumniCount,
+				SUM(CASE WHEN u.role = 'jamaah' THEN 1 ELSE 0 END) as jamaahCount,
+				SUM(CASE WHEN u.role = 'ustadz' THEN 1 ELSE 0 END) as ustadzCount,
+				SUM(CASE WHEN u.role = 'ustadzah' THEN 1 ELSE 0 END) as ustadzahCount,
+				SUM(CASE WHEN u.role = 'tamir' THEN 1 ELSE 0 END) as tamirCount,
+				SUM(CASE WHEN u.role = 'bendahara' THEN 1 ELSE 0 END) as bendaharaCount
+			 FROM organizations o
+			 LEFT JOIN users u ON u.org_id = o.id
+			 GROUP BY o.type
+			 ORDER BY o.type`
+		)
+		.all<{
+			type: string;
+			totalInstitutions: number | null;
+			activeInstitutions: number | null;
+			pendingInstitutions: number | null;
+			rejectedInstitutions: number | null;
+			adminCount: number | null;
+			santriCount: number | null;
+			alumniCount: number | null;
+			jamaahCount: number | null;
+			ustadzCount: number | null;
+			ustadzahCount: number | null;
+			tamirCount: number | null;
+			bendaharaCount: number | null;
+		}>();
+
+	const institutionSummary = (typeSummaryRows ?? []).map((row) => ({
+		type: row.type,
+		totalInstitutions: Number(row.totalInstitutions ?? 0),
+		activeInstitutions: Number(row.activeInstitutions ?? 0),
+		pendingInstitutions: Number(row.pendingInstitutions ?? 0),
+		rejectedInstitutions: Number(row.rejectedInstitutions ?? 0),
+		adminCount: Number(row.adminCount ?? 0),
+		santriCount: Number(row.santriCount ?? 0),
+		alumniCount: Number(row.alumniCount ?? 0),
+		jamaahCount: Number(row.jamaahCount ?? 0),
+		ustadzCount: Number(row.ustadzCount ?? 0),
+		ustadzahCount: Number(row.ustadzahCount ?? 0),
+		tamirCount: Number(row.tamirCount ?? 0),
+		bendaharaCount: Number(row.bendaharaCount ?? 0)
+	}));
+
 	const searchQuery = (url.searchParams.get('q') ?? '').trim();
 	let searchResults: Array<{
 		id: string;
@@ -214,6 +266,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			recentActivities
 		},
 		institutions: orgRows ?? [],
+		institutionSummary,
 		availableUsers: candidateUsers ?? [],
 		searchQuery,
 		searchResults

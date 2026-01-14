@@ -9,6 +9,7 @@ export let data;
 
 let pathname = '/';
 $: pathname = $page.url.pathname as string;
+const isSuperAdmin = data?.user?.role === 'SUPER_ADMIN';
 
 const apkUrl = 'https://files.santrionline.com/Santrionline.apk';
 const installPromptKey = 'so_install_prompt_v1';
@@ -170,13 +171,16 @@ const baseNav = [
 				</div>
 				<div id="google_translate_element" class="translate-slot hidden"></div>
 				{#if data.user}
-					<a href="/dashboard" class="btn btn-sm btn-ghost">Dashboard</a>
+					<a href={isSuperAdmin ? '/admin/super/overview' : '/dashboard'} class="btn btn-sm btn-ghost">
+						{isSuperAdmin ? 'Super Admin' : 'Dashboard'}
+					</a>
 					<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
 					<a href="/akun" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Profil</a>
 					<form method="POST" action="/logout">
 						<button type="submit" class="btn btn-sm btn-error">Logout</button>
 					</form>
 				{:else}
+					<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
 					<a href="/auth" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Login</a>
 					<a href="/register" class="btn btn-sm btn-primary">Daftar Lembaga</a>
 				{/if}
