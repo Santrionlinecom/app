@@ -24,17 +24,30 @@
           hour12: false
         }).format(ts)
       : '';
-  let title = $state(data.post.title);
-  let slug = $state(data.post.slug);
-  let content = $state(data.post.content);
-  let excerpt = $state(data.post.excerpt || '');
-  let seo_keyword = $state(data.post.seo_keyword || '');
-  let meta_description = $state(data.post.meta_description || '');
-  let thumbnail_url = $state(data.post.thumbnail_url || '');
+  let title = $state('');
+  let slug = $state('');
+  let content = $state('');
+  let excerpt = $state('');
+  let seo_keyword = $state('');
+  let meta_description = $state('');
+  let thumbnail_url = $state('');
   let fileInput: HTMLInputElement | null = null;
   let editingSlug = $state(false);
-  let schedule_date = $state(toLocalDate(data.post.scheduled_at));
-  let schedule_time = $state(toLocalTime(data.post.scheduled_at));
+  let schedule_date = $state('');
+  let schedule_time = $state('');
+
+  $effect(() => {
+    const { post } = data;
+    title = post.title;
+    slug = post.slug;
+    content = post.content;
+    excerpt = post.excerpt || '';
+    seo_keyword = post.seo_keyword || '';
+    meta_description = post.meta_description || '';
+    thumbnail_url = post.thumbnail_url || '';
+    schedule_date = toLocalDate(post.scheduled_at);
+    schedule_time = toLocalTime(post.scheduled_at);
+  });
 
   const generateSlug = () => {
     slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
