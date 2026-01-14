@@ -4,11 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "NODE_OPTIONS=--no-deprecation vite build",
     "preview": "vite preview",
     "deploy:pages": "npm run build && npx wrangler@4 pages deploy .svelte-kit/cloudflare --project-name app-santrionline",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+    "check": "NODE_OPTIONS=--no-deprecation svelte-kit sync && NODE_OPTIONS=--no-deprecation svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "NODE_OPTIONS=--no-deprecation svelte-kit sync && NODE_OPTIONS=--no-deprecation svelte-check --tsconfig ./tsconfig.json --watch"
   },
   "devDependencies": {
     "@lucide/svelte": "^0.482.0",
@@ -22,7 +22,7 @@
     "bits-ui": "^1.8.0",
     "clsx": "^2.1.1",
     "daisyui": "^4.12.14",
-    "eslint": "^9.0.0",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-svelte": "^2.45.1",
     "postcss": "^8.4.47",
@@ -61,6 +61,8 @@
     "zod": "^4.3.5"
   },
   "overrides": {
-    "cookie": "0.7.0"
+    "cookie": "0.7.0",
+    "whatwg-url": "15.1.0",
+    "tr46": "6.0.0"
   }
 }
