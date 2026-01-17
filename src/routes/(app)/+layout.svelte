@@ -82,7 +82,7 @@
 		},
 		{
 			label: 'Aset',
-			href: '/dashboard/kelola-lembaga',
+			href: '/dashboard/kelola-aset',
 			icon: 'M4 10.5L12 6l8 4.5v8.5a1 1 0 01-1 1H5a1 1 0 01-1-1v-8.5z',
 			feature: 'kas_masjid'
 		}
