@@ -42,6 +42,31 @@
 
 ---
 
+## 🧾 Panduan Upload Excel Jadwal Imam
+
+Template contoh tersedia di `static/templates/jadwal-imam-template.xlsx` (di web: `/templates/jadwal-imam-template.xlsx`).
+
+### Kolom Wajib
+- `tanggal` → format `YYYY-MM-DD` atau `DD/MM/YYYY` (contoh: `2025-03-01`).
+- `waktu` / `sholat` → contoh: `Subuh`, `Dzuhur`, `Ashar`, `Maghrib`, `Isya`.
+- `imam` → nama imam.
+
+### Kolom Opsional
+- `hari` → contoh: `Senin`, `Selasa`, dst (jika kosong akan dihitung otomatis dari tanggal).
+- `catatan` → keterangan tambahan (opsional).
+
+### Langkah Upload
+1. Buka `/dashboard/jadwal`.
+2. Pada bagian **Jadwal Imam Sholat**, klik **Upload Jadwal**.
+3. Pilih file Excel (`.xlsx` / `.xls` / `.csv`) sesuai template.
+4. Data dengan tanggal + waktu yang sama akan **di-update** otomatis.
+
+### Catatan Penting
+- Sistem membaca **sheet pertama** saja.
+- Baris kosong atau kolom wajib kosong akan diabaikan.
+
+---
+
 ## 🎨 Color Coding
 
 ### Kualitas Hafalan
