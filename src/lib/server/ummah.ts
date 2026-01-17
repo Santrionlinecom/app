@@ -1,5 +1,18 @@
 import type { D1Database } from '@cloudflare/workers-types';
 
+const isMissingTableError = (err: unknown) =>
+	`${(err as Error)?.message ?? err}`.toLowerCase().includes('no such table');
+
+const safeAll = async <T>(promise: Promise<{ results: T[] | null | undefined }>) => {
+	try {
+		const { results } = await promise;
+		return (results ?? []) as T[];
+	} catch (err) {
+		if (isMissingTableError(err)) return [];
+		throw err;
+	}
+};
+
 export const ensureUmmahTables = async (db: D1Database) => {
 	await db
 		.prepare(
@@ -102,17 +115,19 @@ export type OrgFinanceSummary = {
 };
 
 export const getOrgFinanceSummary = async (db: D1Database, orgId: string): Promise<OrgFinanceSummary> => {
-	const { results: kasSummaryRows } = await db
-		.prepare(
-			`SELECT tipe,
-				SUM(nominal) as totalNominal,
-				MAX(tanggal) as lastTanggal
-			 FROM kas_masjid
-			 WHERE organization_id = ?
-			 GROUP BY tipe`
-		)
-		.bind(orgId)
-		.all<{ tipe: string; totalNominal: number | null; lastTanggal: number | null }>();
+	const kasSummaryRows = await safeAll(
+		db
+			.prepare(
+				`SELECT tipe,
+					SUM(nominal) as totalNominal,
+					MAX(tanggal) as lastTanggal
+				 FROM kas_masjid
+				 WHERE organization_id = ?
+				 GROUP BY tipe`
+			)
+			.bind(orgId)
+			.all<{ tipe: string; totalNominal: number | null; lastTanggal: number | null }>()
+	);
 
 	const kas = {
 		masuk: 0,
@@ -141,43 +156,47 @@ export const getOrgFinanceSummary = async (db: D1Database, orgId: string): Promi
 	}
 	kas.saldo = kas.masuk - kas.keluar;
 
-	const { results: kasRows } = await db
-		.prepare(
-			`SELECT tanggal, tipe, kategori, keterangan, nominal
-			 FROM kas_masjid
-			 WHERE organization_id = ?
-			 ORDER BY tanggal DESC, created_at DESC
-			 LIMIT 10`
-		)
-		.bind(orgId)
-		.all<{
-			tanggal: number;
-			tipe: string;
-			kategori: string;
-			keterangan: string | null;
-			nominal: number;
-		}>();
+	const kasRows = await safeAll(
+		db
+			.prepare(
+				`SELECT tanggal, tipe, kategori, keterangan, nominal
+				 FROM kas_masjid
+				 WHERE organization_id = ?
+				 ORDER BY tanggal DESC, created_at DESC
+				 LIMIT 10`
+			)
+			.bind(orgId)
+			.all<{
+				tanggal: number;
+				tipe: string;
+				kategori: string;
+				keterangan: string | null;
+				nominal: number;
+			}>()
+	);
 
-	kas.entries = (kasRows ?? []) as typeof kas.entries;
+	kas.entries = kasRows as typeof kas.entries;
 
-	const { results: zakatSummaryRows } = await db
-		.prepare(
-			`SELECT tz.jenis_bayar as jenisBayar,
-				SUM(tz.nominal) as totalNominal,
-				SUM(tz.jumlah_jiwa) as totalJiwa,
-				MAX(tz.created_at) as lastUpdated
-			 FROM transaksi_zakat tz
-			 JOIN program_amal pa ON pa.id = tz.program_id
-			 WHERE pa.organization_id = ?
-			 GROUP BY tz.jenis_bayar`
-		)
-		.bind(orgId)
-		.all<{
-			jenisBayar: string;
-			totalNominal: number | null;
-			totalJiwa: number | null;
-			lastUpdated: number | null;
-		}>();
+	const zakatSummaryRows = await safeAll(
+		db
+			.prepare(
+				`SELECT tz.jenis_bayar as jenisBayar,
+					SUM(tz.nominal) as totalNominal,
+					SUM(tz.jumlah_jiwa) as totalJiwa,
+					MAX(tz.created_at) as lastUpdated
+				 FROM transaksi_zakat tz
+				 JOIN program_amal pa ON pa.id = tz.program_id
+				 WHERE pa.organization_id = ?
+				 GROUP BY tz.jenis_bayar`
+			)
+			.bind(orgId)
+			.all<{
+				jenisBayar: string;
+				totalNominal: number | null;
+				totalJiwa: number | null;
+				lastUpdated: number | null;
+			}>()
+	);
 
 	const zakat = {
 		beras: 0,
@@ -200,24 +219,26 @@ export const getOrgFinanceSummary = async (db: D1Database, orgId: string): Promi
 		}
 	}
 
-	const { results: qurbanRows } = await db
-		.prepare(
-			`SELECT dq.status_hewan as statusHewan,
-				dq.jenis_hewan as jenisHewan,
-				COUNT(*) as total,
-				MAX(dq.created_at) as lastUpdated
-			 FROM data_qurban dq
-			 JOIN program_amal pa ON pa.id = dq.program_id
-			 WHERE pa.organization_id = ?
-			 GROUP BY dq.status_hewan, dq.jenis_hewan`
-		)
-		.bind(orgId)
-		.all<{
-			statusHewan: string;
-			jenisHewan: string;
-			total: number | null;
-			lastUpdated: number | null;
-		}>();
+	const qurbanRows = await safeAll(
+		db
+			.prepare(
+				`SELECT dq.status_hewan as statusHewan,
+					dq.jenis_hewan as jenisHewan,
+					COUNT(*) as total,
+					MAX(dq.created_at) as lastUpdated
+				 FROM data_qurban dq
+				 JOIN program_amal pa ON pa.id = dq.program_id
+				 WHERE pa.organization_id = ?
+				 GROUP BY dq.status_hewan, dq.jenis_hewan`
+			)
+			.bind(orgId)
+			.all<{
+				statusHewan: string;
+				jenisHewan: string;
+				total: number | null;
+				lastUpdated: number | null;
+			}>()
+	);
 
 	const qurbanStatus: { hidup: number; sembelih: number; bagi: number } = {
 		hidup: 0,

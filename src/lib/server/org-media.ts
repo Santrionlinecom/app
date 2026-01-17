@@ -8,6 +8,9 @@ export type OrgMediaItem = {
 	createdAt: number;
 };
 
+const isMissingTableError = (err: unknown) =>
+	`${(err as Error)?.message ?? err}`.toLowerCase().includes('no such table');
+
 export const ensureOrgMediaSchema = async (db: D1Database) => {
 	await db
 		.prepare(
@@ -28,17 +31,22 @@ export const ensureOrgMediaSchema = async (db: D1Database) => {
 };
 
 export const listOrgMedia = async (db: D1Database, orgId: string): Promise<OrgMediaItem[]> => {
-	const { results } = await db
-		.prepare(
-			`SELECT id, organization_id as organizationId, url, created_by as createdBy, created_at as createdAt
-			 FROM org_media
-			 WHERE organization_id = ?
-			 ORDER BY created_at DESC`
-		)
-		.bind(orgId)
-		.all<OrgMediaItem>();
+	try {
+		const { results } = await db
+			.prepare(
+				`SELECT id, organization_id as organizationId, url, created_by as createdBy, created_at as createdAt
+				 FROM org_media
+				 WHERE organization_id = ?
+				 ORDER BY created_at DESC`
+			)
+			.bind(orgId)
+			.all<OrgMediaItem>();
 
-	return (results ?? []) as OrgMediaItem[];
+		return (results ?? []) as OrgMediaItem[];
+	} catch (err) {
+		if (isMissingTableError(err)) return [];
+		throw err;
+	}
 };
 
 export const addOrgMedia = async (

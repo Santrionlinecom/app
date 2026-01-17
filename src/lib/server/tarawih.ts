@@ -13,6 +13,9 @@ export type TarawihScheduleRow = {
 	updatedAt: number | null;
 };
 
+const isMissingTableError = (err: unknown) =>
+	`${(err as Error)?.message ?? err}`.toLowerCase().includes('no such table');
+
 export const ensureTarawihScheduleTable = async (db: D1Database) => {
 	await db
 		.prepare(
@@ -44,24 +47,29 @@ export const listTarawihSchedule = async (
 	db: D1Database,
 	orgId: string
 ): Promise<TarawihScheduleRow[]> => {
-	const { results } = await db
-		.prepare(
-			`SELECT id,
-				organization_id as organizationId,
-				urut,
-				hari,
-				tanggal,
-				imam,
-				bilal,
-				created_by as createdBy,
-				created_at as createdAt,
-				updated_at as updatedAt
-			 FROM jadwal_tarawih
-			 WHERE organization_id = ?
-			 ORDER BY urut ASC, created_at ASC`
-		)
-		.bind(orgId)
-		.all<TarawihScheduleRow>();
+	try {
+		const { results } = await db
+			.prepare(
+				`SELECT id,
+					organization_id as organizationId,
+					urut,
+					hari,
+					tanggal,
+					imam,
+					bilal,
+					created_by as createdBy,
+					created_at as createdAt,
+					updated_at as updatedAt
+				 FROM jadwal_tarawih
+				 WHERE organization_id = ?
+				 ORDER BY urut ASC, created_at ASC`
+			)
+			.bind(orgId)
+			.all<TarawihScheduleRow>();
 
-	return (results ?? []) as TarawihScheduleRow[];
+		return (results ?? []) as TarawihScheduleRow[];
+	} catch (err) {
+		if (isMissingTableError(err)) return [];
+		throw err;
+	}
 };
