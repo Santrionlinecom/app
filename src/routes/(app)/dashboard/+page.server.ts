@@ -100,8 +100,6 @@ const fetchSurahs = async (db: D1Database) => {
 	}));
 };
 
-const toISODate = (value: Date) => value.toISOString().slice(0, 10);
-
 const fetchKasWeeklyIn = async (db: D1Database, orgId: string) => {
 	const weekStart = Date.now() - 7 * 24 * 60 * 60 * 1000;
 	const { results } = await db
