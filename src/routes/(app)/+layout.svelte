@@ -75,6 +75,12 @@
 			icon: 'M7 11a3.5 3.5 0 117 0 3.5 3.5 0 01-7 0zm-4 10a6.5 6.5 0 0113 0H3z'
 		},
 		{
+			label: 'Jadwal',
+			href: '/dashboard/jadwal',
+			icon: 'M7 2v4M17 2v4M3 8h18M5 5h14a2 2 0 012 2v13a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z',
+			feature: 'jadwal_kegiatan'
+		},
+		{
 			label: 'Aset',
 			href: '/dashboard/kelola-lembaga',
 			icon: 'M4 10.5L12 6l8 4.5v8.5a1 1 0 01-1 1H5a1 1 0 01-1-1v-8.5z',

@@ -14,6 +14,8 @@ import { ensureCmsSchema } from '$lib/server/cms';
 import { ensureMediaSchema } from '$lib/server/media';
 import { ensureSantriUstadzSchema } from '$lib/server/santri-ustadz';
 import { ensureTarawihScheduleTable } from '$lib/server/tarawih';
+import { ensureImamScheduleTable } from '$lib/server/jadwal-imam';
+import { ensureKhotibScheduleTable } from '$lib/server/jadwal-khotib';
 import { ensureSystemLogsTable } from '$lib/server/system-logs';
 
 const assertAuthorized = (locals: App.Locals, secret: string | undefined, token: string | null) => {
@@ -48,6 +50,8 @@ export const POST: RequestHandler = async ({ locals, platform, request, url }) =
 	await ensureSystemLogsTable(db);
 	await ensureUmmahTables(db);
 	await ensureTarawihScheduleTable(db);
+	await ensureImamScheduleTable(db);
+	await ensureKhotibScheduleTable(db);
 	await ensureChatTable(db);
 	await ensureCmsSchema(db);
 	await ensureMediaSchema(db);
