@@ -73,6 +73,9 @@ const dateKeys = ['tanggal', 'tgl', 'date'];
 const dayKeys = ['hari', 'day'];
 const timeKeys = ['waktu', 'sholat', 'shalat', 'salat', 'waktusholat', 'waktusalat'];
 const imamKeys = ['imam'];
+const khotibKeys = ['khotib', 'khatib', 'khutbah'];
+const bilalKeys = ['bilal', 'muadzin', 'muazin'];
+const urutKeys = ['urut', 'no', 'nomor', 'malam', 'urutan'];
 const noteKeys = ['catatan', 'keterangan', 'notes', 'note'];
 
 const requireScheduleContext = async (locals: App.Locals) => {
@@ -361,6 +364,126 @@ export const actions: Actions = {
 
 		return { success: true };
 	},
+	importTarawih: async ({ request, locals }) => {
+		const { db, orgId, role, org, user } = await requireScheduleContext(locals);
+		assertFeature(org.type, role, 'jadwal_kegiatan');
+
+		const data = await request.formData();
+		const file = data.get('file');
+		if (!(file instanceof File) || file.size === 0) {
+			return fail(400, { error: 'File Excel wajib diunggah' });
+		}
+
+		let rows: Record<string, unknown>[] = [];
+		try {
+			const buffer = await file.arrayBuffer();
+			const workbook = XLSX.read(buffer, { type: 'array' });
+			const sheetName = workbook.SheetNames[0];
+			const sheet = sheetName ? workbook.Sheets[sheetName] : null;
+			if (!sheet) {
+				return fail(400, { error: 'Sheet Excel tidak ditemukan' });
+			}
+			rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: true }) as Record<
+				string,
+				unknown
+			>[];
+		} catch (err) {
+			console.error('Import jadwal tarawih error', err);
+			return fail(400, { error: 'File Excel tidak dapat dibaca' });
+		}
+
+		const items: {
+			urut: number;
+			hari: string;
+			tanggal: string;
+			imam: string;
+			bilal: string | null;
+		}[] = [];
+
+		for (const row of rows) {
+			const map = new Map<string, unknown>();
+			for (const [key, value] of Object.entries(row)) {
+				const normalized = normalizeHeader(key);
+				if (normalized) map.set(normalized, value);
+			}
+
+			const urutRaw = pickMapValue(map, urutKeys);
+			const urut = Number(`${urutRaw ?? ''}`.replace(/[^0-9]/g, ''));
+			const hariRaw = `${pickMapValue(map, dayKeys) ?? ''}`.trim();
+			const tanggalRaw = pickMapValue(map, dateKeys);
+			let tanggal = normalizeDateValue(tanggalRaw) ?? '';
+			if (!tanggal) {
+				tanggal = `${tanggalRaw ?? ''}`.trim();
+			}
+			const imam = `${pickMapValue(map, imamKeys) ?? ''}`.trim();
+			const bilal = `${pickMapValue(map, bilalKeys) ?? ''}`.trim();
+
+			if (!Number.isFinite(urut) || urut < 1 || urut > 30 || !Number.isInteger(urut)) {
+				continue;
+			}
+			if (!tanggal || !imam) {
+				continue;
+			}
+
+			let hari = hariRaw;
+			if (!hari && /^\d{4}-\d{2}-\d{2}$/.test(tanggal)) {
+				hari = getDayName(tanggal) ?? '';
+			}
+			if (!hari) {
+				continue;
+			}
+
+			items.push({
+				urut: Math.floor(urut),
+				hari,
+				tanggal,
+				imam,
+				bilal: bilal || null
+			});
+		}
+
+		if (items.length === 0) {
+			return fail(400, { error: 'Tidak ada data valid di file Excel' });
+		}
+
+		const now = Date.now();
+		try {
+			await db.batch(
+				items.map((item) =>
+					db
+						.prepare(
+							`INSERT INTO jadwal_tarawih (id, organization_id, urut, hari, tanggal, imam, bilal, created_by, created_at, updated_at)
+							 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+							 ON CONFLICT(organization_id, urut) DO UPDATE SET
+							   hari = excluded.hari,
+							   tanggal = excluded.tanggal,
+							   imam = excluded.imam,
+							   bilal = excluded.bilal,
+							   updated_at = excluded.updated_at`
+						)
+						.bind(
+							crypto.randomUUID(),
+							orgId,
+							item.urut,
+							item.hari,
+							item.tanggal,
+							item.imam,
+							item.bilal,
+							user.id,
+							now,
+							now
+						)
+				)
+			);
+		} catch (err) {
+			if (isMissingTableError(err)) {
+				return fail(500, { error: 'Tabel jadwal tarawih belum siap. Jalankan migrasi.' });
+			}
+			throw err;
+		}
+
+		return { success: true };
+	},
 	addTarawih: async ({ request, locals }) => {
 		const { db, orgId, role, org, user } = await requireScheduleContext(locals);
 		assertFeature(org.type, role, 'jadwal_kegiatan');
@@ -492,6 +615,112 @@ export const actions: Actions = {
 		} catch (err) {
 			if (isMissingTableError(err)) {
 				return fail(500, { error: 'Tabel jadwal tarawih belum siap. Jalankan migrasi.' });
+			}
+			throw err;
+		}
+
+		return { success: true };
+	},
+	importKhotib: async ({ request, locals }) => {
+		const { db, orgId, role, org, user } = await requireScheduleContext(locals);
+		assertFeature(org.type, role, 'jadwal_kegiatan');
+
+		const data = await request.formData();
+		const file = data.get('file');
+		if (!(file instanceof File) || file.size === 0) {
+			return fail(400, { error: 'File Excel wajib diunggah' });
+		}
+
+		let rows: Record<string, unknown>[] = [];
+		try {
+			const buffer = await file.arrayBuffer();
+			const workbook = XLSX.read(buffer, { type: 'array' });
+			const sheetName = workbook.SheetNames[0];
+			const sheet = sheetName ? workbook.Sheets[sheetName] : null;
+			if (!sheet) {
+				return fail(400, { error: 'Sheet Excel tidak ditemukan' });
+			}
+			rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: true }) as Record<
+				string,
+				unknown
+			>[];
+		} catch (err) {
+			console.error('Import jadwal khotib error', err);
+			return fail(400, { error: 'File Excel tidak dapat dibaca' });
+		}
+
+		const items: {
+			tanggal: string;
+			hari: string;
+			khotib: string;
+			imam: string | null;
+			catatan: string | null;
+		}[] = [];
+
+		for (const row of rows) {
+			const map = new Map<string, unknown>();
+			for (const [key, value] of Object.entries(row)) {
+				const normalized = normalizeHeader(key);
+				if (normalized) map.set(normalized, value);
+			}
+
+			const tanggal = normalizeDateValue(pickMapValue(map, dateKeys));
+			const hariRaw = `${pickMapValue(map, dayKeys) ?? ''}`.trim();
+			const khotib = `${pickMapValue(map, khotibKeys) ?? ''}`.trim();
+			const imam = `${pickMapValue(map, imamKeys) ?? ''}`.trim();
+			const catatan = `${pickMapValue(map, noteKeys) ?? ''}`.trim();
+
+			if (!tanggal || !khotib) {
+				continue;
+			}
+
+			const hari = hariRaw || getDayName(tanggal) || 'Jumat';
+
+			items.push({
+				tanggal,
+				hari,
+				khotib,
+				imam: imam || null,
+				catatan: catatan || null
+			});
+		}
+
+		if (items.length === 0) {
+			return fail(400, { error: 'Tidak ada data valid di file Excel' });
+		}
+
+		const now = Date.now();
+		try {
+			await db.batch(
+				items.map((item) =>
+					db
+						.prepare(
+							`INSERT INTO jadwal_khotib_jumat (id, organization_id, tanggal, hari, khotib, imam, catatan, created_by, created_at, updated_at)
+							 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+							 ON CONFLICT(organization_id, tanggal) DO UPDATE SET
+							   hari = excluded.hari,
+							   khotib = excluded.khotib,
+							   imam = excluded.imam,
+							   catatan = excluded.catatan,
+							   updated_at = excluded.updated_at`
+						)
+						.bind(
+							crypto.randomUUID(),
+							orgId,
+							item.tanggal,
+							item.hari,
+							item.khotib,
+							item.imam,
+							item.catatan,
+							user.id,
+							now,
+							now
+						)
+				)
+			);
+		} catch (err) {
+			if (isMissingTableError(err)) {
+				return fail(500, { error: 'Tabel jadwal khotib belum siap. Jalankan migrasi.' });
 			}
 			throw err;
 		}

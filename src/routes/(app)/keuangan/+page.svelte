@@ -108,6 +108,33 @@
 			</div>
 		</div>
 
+		<div class="mt-6 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4">
+			<h4 class="text-sm font-semibold text-emerald-700">Import Excel</h4>
+			<p class="mt-1 text-xs text-emerald-700/80">
+				Kolom wajib: <strong>tanggal</strong>, <strong>tipe</strong>, <strong>kategori</strong>, <strong>nominal</strong>.
+				Opsional: <strong>keterangan</strong>.
+			</p>
+			<form
+				method="POST"
+				action="?/importKas"
+				enctype="multipart/form-data"
+				class="mt-3 space-y-3"
+				use:enhance={refreshOnSuccess}
+			>
+				<a href="/templates/kas-masjid-template.xlsx" class="btn btn-outline w-full" download>
+					Download Template
+				</a>
+				<input
+					type="file"
+					name="file"
+					accept=".xlsx,.xls,.csv"
+					class="file-input file-input-bordered w-full"
+					required
+				/>
+				<button class="btn btn-primary w-full">Upload Kas</button>
+			</form>
+		</div>
+
 		<form
 			method="POST"
 			action={kasId ? '?/updateKas' : '?/addKas'}

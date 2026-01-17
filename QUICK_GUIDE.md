@@ -67,6 +67,83 @@ Template contoh tersedia di `static/templates/jadwal-imam-template.xlsx` (di web
 
 ---
 
+## 🧾 Panduan Upload Excel Tarawih & Khotib
+
+### Jadwal Imam & Bilal Tarawih (30 malam)
+Template: `static/templates/jadwal-tarawih-template.xlsx` (web: `/templates/jadwal-tarawih-template.xlsx`).
+
+**Kolom Wajib**
+- `urut` → angka 1-30.
+- `hari` → contoh: `Senin`, `Selasa`, dst.
+- `tanggal` → teks bebas (contoh: `1 Ramadan 1446 H` atau `2025-03-01`).
+- `imam` → nama imam.
+
+**Kolom Opsional**
+- `bilal`
+
+### Jadwal Khotib Jumat
+Template: `static/templates/jadwal-khotib-jumat-template.xlsx` (web: `/templates/jadwal-khotib-jumat-template.xlsx`).
+
+**Kolom Wajib**
+- `tanggal` → format `YYYY-MM-DD` atau `DD/MM/YYYY`.
+- `khotib` → nama khotib.
+
+**Kolom Opsional**
+- `hari`, `imam`, `catatan`
+
+### Langkah Upload
+1. Buka `/dashboard/jadwal`.
+2. Pilih **Upload** sesuai jenis jadwal.
+3. Unggah file Excel (`.xlsx` / `.xls` / `.csv`).
+4. Data dengan **urut sama** (tarawih) atau **tanggal sama** (khotib) akan di-update otomatis.
+
+---
+
+## 🧾 Panduan Upload Excel Aset
+
+Template: `static/templates/aset-template.xlsx` (web: `/templates/aset-template.xlsx`).
+
+**Kolom Wajib**
+- `name` → nama aset.
+- `quantity` → jumlah (angka).
+
+**Kolom Opsional**
+- `category`, `condition`, `location`, `acquired_at`, `notes`
+
+### Langkah Upload
+1. Buka `/dashboard`.
+2. Pada bagian **Kelola Aset**, klik **Upload Aset**.
+3. Unggah file Excel.
+
+---
+
+## 🧾 Panduan Upload Excel Kas Masjid
+
+Template: `static/templates/kas-masjid-template.xlsx` (web: `/templates/kas-masjid-template.xlsx`).
+
+**Kolom Wajib**
+- `tanggal` → format `YYYY-MM-DD` atau `DD/MM/YYYY`.
+- `tipe` → `masuk` / `keluar`.
+- `kategori`
+- `nominal`
+
+**Kolom Opsional**
+- `keterangan`
+
+### Langkah Upload
+1. Buka `/keuangan`.
+2. Pada bagian **Import Excel**, klik **Upload Kas**.
+3. Unggah file Excel.
+
+---
+
+## 📤 Export Excel
+
+- **Jamaah/Santri**: tombol **Download Excel (.xlsx)** di `/dashboard/kelola-santri`.
+- **Keuangan**: tombol **Download Kas/Zakat/Qurban** di `/org/[slug]/ummah`.
+
+---
+
 ## 🎨 Color Coding
 
 ### Kualitas Hafalan

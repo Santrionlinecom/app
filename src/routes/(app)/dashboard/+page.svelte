@@ -455,6 +455,32 @@
 				<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${assetId ? 'xl:col-span-2' : ''}`}>
 					<h3 class="app-title text-xl font-semibold text-slate-900">Kelola Aset</h3>
 					<p class="text-xs text-slate-500">Inventaris masjid yang akan tampil di halaman publik.</p>
+					<div class="mt-4 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4">
+						<h4 class="text-sm font-semibold text-emerald-700">Import Excel</h4>
+						<p class="mt-1 text-xs text-emerald-700/80">
+							Kolom wajib: <strong>name</strong>, <strong>quantity</strong>. Opsional:
+							<strong>category</strong>, <strong>condition</strong>, <strong>location</strong>, <strong>acquired_at</strong>, <strong>notes</strong>.
+						</p>
+						<form
+							method="POST"
+							action="?/importAssets"
+							enctype="multipart/form-data"
+							class="mt-3 space-y-3"
+							use:enhance={refreshOnSuccess}
+						>
+							<a href="/templates/aset-template.xlsx" class="btn btn-outline w-full" download>
+								Download Template
+							</a>
+							<input
+								type="file"
+								name="file"
+								accept=".xlsx,.xls,.csv"
+								class="file-input file-input-bordered w-full"
+								required
+							/>
+							<button class="btn btn-primary w-full">Upload Aset</button>
+						</form>
+					</div>
 					<form
 						method="POST"
 						action={assetId ? '?/updateAsset' : '?/addAsset'}

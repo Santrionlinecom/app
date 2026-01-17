@@ -380,6 +380,37 @@
 		</div>
 
 		<div class="grid gap-6 xl:grid-cols-2">
+			<div class="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur">
+				<h3 class="text-lg font-semibold text-slate-900">Import Excel</h3>
+				<p class="text-xs text-slate-500 mt-2">
+					Kolom wajib: <strong>urut</strong>, <strong>hari</strong>, <strong>tanggal</strong>, <strong>imam</strong>.
+					Opsional: <strong>bilal</strong>.
+				</p>
+				<form
+					method="POST"
+					action="?/importTarawih"
+					enctype="multipart/form-data"
+					class="mt-4 space-y-3"
+					use:enhance={handleAction}
+				>
+					<a
+						href="/templates/jadwal-tarawih-template.xlsx"
+						class="btn btn-outline w-full"
+						download
+					>
+						Download Template
+					</a>
+					<input
+						type="file"
+						name="file"
+						accept=".xlsx,.xls,.csv"
+						class="file-input file-input-bordered w-full"
+						required
+					/>
+					<button class="btn btn-primary w-full">Upload Tarawih</button>
+				</form>
+			</div>
+
 			<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${tarawihId ? 'xl:col-span-2' : ''}`}>
 				<h3 class="text-lg font-semibold text-slate-900">Input Jadwal Tarawih</h3>
 				<form
@@ -460,90 +491,90 @@
 					</div>
 				</form>
 			</div>
+		</div>
 
-			<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${tarawihId ? 'xl:col-span-2' : ''}`}>
-				<div class="flex items-center justify-between">
-					<h3 class="text-lg font-semibold text-slate-900">Daftar Tarawih</h3>
-					<span class="text-xs text-slate-500">{tarawihSchedule.length} malam</span>
-				</div>
-				{#if tarawihSchedule.length === 0}
-					<p class="mt-4 text-sm text-slate-500">Belum ada jadwal tarawih.</p>
-				{:else}
-					<div class="mt-4 space-y-3 md:hidden">
-						{#each tarawihSchedule as row}
-							<div class={`rounded-2xl border p-4 shadow-sm ${tarawihId === row.id ? 'border-amber-300 bg-amber-50/60' : 'border-slate-200 bg-white'}`}>
-								<div class="flex items-center justify-between">
-									<p class="text-sm font-semibold text-slate-900">{row.urut}. {row.hari}</p>
-									<span class="text-xs text-slate-500">{row.tanggal}</span>
-								</div>
-								<p class="mt-2 text-xs text-slate-500">Imam: {row.imam}</p>
-								<p class="mt-1 text-xs text-slate-500">Bilal: {row.bilal || '-'}</p>
-								<div class="mt-3 flex flex-wrap gap-2">
-									<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditTarawih(row)}>
-										Edit
-									</button>
-									<form method="POST" action="?/deleteTarawih" use:enhance={handleAction}>
-										<input type="hidden" name="id" value={row.id} />
-										<button
-											type="submit"
-											class="btn btn-xs btn-ghost text-red-600"
-											on:click={(event) => {
-												if (!confirm('Hapus jadwal ini?')) event.preventDefault();
-											}}
-										>
-											Hapus
-										</button>
-									</form>
-								</div>
-							</div>
-						{/each}
-					</div>
-					<div class="mt-4 hidden overflow-auto md:block">
-						<table class="table table-zebra w-full text-sm">
-							<thead>
-								<tr>
-									<th>No</th>
-									<th>Hari</th>
-									<th>Tanggal</th>
-									<th>Imam</th>
-									<th>Bilal</th>
-									<th>Aksi</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each tarawihSchedule as row}
-									<tr class={tarawihId === row.id ? 'bg-amber-50' : ''}>
-										<td>{row.urut}</td>
-										<td>{row.hari}</td>
-										<td>{row.tanggal}</td>
-										<td>{row.imam}</td>
-										<td>{row.bilal || '-'}</td>
-										<td>
-											<div class="flex flex-wrap gap-2">
-												<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditTarawih(row)}>
-													Edit
-												</button>
-												<form method="POST" action="?/deleteTarawih" use:enhance={handleAction}>
-													<input type="hidden" name="id" value={row.id} />
-													<button
-														type="submit"
-														class="btn btn-xs btn-ghost text-red-600"
-														on:click={(event) => {
-															if (!confirm('Hapus jadwal ini?')) event.preventDefault();
-														}}
-													>
-														Hapus
-													</button>
-												</form>
-											</div>
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{/if}
+		<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${tarawihId ? 'xl:col-span-2' : ''}`}>
+			<div class="flex items-center justify-between">
+				<h3 class="text-lg font-semibold text-slate-900">Daftar Tarawih</h3>
+				<span class="text-xs text-slate-500">{tarawihSchedule.length} malam</span>
 			</div>
+			{#if tarawihSchedule.length === 0}
+				<p class="mt-4 text-sm text-slate-500">Belum ada jadwal tarawih.</p>
+			{:else}
+				<div class="mt-4 space-y-3 md:hidden">
+					{#each tarawihSchedule as row}
+						<div class={`rounded-2xl border p-4 shadow-sm ${tarawihId === row.id ? 'border-amber-300 bg-amber-50/60' : 'border-slate-200 bg-white'}`}>
+							<div class="flex items-center justify-between">
+								<p class="text-sm font-semibold text-slate-900">{row.urut}. {row.hari}</p>
+								<span class="text-xs text-slate-500">{row.tanggal}</span>
+							</div>
+							<p class="mt-2 text-xs text-slate-500">Imam: {row.imam}</p>
+							<p class="mt-1 text-xs text-slate-500">Bilal: {row.bilal || '-'}</p>
+							<div class="mt-3 flex flex-wrap gap-2">
+								<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditTarawih(row)}>
+									Edit
+								</button>
+								<form method="POST" action="?/deleteTarawih" use:enhance={handleAction}>
+									<input type="hidden" name="id" value={row.id} />
+									<button
+										type="submit"
+										class="btn btn-xs btn-ghost text-red-600"
+										on:click={(event) => {
+											if (!confirm('Hapus jadwal ini?')) event.preventDefault();
+										}}
+									>
+										Hapus
+									</button>
+								</form>
+							</div>
+						</div>
+					{/each}
+				</div>
+				<div class="mt-4 hidden overflow-auto md:block">
+					<table class="table table-zebra w-full text-sm">
+						<thead>
+							<tr>
+								<th>No</th>
+								<th>Hari</th>
+								<th>Tanggal</th>
+								<th>Imam</th>
+								<th>Bilal</th>
+								<th>Aksi</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each tarawihSchedule as row}
+								<tr class={tarawihId === row.id ? 'bg-amber-50' : ''}>
+									<td>{row.urut}</td>
+									<td>{row.hari}</td>
+									<td>{row.tanggal}</td>
+									<td>{row.imam}</td>
+									<td>{row.bilal || '-'}</td>
+									<td>
+										<div class="flex flex-wrap gap-2">
+											<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditTarawih(row)}>
+												Edit
+											</button>
+											<form method="POST" action="?/deleteTarawih" use:enhance={handleAction}>
+												<input type="hidden" name="id" value={row.id} />
+												<button
+													type="submit"
+													class="btn btn-xs btn-ghost text-red-600"
+													on:click={(event) => {
+														if (!confirm('Hapus jadwal ini?')) event.preventDefault();
+													}}
+												>
+													Hapus
+												</button>
+											</form>
+										</div>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{/if}
 		</div>
 	</section>
 
@@ -555,6 +586,37 @@
 		</div>
 
 		<div class="grid gap-6 xl:grid-cols-2">
+			<div class="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur">
+				<h3 class="text-lg font-semibold text-slate-900">Import Excel</h3>
+				<p class="text-xs text-slate-500 mt-2">
+					Kolom wajib: <strong>tanggal</strong>, <strong>khotib</strong>. Opsional:
+					<strong>hari</strong>, <strong>imam</strong>, <strong>catatan</strong>.
+				</p>
+				<form
+					method="POST"
+					action="?/importKhotib"
+					enctype="multipart/form-data"
+					class="mt-4 space-y-3"
+					use:enhance={handleAction}
+				>
+					<a
+						href="/templates/jadwal-khotib-jumat-template.xlsx"
+						class="btn btn-outline w-full"
+						download
+					>
+						Download Template
+					</a>
+					<input
+						type="file"
+						name="file"
+						accept=".xlsx,.xls,.csv"
+						class="file-input file-input-bordered w-full"
+						required
+					/>
+					<button class="btn btn-primary w-full">Upload Khotib</button>
+				</form>
+			</div>
+
 			<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${khotibId ? 'xl:col-span-2' : ''}`}>
 				<h3 class="text-lg font-semibold text-slate-900">Input Jadwal Khotib</h3>
 				<form
@@ -613,93 +675,93 @@
 					</div>
 				</form>
 			</div>
+		</div>
 
-			<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${khotibId ? 'xl:col-span-2' : ''}`}>
-				<div class="flex items-center justify-between">
-					<h3 class="text-lg font-semibold text-slate-900">Daftar Khotib Jumat</h3>
-					<span class="text-xs text-slate-500">{khotibSchedule.length} jadwal</span>
-				</div>
-				{#if khotibSchedule.length === 0}
-					<p class="mt-4 text-sm text-slate-500">Belum ada jadwal khotib Jumat.</p>
-				{:else}
-					<div class="mt-4 space-y-3 md:hidden">
-						{#each khotibSchedule as row}
-							<div class={`rounded-2xl border p-4 shadow-sm ${khotibId === row.id ? 'border-amber-300 bg-amber-50/60' : 'border-slate-200 bg-white'}`}>
-								<div class="flex items-center justify-between">
-									<p class="text-sm font-semibold text-slate-900">{row.khotib}</p>
-									<span class="text-xs text-slate-500">{formatDate(row.tanggal)}</span>
-								</div>
-								<p class="mt-2 text-xs text-slate-500">Hari: {formatDay(row)}</p>
-								<p class="mt-1 text-xs text-slate-500">Imam: {row.imam || '-'}</p>
-								{#if row.catatan}
-									<p class="mt-1 text-xs text-slate-500">{row.catatan}</p>
-								{/if}
-								<div class="mt-3 flex flex-wrap gap-2">
-									<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditKhotib(row)}>
-										Edit
-									</button>
-									<form method="POST" action="?/deleteKhotib" use:enhance={handleAction}>
-										<input type="hidden" name="id" value={row.id} />
-										<button
-											type="submit"
-											class="btn btn-xs btn-ghost text-red-600"
-											on:click={(event) => {
-												if (!confirm('Hapus jadwal ini?')) event.preventDefault();
-											}}
-										>
-											Hapus
-										</button>
-									</form>
-								</div>
-							</div>
-						{/each}
-					</div>
-					<div class="mt-4 hidden overflow-auto md:block">
-						<table class="table table-zebra w-full text-sm">
-							<thead>
-								<tr>
-									<th>Tanggal</th>
-									<th>Hari</th>
-									<th>Khotib</th>
-									<th>Imam</th>
-									<th>Catatan</th>
-									<th>Aksi</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each khotibSchedule as row}
-									<tr class={khotibId === row.id ? 'bg-amber-50' : ''}>
-										<td>{formatDate(row.tanggal)}</td>
-										<td>{formatDay(row)}</td>
-										<td>{row.khotib}</td>
-										<td>{row.imam || '-'}</td>
-										<td>{row.catatan || '-'}</td>
-										<td>
-											<div class="flex flex-wrap gap-2">
-												<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditKhotib(row)}>
-													Edit
-												</button>
-												<form method="POST" action="?/deleteKhotib" use:enhance={handleAction}>
-													<input type="hidden" name="id" value={row.id} />
-													<button
-														type="submit"
-														class="btn btn-xs btn-ghost text-red-600"
-														on:click={(event) => {
-															if (!confirm('Hapus jadwal ini?')) event.preventDefault();
-														}}
-													>
-														Hapus
-													</button>
-												</form>
-											</div>
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{/if}
+		<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${khotibId ? 'xl:col-span-2' : ''}`}>
+			<div class="flex items-center justify-between">
+				<h3 class="text-lg font-semibold text-slate-900">Daftar Khotib Jumat</h3>
+				<span class="text-xs text-slate-500">{khotibSchedule.length} jadwal</span>
 			</div>
+			{#if khotibSchedule.length === 0}
+				<p class="mt-4 text-sm text-slate-500">Belum ada jadwal khotib Jumat.</p>
+			{:else}
+				<div class="mt-4 space-y-3 md:hidden">
+					{#each khotibSchedule as row}
+						<div class={`rounded-2xl border p-4 shadow-sm ${khotibId === row.id ? 'border-amber-300 bg-amber-50/60' : 'border-slate-200 bg-white'}`}>
+							<div class="flex items-center justify-between">
+								<p class="text-sm font-semibold text-slate-900">{row.khotib}</p>
+								<span class="text-xs text-slate-500">{formatDate(row.tanggal)}</span>
+							</div>
+							<p class="mt-2 text-xs text-slate-500">Hari: {formatDay(row)}</p>
+							<p class="mt-1 text-xs text-slate-500">Imam: {row.imam || '-'}</p>
+							{#if row.catatan}
+								<p class="mt-1 text-xs text-slate-500">{row.catatan}</p>
+							{/if}
+							<div class="mt-3 flex flex-wrap gap-2">
+								<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditKhotib(row)}>
+									Edit
+								</button>
+								<form method="POST" action="?/deleteKhotib" use:enhance={handleAction}>
+									<input type="hidden" name="id" value={row.id} />
+									<button
+										type="submit"
+										class="btn btn-xs btn-ghost text-red-600"
+										on:click={(event) => {
+											if (!confirm('Hapus jadwal ini?')) event.preventDefault();
+										}}
+									>
+										Hapus
+									</button>
+								</form>
+							</div>
+						</div>
+					{/each}
+				</div>
+				<div class="mt-4 hidden overflow-auto md:block">
+					<table class="table table-zebra w-full text-sm">
+						<thead>
+							<tr>
+								<th>Tanggal</th>
+								<th>Hari</th>
+								<th>Khotib</th>
+								<th>Imam</th>
+								<th>Catatan</th>
+								<th>Aksi</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each khotibSchedule as row}
+								<tr class={khotibId === row.id ? 'bg-amber-50' : ''}>
+									<td>{formatDate(row.tanggal)}</td>
+									<td>{formatDay(row)}</td>
+									<td>{row.khotib}</td>
+									<td>{row.imam || '-'}</td>
+									<td>{row.catatan || '-'}</td>
+									<td>
+										<div class="flex flex-wrap gap-2">
+											<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditKhotib(row)}>
+												Edit
+											</button>
+											<form method="POST" action="?/deleteKhotib" use:enhance={handleAction}>
+												<input type="hidden" name="id" value={row.id} />
+												<button
+													type="submit"
+													class="btn btn-xs btn-ghost text-red-600"
+													on:click={(event) => {
+														if (!confirm('Hapus jadwal ini?')) event.preventDefault();
+													}}
+												>
+													Hapus
+												</button>
+											</form>
+										</div>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{/if}
 		</div>
 	</section>
 </div>

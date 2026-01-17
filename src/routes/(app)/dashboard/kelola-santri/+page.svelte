@@ -268,10 +268,10 @@
 					<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4 rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40 px-4 py-3">
 						<div>
 							<div class="text-sm font-semibold text-emerald-700">Unduh laporan {memberLabel}</div>
-							<div class="text-xs text-emerald-700/80">Format CSV dapat dibuka di Excel atau Google Sheets.</div>
+							<div class="text-xs text-emerald-700/80">Format .xlsx dapat dibuka di Excel atau Google Sheets.</div>
 						</div>
 						<a class="btn btn-sm btn-outline btn-success" href="/api/reports/anggota">
-							⬇️ Download Excel
+							⬇️ Download Excel (.xlsx)
 						</a>
 					</div>
 				{/if}

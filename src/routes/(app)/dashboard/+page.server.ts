@@ -10,10 +10,70 @@ import { isCommunityOrgType, isEducationalOrgType } from '$lib/server/utils';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import { assertLoggedIn, assertOrgMember, assertOrgRoleAllowed } from '$lib/server/auth/rbac';
 import { listOrgAssets } from '$lib/server/org-assets';
+import * as XLSX from 'xlsx';
 
 const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
 const isMissingTableError = (err: unknown) =>
 	`${(err as Error)?.message ?? err}`.toLowerCase().includes('no such table');
+
+const normalizeHeader = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const pickMapValue = (map: Map<string, unknown>, keys: string[]) => {
+	for (const key of keys) {
+		if (map.has(key)) return map.get(key);
+	}
+	return null;
+};
+
+const toISODate = (date: Date) => date.toISOString().slice(0, 10);
+
+const normalizeDateInput = (value: string) => {
+	const trimmed = value.trim();
+	if (!trimmed) return null;
+	if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+	const match = trimmed.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+	if (!match) return null;
+	const day = Number(match[1]);
+	const month = Number(match[2]);
+	const year = Number(match[3]);
+	if (!year || !month || !day) return null;
+	const date = new Date(Date.UTC(year, month - 1, day));
+	if (Number.isNaN(date.getTime())) return null;
+	return toISODate(date);
+};
+
+const normalizeDateValue = (value: unknown) => {
+	if (!value) return null;
+	if (value instanceof Date) {
+		return Number.isNaN(value.getTime()) ? null : toISODate(value);
+	}
+	if (typeof value === 'number') {
+		const parsed = XLSX.SSF.parse_date_code(value);
+		if (!parsed) return null;
+		const date = new Date(Date.UTC(parsed.y, parsed.m - 1, parsed.d));
+		return Number.isNaN(date.getTime()) ? null : toISODate(date);
+	}
+	if (typeof value === 'string') {
+		return normalizeDateInput(value);
+	}
+	return null;
+};
+
+const parseInteger = (value: unknown) => {
+	if (typeof value === 'number' && Number.isFinite(value)) return Math.floor(value);
+	const cleaned = `${value ?? ''}`.replace(/[^0-9.-]/g, '');
+	if (!cleaned) return null;
+	const parsed = Number(cleaned);
+	return Number.isFinite(parsed) ? Math.floor(parsed) : null;
+};
+
+const assetNameKeys = ['name', 'nama', 'aset', 'asset'];
+const assetCategoryKeys = ['category', 'kategori'];
+const assetQuantityKeys = ['quantity', 'jumlah', 'qty', 'unit'];
+const assetConditionKeys = ['condition', 'kondisi'];
+const assetLocationKeys = ['location', 'lokasi'];
+const assetNotesKeys = ['notes', 'catatan', 'keterangan'];
+const assetDateKeys = ['acquiredat', 'acquired', 'tanggal', 'tgl', 'date', 'perolehan', 'tanggalperolehan'];
 
 const fetchSurahs = async (db: D1Database) => {
 	// Coba beberapa variasi kolom agar tidak error jika skema lama berbeda (prioritas pakai "nama","total_ayat")
@@ -324,6 +384,110 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 };
 
 export const actions: Actions = {
+	importAssets: async ({ request, locals }) => {
+		const { db, orgId, user } = await requireCommunityContext(locals);
+
+		const data = await request.formData();
+		const file = data.get('file');
+		if (!(file instanceof File) || file.size === 0) {
+			return fail(400, { error: 'File Excel wajib diunggah' });
+		}
+
+		let rows: Record<string, unknown>[] = [];
+		try {
+			const buffer = await file.arrayBuffer();
+			const workbook = XLSX.read(buffer, { type: 'array' });
+			const sheetName = workbook.SheetNames[0];
+			const sheet = sheetName ? workbook.Sheets[sheetName] : null;
+			if (!sheet) {
+				return fail(400, { error: 'Sheet Excel tidak ditemukan' });
+			}
+			rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: true }) as Record<
+				string,
+				unknown
+			>[];
+		} catch (err) {
+			console.error('Import aset error', err);
+			return fail(400, { error: 'File Excel tidak dapat dibaca' });
+		}
+
+		const items: {
+			name: string;
+			category: string | null;
+			quantity: number;
+			condition: string | null;
+			location: string | null;
+			notes: string | null;
+			acquiredAt: string | null;
+		}[] = [];
+
+		for (const row of rows) {
+			const map = new Map<string, unknown>();
+			for (const [key, value] of Object.entries(row)) {
+				const normalized = normalizeHeader(key);
+				if (normalized) map.set(normalized, value);
+			}
+
+			const name = `${pickMapValue(map, assetNameKeys) ?? ''}`.trim();
+			const quantity = parseInteger(pickMapValue(map, assetQuantityKeys));
+			if (!name || !Number.isFinite(quantity ?? NaN) || (quantity ?? 0) <= 0) {
+				continue;
+			}
+
+			const category = `${pickMapValue(map, assetCategoryKeys) ?? ''}`.trim();
+			const condition = `${pickMapValue(map, assetConditionKeys) ?? ''}`.trim();
+			const location = `${pickMapValue(map, assetLocationKeys) ?? ''}`.trim();
+			const notes = `${pickMapValue(map, assetNotesKeys) ?? ''}`.trim();
+			const acquiredAt = normalizeDateValue(pickMapValue(map, assetDateKeys));
+
+			items.push({
+				name,
+				category: category || null,
+				quantity: Math.floor(quantity ?? 1),
+				condition: condition || null,
+				location: location || null,
+				notes: notes || null,
+				acquiredAt: acquiredAt || null
+			});
+		}
+
+		if (items.length === 0) {
+			return fail(400, { error: 'Tidak ada data valid di file Excel' });
+		}
+
+		const now = Date.now();
+		try {
+			await db.batch(
+				items.map((item) =>
+					db
+						.prepare(
+							`INSERT INTO org_assets (id, organization_id, name, category, quantity, condition, location, notes, acquired_at, created_by, created_at)
+							 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+						)
+						.bind(
+							crypto.randomUUID(),
+							orgId,
+							item.name,
+							item.category,
+							item.quantity,
+							item.condition,
+							item.location,
+							item.notes,
+							item.acquiredAt,
+							user.id,
+							now
+						)
+				)
+			);
+		} catch (err) {
+			if (isMissingTableError(err)) {
+				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+			}
+			throw err;
+		}
+
+		return { success: true };
+	},
 	addAsset: async ({ request, locals }) => {
 		const { db, orgId, user } = await requireCommunityContext(locals);
 

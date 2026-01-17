@@ -2,19 +2,12 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
 import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import * as XLSX from 'xlsx';
 
 const managerRoles = ['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
 
 const ensureAuth = (locals: App.Locals) => {
 	return assertLoggedIn({ locals });
-};
-
-const escapeCsv = (value: unknown) => {
-	const text = value == null ? '' : String(value);
-	if (/[",\n]/.test(text)) {
-		return `"${text.replace(/"/g, '""')}"`;
-	}
-	return text;
 };
 
 const formatDate = (value?: number | string | null) => {
@@ -110,13 +103,16 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		'Disetujui Terakhir'
 	];
 
-	const csv = [header, ...rows].map((line) => line.map(escapeCsv).join(',')).join('\n');
 	const dateStamp = new Date().toISOString().slice(0, 10);
-	const filename = `laporan-${memberRole}-${org.slug}-${dateStamp}.csv`;
+	const filename = `laporan-${memberRole}-${org.slug}-${dateStamp}.xlsx`;
+	const worksheet = XLSX.utils.aoa_to_sheet([header, ...rows]);
+	const workbook = XLSX.utils.book_new();
+	XLSX.utils.book_append_sheet(workbook, worksheet, 'Anggota');
+	const output = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
 
-	return new Response(`\ufeff${csv}`, {
+	return new Response(output, {
 		headers: {
-			'Content-Type': 'text/csv; charset=utf-8',
+			'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 			'Content-Disposition': `attachment; filename="${filename}"`
 		}
 	});

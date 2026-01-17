@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getOrganizationById } from '$lib/server/organizations';
 import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import * as XLSX from 'xlsx';
 
 const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
 
@@ -11,14 +12,6 @@ const ensureAuth = (locals: App.Locals) => {
 		throw error(500, 'Database tidak tersedia');
 	}
 	return user;
-};
-
-const escapeCsv = (value: unknown) => {
-	const text = value == null ? '' : String(value);
-	if (/[",\n]/.test(text)) {
-		return `"${text.replace(/"/g, '""')}"`;
-	}
-	return text;
 };
 
 const formatDate = (value?: number | string | null) => {
@@ -88,7 +81,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const { startTs, endTs, startRaw, endRaw } = parseDateRange(url);
 	const params: Array<string | number> = [];
 
-	let csvRows: string[][] = [];
+	let rows: string[][] = [];
 	let header: string[] = [];
 	let filenamePrefix = '';
 
@@ -135,7 +128,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			}>();
 
 		header = ['Tanggal', 'Tipe', 'Kategori', 'Keterangan', 'Nominal', 'Input Oleh', 'Dibuat Pada'];
-		csvRows = (results ?? []).map((row) => [
+		rows = (results ?? []).map((row) => [
 			formatDate(row.tanggal),
 			row.tipe,
 			row.kategori,
@@ -185,7 +178,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			}>();
 
 		header = ['Tanggal', 'Program', 'Nama Muzakki', 'Jumlah Jiwa', 'Jenis Bayar', 'Nominal', 'Diterima Oleh'];
-		csvRows = (results ?? []).map((row) => [
+		rows = (results ?? []).map((row) => [
 			formatDate(row.createdAt),
 			row.namaProgram,
 			row.namaMuzakki,
@@ -231,7 +224,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			}>();
 
 		header = ['Tanggal', 'Program', 'Jenis Hewan', 'Status Hewan', 'Nama Sohibul Qurban'];
-		csvRows = (results ?? []).map((row) => [
+		rows = (results ?? []).map((row) => [
 			formatDate(row.createdAt),
 			row.namaProgram,
 			row.jenisHewan,
@@ -241,15 +234,18 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		filenamePrefix = 'qurban';
 	}
 
-	const csv = [header, ...csvRows].map((line) => line.map(escapeCsv).join(',')).join('\n');
 	const rangeLabel =
 		startRaw || endRaw ? `-${startRaw ?? 'awal'}-${endRaw ?? 'akhir'}` : '';
 	const dateStamp = new Date().toISOString().slice(0, 10);
-	const filename = `laporan-${filenamePrefix}-${org.slug}${rangeLabel}-${dateStamp}.csv`;
+	const filename = `laporan-${filenamePrefix}-${org.slug}${rangeLabel}-${dateStamp}.xlsx`;
+	const worksheet = XLSX.utils.aoa_to_sheet([header, ...rows]);
+	const workbook = XLSX.utils.book_new();
+	XLSX.utils.book_append_sheet(workbook, worksheet, filenamePrefix);
+	const output = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
 
-	return new Response(`\ufeff${csv}`, {
+	return new Response(output, {
 		headers: {
-			'Content-Type': 'text/csv; charset=utf-8',
+			'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 			'Content-Disposition': `attachment; filename="${filename}"`
 		}
 	});

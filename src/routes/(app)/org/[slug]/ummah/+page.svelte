@@ -150,7 +150,7 @@
 		<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 			<div>
 				<h2 class="text-lg font-semibold text-slate-900">Export Laporan Keuangan</h2>
-				<p class="text-xs text-slate-500">Unduh CSV untuk kas, zakat, atau qurban. Biarkan tanggal kosong untuk semua data.</p>
+				<p class="text-xs text-slate-500">Unduh Excel (.xlsx) untuk kas, zakat, atau qurban. Biarkan tanggal kosong untuk semua data.</p>
 			</div>
 			<div class="flex flex-wrap gap-2">
 				{#if data.canManageKas}
