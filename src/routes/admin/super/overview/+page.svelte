@@ -413,8 +413,10 @@
 					>
 						<div class="flex items-start justify-between">
 							<div>
-								<p class="text-[11px] uppercase tracking-[0.3em] text-slate-400">{card.label}</p>
-								<p class={`mt-2 text-2xl font-semibold ${card.accent}`}>{formatNumber(card.totalInstitutions)}</p>
+								<p class="text-[11px] uppercase tracking-[0.22em] text-slate-400 leading-snug">{card.label}</p>
+								<p class={`mt-2 text-2xl font-semibold tabular-nums ${card.accent}`}>
+									{formatNumber(card.totalInstitutions)}
+								</p>
 								<p class="text-xs text-slate-500">
 									Aktif {formatNumber(card.activeInstitutions)} • Pending {formatNumber(card.pendingInstitutions)}
 								</p>
@@ -422,17 +424,21 @@
 							<div class={`h-10 w-10 rounded-2xl bg-gradient-to-br ${card.tone}`}></div>
 						</div>
 						<div class="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-500">
-							<div>
-								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">{card.primaryLabel}</p>
-								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.primaryCount)}</p>
+							<div class="min-w-0">
+								<p class="text-[9px] uppercase tracking-[0.2em] text-slate-400 leading-snug break-words">
+									{card.primaryLabel}
+								</p>
+								<p class="text-sm font-semibold text-slate-900 tabular-nums">{formatNumber(card.primaryCount)}</p>
 							</div>
-							<div>
-								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">{card.staffLabel}</p>
-								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.staffCount)}</p>
+							<div class="min-w-0">
+								<p class="text-[9px] uppercase tracking-[0.2em] text-slate-400 leading-snug break-words">
+									{card.staffLabel}
+								</p>
+								<p class="text-sm font-semibold text-slate-900 tabular-nums">{formatNumber(card.staffCount)}</p>
 							</div>
-							<div>
-								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Admin</p>
-								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.adminCount)}</p>
+							<div class="min-w-0">
+								<p class="text-[9px] uppercase tracking-[0.2em] text-slate-400 leading-snug break-words">Admin</p>
+								<p class="text-sm font-semibold text-slate-900 tabular-nums">{formatNumber(card.adminCount)}</p>
 							</div>
 						</div>
 						{#if card.alumniCount}
@@ -461,8 +467,10 @@
 					>
 						<div class="flex items-start justify-between">
 							<div>
-								<p class="text-[11px] uppercase tracking-[0.3em] text-slate-400">{card.label}</p>
-								<p class={`mt-2 text-2xl font-semibold ${card.accent}`}>{formatNumber(card.totalInstitutions)}</p>
+								<p class="text-[11px] uppercase tracking-[0.22em] text-slate-400 leading-snug">{card.label}</p>
+								<p class={`mt-2 text-2xl font-semibold tabular-nums ${card.accent}`}>
+									{formatNumber(card.totalInstitutions)}
+								</p>
 								<p class="text-xs text-slate-500">
 									Aktif {formatNumber(card.activeInstitutions)} • Pending {formatNumber(card.pendingInstitutions)}
 								</p>
@@ -470,17 +478,21 @@
 							<div class={`h-10 w-10 rounded-2xl bg-gradient-to-br ${card.tone}`}></div>
 						</div>
 						<div class="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-500">
-							<div>
-								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">{card.primaryLabel}</p>
-								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.primaryCount)}</p>
+							<div class="min-w-0">
+								<p class="text-[9px] uppercase tracking-[0.2em] text-slate-400 leading-snug break-words">
+									{card.primaryLabel}
+								</p>
+								<p class="text-sm font-semibold text-slate-900 tabular-nums">{formatNumber(card.primaryCount)}</p>
 							</div>
-							<div>
-								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">{card.staffLabel}</p>
-								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.staffCount)}</p>
+							<div class="min-w-0">
+								<p class="text-[9px] uppercase tracking-[0.2em] text-slate-400 leading-snug break-words">
+									{card.staffLabel}
+								</p>
+								<p class="text-sm font-semibold text-slate-900 tabular-nums">{formatNumber(card.staffCount)}</p>
 							</div>
-							<div>
-								<p class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Admin</p>
-								<p class="text-sm font-semibold text-slate-900">{formatNumber(card.adminCount)}</p>
+							<div class="min-w-0">
+								<p class="text-[9px] uppercase tracking-[0.2em] text-slate-400 leading-snug break-words">Admin</p>
+								<p class="text-sm font-semibold text-slate-900 tabular-nums">{formatNumber(card.adminCount)}</p>
 							</div>
 						</div>
 						{#if card.rejectedInstitutions}

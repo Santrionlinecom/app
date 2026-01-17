@@ -385,15 +385,21 @@
 				<div class="mt-4 grid gap-3 md:grid-cols-3">
 					<div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
 						<p class="text-xs uppercase text-emerald-700">Saldo</p>
-						<p class="text-lg font-bold text-emerald-700">{formatCurrency(data.kasSummary?.saldo)}</p>
+						<p class="text-base font-bold text-emerald-700 tabular-nums tracking-tight leading-tight break-words sm:text-lg">
+							{formatCurrency(data.kasSummary?.saldo)}
+						</p>
 					</div>
 					<div class="rounded-xl border border-blue-100 bg-blue-50 p-3">
 						<p class="text-xs uppercase text-blue-700">Pemasukan</p>
-						<p class="text-lg font-bold text-blue-700">{formatCurrency(data.kasSummary?.masuk)}</p>
+						<p class="text-base font-bold text-blue-700 tabular-nums tracking-tight leading-tight break-words sm:text-lg">
+							{formatCurrency(data.kasSummary?.masuk)}
+						</p>
 					</div>
 					<div class="rounded-xl border border-amber-100 bg-amber-50 p-3">
 						<p class="text-xs uppercase text-amber-700">Pengeluaran</p>
-						<p class="text-lg font-bold text-amber-700">{formatCurrency(data.kasSummary?.keluar)}</p>
+						<p class="text-base font-bold text-amber-700 tabular-nums tracking-tight leading-tight break-words sm:text-lg">
+							{formatCurrency(data.kasSummary?.keluar)}
+						</p>
 					</div>
 				</div>
 

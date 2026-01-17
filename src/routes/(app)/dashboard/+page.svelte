@@ -316,29 +316,41 @@
 				{#if isCommunityOrg}
 					<div class="flex-1 rounded-2xl bg-amber-50 px-4 py-3">
 						<p class="text-xs text-amber-700">Pemasukan 7 hari</p>
-						<p class="text-2xl font-semibold text-amber-900">{formatCurrency(kasWeeklyIn)}</p>
+						<p class="text-xl font-semibold text-amber-900 tabular-nums tracking-tight leading-tight break-words sm:text-2xl">
+							{formatCurrency(kasWeeklyIn)}
+						</p>
 					</div>
 					<div class="flex-1 rounded-2xl bg-emerald-50 px-4 py-3">
 						<p class="text-xs text-emerald-700">Agenda mendatang</p>
-						<p class="text-2xl font-semibold text-emerald-900">{communitySchedule.length}</p>
+						<p class="text-2xl font-semibold text-emerald-900 tabular-nums tracking-tight leading-tight">
+							{communitySchedule.length}
+						</p>
 					</div>
 				{:else if isStudent}
 					<div class="flex-1 rounded-2xl bg-teal-50 px-4 py-3">
 						<p class="text-xs text-teal-700">Disetujui</p>
-						<p class="text-2xl font-semibold text-teal-900">{stats.approved ?? 0}</p>
+						<p class="text-2xl font-semibold text-teal-900 tabular-nums tracking-tight leading-tight">
+							{stats.approved ?? 0}
+						</p>
 					</div>
 					<div class="flex-1 rounded-2xl bg-amber-50 px-4 py-3">
 						<p class="text-xs text-amber-700">Hari ini</p>
-						<p class="text-2xl font-semibold text-amber-900">{stats.todayApproved ?? 0}</p>
+						<p class="text-2xl font-semibold text-amber-900 tabular-nums tracking-tight leading-tight">
+							{stats.todayApproved ?? 0}
+						</p>
 					</div>
 				{:else if isStaff}
 					<div class="flex-1 rounded-2xl bg-amber-50 px-4 py-3">
 						<p class="text-xs text-amber-700">Setoran menunggu</p>
-						<p class="text-2xl font-semibold text-amber-900">{pending.length}</p>
+						<p class="text-2xl font-semibold text-amber-900 tabular-nums tracking-tight leading-tight">
+							{pending.length}
+						</p>
 					</div>
 					<div class="flex-1 rounded-2xl bg-teal-50 px-4 py-3">
 						<p class="text-xs text-teal-700">Santri aktif</p>
-						<p class="text-2xl font-semibold text-teal-900">{students.length}</p>
+						<p class="text-2xl font-semibold text-teal-900 tabular-nums tracking-tight leading-tight">
+							{students.length}
+						</p>
 					</div>
 				{/if}
 			</div>
@@ -368,10 +380,12 @@
 					{#each statHighlights as stat}
 						<a
 							href={stat.href}
-							class="flex items-center justify-between rounded-2xl border border-white/70 bg-white/70 px-4 py-3 text-sm text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+							class="flex flex-col gap-1 rounded-2xl border border-white/70 bg-white/70 px-4 py-3 text-sm text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
 						>
-							<span>{stat.label}</span>
-							<span class="font-semibold text-slate-900">{stat.value}</span>
+							<span class="min-w-0">{stat.label}</span>
+							<span class="font-semibold text-slate-900 tabular-nums tracking-tight sm:text-right">
+								{stat.value}
+							</span>
 						</a>
 					{/each}
 				{:else}

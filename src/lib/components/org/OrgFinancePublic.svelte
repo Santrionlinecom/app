@@ -125,17 +125,23 @@
 		<div class="grid gap-4 md:grid-cols-3">
 			<div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
 				<p class="text-xs uppercase text-emerald-700">Saldo Kas</p>
-				<p class="text-2xl font-bold text-emerald-700">{formatCurrency(kas.saldo)}</p>
+				<p class="text-xl font-bold text-emerald-700 tabular-nums tracking-tight leading-tight break-words sm:text-2xl">
+					{formatCurrency(kas.saldo)}
+				</p>
 				<p class="text-xs text-emerald-700/80">Update: {formatDate(kas.updatedAt)}</p>
 			</div>
 			<div class="rounded-2xl border border-blue-100 bg-blue-50 p-4">
 				<p class="text-xs uppercase text-blue-700">Pemasukan</p>
-				<p class="text-2xl font-bold text-blue-700">{formatCurrency(kas.masuk)}</p>
+				<p class="text-xl font-bold text-blue-700 tabular-nums tracking-tight leading-tight break-words sm:text-2xl">
+					{formatCurrency(kas.masuk)}
+				</p>
 				<p class="text-xs text-blue-700/80">Kas masuk terakumulasi</p>
 			</div>
 			<div class="rounded-2xl border border-amber-100 bg-amber-50 p-4">
 				<p class="text-xs uppercase text-amber-700">Pengeluaran</p>
-				<p class="text-2xl font-bold text-amber-700">{formatCurrency(kas.keluar)}</p>
+				<p class="text-xl font-bold text-amber-700 tabular-nums tracking-tight leading-tight break-words sm:text-2xl">
+					{formatCurrency(kas.keluar)}
+				</p>
 				<p class="text-xs text-amber-700/80">Kas keluar terakumulasi</p>
 			</div>
 		</div>
@@ -153,7 +159,9 @@
 					</div>
 					<div class="rounded-xl border border-blue-100 bg-blue-50 p-3">
 						<p class="text-xs uppercase text-blue-700">Zakat Uang</p>
-						<p class="text-lg font-bold text-blue-700">{formatCurrency(zakat.uang)}</p>
+						<p class="text-lg font-bold text-blue-700 tabular-nums tracking-tight leading-tight break-words">
+							{formatCurrency(zakat.uang)}
+						</p>
 					</div>
 					<div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
 						<p class="text-xs uppercase text-slate-600">Total Jiwa</p>
