@@ -197,6 +197,13 @@
 					class="mt-4 space-y-3"
 					use:enhance={handleAction}
 				>
+					<a
+						href="/templates/jadwal-imam-template.xlsx"
+						class="btn btn-outline w-full"
+						download
+					>
+						Download Template
+					</a>
 					<input
 						type="file"
 						name="file"
@@ -369,7 +376,7 @@
 		<div class="rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur">
 			<p class="text-xs uppercase tracking-[0.3em] text-amber-600">Ramadan</p>
 			<h2 class="text-xl md:text-2xl font-semibold text-slate-900 mt-2">Jadwal Imam & Bilal Tarawih</h2>
-			<p class="text-sm text-slate-600 mt-1">Susunan imam dan bilal untuk malam tarawih.</p>
+			<p class="text-sm text-slate-600 mt-1">Susunan imam dan bilal untuk 30 malam tarawih.</p>
 		</div>
 
 		<div class="grid gap-6 xl:grid-cols-2">
@@ -393,7 +400,8 @@
 							type="number"
 							name="urut"
 							min="1"
-							placeholder="No."
+							max="30"
+							placeholder="No. (1-30)"
 							class="input input-bordered w-full"
 							bind:value={tarawihUrut}
 							required

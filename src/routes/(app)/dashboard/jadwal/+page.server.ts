@@ -373,8 +373,8 @@ export const actions: Actions = {
 		const bilal = `${data.get('bilal') ?? ''}`.trim();
 
 		const urut = Number(urutRaw);
-		if (!Number.isFinite(urut) || urut < 1 || !Number.isInteger(urut)) {
-			return fail(400, { error: 'Nomor urut harus angka bulat' });
+		if (!Number.isFinite(urut) || urut < 1 || urut > 30 || !Number.isInteger(urut)) {
+			return fail(400, { error: 'Nomor urut harus 1-30' });
 		}
 		if (!hari || !tanggal || !imam) {
 			return fail(400, { error: 'Data jadwal belum lengkap' });
@@ -431,8 +431,8 @@ export const actions: Actions = {
 		if (!id) {
 			return fail(400, { error: 'Jadwal tidak ditemukan' });
 		}
-		if (!Number.isFinite(urut) || urut < 1 || !Number.isInteger(urut)) {
-			return fail(400, { error: 'Nomor urut harus angka bulat' });
+		if (!Number.isFinite(urut) || urut < 1 || urut > 30 || !Number.isInteger(urut)) {
+			return fail(400, { error: 'Nomor urut harus 1-30' });
 		}
 		if (!hari || !tanggal || !imam) {
 			return fail(400, { error: 'Data jadwal belum lengkap' });
