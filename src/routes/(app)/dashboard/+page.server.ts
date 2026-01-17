@@ -1,5 +1,5 @@
-import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error, fail, redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
 import { getPendingSubmissions, getAllStudentsProgress, getSantriChecklist, getSantriStats, getDailySeries } from '$lib/server/progress';
 import { getSantriTeacherId, listOrgTeachers } from '$lib/server/santri-ustadz';
 import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
@@ -8,6 +8,18 @@ import { SURAH_DATA } from '$lib/surah-data';
 import { getOrgFinanceSummary } from '$lib/server/ummah';
 import { isCommunityOrgType, isEducationalOrgType } from '$lib/server/utils';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
+import {
+	assertFeature,
+	assertLoggedIn,
+	assertOrgMember,
+	assertOrgRoleAllowed
+} from '$lib/server/auth/rbac';
+import { listTarawihSchedule } from '$lib/server/tarawih';
+import { listOrgAssets } from '$lib/server/org-assets';
+
+const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
+const isMissingTableError = (err: unknown) =>
+	`${(err as Error)?.message ?? err}`.toLowerCase().includes('no such table');
 
 const fetchSurahs = async (db: D1Database) => {
 	// Coba beberapa variasi kolom agar tidak error jika skema lama berbeda (prioritas pakai "nama","total_ayat")
@@ -95,6 +107,47 @@ const fetchCommunitySchedule = async (
 	return results ?? [];
 };
 
+const requireCommunityContext = async (locals: App.Locals) => {
+	const user = assertLoggedIn({ locals });
+	if (!locals.db) {
+		throw error(500, 'Database tidak tersedia');
+	}
+
+	const orgId = assertOrgMember(user);
+	const { isSystemAdmin } = getOrgScope(user);
+	const role = user.role ?? '';
+	if (!isSystemAdmin && !allowedRoles.has(role)) {
+		throw error(403, 'Tidak memiliki akses');
+	}
+
+	const org = await getOrganizationById(locals.db, orgId);
+	if (!org) {
+		throw error(404, 'Lembaga tidak ditemukan');
+	}
+	assertOrgRoleAllowed(org.type, role);
+	if (org.type !== 'masjid' && org.type !== 'musholla') {
+		throw error(400, 'Fitur ini hanya untuk masjid atau musholla');
+	}
+
+	return { db: locals.db, orgId, user, org, role };
+};
+
+const loadCommunityManagerData = async (db: D1Database, orgId: string) => {
+	const [assets, tarawihSchedule] = await Promise.all([
+		listOrgAssets(db, orgId),
+		listTarawihSchedule(db, orgId)
+	]);
+
+	let nextTarawihUrut = 1;
+	for (const row of tarawihSchedule) {
+		if (row.urut >= nextTarawihUrut) {
+			nextTarawihUrut = row.urut + 1;
+		}
+	}
+
+	return { assets, tarawihSchedule, nextTarawihUrut };
+};
+
 export const load: PageServerLoad = async ({ locals, request, platform }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth');
@@ -120,6 +173,11 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 	const isEducationalOrg = isEducationalOrgType(orgType);
 	const isCommunityOrg = isCommunityOrgType(orgType);
 	const isCommunityMember = isCommunityOrg || role === 'jamaah';
+	const canManageCommunity = isCommunityOrg && allowedRoles.has(role);
+	const communityManagerData =
+		canManageCommunity && orgId
+			? await loadCommunityManagerData(db, orgId)
+			: { assets: [], tarawihSchedule: [], nextTarawihUrut: 1 };
 
 	const loadCommunityWidgets = async () => {
 		if (!isCommunityMember || !orgId) {
@@ -186,7 +244,9 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			return {
 				...basePayload,
 				orgs,
-				...communityWidgets
+				canManageCommunity,
+				...communityWidgets,
+				...communityManagerData
 			};
 		}
 
@@ -195,6 +255,8 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			...basePayload,
 			surahs,
 			orgs,
+			canManageCommunity,
+			...communityManagerData,
 			students: await getAllStudentsProgress(db, { orgId: scopedOrgId }),
 			pending: await getPendingSubmissions(db, { orgId: scopedOrgId })
 		};
@@ -208,7 +270,9 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 				org: orgProfile,
 				isEducationalOrg,
 				isCommunityOrg,
-				...communityWidgets
+				canManageCommunity,
+				...communityWidgets,
+				...communityManagerData
 			};
 		}
 
@@ -219,6 +283,8 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			org: orgProfile,
 			isEducationalOrg,
 			isCommunityOrg,
+			canManageCommunity,
+			...communityManagerData,
 			pending: await getPendingSubmissions(db, { orgId: scopedOrgId, ustadzId: locals.user.id }),
 			students: await getAllStudentsProgress(db, { orgId: scopedOrgId, ustadzId: locals.user.id }),
 			surahs
@@ -242,6 +308,8 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			org: orgProfile,
 			isEducationalOrg,
 			isCommunityOrg,
+			canManageCommunity,
+			...communityManagerData,
 			checklist,
 			stats,
 			series,
@@ -261,6 +329,8 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 		org: orgProfile,
 		isEducationalOrg,
 		isCommunityOrg,
+		canManageCommunity,
+		...communityManagerData,
 		checklist: [],
 		stats: { approved: 0, submitted: 0, todayApproved: 0 },
 		series: [],
@@ -268,4 +338,293 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 		totalAyah: 0,
 		...communityWidgets
 	};
+};
+
+export const actions: Actions = {
+	addAsset: async ({ request, locals }) => {
+		const { db, orgId, user } = await requireCommunityContext(locals);
+
+		const data = await request.formData();
+		const name = `${data.get('name') ?? ''}`.trim();
+		const category = `${data.get('category') ?? ''}`.trim();
+		const quantityRaw = `${data.get('quantity') ?? ''}`.trim();
+		const condition = `${data.get('condition') ?? ''}`.trim();
+		const location = `${data.get('location') ?? ''}`.trim();
+		const notes = `${data.get('notes') ?? ''}`.trim();
+		const acquiredAtRaw = `${data.get('acquiredAt') ?? ''}`.trim();
+
+		const quantity = Number(quantityRaw);
+		const acquiredAt = acquiredAtRaw || null;
+		const parsedDate = acquiredAt ? Date.parse(`${acquiredAt}T00:00:00`) : null;
+
+		if (!name) return fail(400, { error: 'Nama aset wajib diisi' });
+		if (!Number.isFinite(quantity) || quantity <= 0) {
+			return fail(400, { error: 'Jumlah harus lebih dari 0' });
+		}
+		if (acquiredAt && !Number.isFinite(parsedDate)) {
+			return fail(400, { error: 'Tanggal perolehan tidak valid' });
+		}
+
+		try {
+			await db
+				.prepare(
+					`INSERT INTO org_assets (id, organization_id, name, category, quantity, condition, location, notes, acquired_at, created_by, created_at)
+					 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				)
+				.bind(
+					crypto.randomUUID(),
+					orgId,
+					name,
+					category || null,
+					Math.floor(quantity),
+					condition || null,
+					location || null,
+					notes || null,
+					acquiredAt,
+					user.id,
+					Date.now()
+				)
+				.run();
+		} catch (err) {
+			if (isMissingTableError(err)) {
+				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+			}
+			throw err;
+		}
+
+		return { success: true };
+	},
+	updateAsset: async ({ request, locals }) => {
+		const { db, orgId } = await requireCommunityContext(locals);
+
+		const data = await request.formData();
+		const id = `${data.get('id') ?? ''}`.trim();
+		const name = `${data.get('name') ?? ''}`.trim();
+		const category = `${data.get('category') ?? ''}`.trim();
+		const quantityRaw = `${data.get('quantity') ?? ''}`.trim();
+		const condition = `${data.get('condition') ?? ''}`.trim();
+		const location = `${data.get('location') ?? ''}`.trim();
+		const notes = `${data.get('notes') ?? ''}`.trim();
+		const acquiredAtRaw = `${data.get('acquiredAt') ?? ''}`.trim();
+
+		const quantity = Number(quantityRaw);
+		const acquiredAt = acquiredAtRaw || null;
+		const parsedDate = acquiredAt ? Date.parse(`${acquiredAt}T00:00:00`) : null;
+
+		if (!id) return fail(400, { error: 'Aset tidak ditemukan' });
+		if (!name) return fail(400, { error: 'Nama aset wajib diisi' });
+		if (!Number.isFinite(quantity) || quantity <= 0) {
+			return fail(400, { error: 'Jumlah harus lebih dari 0' });
+		}
+		if (acquiredAt && !Number.isFinite(parsedDate)) {
+			return fail(400, { error: 'Tanggal perolehan tidak valid' });
+		}
+
+		let result;
+		try {
+			result = await db
+				.prepare(
+					`UPDATE org_assets
+					 SET name = ?, category = ?, quantity = ?, condition = ?, location = ?, notes = ?, acquired_at = ?
+					 WHERE id = ? AND organization_id = ?`
+				)
+				.bind(
+					name,
+					category || null,
+					Math.floor(quantity),
+					condition || null,
+					location || null,
+					notes || null,
+					acquiredAt,
+					id,
+					orgId
+				)
+				.run();
+		} catch (err) {
+			if (isMissingTableError(err)) {
+				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+			}
+			throw err;
+		}
+
+		if ((result?.meta?.changes ?? 0) === 0) {
+			return fail(404, { error: 'Aset tidak ditemukan' });
+		}
+
+		return { success: true };
+	},
+	deleteAsset: async ({ request, locals }) => {
+		const { db, orgId } = await requireCommunityContext(locals);
+
+		const data = await request.formData();
+		const id = `${data.get('id') ?? ''}`.trim();
+		if (!id) {
+			return fail(400, { error: 'Aset tidak valid' });
+		}
+
+		let result;
+		try {
+			result = await db
+				.prepare('DELETE FROM org_assets WHERE id = ? AND organization_id = ?')
+				.bind(id, orgId)
+				.run();
+		} catch (err) {
+			if (isMissingTableError(err)) {
+				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+			}
+			throw err;
+		}
+
+		if ((result?.meta?.changes ?? 0) === 0) {
+			return fail(404, { error: 'Aset tidak ditemukan' });
+		}
+
+		return { success: true };
+	},
+	addTarawih: async ({ request, locals }) => {
+		const { db, orgId, role, org, user } = await requireCommunityContext(locals);
+		assertFeature(org.type, role, 'jadwal_kegiatan');
+
+		const data = await request.formData();
+		const urutRaw = `${data.get('urut') ?? ''}`.trim();
+		const hari = `${data.get('hari') ?? ''}`.trim();
+		const tanggal = `${data.get('tanggal') ?? ''}`.trim();
+		const imam = `${data.get('imam') ?? ''}`.trim();
+		const bilal = `${data.get('bilal') ?? ''}`.trim();
+
+		const urut = Number(urutRaw);
+		if (!Number.isFinite(urut) || urut < 1 || !Number.isInteger(urut)) {
+			return fail(400, { error: 'Nomor urut harus angka bulat' });
+		}
+		if (!hari || !tanggal || !imam) {
+			return fail(400, { error: 'Data jadwal belum lengkap' });
+		}
+
+		try {
+			const existing = await db
+				.prepare('SELECT id FROM jadwal_tarawih WHERE organization_id = ? AND urut = ?')
+				.bind(orgId, Math.floor(urut))
+				.first<{ id: string }>();
+			if (existing) {
+				return fail(400, { error: 'Nomor urut sudah digunakan' });
+			}
+
+			await db
+				.prepare(
+					`INSERT INTO jadwal_tarawih (id, organization_id, urut, hari, tanggal, imam, bilal, created_by, created_at)
+					 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				)
+				.bind(
+					crypto.randomUUID(),
+					orgId,
+					Math.floor(urut),
+					hari,
+					tanggal,
+					imam,
+					bilal || null,
+					user.id,
+					Date.now()
+				)
+				.run();
+		} catch (err) {
+			if (isMissingTableError(err)) {
+				return fail(500, { error: 'Tabel jadwal tarawih belum siap. Jalankan migrasi.' });
+			}
+			throw err;
+		}
+
+		return { success: true };
+	},
+	updateTarawih: async ({ request, locals }) => {
+		const { db, orgId, role, org } = await requireCommunityContext(locals);
+		assertFeature(org.type, role, 'jadwal_kegiatan');
+
+		const data = await request.formData();
+		const id = `${data.get('id') ?? ''}`.trim();
+		const urutRaw = `${data.get('urut') ?? ''}`.trim();
+		const hari = `${data.get('hari') ?? ''}`.trim();
+		const tanggal = `${data.get('tanggal') ?? ''}`.trim();
+		const imam = `${data.get('imam') ?? ''}`.trim();
+		const bilal = `${data.get('bilal') ?? ''}`.trim();
+
+		const urut = Number(urutRaw);
+		if (!id) {
+			return fail(400, { error: 'Jadwal tidak ditemukan' });
+		}
+		if (!Number.isFinite(urut) || urut < 1 || !Number.isInteger(urut)) {
+			return fail(400, { error: 'Nomor urut harus angka bulat' });
+		}
+		if (!hari || !tanggal || !imam) {
+			return fail(400, { error: 'Data jadwal belum lengkap' });
+		}
+
+		try {
+			const existing = await db
+				.prepare(
+					'SELECT id FROM jadwal_tarawih WHERE organization_id = ? AND urut = ? AND id != ?'
+				)
+				.bind(orgId, Math.floor(urut), id)
+				.first<{ id: string }>();
+			if (existing) {
+				return fail(400, { error: 'Nomor urut sudah digunakan' });
+			}
+
+			const result = await db
+				.prepare(
+					`UPDATE jadwal_tarawih
+					 SET urut = ?, hari = ?, tanggal = ?, imam = ?, bilal = ?, updated_at = ?
+					 WHERE id = ? AND organization_id = ?`
+				)
+				.bind(
+					Math.floor(urut),
+					hari,
+					tanggal,
+					imam,
+					bilal || null,
+					Date.now(),
+					id,
+					orgId
+				)
+				.run();
+
+			if ((result?.meta?.changes ?? 0) === 0) {
+				return fail(404, { error: 'Jadwal tidak ditemukan' });
+			}
+		} catch (err) {
+			if (isMissingTableError(err)) {
+				return fail(500, { error: 'Tabel jadwal tarawih belum siap. Jalankan migrasi.' });
+			}
+			throw err;
+		}
+
+		return { success: true };
+	},
+	deleteTarawih: async ({ request, locals }) => {
+		const { db, orgId, role, org } = await requireCommunityContext(locals);
+		assertFeature(org.type, role, 'jadwal_kegiatan');
+
+		const data = await request.formData();
+		const id = `${data.get('id') ?? ''}`.trim();
+		if (!id) {
+			return fail(400, { error: 'Jadwal tidak valid' });
+		}
+
+		try {
+			const result = await db
+				.prepare('DELETE FROM jadwal_tarawih WHERE id = ? AND organization_id = ?')
+				.bind(id, orgId)
+				.run();
+
+			if ((result?.meta?.changes ?? 0) === 0) {
+				return fail(404, { error: 'Jadwal tidak ditemukan' });
+			}
+		} catch (err) {
+			if (isMissingTableError(err)) {
+				return fail(500, { error: 'Tabel jadwal tarawih belum siap. Jalankan migrasi.' });
+			}
+			throw err;
+		}
+
+		return { success: true };
+	}
 };

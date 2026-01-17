@@ -71,6 +71,22 @@ CREATE TABLE IF NOT EXISTS org_media (
 );
 CREATE INDEX IF NOT EXISTS idx_org_media_org ON org_media(organization_id, created_at DESC);
 
+-- Organization assets
+CREATE TABLE IF NOT EXISTS org_assets (
+  id TEXT PRIMARY KEY,
+  organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  category TEXT,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  condition TEXT,
+  location TEXT,
+  notes TEXT,
+  acquired_at TEXT,
+  created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+);
+CREATE INDEX IF NOT EXISTS idx_org_assets_org ON org_assets(organization_id, created_at DESC);
+
 -- Relasi santri memilih ustadz/ustadzah
 CREATE TABLE IF NOT EXISTS santri_ustadz (
   santri_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,

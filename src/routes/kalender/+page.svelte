@@ -16,12 +16,13 @@
 		orgName?: string | null;
 		orgSlug?: string | null;
 		orgType?: string | null;
+		isHoliday?: boolean;
 	};
-	type OrgOption = { id: string; label: string; count: number };
+	type OrgDirectory = { id: string; name: string; type: string; slug: string };
+	type OrgOption = { id: string; label: string };
 	type HafalanPoint = { date: string; total: number; hijau: number; kuning: number; merah: number };
 
-	const ORG_ALL = 'all';
-	const ORG_NONE = 'none';
+	const ORG_PUBLIC = 'public';
 
 	const pasaranCycle = ['Legi', 'Pahing', 'Pon', 'Wage', 'Kliwon'];
 	const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
@@ -43,6 +44,7 @@
 
 	const hijriFormatter = makeFormatter('id-ID-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
 	const hijriDayFormatter = makeFormatter('en-u-ca-islamic', { day: 'numeric', timeZone: 'Asia/Jakarta' });
+	const hijriNumberFormatter = makeFormatter('en-u-ca-islamic', { day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'Asia/Jakarta' });
 	const gregMonthFormatter = makeFormatter('id-ID', { month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
 
 	const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
@@ -53,6 +55,18 @@
 			const day = parts.find(p => p.type === 'day')?.value;
 			return day ? Number(day) : null;
 		} catch { return null; }
+	};
+
+	const getHijriParts = (date: Date) => {
+		try {
+			const parts = hijriNumberFormatter.formatToParts(date);
+			const day = Number(parts.find((p) => p.type === 'day')?.value ?? 0);
+			const month = Number(parts.find((p) => p.type === 'month')?.value ?? 0);
+			const year = Number(parts.find((p) => p.type === 'year')?.value ?? 0);
+			return { day, month, year };
+		} catch {
+			return { day: 0, month: 0, year: 0 };
+		}
 	};
 
 	let today = new Date();
@@ -67,9 +81,11 @@
 	let savingNote = false;
 	let dailyMap: Record<string, HafalanPoint> = {};
 	let filteredNotesByDate: Record<string, CalendarNote[]> = {};
-	let selectedOrg = ORG_ALL;
+	let selectedOrg = ORG_PUBLIC;
 	let orgOptions: OrgOption[] = [];
+	let selectedOrgInitialized = false;
 	let currentUser: any = null;
+	let modalTheme = DAILY_THEMES[selectedDate.getDay()];
 
 	$: currentUser = $page.data.user;
 	$: modalTheme = noteModalDate ? DAILY_THEMES[noteModalDate.getDay()] : DAILY_THEMES[selectedDate.getDay()];
@@ -82,54 +98,111 @@
 		return pasaranCycle[((diffDays + 3) % 5 + 5) % 5];
 	};
 
-	const getOrgLabel = (note: CalendarNote) => note.orgName ?? note.orgSlug ?? 'Lembaga';
+	const orgTypeLabels: Record<string, string> = {
+		masjid: 'Masjid',
+		musholla: 'Musholla',
+		pondok: 'Pondok',
+		tpq: 'TPQ',
+		'rumah-tahfidz': 'Rumah Tahfidz'
+	};
 
-	const buildOrgOptions = (notes: Record<string, CalendarNote[]>) => {
-		const map = new Map<string, OrgOption>();
-		let noneCount = 0;
-		for (const list of Object.values(notes)) {
-			for (const note of list) {
-				if (note.orgId) {
-					const existing = map.get(note.orgId);
-					if (existing) {
-						existing.count += 1;
-					} else {
-						map.set(note.orgId, { id: note.orgId, label: getOrgLabel(note), count: 1 });
-					}
-				} else {
-					noneCount += 1;
+	const formatOrgLabel = (org: OrgDirectory) => {
+		const typeLabel = orgTypeLabels[org.type] ?? org.type;
+		return `${typeLabel} ${org.name}`;
+	};
+
+	const FIXED_HOLIDAYS = [
+		{ key: 'new-year', month: 1, day: 1, title: 'Tahun Baru Masehi' },
+		{ key: 'independence', month: 8, day: 17, title: 'HUT Kemerdekaan RI' },
+		{ key: 'christmas', month: 12, day: 25, title: 'Natal' }
+	];
+
+	const HIJRI_HOLIDAYS = [
+		{ key: 'muharram', month: 1, day: 1, title: 'Tahun Baru Hijriah' },
+		{ key: 'maulid', month: 3, day: 12, title: 'Maulid Nabi' },
+		{ key: 'isra', month: 7, day: 27, title: "Isra Mi'raj" },
+		{ key: 'ramadhan', month: 9, day: 1, title: 'Awal Ramadhan' },
+		{ key: 'nuzul', month: 9, day: 17, title: "Nuzulul Qur'an" },
+		{ key: 'fitri', month: 10, day: 1, title: 'Idul Fitri' },
+		{ key: 'adha', month: 12, day: 10, title: 'Idul Adha' }
+	];
+
+	const buildGeneralNotes = (start: Date, end: Date) => {
+		const notes: CalendarNote[] = [];
+		const seen = new Set<string>();
+		const cursor = new Date(start);
+		while (cursor <= end) {
+			const iso = toISODate(cursor);
+			const month = cursor.getMonth() + 1;
+			const day = cursor.getDate();
+			for (const holiday of FIXED_HOLIDAYS) {
+				if (holiday.month === month && holiday.day === day) {
+					const key = `${iso}-${holiday.key}`;
+					if (seen.has(key)) continue;
+					seen.add(key);
+					notes.push({
+						id: `holiday-${holiday.key}-${iso}`,
+						userId: 'public',
+						role: 'umum',
+						title: holiday.title,
+						content: 'Hari besar nasional.',
+						eventDate: iso,
+						createdAt: cursor.getTime(),
+						updatedAt: cursor.getTime(),
+						orgId: null,
+						orgName: 'Kalender Umum',
+						orgSlug: null,
+						orgType: null,
+						isHoliday: true
+					});
 				}
 			}
+
+			const hijri = getHijriParts(cursor);
+			for (const holiday of HIJRI_HOLIDAYS) {
+				if (holiday.month === hijri.month && holiday.day === hijri.day) {
+					const key = `${iso}-${holiday.key}`;
+					if (seen.has(key)) continue;
+					seen.add(key);
+					notes.push({
+						id: `holiday-${holiday.key}-${iso}`,
+						userId: 'public',
+						role: 'umum',
+						title: holiday.title,
+						content: 'Hari besar Islam.',
+						eventDate: iso,
+						createdAt: cursor.getTime(),
+						updatedAt: cursor.getTime(),
+						orgId: null,
+						orgName: 'Kalender Umum',
+						orgSlug: null,
+						orgType: null,
+						isHoliday: true
+					});
+				}
+			}
+
+			cursor.setDate(cursor.getDate() + 1);
 		}
-		const options = Array.from(map.values()).sort((a, b) => {
-			if (b.count !== a.count) return b.count - a.count;
-			return a.label.localeCompare(b.label);
-		});
-		if (noneCount > 0) options.push({ id: ORG_NONE, label: 'Tanpa lembaga', count: noneCount });
-		return options;
+
+		return notes;
 	};
 
-	const filterNotesByOrg = (notes: Record<string, CalendarNote[]>, orgId: string) => {
-		if (orgId === ORG_ALL) return notes;
-		const filtered: Record<string, CalendarNote[]> = {};
-		for (const [date, list] of Object.entries(notes)) {
-			const kept = list.filter((note) => {
-				if (orgId === ORG_NONE) return !note.orgId;
-				return note.orgId === orgId;
-			});
-			if (kept.length) filtered[date] = kept;
-		}
-		return filtered;
-	};
-
-	$: orgOptions = buildOrgOptions(notesByDate);
-	$: filteredNotesByDate = filterNotesByOrg(notesByDate, selectedOrg);
+	$: {
+		const orgList = ($page.data.orgs ?? []) as OrgDirectory[];
+		orgOptions = orgList
+			.map((org) => ({ id: org.id, label: formatOrgLabel(org) }))
+			.sort((a, b) => a.label.localeCompare(b.label));
+	}
+	$: filteredNotesByDate = notesByDate;
+	$: if (!selectedOrgInitialized) {
+		selectedOrg = currentUser?.orgId ?? ORG_PUBLIC;
+		selectedOrgInitialized = true;
+	}
 	$: {
 		const optionIds = new Set(orgOptions.map((option) => option.id));
-		if (selectedOrg === ORG_NONE && !optionIds.has(ORG_NONE)) {
-			selectedOrg = ORG_ALL;
-		} else if (selectedOrg !== ORG_ALL && selectedOrg !== ORG_NONE && !optionIds.has(selectedOrg)) {
-			selectedOrg = ORG_ALL;
+		if (selectedOrg !== ORG_PUBLIC && !optionIds.has(selectedOrg)) {
+			selectedOrg = ORG_PUBLIC;
 		}
 	}
 
@@ -149,16 +222,31 @@
 		return chunked;
 	}
 
+	let lastFetchKey = '';
+	const refreshNotes = () => {
+		const key = `${viewMonth.getFullYear()}-${viewMonth.getMonth()}-${selectedOrg}-${currentUser?.id ?? 'guest'}`;
+		if (key === lastFetchKey) return;
+		lastFetchKey = key;
+		loadNotesForMonth(viewMonth);
+	};
+
+	$: if (selectedOrgInitialized) {
+		selectedOrg;
+		currentUser;
+		viewMonth;
+		refreshNotes();
+	}
+
 	onMount(() => {
 		weeks = buildWeeks(viewMonth);
-		loadNotesForMonth(viewMonth);
+		refreshNotes();
 		loadDaily();
 	});
 
 	const setMonth = (delta: number) => {
 		viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + delta, 1);
 		weeks = buildWeeks(viewMonth);
-		loadNotesForMonth(viewMonth);
+		refreshNotes();
 	};
 
 	const pickDate = (date: Date) => {
@@ -166,7 +254,7 @@
 		if (date.getMonth() !== viewMonth.getMonth()) {
 			viewMonth = new Date(date.getFullYear(), date.getMonth(), 1);
 			weeks = buildWeeks(viewMonth);
-			loadNotesForMonth(viewMonth);
+			refreshNotes();
 		}
 		noteModalDate = new Date(date);
 		formTitle = '';
@@ -177,18 +265,34 @@
 	const loadNotesForMonth = async (monthDate: Date) => {
 		const start = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
 		const end = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+		const startIso = toISODate(start);
+		const endIso = toISODate(end);
+		const orgId = selectedOrg;
+		const isOwnOrg =
+			currentUser && orgId !== ORG_PUBLIC && currentUser.orgId && currentUser.orgId === orgId;
+		const params = new URLSearchParams({ start: startIso, end: endIso });
+		const grouped: Record<string, CalendarNote[]> = {};
 		try {
-			const res = await fetch(`/api/notes?start=${toISODate(start)}&end=${toISODate(end)}`);
+			const url = isOwnOrg ? '/api/notes' : '/api/calendar';
+			if (!isOwnOrg) {
+				params.set('orgId', orgId);
+			}
+			const res = await fetch(`${url}?${params.toString()}`);
 			if (res.ok) {
 				const data = await res.json();
-				const grouped: Record<string, CalendarNote[]> = {};
 				for (const note of data.notes ?? []) {
 					grouped[note.eventDate] = grouped[note.eventDate] ?? [];
 					grouped[note.eventDate].push(note);
 				}
-				notesByDate = grouped;
 			}
 		} catch {}
+		if (orgId === ORG_PUBLIC) {
+			for (const note of buildGeneralNotes(start, end)) {
+				grouped[note.eventDate] = grouped[note.eventDate] ?? [];
+				grouped[note.eventDate].push(note);
+			}
+		}
+		notesByDate = grouped;
 	};
 
 	const loadDaily = async () => {
@@ -250,6 +354,7 @@
 	const isSystemAdmin = (user: any) => user?.role === 'SUPER_ADMIN';
 
 	const canEdit = (note: CalendarNote) => {
+		if (note.isHoliday) return false;
 		if (!currentUser) return false;
 		if (currentUser.id === note.userId) return true;
 		if (currentUser.role !== 'admin' && currentUser.role !== 'SUPER_ADMIN') return false;
@@ -306,9 +411,9 @@
 						class="select select-bordered select-sm bg-white"
 						bind:value={selectedOrg}
 					>
-						<option value={ORG_ALL}>Semua lembaga</option>
+						<option value={ORG_PUBLIC}>Kalender Umum</option>
 						{#each orgOptions as option}
-							<option value={option.id}>{option.label} ({option.count})</option>
+							<option value={option.id}>{option.label}</option>
 						{/each}
 					</select>
 				</div>

@@ -4,6 +4,7 @@ import { getOrganizationBySlug, listPublicOrgMembers } from '$lib/server/organiz
 import { getOrgFinanceSummary } from '$lib/server/ummah';
 import { listOrgMedia } from '$lib/server/org-media';
 import { listTarawihSchedule } from '$lib/server/tarawih';
+import { listOrgAssets } from '$lib/server/org-assets';
 
 export const ssr = true;
 export const prerender = false;
@@ -20,8 +21,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	const media = await listOrgMedia(db, org.id);
+	const assets = await listOrgAssets(db, org.id);
 	const finance = await getOrgFinanceSummary(db, org.id);
 	const members = await listPublicOrgMembers(db, org.id);
 	const tarawihSchedule = await listTarawihSchedule(db, org.id);
-	return { org, typePath: 'masjid', finance, media, members, tarawihSchedule };
+	return { org, typePath: 'masjid', finance, media, members, tarawihSchedule, assets };
 };

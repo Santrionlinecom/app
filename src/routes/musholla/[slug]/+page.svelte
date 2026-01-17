@@ -1,5 +1,6 @@
 <script lang="ts">
 	import OrgDetailView from '$lib/components/org/OrgDetailView.svelte';
+	import OrgAssetsPublic from '$lib/components/org/OrgAssetsPublic.svelte';
 	import OrgFinancePublic from '$lib/components/org/OrgFinancePublic.svelte';
 	import OrgTarawihSchedule from '$lib/components/org/OrgTarawihSchedule.svelte';
 	export let data;
@@ -29,5 +30,6 @@
 </svelte:head>
 
 <OrgDetailView org={data.org} typePath={data.typePath} media={data.media} members={data.members} />
+<OrgAssetsPublic org={data.org} assets={data.assets} />
 <OrgTarawihSchedule org={data.org} schedule={data.tarawihSchedule ?? []} />
 <OrgFinancePublic org={data.org} finance={data.finance} />

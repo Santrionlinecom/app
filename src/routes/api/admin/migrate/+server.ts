@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { ensureOrgSchema } from '$lib/server/organizations';
 import { ensureOrgMediaSchema } from '$lib/server/org-media';
+import { ensureOrgAssetsTable } from '$lib/server/org-assets';
 import { ensureUserOptionalColumns } from '$lib/server/users';
 import { ensureHafalanTable, ensureHafalanSurahChecksTable } from '$lib/server/hafalan';
 import { ensureCalendarTable, ensureMurojaTable } from '$lib/server/calendar';
@@ -36,6 +37,7 @@ export const POST: RequestHandler = async ({ locals, platform, request, url }) =
 	await ensureOrgSchema(db);
 	await ensureUserOptionalColumns(db);
 	await ensureOrgMediaSchema(db);
+	await ensureOrgAssetsTable(db);
 	await ensureHafalanTable(db);
 	await ensureHafalanSurahChecksTable(db);
 	await ensureCalendarTable(db);

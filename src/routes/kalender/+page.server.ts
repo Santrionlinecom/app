@@ -5,11 +5,30 @@ import type { PageServerLoad, Actions } from './$types';
 export const load: PageServerLoad = async ({ locals }) => {
 	const currentUser = locals.user ?? null;
 	const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'SUPER_ADMIN';
+	let orgs: {
+		id: string;
+		type: string;
+		name: string;
+		slug: string;
+		status: string;
+	}[] = [];
+	if (locals.db) {
+		const { results } = await locals.db
+			.prepare(
+				`SELECT id, type, name, slug, status
+				 FROM organizations
+				 WHERE status = 'active'
+				 ORDER BY name ASC`
+			)
+			.all();
+		orgs = (results ?? []) as typeof orgs;
+	}
 	return {
 		notes: [],
 		tasks: [],
 		isAdmin: Boolean(isAdmin),
-		currentUser
+		currentUser,
+		orgs
 	};
 };
 

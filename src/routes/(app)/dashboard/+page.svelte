@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { SURAH_DATA } from '$lib/surah-data';
+	import { enhance } from '$app/forms';
 
 	export let data: PageData;
 
@@ -40,9 +41,50 @@
 	let finance: any = null;
 	let communitySchedule: any[] = [];
 	let kasWeeklyIn = 0;
+	let canManageCommunity = false;
+	let assets: AssetRow[] = [];
+	let tarawihSchedule: TarawihRow[] = [];
+	let nextTarawihUrut = 1;
+
+	let assetId = '';
+	let assetName = '';
+	let assetCategory = '';
+	let assetQuantity = '1';
+	let assetCondition = '';
+	let assetLocation = '';
+	let assetNotes = '';
+	let assetAcquiredAt = '';
+	let assetFormRef: HTMLFormElement | null = null;
+
+	let tarawihId = '';
+	let tarawihUrut = '1';
+	let tarawihHari = '';
+	let tarawihTanggal = '';
+	let tarawihImam = '';
+	let tarawihBilal = '';
+	let tarawihFormRef: HTMLFormElement | null = null;
+	let tarawihInitialized = false;
 
 	type QuickLink = { label: string; desc: string; href: string; tone: string };
 	type StatHighlight = { label: string; value: string; href: string };
+	type AssetRow = {
+		id: string;
+		name: string;
+		category: string | null;
+		quantity: number;
+		condition: string | null;
+		location: string | null;
+		notes: string | null;
+		acquiredAt: string | null;
+	};
+	type TarawihRow = {
+		id: string;
+		urut: number;
+		hari: string;
+		tanggal: string;
+		imam: string;
+		bilal: string | null;
+	};
 
 	let quickLinks: QuickLink[] = [];
 	let statHighlights: StatHighlight[] = [];
@@ -72,6 +114,14 @@
 		finance = data?.finance ?? null;
 		communitySchedule = data?.communitySchedule ?? [];
 		kasWeeklyIn = data?.kasWeeklyIn ?? 0;
+		canManageCommunity = Boolean(data?.canManageCommunity);
+		assets = (data?.assets ?? []) as AssetRow[];
+		tarawihSchedule = (data?.tarawihSchedule ?? []) as TarawihRow[];
+		nextTarawihUrut = data?.nextTarawihUrut ?? 1;
+		if (!tarawihInitialized && canManageCommunity) {
+			tarawihUrut = `${nextTarawihUrut}`;
+			tarawihInitialized = true;
+		}
 
 		const surahSource = data?.surahs?.length ? data.surahs : SURAH_DATA;
 		surahLookup = new Map(surahSource.map((s: any) => [s.number, s.name]));
@@ -229,6 +279,60 @@
 	}
 
 	const getSurahName = (num: number) => surahLookup.get(num) ?? `Surah ${num}`;
+
+	const startEditAsset = (asset: AssetRow) => {
+		assetId = asset.id;
+		assetName = asset.name;
+		assetCategory = asset.category ?? '';
+		assetQuantity = `${asset.quantity ?? 1}`;
+		assetCondition = asset.condition ?? '';
+		assetLocation = asset.location ?? '';
+		assetNotes = asset.notes ?? '';
+		assetAcquiredAt = asset.acquiredAt ?? '';
+		if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+			assetFormRef?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	};
+
+	const resetAssetForm = () => {
+		assetId = '';
+		assetName = '';
+		assetCategory = '';
+		assetQuantity = '1';
+		assetCondition = '';
+		assetLocation = '';
+		assetNotes = '';
+		assetAcquiredAt = '';
+	};
+
+	const startEditTarawih = (row: TarawihRow) => {
+		tarawihId = row.id;
+		tarawihUrut = `${row.urut}`;
+		tarawihHari = row.hari;
+		tarawihTanggal = row.tanggal;
+		tarawihImam = row.imam;
+		tarawihBilal = row.bilal ?? '';
+		if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+			tarawihFormRef?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	};
+
+	const resetTarawihForm = () => {
+		tarawihId = '';
+		tarawihUrut = `${nextTarawihUrut}`;
+		tarawihHari = '';
+		tarawihTanggal = '';
+		tarawihImam = '';
+		tarawihBilal = '';
+	};
+
+	const refreshOnSuccess = () => {
+		return async ({ result }: { result: { type: string } }) => {
+			if (result.type === 'success') {
+				location.reload();
+			}
+		};
+	};
 </script>
 
 <svelte:head>
@@ -377,6 +481,367 @@
 				{/if}
 			</div>
 		</section>
+		{#if canManageCommunity}
+			<section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+				<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${assetId ? 'xl:col-span-2' : ''}`}>
+					<h3 class="app-title text-xl font-semibold text-slate-900">Kelola Aset</h3>
+					<p class="text-xs text-slate-500">Inventaris masjid yang akan tampil di halaman publik.</p>
+					<form
+						method="POST"
+						action={assetId ? '?/updateAsset' : '?/addAsset'}
+						class="mt-4 space-y-4"
+						use:enhance={refreshOnSuccess}
+						bind:this={assetFormRef}
+					>
+						{#if assetId}
+							<input type="hidden" name="id" value={assetId} />
+							<div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+								Sedang mengedit aset. Simpan untuk memperbarui atau batalkan untuk input baru.
+							</div>
+						{/if}
+						<div class="grid gap-3 md:grid-cols-2">
+							<input
+								type="text"
+								name="name"
+								placeholder="Nama aset"
+								class="input input-bordered w-full md:col-span-2"
+								bind:value={assetName}
+								required
+							/>
+							<input
+								type="text"
+								name="category"
+								placeholder="Kategori (misal: fasilitas)"
+								class="input input-bordered w-full"
+								bind:value={assetCategory}
+							/>
+							<input
+								type="number"
+								name="quantity"
+								min="1"
+								placeholder="Jumlah"
+								class="input input-bordered w-full"
+								bind:value={assetQuantity}
+								required
+							/>
+							<input
+								type="text"
+								name="condition"
+								placeholder="Kondisi (baik, rusak)"
+								class="input input-bordered w-full"
+								bind:value={assetCondition}
+							/>
+							<input
+								type="text"
+								name="location"
+								placeholder="Lokasi penyimpanan"
+								class="input input-bordered w-full"
+								bind:value={assetLocation}
+							/>
+							<input
+								type="date"
+								name="acquiredAt"
+								class="input input-bordered w-full"
+								bind:value={assetAcquiredAt}
+							/>
+							<textarea
+								name="notes"
+								rows="2"
+								placeholder="Catatan"
+								class="textarea textarea-bordered w-full md:col-span-2"
+								bind:value={assetNotes}
+							></textarea>
+						</div>
+						<div class="flex flex-col gap-2 sm:flex-row">
+							<button class="btn btn-primary w-full sm:flex-1">
+								{assetId ? 'Perbarui Aset' : 'Simpan Aset'}
+							</button>
+							{#if assetId}
+								<button type="button" class="btn btn-outline w-full sm:flex-1" on:click={resetAssetForm}>
+									Batal Edit
+								</button>
+							{/if}
+						</div>
+					</form>
+				</div>
+
+				<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${assetId ? 'xl:col-span-2' : ''}`}>
+					<div class="flex items-center justify-between">
+						<h3 class="app-title text-xl font-semibold text-slate-900">Daftar Aset</h3>
+						<span class="text-xs text-slate-400">{assets.length} item</span>
+					</div>
+					{#if assets.length === 0}
+						<p class="mt-4 text-sm text-slate-500">Belum ada data aset.</p>
+					{:else}
+						<div class="mt-4 space-y-3 md:hidden">
+							{#each assets as asset}
+								<div
+									class={`rounded-2xl border p-4 shadow-sm ${
+										assetId === asset.id ? 'border-amber-300 bg-amber-50/60' : 'border-slate-200 bg-white'
+									}`}
+								>
+									<div class="flex items-center justify-between">
+										<p class="text-sm font-semibold text-slate-900">{asset.name}</p>
+										<span class="text-xs text-slate-500">{asset.quantity} unit</span>
+									</div>
+									<p class="mt-2 text-xs text-slate-500">Kategori: {asset.category || '-'}</p>
+									<p class="mt-1 text-xs text-slate-500">Kondisi: {asset.condition || '-'}</p>
+									<p class="mt-1 text-xs text-slate-500">Lokasi: {asset.location || '-'}</p>
+									<p class="mt-1 text-xs text-slate-500">Tanggal: {formatDate(asset.acquiredAt)}</p>
+									{#if asset.notes}
+										<p class="mt-2 text-xs text-slate-500">{asset.notes}</p>
+									{/if}
+									<div class="mt-3 flex flex-wrap gap-2">
+										<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditAsset(asset)}>
+											Edit
+										</button>
+										<form method="POST" action="?/deleteAsset" use:enhance={refreshOnSuccess}>
+											<input type="hidden" name="id" value={asset.id} />
+											<button
+												type="submit"
+												class="btn btn-xs btn-ghost text-red-600"
+												on:click={(event) => {
+													if (!confirm('Hapus aset ini?')) {
+														event.preventDefault();
+													}
+												}}
+											>
+												Hapus
+											</button>
+										</form>
+									</div>
+								</div>
+							{/each}
+						</div>
+						<div class="mt-4 hidden overflow-auto md:block">
+							<table class="table table-zebra w-full text-sm">
+								<thead>
+									<tr>
+										<th>Nama</th>
+										<th>Kategori</th>
+										<th>Jumlah</th>
+										<th>Kondisi</th>
+										<th>Lokasi</th>
+										<th>Tanggal</th>
+										<th>Catatan</th>
+										<th>Aksi</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each assets as asset}
+										<tr class={assetId === asset.id ? 'bg-amber-50' : ''}>
+											<td>{asset.name}</td>
+											<td>{asset.category || '-'}</td>
+											<td>{asset.quantity}</td>
+											<td>{asset.condition || '-'}</td>
+											<td>{asset.location || '-'}</td>
+											<td>{formatDate(asset.acquiredAt)}</td>
+											<td>{asset.notes || '-'}</td>
+											<td>
+												<div class="flex flex-wrap gap-2">
+													<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditAsset(asset)}>
+														Edit
+													</button>
+													<form method="POST" action="?/deleteAsset" use:enhance={refreshOnSuccess}>
+														<input type="hidden" name="id" value={asset.id} />
+														<button
+															type="submit"
+															class="btn btn-xs btn-ghost text-red-600"
+															on:click={(event) => {
+																if (!confirm('Hapus aset ini?')) {
+																	event.preventDefault();
+																}
+															}}
+														>
+															Hapus
+														</button>
+													</form>
+												</div>
+											</td>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+					{/if}
+				</div>
+			</section>
+
+			<section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+				<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${tarawihId ? 'xl:col-span-2' : ''}`}>
+					<h3 class="app-title text-xl font-semibold text-slate-900">Jadwal Imam Tarawih</h3>
+					<p class="text-xs text-slate-500">Atur jadwal imam dan bilal untuk malam tarawih.</p>
+					<form
+						method="POST"
+						action={tarawihId ? '?/updateTarawih' : '?/addTarawih'}
+						class="mt-4 space-y-4"
+						use:enhance={refreshOnSuccess}
+						bind:this={tarawihFormRef}
+					>
+						{#if tarawihId}
+							<input type="hidden" name="id" value={tarawihId} />
+							<div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+								Sedang mengedit jadwal. Simpan untuk memperbarui atau batalkan untuk input baru.
+							</div>
+						{/if}
+						<div class="grid gap-3 md:grid-cols-2">
+							<input
+								type="number"
+								name="urut"
+								min="1"
+								placeholder="No."
+								class="input input-bordered w-full"
+								bind:value={tarawihUrut}
+								required
+							/>
+							<input
+								type="text"
+								name="hari"
+								list="tarawihHariList"
+								placeholder="Hari (misal: Kamis)"
+								class="input input-bordered w-full"
+								bind:value={tarawihHari}
+								required
+							/>
+							<input
+								type="text"
+								name="tanggal"
+								placeholder="Tanggal (misal: 12 Ramadhan 1446 H)"
+								class="input input-bordered w-full"
+								bind:value={tarawihTanggal}
+								required
+							/>
+							<input
+								type="text"
+								name="imam"
+								placeholder="Nama imam"
+								class="input input-bordered w-full"
+								bind:value={tarawihImam}
+								required
+							/>
+							<input
+								type="text"
+								name="bilal"
+								placeholder="Nama bilal (opsional)"
+								class="input input-bordered w-full"
+								bind:value={tarawihBilal}
+							/>
+						</div>
+						<datalist id="tarawihHariList">
+							<option value="Senin"></option>
+							<option value="Selasa"></option>
+							<option value="Rabu"></option>
+							<option value="Kamis"></option>
+							<option value="Jumat"></option>
+							<option value="Sabtu"></option>
+							<option value="Ahad"></option>
+						</datalist>
+						<div class="flex flex-col gap-2 sm:flex-row">
+							<button class="btn btn-primary w-full sm:flex-1">
+								{tarawihId ? 'Perbarui Jadwal' : 'Tambah Jadwal'}
+							</button>
+							{#if tarawihId}
+								<button type="button" class="btn btn-outline w-full sm:flex-1" on:click={resetTarawihForm}>
+									Batal Edit
+								</button>
+							{/if}
+						</div>
+					</form>
+				</div>
+
+				<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${tarawihId ? 'xl:col-span-2' : ''}`}>
+					<div class="flex items-center justify-between">
+						<h3 class="app-title text-xl font-semibold text-slate-900">Jadwal Tarawih</h3>
+						<span class="text-xs text-slate-400">{tarawihSchedule.length} malam</span>
+					</div>
+					{#if tarawihSchedule.length === 0}
+						<p class="mt-4 text-sm text-slate-500">Belum ada jadwal tarawih.</p>
+					{:else}
+						<div class="mt-4 space-y-3 md:hidden">
+							{#each tarawihSchedule as row}
+								<div
+									class={`rounded-2xl border p-4 shadow-sm ${
+										tarawihId === row.id ? 'border-amber-300 bg-amber-50/60' : 'border-slate-200 bg-white'
+									}`}
+								>
+									<div class="flex items-center justify-between">
+										<p class="text-sm font-semibold text-slate-900">{row.urut}. {row.hari}</p>
+										<span class="text-xs text-slate-500">{row.tanggal}</span>
+									</div>
+									<p class="mt-2 text-xs text-slate-500">Imam: {row.imam}</p>
+									<p class="mt-1 text-xs text-slate-500">Bilal: {row.bilal || '-'}</p>
+									<div class="mt-3 flex flex-wrap gap-2">
+										<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditTarawih(row)}>
+											Edit
+										</button>
+										<form method="POST" action="?/deleteTarawih" use:enhance={refreshOnSuccess}>
+											<input type="hidden" name="id" value={row.id} />
+											<button
+												type="submit"
+												class="btn btn-xs btn-ghost text-red-600"
+												on:click={(event) => {
+													if (!confirm('Hapus jadwal ini?')) {
+														event.preventDefault();
+													}
+												}}
+											>
+												Hapus
+											</button>
+										</form>
+									</div>
+								</div>
+							{/each}
+						</div>
+						<div class="mt-4 hidden overflow-auto md:block">
+							<table class="table table-zebra w-full text-sm">
+								<thead>
+									<tr>
+										<th>No</th>
+										<th>Hari</th>
+										<th>Tanggal</th>
+										<th>Imam</th>
+										<th>Bilal</th>
+										<th>Aksi</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each tarawihSchedule as row}
+										<tr class={tarawihId === row.id ? 'bg-amber-50' : ''}>
+											<td>{row.urut}</td>
+											<td>{row.hari}</td>
+											<td>{row.tanggal}</td>
+											<td>{row.imam}</td>
+											<td>{row.bilal || '-'}</td>
+											<td>
+												<div class="flex flex-wrap gap-2">
+													<button type="button" class="btn btn-xs btn-outline" on:click={() => startEditTarawih(row)}>
+														Edit
+													</button>
+													<form method="POST" action="?/deleteTarawih" use:enhance={refreshOnSuccess}>
+														<input type="hidden" name="id" value={row.id} />
+														<button
+															type="submit"
+															class="btn btn-xs btn-ghost text-red-600"
+															on:click={(event) => {
+																if (!confirm('Hapus jadwal ini?')) {
+																	event.preventDefault();
+																}
+															}}
+														>
+															Hapus
+														</button>
+													</form>
+												</div>
+											</td>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+					{/if}
+				</div>
+			</section>
+		{/if}
 	{:else if isEducationalOrg && isStudent}
 		<section class="grid grid-cols-1 gap-6 xl:grid-cols-3">
 			<div class="fade-in rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur xl:col-span-2" style="animation-delay: 120ms;">
