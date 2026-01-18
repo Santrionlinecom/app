@@ -32,8 +32,8 @@
 </svelte:head>
 
 <OrgDetailView org={data.org} typePath={data.typePath} media={data.media} members={data.members} />
+<OrgFinancePublic org={data.org} finance={data.finance} />
 <OrgAssetsPublic org={data.org} assets={data.assets} />
 <OrgImamSchedule org={data.org} schedule={data.imamSchedule ?? []} />
 <OrgTarawihSchedule org={data.org} schedule={data.tarawihSchedule ?? []} />
 <OrgKhotibSchedule org={data.org} schedule={data.khotibSchedule ?? []} />
-<OrgFinancePublic org={data.org} finance={data.finance} />
