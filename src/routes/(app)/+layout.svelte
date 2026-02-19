@@ -14,17 +14,33 @@
 		| 'jadwal_kegiatan'
 		| 'kalender';
 
-	const orgType = data?.org?.type ?? null;
-	const isCommunityOrg = orgType === 'masjid' || orgType === 'musholla';
-	const featureAccess = data?.featureAccess ?? {};
-	const hasOrg = Boolean(data?.org);
-	const isSuperAdmin = data?.user?.role === 'SUPER_ADMIN';
+	let role = '';
+	let orgType: string | null = null;
+	let isCommunityOrg = false;
+	let hasOrg = false;
+	let isSuperAdmin = false;
+	let orgLabel = 'Lembaga';
+	let roleLabel = 'Pengguna';
+	let headerTitle = 'Ringkasan Harian';
+	let featureAccess: Record<string, boolean> = {};
+
 	const orgLabelMap: Record<string, string> = {
 		pondok: 'Pondok',
 		tpq: 'TPQ',
 		'rumah-tahfidz': 'Rumah Tahfidz',
 		masjid: 'Masjid',
 		musholla: 'Musholla'
+	};
+	const roleLabelMap: Record<string, string> = {
+		SUPER_ADMIN: 'Super Admin',
+		admin: 'Admin',
+		ustadz: 'Ustadz',
+		ustadzah: 'Ustadzah',
+		santri: 'Santri',
+		alumni: 'Alumni',
+		jamaah: 'Jamaah',
+		tamir: "Ta'mir",
+		bendahara: 'Bendahara'
 	};
 
 	type MenuItem = {
@@ -34,15 +50,7 @@
 		feature?: FeatureKey;
 	};
 
-	const baseItems: MenuItem[] = [
-		{
-			label: 'Dashboard',
-			href: isSuperAdmin ? '/admin/super/overview' : '/dashboard',
-			icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z'
-		}
-	];
-
-	const pesantrenItems: MenuItem[] = [
+	const educationalAdminItems: MenuItem[] = [
 		{
 			label: 'Akademik',
 			href: '/akademik',
@@ -50,19 +58,90 @@
 			feature: 'setoran'
 		},
 		{
-			label: 'Santri',
+			label: 'Kelola Santri',
 			href: '/dashboard/kelola-santri',
 			icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0H5z'
 		},
 		{
-			label: 'Hafalan',
+			label: 'Review Setoran',
+			href: '/dashboard/review-setoran',
+			icon: 'M5 12l5 5L20 7',
+			feature: 'setoran'
+		},
+		{
+			label: 'Pencapaian',
+			href: '/dashboard/pencapaian-hafalan',
+			icon: 'M4 17l5-5 4 4 7-7',
+			feature: 'raport'
+		},
+		{
+			label: 'Sertifikat',
+			href: '/dashboard/sertifikat',
+			icon: 'M8 5h8l3 3v11a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1z',
+			feature: 'raport'
+		}
+	];
+
+	const educationalTeacherItems: MenuItem[] = [
+		{
+			label: 'Akademik',
+			href: '/akademik',
+			icon: 'M3.5 7.5l8.5-4 8.5 4-8.5 4-8.5-4zm1.5 5.5l7 3.25 7-3.25v5.5l-7 3.25-7-3.25v-5.5z',
+			feature: 'setoran'
+		},
+		{
+			label: 'Review Setoran',
+			href: '/dashboard/review-setoran',
+			icon: 'M5 12l5 5L20 7',
+			feature: 'setoran'
+		},
+		{
+			label: 'Kelola Santri',
+			href: '/dashboard/kelola-santri',
+			icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0H5z'
+		},
+		{
+			label: 'Pencapaian',
+			href: '/dashboard/pencapaian-hafalan',
+			icon: 'M4 17l5-5 4 4 7-7',
+			feature: 'raport'
+		},
+		{
+			label: 'Sertifikat',
+			href: '/dashboard/sertifikat',
+			icon: 'M8 5h8l3 3v11a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1z',
+			feature: 'raport'
+		}
+	];
+
+	const educationalStudentItems: MenuItem[] = [
+		{
+			label: "Muroja'ah",
 			href: '/dashboard/hafalan-mandiri',
 			icon: 'M6 4h9l3 3v13a1 1 0 01-1 1H6a1 1 0 01-1-1V5a1 1 0 011-1zm8 0v4h4',
+			feature: 'hafalan'
+		},
+		{
+			label: 'Setoran',
+			href: '/dashboard/setoran-hari-ini',
+			icon: 'M4 12h16M4 6h16M4 18h10',
+			feature: 'setoran'
+		},
+		{
+			label: 'Pencapaian',
+			href: '/dashboard/pencapaian-hafalan',
+			icon: 'M4 17l5-5 4 4 7-7',
+			feature: 'raport'
+		},
+		{
+			label: 'Belum Lancar',
+			href: '/dashboard/hafalan-belum-lancar',
+			icon: 'M12 8v5m0 4h.01M10.29 3.86l-7.4 12.8A1 1 0 003.75 18h16.5a1 1 0 00.86-1.34l-7.4-12.8a1 1 0 00-1.72 0z',
 			feature: 'hafalan'
 		}
 	];
 
-	const masjidItems: MenuItem[] = [
+	const communityManagerItems: MenuItem[] = [
 		{
 			label: 'Keuangan',
 			href: '/keuangan',
@@ -70,7 +149,7 @@
 			feature: 'kas_masjid'
 		},
 		{
-			label: 'Jamaah',
+			label: 'Kelola Jamaah',
 			href: '/dashboard/kelola-santri',
 			icon: 'M7 11a3.5 3.5 0 117 0 3.5 3.5 0 01-7 0zm-4 10a6.5 6.5 0 0113 0H3z'
 		},
@@ -87,6 +166,14 @@
 			feature: 'kas_masjid'
 		}
 	];
+	const communityMemberItems: MenuItem[] = [
+		{
+			label: 'Kalender',
+			href: '/kalender',
+			icon: 'M7 2v4M17 2v4M3 8h18M5 5h14a2 2 0 012 2v13a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z',
+			feature: 'kalender'
+		}
+	];
 
 	const footerItems: MenuItem[] = [
 		{
@@ -97,16 +184,51 @@
 	];
 
 	const featureAllowed = (item: MenuItem) =>
-		!item.feature || Boolean((featureAccess as Record<string, boolean>)[item.feature]);
+		!item.feature || Boolean(featureAccess[item.feature]);
 
-	let menuItems = [...baseItems, ...footerItems];
-	$: menuItems = hasOrg
-		? [
-				...baseItems,
-				...(isCommunityOrg ? masjidItems : pesantrenItems).filter(featureAllowed),
-				...footerItems
-			]
-		: [...baseItems, ...footerItems];
+	const resolveRoleItems = () => {
+		if (!hasOrg) return [];
+		if (isCommunityOrg) {
+			if (role === 'admin' || role === 'tamir' || role === 'bendahara') {
+				return communityManagerItems;
+			}
+			return communityMemberItems;
+		}
+
+		if (role === 'admin') return educationalAdminItems;
+		if (role === 'ustadz' || role === 'ustadzah') return educationalTeacherItems;
+		if (role === 'santri' || role === 'alumni') return educationalStudentItems;
+		return [];
+	};
+
+	let roleItems: MenuItem[] = [];
+	let menuItems: MenuItem[] = [];
+	$: {
+		role = data?.user?.role ?? '';
+		orgType = data?.org?.type ?? null;
+		isCommunityOrg = orgType === 'masjid' || orgType === 'musholla';
+		hasOrg = Boolean(data?.org);
+		isSuperAdmin = role === 'SUPER_ADMIN';
+		featureAccess = (data?.featureAccess ?? {}) as Record<string, boolean>;
+		orgLabel = orgType ? orgLabelMap[orgType] ?? orgType : 'Lembaga';
+		roleLabel = roleLabelMap[role] ?? 'Pengguna';
+		headerTitle = isSuperAdmin
+			? 'Panel Super Admin'
+			: isCommunityOrg
+				? 'Dasbor Komunitas'
+				: role === 'santri' || role === 'alumni'
+					? 'Dasbor Santri'
+					: 'Dasbor Pengajar';
+
+		const dashboardItem: MenuItem = {
+			label: isSuperAdmin ? 'Super Admin' : 'Dashboard',
+			href: isSuperAdmin ? '/admin/super/overview' : '/dashboard',
+			icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z'
+		};
+
+		roleItems = resolveRoleItems().filter(featureAllowed);
+		menuItems = [dashboardItem, ...roleItems, ...footerItems];
+	}
 
 	let sidebarOpen = false;
 
@@ -116,7 +238,6 @@
 	};
 
 	const displayName = data?.user?.username || data?.user?.email || 'Guest';
-	const orgLabel = orgType ? orgLabelMap[orgType] ?? orgType : 'Lembaga';
 </script>
 
 <svelte:head>
@@ -168,8 +289,8 @@
 				class="mt-auto rounded-2xl px-4 py-4 text-xs"
 				style="border: 1px solid var(--app-warm-soft); background: var(--app-warm-wash); color: var(--app-warm);"
 			>
-				<p class="font-semibold">Quick note</p>
-				<p class="mt-1">Menu will follow institution settings once wired to data.</p>
+				<p class="font-semibold">Akses Role</p>
+				<p class="mt-1">Menu ditampilkan sesuai peran {roleLabel} di {orgLabel}.</p>
 			</div>
 		</aside>
 
@@ -187,7 +308,7 @@
 					</button>
 					<div>
 						<p class="text-xs uppercase tracking-[0.3em] text-slate-400">Dashboard</p>
-						<h1 class="app-title text-2xl font-semibold text-slate-900">Ringkasan Harian</h1>
+						<h1 class="app-title text-2xl font-semibold text-slate-900">{headerTitle}</h1>
 					</div>
 				</div>
 
@@ -211,6 +332,25 @@
 			</main>
 		</div>
 	</div>
+
+	<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-white/70 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] md:hidden safe-area-bottom">
+		<div class="mx-auto flex max-w-2xl items-center justify-between px-2 py-3 pb-safe">
+			{#each menuItems as item}
+				<a
+					href={item.href}
+					class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-slate-500 transition-colors"
+					class:text-emerald-700={isActive(item.href)}
+					class:font-semibold={isActive(item.href)}
+					class:bg-emerald-50={isActive(item.href)}
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
+						<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+					<span class="text-[10px]">{item.label}</span>
+				</a>
+			{/each}
+		</div>
+	</nav>
 
 	{#if sidebarOpen}
 		<div class="fixed inset-0 z-40 md:hidden">
@@ -259,8 +399,8 @@
 					class="mt-8 rounded-2xl px-4 py-4 text-xs"
 					style="border: 1px solid var(--app-accent-soft); background: var(--app-accent-wash); color: var(--app-accent);"
 				>
-					<p class="font-semibold">Institution mode</p>
-					<p class="mt-1">Currently showing menus for {orgLabel}.</p>
+					<p class="font-semibold">Role Aktif</p>
+					<p class="mt-1">{roleLabel} • {orgLabel}</p>
 				</div>
 			</aside>
 		</div>
@@ -288,6 +428,14 @@
 
 	:global(.fade-in) {
 		animation: fade-in 0.5s ease both;
+	}
+
+	.safe-area-bottom {
+		padding-bottom: env(safe-area-inset-bottom);
+	}
+
+	.pb-safe {
+		padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 	}
 
 	@keyframes fade-in {

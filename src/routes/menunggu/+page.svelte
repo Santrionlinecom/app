@@ -36,7 +36,9 @@
 			</p>
 		{/if}
 		<div class="pt-4">
-			<a href="/logout" class="btn btn-outline">Keluar</a>
+			<form method="POST" action="/logout">
+				<button type="submit" class="btn btn-outline">Keluar</button>
+			</form>
 		</div>
 	</div>
 </section>

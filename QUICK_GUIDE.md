@@ -42,6 +42,37 @@
 
 ---
 
+## ☁️ Integrasi Cloudflare D1 + R2
+
+Struktur integrasi D1 + R2 sudah disiapkan di project ini:
+- Binding ada di `wrangler.toml` (`DB`, `BUCKET`, `R2_PUBLIC_BASE_URL`).
+- Helper server terpusat: `src/lib/server/cloudflare.ts`.
+- Endpoint cek integrasi (admin): `GET /api/admin/cloudflare`.
+- Seed demo user (aman): `POST /api/seed-admin` (hanya `admin/SUPER_ADMIN`, opsional `x-seed-secret`).
+- Upload ke R2 + simpan metadata D1: `POST /api/upload`.
+- List metadata media dari D1: `GET /api/media`.
+
+### Langkah cek cepat
+
+```bash
+# wajib: token Cloudflare untuk mode non-interactive
+export CLOUDFLARE_API_TOKEN=xxxxx
+
+# cek akses akun/resource
+npm run cf:whoami
+npm run cf:d1:list
+npm run cf:r2:list
+
+# jalankan migrasi schema ke D1 remote
+npm run cf:d1:migrate:remote
+```
+
+### Catatan dev
+- Untuk memastikan binding Cloudflare aktif saat development, jalankan app via Wrangler (`wrangler pages dev`) saat perlu test D1/R2 live.
+- Jika `GET /api/admin/cloudflare` mengembalikan status `503`, artinya salah satu binding (D1/R2) belum aktif atau token belum valid.
+
+---
+
 ## 🧾 Panduan Upload Excel Jadwal Imam
 
 Template contoh tersedia di `static/templates/jadwal-imam-template.xlsx` (di web: `/templates/jadwal-imam-template.xlsx`).

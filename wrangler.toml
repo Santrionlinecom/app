@@ -4,6 +4,10 @@ compatibility_date = "2024-11-19"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".svelte-kit/cloudflare"
 
+[vars]
+R2_PUBLIC_BASE_URL = "https://files.santrionline.com"
+# SEED_SECRET = "ganti-dengan-secret-acak"
+
 # --- Konfigurasi Database D1 ---
 [[d1_databases]]
 binding = "DB" # Ini nama variabel yang akan kita panggil di kodingan (misal: platform.env.DB)

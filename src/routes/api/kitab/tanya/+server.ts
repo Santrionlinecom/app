@@ -2,7 +2,10 @@ import { json, error } from '@sveltejs/kit';
 import { cariJawaban } from '$lib/server/rag';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = async ({ request, platform }) => {
+export const POST: RequestHandler = async ({ request, platform, locals }) => {
+	if (!locals.user) {
+		throw error(401, 'Unauthorized');
+	}
 	if (!platform?.env?.AI || !platform?.env?.VECTORIZE_INDEX) {
 		throw error(500, 'AI atau Vectorize binding tidak tersedia');
 	}

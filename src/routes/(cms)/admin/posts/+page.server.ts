@@ -3,7 +3,7 @@ import { getAllPosts, deletePost, updatePost } from '$lib/server/cms';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals, platform, url }) => {
-  if (!locals.user) throw redirect(302, '/login');
+  if (!locals.user) throw redirect(302, '/auth');
   if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah') {
     throw redirect(302, '/dashboard');
   }

@@ -42,6 +42,7 @@
 	let communitySchedule: any[] = [];
 	let kasWeeklyIn = 0;
 	let canManageCommunity = false;
+	let isCommunityManager = false;
 	let assets: AssetRow[] = [];
 
 	let assetId = '';
@@ -94,10 +95,11 @@
 		series = data?.series ?? [];
 		stats = data?.stats ?? { approved: 0, submitted: 0, todayApproved: 0 };
 		finance = data?.finance ?? null;
-		communitySchedule = data?.communitySchedule ?? [];
-		kasWeeklyIn = data?.kasWeeklyIn ?? 0;
-		canManageCommunity = Boolean(data?.canManageCommunity);
-		assets = (data?.assets ?? []) as AssetRow[];
+			communitySchedule = data?.communitySchedule ?? [];
+			kasWeeklyIn = data?.kasWeeklyIn ?? 0;
+			canManageCommunity = Boolean(data?.canManageCommunity);
+			isCommunityManager = canManageCommunity;
+			assets = (data?.assets ?? []) as AssetRow[];
 
 		const surahSource = data?.surahs?.length ? data.surahs : SURAH_DATA;
 		surahLookup = new Map(surahSource.map((s: any) => [s.number, s.name]));
@@ -119,46 +121,87 @@
 			.sort((a: any, b: any) => (b.disetujui ?? 0) - (a.disetujui ?? 0))
 			.slice(0, 6);
 
-		if (isCommunityOrg) {
-			quickLinks = [
-				{
-					label: 'Keuangan',
-					desc: 'Kelola kas dan transaksi',
-					href: '/keuangan',
-					tone: 'from-amber-50 to-orange-100 text-amber-800'
-				},
-				{
-					label: 'Kalender',
-					desc: 'Agenda kegiatan komunitas',
-					href: '/kalender',
-					tone: 'from-teal-50 to-emerald-100 text-emerald-800'
-				},
-				{
-					label: 'Akun',
-					desc: 'Profil dan pengaturan',
-					href: '/akun',
-					tone: 'from-slate-50 to-slate-100 text-slate-800'
-				}
-			];
+			if (isCommunityOrg) {
+				if (isCommunityManager) {
+					quickLinks = [
+						{
+							label: 'Keuangan',
+							desc: 'Kelola kas dan transaksi',
+							href: '/keuangan',
+							tone: 'from-amber-50 to-orange-100 text-amber-800'
+						},
+						{
+							label: 'Kalender',
+							desc: 'Agenda kegiatan komunitas',
+							href: '/kalender',
+							tone: 'from-teal-50 to-emerald-100 text-emerald-800'
+						},
+						{
+							label: 'Akun',
+							desc: 'Profil dan pengaturan',
+							href: '/akun',
+							tone: 'from-slate-50 to-slate-100 text-slate-800'
+						}
+					];
 
-			statHighlights = [
-				{
-					label: 'Saldo Kas',
-					value: formatCurrency(finance?.kas?.saldo ?? 0),
-					href: '/keuangan'
-				},
-				{
-					label: 'Pemasukan 7 hari',
-					value: formatCurrency(kasWeeklyIn),
-					href: '/keuangan'
-				},
-				{
-					label: 'Agenda Mendatang',
-					value: String(communitySchedule.length),
-					href: '/kalender'
+					statHighlights = [
+						{
+							label: 'Saldo Kas',
+							value: formatCurrency(finance?.kas?.saldo ?? 0),
+							href: '/keuangan'
+						},
+						{
+							label: 'Pemasukan 7 hari',
+							value: formatCurrency(kasWeeklyIn),
+							href: '/keuangan'
+						},
+						{
+							label: 'Agenda Mendatang',
+							value: String(communitySchedule.length),
+							href: '/kalender'
+						}
+					];
+				} else {
+					quickLinks = [
+						{
+							label: 'Kalender',
+							desc: 'Lihat agenda kegiatan komunitas',
+							href: '/kalender',
+							tone: 'from-teal-50 to-emerald-100 text-emerald-800'
+						},
+						{
+							label: 'Dashboard',
+							desc: 'Ringkasan aktivitas komunitas',
+							href: '/dashboard',
+							tone: 'from-sky-50 to-indigo-100 text-indigo-800'
+						},
+						{
+							label: 'Akun',
+							desc: 'Profil dan pengaturan',
+							href: '/akun',
+							tone: 'from-slate-50 to-slate-100 text-slate-800'
+						}
+					];
+
+					statHighlights = [
+						{
+							label: 'Agenda Mendatang',
+							value: String(communitySchedule.length),
+							href: '/kalender'
+						},
+						{
+							label: 'Aktivitas 7 hari',
+							value: formatCurrency(kasWeeklyIn),
+							href: '/dashboard'
+						},
+						{
+							label: 'Peran',
+							value: role.toUpperCase(),
+							href: '/akun'
+						}
+					];
 				}
-			];
-		} else if (isStudent) {
+			} else if (isStudent) {
 			quickLinks = [
 				{
 					label: 'Pencapaian Hafalan',

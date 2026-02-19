@@ -75,7 +75,7 @@ export const normalizeRole = (role?: string | null): UserRole | null => {
 
 export const assertLoggedIn = (event: { locals: App.Locals }) => {
 	if (!event.locals.user) {
-		throw redirect(302, '/login');
+		throw redirect(302, '/auth');
 	}
 	return event.locals.user;
 };

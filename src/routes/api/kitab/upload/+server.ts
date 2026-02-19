@@ -1,13 +1,47 @@
 import { json, error } from '@sveltejs/kit';
 import { extractPdfTextPages, splitText, toDriveDownloadUrl } from '$lib/server/pdf';
 import { insertDokumen } from '$lib/server/rag';
+import { getOrganizationById } from '$lib/server/organizations';
+import { isEducationalOrgType } from '$lib/server/utils';
+import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
 import type { RequestHandler } from './$types';
 
 const MAX_PDF_BYTES = 20 * 1024 * 1024;
 const MAX_PDF_PAGES = 300;
 const MAX_TEXT_CHUNKS = 1200;
+const allowedRoles = new Set(['admin', 'ustadz', 'ustadzah', 'SUPER_ADMIN']);
+const JSON_UPLOAD_RATE_LIMIT = { scope: 'kitab:upload:text', limit: 30, windowMs: 10 * 60 * 1000 };
+const PDF_UPLOAD_RATE_LIMIT = { scope: 'kitab:upload:pdf', limit: 6, windowMs: 30 * 60 * 1000 };
 
-export const GET: RequestHandler = async ({ platform }) => {
+const assertKitabAccess = async (locals: App.Locals) => {
+	if (!locals.user) {
+		throw error(401, 'Unauthorized');
+	}
+	const role = locals.user.role ?? '';
+	if (!allowedRoles.has(role)) {
+		throw error(403, 'Forbidden');
+	}
+	if (role === 'SUPER_ADMIN') {
+		return locals.user;
+	}
+	if (!locals.db) {
+		throw error(500, 'Database tidak tersedia');
+	}
+	if (!locals.user.orgId) {
+		throw error(403, 'Akun belum terhubung ke lembaga.');
+	}
+	const org = await getOrganizationById(locals.db, locals.user.orgId);
+	if (!org) {
+		throw error(404, 'Lembaga tidak ditemukan');
+	}
+	if (!isEducationalOrgType(org.type)) {
+		throw error(403, 'Fitur kitab hanya untuk lembaga pendidikan.');
+	}
+	return locals.user;
+};
+
+export const GET: RequestHandler = async ({ platform, locals }) => {
+	await assertKitabAccess(locals);
 	if (!platform?.env?.DB) throw error(500, 'DB tidak tersedia');
 	try {
 		const { results } =
@@ -24,13 +58,42 @@ export const GET: RequestHandler = async ({ platform }) => {
 	}
 };
 
-export const POST: RequestHandler = async ({ request, platform }) => {
+export const POST: RequestHandler = async ({ request, platform, locals }) => {
+	const user = await assertKitabAccess(locals);
 	if (!platform?.env?.AI || !platform?.env?.VECTORIZE_INDEX || !platform?.env?.DB) {
 		throw error(500, 'AI, Vectorize, atau DB binding tidak tersedia');
 	}
 	const bucket = platform?.env?.BUCKET;
 
 	const contentType = request.headers.get('content-type') ?? '';
+	const rateLimitConfig = contentType.includes('multipart/form-data')
+		? PDF_UPLOAD_RATE_LIMIT
+		: JSON_UPLOAD_RATE_LIMIT;
+	const rateLimitDb = locals.db ?? platform?.env?.DB;
+	if (rateLimitDb) {
+		try {
+			const rateLimit = await consumeApiRateLimit({
+				db: rateLimitDb,
+				scope: rateLimitConfig.scope,
+				key: `user:${user.id}`,
+				limit: rateLimitConfig.limit,
+				windowMs: rateLimitConfig.windowMs
+			});
+			if (!rateLimit.allowed) {
+				return json(
+					{
+						ok: false,
+						error: 'Terlalu banyak upload kitab. Coba lagi sebentar.',
+						limit: rateLimit.limit,
+						resetAt: rateLimit.resetAt
+					},
+					{ status: 429, headers: buildRateLimitHeaders(rateLimit) }
+				);
+			}
+		} catch (err) {
+			console.warn('Rate limit kitab upload gagal:', err);
+		}
+	}
 
 	if (contentType.includes('application/json')) {
 		const body = await request.json().catch(() => ({}));

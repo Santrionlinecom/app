@@ -1,8 +1,9 @@
-import { json, error } from '@sveltejs/kit';
+import { json, error, isHttpError } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
 
 const ADMIN_ROLES = new Set(['admin', 'tamir', 'bendahara', 'SUPER_ADMIN']);
+const MAX_CALENDAR_RANGE_DAYS = 370;
 
 const requireDb = (locals: App.Locals) => {
 	if (!locals.db) {
@@ -15,7 +16,25 @@ const normalizeOrgId = (value: string | null) => {
 	if (!value) return null;
 	const trimmed = value.trim().toLowerCase();
 	if (!trimmed || trimmed === 'public' || trimmed === 'umum') return null;
-	return value;
+	if (trimmed.length > 80) {
+		throw error(400, 'orgId tidak valid');
+	}
+	return trimmed;
+};
+
+const parseIsoDate = (value: string | null, label: string) => {
+	if (!value) {
+		throw error(400, `${label} harus diisi (YYYY-MM-DD)`);
+	}
+	const validPattern = /^\d{4}-\d{2}-\d{2}$/;
+	if (!validPattern.test(value)) {
+		throw error(400, `${label} tidak valid (YYYY-MM-DD)`);
+	}
+	const ts = Date.parse(`${value}T00:00:00.000Z`);
+	if (!Number.isFinite(ts)) {
+		throw error(400, `${label} tidak valid (YYYY-MM-DD)`);
+	}
+	return ts;
 };
 
 export const GET: RequestHandler = async ({ locals, url }) => {
@@ -24,8 +43,16 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		const end = url.searchParams.get('end');
 		const orgParam = url.searchParams.get('orgId');
 
-		if (!start || !end) {
-			throw error(400, 'start dan end harus diisi (YYYY-MM-DD)');
+		const startTs = parseIsoDate(start, 'start');
+		const endTs = parseIsoDate(end, 'end');
+		const startValue = start as string;
+		const endValue = end as string;
+		if (endTs < startTs) {
+			throw error(400, 'Rentang tanggal tidak valid');
+		}
+		const rangeDays = Math.floor((endTs - startTs) / 86400000) + 1;
+		if (rangeDays > MAX_CALENDAR_RANGE_DAYS) {
+			throw error(400, `Rentang maksimal ${MAX_CALENDAR_RANGE_DAYS} hari`);
 		}
 		if (!locals.db) {
 			return json({ notes: [] });
@@ -50,7 +77,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 					   LEFT JOIN users u ON u.id = cn.user_id
 					   LEFT JOIN organizations o ON o.id = u.org_id`;
 		const conditions = ['cn.event_date BETWEEN ? AND ?'];
-		const params: (string | number)[] = [start, end];
+		const params: (string | number)[] = [startValue, endValue];
 
 		if (orgId) {
 			conditions.push('u.org_id = ?');
@@ -72,6 +99,9 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 		return json({ notes: results ?? [] });
 	} catch (err) {
+		if (isHttpError(err)) {
+			return json({ error: err.body?.message ?? 'Request tidak valid' }, { status: err.status });
+		}
 		console.error('GET /api/calendar error', err);
 		return json({ error: 'Internal Error: pastikan tabel calendar_notes sudah ada.' }, { status: 500 });
 	}

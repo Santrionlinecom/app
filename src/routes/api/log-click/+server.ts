@@ -4,6 +4,9 @@ import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 
 export const POST: RequestHandler = async ({ request, locals, url, platform }) => {
+	if (!locals.user) {
+		throw error(401, 'Unauthorized');
+	}
 	if (!locals.db) {
 		throw error(500, 'Database tidak tersedia');
 	}
@@ -32,13 +35,13 @@ export const POST: RequestHandler = async ({ request, locals, url, platform }) =
 	};
 
 	await logActivity(locals.db, {
-		userId: locals.user?.id ?? null,
+		userId: locals.user.id,
 		action: actionRaw.toUpperCase(),
 		metadata
 	});
 	logSystemActivity(locals.db, actionRaw.toUpperCase(), {
-		userId: locals.user?.id ?? null,
-		userEmail: locals.user?.email ?? null,
+		userId: locals.user.id,
+		userEmail: locals.user.email,
 		ipAddress: getRequestIp(request),
 		metadata,
 		waitUntil: platform?.context?.waitUntil

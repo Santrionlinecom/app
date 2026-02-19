@@ -76,7 +76,10 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		return json({ notes: results ?? [] });
 	} catch (err) {
 		console.error('GET /api/notes error', err);
-		return json({ error: 'Internal Error: pastikan tabel calendar_notes sudah ada (jalankan /api/setup-db).' }, { status: 500 });
+		return json(
+			{ error: 'Internal Error: pastikan tabel calendar_notes sudah ada (jalankan migrasi /api/admin/migrate).' },
+			{ status: 500 }
+		);
 	}
 };
 

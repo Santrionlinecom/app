@@ -1,5 +1,5 @@
-﻿<script>
-    export let form;
+﻿<script lang="ts">
+    export let form: { message?: string } | null = null;
 </script>
 
 <div class="px-6 py-8 max-w-md mx-auto">

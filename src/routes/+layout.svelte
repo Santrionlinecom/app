@@ -10,6 +10,12 @@ export let data;
 let pathname = '/';
 $: pathname = $page.url.pathname as string;
 const isSuperAdmin = data?.user?.role === 'SUPER_ADMIN';
+const appRoutePrefixes = ['/dashboard', '/keuangan', '/akademik', '/org'];
+const isAppRoute = (path: string) =>
+	appRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+const isAdminRoute = (path: string) => path === '/admin' || path.startsWith('/admin/');
+let isAppRouteActive = false;
+let isAdminRouteActive = false;
 
 const apkUrl = 'https://files.santrionline.com/Santrionline.apk';
 const installPromptKey = 'so_install_prompt_v1';
@@ -136,6 +142,24 @@ const baseNav = [
 		isActive: (path: string) => path.startsWith('/ulama')
 	}
 ];
+
+const adminNav = [
+	{
+		label: 'Dashboard',
+		href: '/admin/super/overview',
+		icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z',
+		isActive: (path: string) => path === '/admin/super/overview' || path.startsWith('/admin/super/overview/')
+	},
+	{
+		label: 'Settings',
+		href: '/akun',
+		icon: 'M12 8a4 4 0 100 8 4 4 0 000-8zm9 4a7.5 7.5 0 01-.2 1.8l2 1.5-2 3.4-2.3-.7a7.4 7.4 0 01-1.6.9l-.3 2.4H9l-.3-2.4a7.4 7.4 0 01-1.6-.9l-2.3.7-2-3.4 2-1.5A7.5 7.5 0 015 12c0-.6.1-1.2.2-1.8L3.2 8.7l2-3.4 2.3.7c.5-.4 1-.7 1.6-.9L9 2.7h4l.3 2.4c.6.2 1.1.5 1.6.9l2.3-.7 2 3.4-2 1.5c.1.6.2 1.2.2 1.8z',
+		isActive: (path: string) => path.startsWith('/akun')
+	}
+];
+
+$: isAppRouteActive = isAppRoute(pathname);
+$: isAdminRouteActive = isAdminRoute(pathname);
 </script>
 
 <svelte:head>
@@ -193,49 +217,70 @@ const baseNav = [
 	</main>
 
 	<!-- Bottom nav (mobile) -->
-	<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-base-200 bg-base-100 shadow-[0_-6px_24px_rgba(0,0,0,0.08)] md:hidden safe-area-bottom">
-		<div class="mx-auto flex max-w-2xl items-center justify-between px-2 py-3 pb-safe">
-			{#each baseNav as item}
-				<a
-					href={item.href}
-					class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-slate-500 transition-colors"
-					class:text-emerald-600={item.isActive(pathname)}
-					class:font-semibold={item.isActive(pathname)}
-					class:bg-emerald-50={item.isActive(pathname)}
-				>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
-						<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
-					</svg>
-					<span class="text-[10px]">{item.label}</span>
-				</a>
-			{/each}
+	{#if !isAppRouteActive && !isAdminRouteActive}
+		<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-base-200 bg-base-100 shadow-[0_-6px_24px_rgba(0,0,0,0.08)] md:hidden safe-area-bottom">
+			<div class="mx-auto flex max-w-2xl items-center justify-between px-2 py-3 pb-safe">
+				{#each baseNav as item}
+					<a
+						href={item.href}
+						class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-slate-500 transition-colors"
+						class:text-emerald-600={item.isActive(pathname)}
+						class:font-semibold={item.isActive(pathname)}
+						class:bg-emerald-50={item.isActive(pathname)}
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
+							<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+						</svg>
+						<span class="text-[10px]">{item.label}</span>
+					</a>
+				{/each}
 
-			{#if data.user}
-				<a
-					href="/akun"
-					class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs transition-colors"
-					class:text-emerald-600={pathname.startsWith('/akun')}
-					class:font-semibold={pathname.startsWith('/akun')}
-					class:bg-emerald-50={pathname.startsWith('/akun')}
-				>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0" />
-					</svg>
-					<span class="text-[10px]">Profil</span>
-				</a>
-			{:else}
-				<a
-					href="/register"
-					class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-emerald-600 font-semibold bg-emerald-50 transition-colors"
-				>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0M15 12h4m0 0l-2-2m2 2l-2 2" />
-					</svg>
-					<span class="text-[10px]">Daftar Lembaga</span>
-				</a>
-			{/if}
-		</div>
-	</nav>
+				{#if data.user}
+					<a
+						href="/akun"
+						class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs transition-colors"
+						class:text-emerald-600={pathname.startsWith('/akun')}
+						class:font-semibold={pathname.startsWith('/akun')}
+						class:bg-emerald-50={pathname.startsWith('/akun')}
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0" />
+						</svg>
+						<span class="text-[10px]">Profil</span>
+					</a>
+				{:else}
+					<a
+						href="/register"
+						class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-emerald-600 font-semibold bg-emerald-50 transition-colors"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0M15 12h4m0 0l-2-2m2 2l-2 2" />
+						</svg>
+						<span class="text-[10px]">Daftar Lembaga</span>
+					</a>
+				{/if}
+			</div>
+		</nav>
+	{:else if isAdminRouteActive && isSuperAdmin}
+		<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-base-200 bg-base-100 shadow-[0_-6px_24px_rgba(0,0,0,0.08)] md:hidden safe-area-bottom">
+			<div class="mx-auto flex max-w-2xl items-center justify-between px-2 py-3 pb-safe">
+				{#each adminNav as item}
+					<a
+						href={item.href}
+						class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-slate-500 transition-colors"
+						class:text-emerald-600={item.isActive(pathname)}
+						class:font-semibold={item.isActive(pathname)}
+						class:bg-emerald-50={item.isActive(pathname)}
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
+							<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+						</svg>
+						<span class="text-[10px]">{item.label}</span>
+					</a>
+				{/each}
+			</div>
+		</nav>
+	{/if}
 
 	{#if showInstallPopup}
 		<div

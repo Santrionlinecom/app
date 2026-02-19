@@ -10,7 +10,7 @@ const toJakartaEpoch = (dateStr: string | null, timeStr: string | null) => {
 };
 
 export const load: PageServerLoad = async ({ locals, params, platform }) => {
-  if (!locals.user) throw redirect(302, '/login');
+  if (!locals.user) throw redirect(302, '/auth');
   if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah') {
     throw redirect(302, '/dashboard');
   }
