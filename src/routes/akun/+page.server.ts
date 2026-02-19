@@ -9,7 +9,7 @@ import {
 import { listOrgMedia } from '$lib/server/org-media';
 import type { Actions, PageServerLoad } from './$types';
 
-const allowedOrgTypes = ['pondok', 'masjid', 'musholla', 'tpq', 'rumah-tahfidz'] as const;
+const allowedOrgTypes = ['tpq'] as const;
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {

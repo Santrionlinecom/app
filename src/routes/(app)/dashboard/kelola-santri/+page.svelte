@@ -16,12 +16,12 @@
 	let scope = data?.scope ?? null;
 	let isAdminView = scope?.isAdmin ?? false;
 	let memberRole = scope?.memberRole ?? 'santri';
-	let memberLabel = memberRole === 'jamaah' ? 'Jamaah' : 'Santri';
+	let memberLabel = 'Santri';
 
 	$: scope = data?.scope ?? null;
 	$: isAdminView = scope?.isAdmin ?? false;
 	$: memberRole = scope?.memberRole ?? 'santri';
-	$: memberLabel = memberRole === 'jamaah' ? 'Jamaah' : 'Santri';
+	$: memberLabel = 'Santri';
 
 	let santri: MemberRow[] = Array.isArray(data.santri)
 		? structuredClone(data.santri as MemberRow[])
@@ -60,7 +60,6 @@
 	const deriveStats = (list: MemberRow[]) => ({
 		total: list.length,
 		santri: list.filter((s: MemberRow) => s.role === 'santri').length,
-		jamaah: list.filter((s: MemberRow) => s.role === 'jamaah').length,
 		ustadz: list.filter((s: MemberRow) => s.role === 'ustadz' || s.role === 'ustadzah').length,
 		admin: list.filter((s: MemberRow) => s.role === 'admin').length,
 		pending: list.filter((s: MemberRow) => (s.orgStatus || 'active') === 'pending').length
@@ -139,15 +138,12 @@
 			admin: 'badge-error',
 			ustadz: 'badge-info',
 			ustadzah: 'badge-info',
-			santri: 'badge-success',
-			jamaah: 'badge-accent',
-			tamir: 'badge-secondary',
-			bendahara: 'badge-warning'
+			santri: 'badge-success'
 		};
 		return classes[role as keyof typeof classes] || 'badge-ghost';
 	};
 
-	const canDownloadPdf = (role: string) => role === 'santri' || role === 'jamaah';
+	const canDownloadPdf = (role: string) => role === 'santri';
 
 	const downloadPdf = async (id: string, name?: string | null) => {
 		if (downloadingPdfId) return;
@@ -224,7 +220,7 @@
 				<div class="text-sm text-slate-600">Total Anggota</div>
 			</div>
 			<div class="rounded-xl border bg-white p-4 shadow-sm">
-				<div class="text-2xl font-bold text-green-600">{memberRole === 'jamaah' ? stats.jamaah : stats.santri}</div>
+				<div class="text-2xl font-bold text-green-600">{stats.santri}</div>
 				<div class="text-sm text-slate-600">{memberLabel}</div>
 			</div>
 			<div class="rounded-xl border bg-white p-4 shadow-sm">
@@ -250,9 +246,6 @@
 						{#if isAdminView}
 							<option value="santri">Santri</option>
 							<option value="ustadz">Ustadz</option>
-							<option value="jamaah">Jamaah</option>
-							<option value="tamir">Ta'mir</option>
-							<option value="bendahara">Bendahara</option>
 							<option value="admin">Admin</option>
 						{:else}
 							<option value={memberRole}>{memberLabel}</option>
@@ -425,9 +418,6 @@
 							{#if isAdminView}
 								<option value="santri">🎓 Santri</option>
 								<option value="ustadz">👩‍🏫 Ustadz</option>
-								<option value="jamaah">🧎‍♂️ Jamaah</option>
-								<option value="tamir">🕌 Ta'mir</option>
-								<option value="bendahara">💰 Bendahara</option>
 								<option value="admin">⚙️ Admin</option>
 							{:else}
 								<option value={memberRole}>🎓 {memberLabel}</option>

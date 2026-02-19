@@ -497,7 +497,7 @@
 			<section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
 				<div class={`rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur ${assetId ? 'xl:col-span-2' : ''}`}>
 					<h3 class="app-title text-xl font-semibold text-slate-900">Kelola Aset</h3>
-					<p class="text-xs text-slate-500">Inventaris masjid yang akan tampil di halaman publik.</p>
+					<p class="text-xs text-slate-500">Inventaris lembaga yang tampil di halaman publik.</p>
 					<div class="mt-4 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4">
 						<h4 class="text-sm font-semibold text-emerald-700">Import Excel</h4>
 						<p class="mt-1 text-xs text-emerald-700/80">

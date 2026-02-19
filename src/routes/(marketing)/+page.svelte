@@ -3,112 +3,32 @@
 	export let data: PageData;
 
 	import { FEATURES } from '$lib/features';
+	import { ACTIVE_CTA, INSTITUTIONS } from '$lib/config/institutions';
 
-	const privilegedRoles = ['admin', 'ustadz', 'ustadzah', 'santri', 'jamaah', 'tamir', 'bendahara', 'alumni'];
+	const privilegedRoles = ['admin', 'ustadz', 'ustadzah', 'santri', 'alumni'];
 	$: showDashboard = data?.user?.role && privilegedRoles.includes(data.user.role);
-
-	const orgTypes = [
-		{
-			label: 'Pondok Pesantren',
-			tag: 'Pendidikan',
-			desc: 'Pembinaan santri 24 jam dengan kurikulum diniyah dan tahfidz.',
-			href: '/pondok',
-			icon: '🏫',
-			highlights: ['Manajemen santri', 'Materi diniyah', 'Tahfidz & ujian'],
-			classes: {
-				card: 'border-indigo-200/70 bg-white/90',
-				accent: 'text-indigo-700',
-				badge: 'bg-indigo-100 text-indigo-700'
-			}
-		},
-		{
-			label: 'Masjid',
-			tag: 'Kemasjidan',
-			desc: 'Transparansi kas, zakat, dan qurban untuk jamaah.',
-			href: '/masjid',
-			icon: '🕌',
-			highlights: ['Kas transparan', 'Zakat & qurban', 'Agenda jamaah'],
-			classes: {
-				card: 'border-emerald-200/70 bg-white/90',
-				accent: 'text-emerald-700',
-				badge: 'bg-emerald-100 text-emerald-700'
-			}
-		},
-		{
-			label: 'Musholla',
-			tag: 'Kemasjidan',
-			desc: 'Pengelolaan kegiatan musholla kampung yang rapi.',
-			href: '/musholla',
-			icon: '🏠',
-			highlights: ['Kas transparan', 'Kegiatan rutin', 'Pelayanan warga'],
-			classes: {
-				card: 'border-cyan-200/70 bg-white/90',
-				accent: 'text-cyan-700',
-				badge: 'bg-cyan-100 text-cyan-700'
-			}
-		},
-		{
-			label: 'TPQ',
-			tag: 'Pendidikan',
-			desc: 'Pembelajaran Al-Quran dasar dengan pengelolaan kelas.',
-			href: '/tpq',
-			icon: '📘',
-			highlights: ['Tahsin dasar', 'Materi harian', 'Monitoring bacaan'],
-			classes: {
-				card: 'border-lime-200/70 bg-white/90',
-				accent: 'text-lime-700',
-				badge: 'bg-lime-100 text-lime-700'
-			}
-		},
-		{
-			label: 'Rumah Tahfidz',
-			tag: 'Pendidikan',
-			desc: 'Fokus hafalan dengan target dan evaluasi terukur.',
-			href: '/rumah-tahfidz',
-			icon: '🎯',
-			highlights: ['Halaqoh hafalan', 'Setoran harian', 'Ujian tahfidz'],
-			classes: {
-				card: 'border-amber-200/70 bg-white/90',
-				accent: 'text-amber-800',
-				badge: 'bg-amber-100 text-amber-800'
-			}
-		}
-	];
+	const orgTypes = INSTITUTIONS.filter((institution) => institution.enabled);
 
 	const solutionCards = [
 		{
-			title: 'Lembaga Pendidikan',
-			subtitle: 'Pondok - TPQ - Rumah Tahfidz',
-			desc: 'Kelola santri, materi ajar, dan hafalan dengan dashboard yang tertata.',
-			bullets: ['Database santri dan ustadz/ustadzah', 'Materi diniyah terjadwal', 'Setoran dan ujian hafalan'],
+			title: 'Fokus Produk TPQ',
+			subtitle: 'Aktif Sekarang',
+			desc: 'Santri Online saat ini difokuskan untuk operasional TPQ agar implementasi lebih optimal.',
+			bullets: ['Pendaftaran TPQ', 'Kelola santri dan kelas', 'Pemantauan progres bacaan'],
 			href: '/fitur/belajar-alquran',
-			cta: 'Lihat fitur pendidikan',
+			cta: 'Lihat fitur TPQ',
 			classes: {
 				card: 'border-emerald-200',
 				accent: 'text-emerald-700',
 				badge: 'bg-emerald-100 text-emerald-700',
 				bullet: 'text-emerald-600'
 			}
-		},
-		{
-			title: 'Masjid & Musholla',
-			subtitle: 'Kas - Zakat - Qurban',
-			desc: 'Transparansi keuangan dan agenda jamaah agar warga semakin percaya.',
-			bullets: ['Kas transparan dan cashflow', 'Rekap zakat & qurban', 'Agenda kajian dan jamaah'],
-			href: '/fitur/sholat-jamaah',
-			cta: 'Lihat fitur kemasjidan',
-			classes: {
-				card: 'border-amber-200',
-				accent: 'text-amber-800',
-				badge: 'bg-amber-100 text-amber-800',
-				bullet: 'text-amber-600'
-			}
 		}
 	];
 </script>
 
 <svelte:head>
-	<title>Santri Online - Platform Lembaga & Pembelajaran Aswaja</title>
+	<title>Santri Online - Platform Operasional TPQ</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 	<link
@@ -128,11 +48,11 @@
 						<span class="text-xs uppercase tracking-[0.35em] text-emerald-600">Platform Lembaga Aswaja</span>
 					</div>
 					<h1 class="home-title text-4xl md:text-6xl text-slate-900 leading-tight">
-						Promosi Lembaga Islam &amp; Fitur Pembinaan Santri
+						Platform Operasional TPQ yang Lebih Tertata
 					</h1>
 					<p class="text-lg md:text-xl text-slate-600 max-w-2xl">
-						Daftarkan lembaga dan tampilkan fitur unggulan: manajemen santri, materi ajar, hafalan, hingga
-						transparansi kas untuk masjid dan musholla.
+						Santri Online saat ini berfokus pada kebutuhan TPQ, mulai dari pendaftaran lembaga hingga
+						pengelolaan pembelajaran Al-Quran.
 					</p>
 
 					<div class="flex flex-col sm:flex-row gap-4">
@@ -142,34 +62,34 @@
 							</a>
 						{:else}
 							<a href="/register" class="home-btn-primary">
-								✨ Daftarkan Lembaga
+								✨ Daftarkan TPQ
 							</a>
 						{/if}
 						<a href="/fitur" class="home-btn-secondary">Lihat Fitur</a>
 					</div>
 
 					<div class="flex flex-wrap gap-3 text-xs uppercase tracking-[0.2em] text-slate-500">
-						<span class="rounded-full bg-white/80 px-3 py-2">5 Jenis Lembaga</span>
-						<span class="rounded-full bg-white/80 px-3 py-2">Dashboard Per Lembaga</span>
-						<span class="rounded-full bg-white/80 px-3 py-2">Transparansi Keuangan</span>
+						<span class="rounded-full bg-white/80 px-3 py-2">Fokus TPQ</span>
+						<span class="rounded-full bg-white/80 px-3 py-2">Dashboard TPQ</span>
+						<span class="rounded-full bg-white/80 px-3 py-2">Flow TPQ End-to-End</span>
 					</div>
 				</div>
 
 				<div class="home-panel home-rise" style="animation-delay: 120ms">
 					<div class="flex items-center justify-between">
 						<p class="text-xs uppercase tracking-[0.3em] text-slate-400">Rangkuman</p>
-						<a href="/register" class="text-xs font-semibold text-emerald-700">Daftar Lembaga</a>
+						<a href="/register" class="text-xs font-semibold text-emerald-700">Daftar TPQ</a>
 					</div>
 					<div class="mt-4 grid gap-3">
 						<div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-							<p class="text-sm font-semibold text-emerald-800">Pendidikan</p>
-							<p class="text-xs text-slate-600 mt-1">Pondok, TPQ, Rumah Tahfidz</p>
-							<p class="text-xs text-slate-600 mt-2">Santri, materi ajar, halaqoh, dan ujian tahfidz.</p>
+							<p class="text-sm font-semibold text-emerald-800">TPQ Aktif</p>
+							<p class="text-xs text-slate-600 mt-1">Pendaftaran, kelas, dan monitoring santri</p>
+							<p class="text-xs text-slate-600 mt-2">Siap digunakan untuk kebutuhan operasional TPQ harian.</p>
 						</div>
 						<div class="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
-							<p class="text-sm font-semibold text-cyan-800">Kemasjidan</p>
-							<p class="text-xs text-slate-600 mt-1">Masjid, Musholla</p>
-							<p class="text-xs text-slate-600 mt-2">Kas transparan, zakat, qurban, dan agenda jamaah.</p>
+							<p class="text-sm font-semibold text-cyan-800">Pembelajaran Inti</p>
+							<p class="text-xs text-slate-600 mt-1">Hafalan, setoran, dan evaluasi</p>
+							<p class="text-xs text-slate-600 mt-2">Disiapkan khusus untuk kebutuhan operasional TPQ.</p>
 						</div>
 						<div class="rounded-2xl border border-slate-200 bg-white p-4">
 							<p class="text-sm font-semibold text-slate-900">Fitur Unggulan</p>
@@ -188,25 +108,27 @@
 	<section class="container mx-auto px-4 py-12 home-section">
 		<div class="text-center max-w-3xl mx-auto mb-10">
 			<p class="home-eyebrow text-emerald-600">Promosi Lembaga</p>
-			<h2 class="home-heading text-3xl md:text-4xl text-slate-900">Jenis Lembaga yang Tersedia</h2>
+			<h2 class="home-heading text-3xl md:text-4xl text-slate-900">Direktori TPQ</h2>
 			<p class="text-slate-600 mt-3">
-				Santri Online menampilkan profil lembaga dan fitur yang sesuai dengan kebutuhan masing-masing.
+				Santri Online saat ini hanya melayani lembaga TPQ (Taman Pendidikan Qur'an).
 			</p>
 		</div>
 
 		<div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
 			{#each orgTypes as org, index}
 				<a
-					href={org.href}
+					href={org.route}
 					class={`home-card rounded-2xl border ${org.classes.card} p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl`}
 					style={`animation-delay: ${index * 90}ms`}
 				>
 					<div class="flex items-center justify-between">
-						<span class={`badge ${org.classes.badge}`}>{org.tag}</span>
+						<div class="flex items-center gap-2">
+							<span class={`badge ${org.classes.badge}`}>{org.category}</span>
+						</div>
 						<span class="text-2xl">{org.icon}</span>
 					</div>
 					<h3 class={`mt-3 text-xl font-semibold ${org.classes.accent}`}>{org.label}</h3>
-					<p class="text-sm text-slate-600 mt-2">{org.desc}</p>
+					<p class="text-sm text-slate-600 mt-2">{org.description}</p>
 					<ul class="mt-3 space-y-1 text-xs text-slate-600">
 						{#each org.highlights as highlight}
 							<li class="flex items-center gap-2">
@@ -216,7 +138,7 @@
 						{/each}
 					</ul>
 					<span class="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700">
-						Lihat lembaga
+						{ACTIVE_CTA}
 						<span>→</span>
 					</span>
 				</a>
@@ -292,13 +214,13 @@
 			<div class="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-white/10 blur-3xl"></div>
 			<div class="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-white/10 blur-3xl"></div>
 			<div class="relative z-10 text-center max-w-3xl mx-auto">
-				<h2 class="home-heading text-3xl md:text-4xl mb-4">Bangun Lembaga yang Lebih Tertata</h2>
+				<h2 class="home-heading text-3xl md:text-4xl mb-4">Bangun Operasional TPQ yang Lebih Tertata</h2>
 				<p class="text-lg opacity-90 mb-8">
-					Promosikan lembaga Anda dan aktifkan fitur sesuai kebutuhan jamaah dan santri.
+					Mulai dari TPQ hari ini, lalu perluas saat roadmap lembaga lain resmi dibuka.
 				</p>
 				<div class="flex flex-col sm:flex-row gap-4 justify-center">
 					<a href="/register" class="btn bg-white text-emerald-600 hover:bg-gray-100 shadow-xl text-lg px-8 py-4">
-						Daftar Lembaga
+						Daftar TPQ
 					</a>
 					<a href="/fitur" class="btn btn-ghost text-white hover:bg-white/10 text-lg px-8 py-4">
 						Lihat Fitur

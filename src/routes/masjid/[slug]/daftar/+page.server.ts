@@ -6,6 +6,7 @@ import { Scrypt } from '$lib/server/password';
 import { generateId } from 'lucia';
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
+import { getInstitutionActionBlock, getInstitutionComingSoonLoad } from '$lib/server/institution-guards';
 
 const roleLabel = (value: string) => {
 	if (value === 'ustadzah') return 'Ustadzah';
@@ -16,6 +17,8 @@ const roleLabel = (value: string) => {
 };
 
 export const load: PageServerLoad = async ({ params, locals, url }) => {
+	getInstitutionComingSoonLoad('masjid');
+
 	if (!locals.db) {
 		throw error(500, 'Database tidak tersedia');
 	}
@@ -37,6 +40,11 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 
 export const actions: Actions = {
 	default: async ({ request, locals, cookies, params, url, platform }) => {
+		const blockedAction = getInstitutionActionBlock('masjid');
+		if (blockedAction) {
+			return blockedAction;
+		}
+
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
 		const org = await getOrganizationBySlug(db, params.slug, 'masjid');

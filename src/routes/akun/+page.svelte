@@ -6,7 +6,7 @@
 
 	const profile = data.profile;
 	const org = data.org;
-	const orgMediaRoles = new Set(['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara']);
+	const orgMediaRoles = new Set(['admin', 'ustadz', 'ustadzah']);
 	const canManageOrgMedia = orgMediaRoles.has(profile?.role ?? '');
 
 	type OrgMediaItem = {
@@ -23,7 +23,7 @@
 	let deletingMediaId: string | null = null;
 	let orgMediaInput: HTMLInputElement | null = null;
 
-	let orgType = 'pondok';
+	let orgType = 'tpq';
 	let orgName = '';
 	let orgSlug = '';
 	let orgPhone = '';
@@ -36,11 +36,7 @@
 	const baseUrl = 'https://app.santrionline.com';
 	$: bioLink = profile?.id ? `${baseUrl}/u/${profile.id}` : '';
 	const memberLabelByType: Record<string, string> = {
-		pondok: 'Santri',
-		masjid: 'Jamaah',
-		musholla: 'Jamaah',
-		tpq: 'Santri',
-		'rumah-tahfidz': 'Santri'
+		tpq: 'Santri'
 	};
 	$: memberLabel = org ? memberLabelByType[org.type] ?? 'Anggota' : 'Anggota';
 	$: shareLink = org ? `${baseUrl}/${org.type}/${org.slug}/daftar?ref=anggota` : '';
@@ -118,8 +114,7 @@
 	const formatOrgType = (value?: string) => {
 		if (!value) return '-';
 		if (value === 'tpq') return 'TPQ';
-		if (value === 'rumah-tahfidz') return 'Rumah Tahfidz';
-		return value.charAt(0).toUpperCase() + value.slice(1);
+		return value;
 	};
 
 	const formatDate = (value: number) =>
@@ -266,11 +261,7 @@
 						<div>
 							<label for="org-type" class="block text-sm font-semibold text-gray-700 mb-2">🏷️ Jenis Lembaga</label>
 							<select id="org-type" name="orgType" class="select select-bordered w-full" bind:value={orgType} required>
-								<option value="pondok">Pondok</option>
-								<option value="masjid">Masjid</option>
-								<option value="musholla">Musholla</option>
 								<option value="tpq">TPQ</option>
-								<option value="rumah-tahfidz">Rumah Tahfidz</option>
 							</select>
 						</div>
 						<div>

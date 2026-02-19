@@ -1,7 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getOrganizationById } from '$lib/server/organizations';
-import { isEducationalOrgType } from '$lib/server/utils';
 import { assignSantriTeacher, getSantriTeacherId, listOrgTeachers } from '$lib/server/santri-ustadz';
 
 const ensureSantri = async (locals: App.Locals) => {
@@ -18,8 +17,8 @@ const ensureSantri = async (locals: App.Locals) => {
 		throw error(400, 'Organisasi belum ditentukan');
 	}
 	const org = await getOrganizationById(locals.db, locals.user.orgId);
-	if (!isEducationalOrgType(org?.type)) {
-		throw error(403, 'Fitur ustadz hanya untuk pondok/TPQ/rumah tahfidz');
+	if (org?.type !== 'tpq') {
+		throw error(403, 'Fitur ustadz hanya untuk TPQ');
 	}
 	return { db: locals.db, orgId: locals.user.orgId, org };
 };

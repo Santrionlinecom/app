@@ -7,11 +7,14 @@ import { listTarawihSchedule } from '$lib/server/tarawih';
 import { listOrgAssets } from '$lib/server/org-assets';
 import { listImamSchedule } from '$lib/server/jadwal-imam';
 import { listKhotibSchedule } from '$lib/server/jadwal-khotib';
+import { getInstitutionComingSoonLoad } from '$lib/server/institution-guards';
 
 export const ssr = true;
 export const prerender = false;
 
 export const load: PageServerLoad = async ({ params, locals }) => {
+	getInstitutionComingSoonLoad('masjid');
+
 	const db = locals.db;
 	if (!db) {
 		throw error(500, 'Database tidak tersedia');

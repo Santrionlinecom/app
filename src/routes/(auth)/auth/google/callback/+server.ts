@@ -62,7 +62,7 @@ const parseOAuthContext = (value?: string | null) => {
 
 const isOrgType = (value?: string | null): value is OrgType => {
 	if (!value) return false;
-	return ['pondok', 'masjid', 'musholla', 'tpq', 'rumah-tahfidz'].includes(value);
+	return ['tpq'].includes(value);
 };
 
 const getUserColumns = async (db: D1Database) => {
@@ -74,7 +74,7 @@ const buildRedirectForRole = (role?: string | null) => {
 	if (!role) return '/akun';
 	const normalized = role.toLowerCase();
 	if (role === 'SUPER_ADMIN' || normalized === 'super_admin') return '/admin/super/overview';
-	if (['ustadz', 'ustadzah', 'admin_lembaga', 'admin', 'tamir', 'bendahara'].includes(normalized)) {
+	if (['ustadz', 'ustadzah', 'admin_lembaga', 'admin'].includes(normalized)) {
 		return '/dashboard';
 	}
 	return '/akun';

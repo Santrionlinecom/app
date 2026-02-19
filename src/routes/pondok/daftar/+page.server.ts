@@ -6,13 +6,21 @@ import { createOrganization, ensureUniqueSlug, slugify } from '$lib/server/organ
 import { generateId } from 'lucia';
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
+import { getInstitutionActionBlock, getInstitutionComingSoonLoad } from '$lib/server/institution-guards';
 
 export const load: PageServerLoad = async () => {
+	getInstitutionComingSoonLoad('pondok');
+
 	return {};
 };
 
 export const actions: Actions = {
 	default: async ({ request, locals, cookies, platform }) => {
+		const blockedAction = getInstitutionActionBlock('pondok');
+		if (blockedAction) {
+			return blockedAction;
+		}
+
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
 		const db = locals.db!;
 

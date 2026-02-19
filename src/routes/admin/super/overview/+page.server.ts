@@ -5,7 +5,7 @@ import { Scrypt } from '$lib/server/password';
 import { getOrganizationById } from '$lib/server/organizations';
 import { logActivity } from '$lib/server/activity-logs';
 
-const memberRoles = ['santri', 'jamaah'];
+const memberRoles = ['santri'];
 
 const countTable = async (db: App.Locals['db'], table: string) => {
 	try {

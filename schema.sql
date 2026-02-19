@@ -45,7 +45,7 @@ CREATE INDEX IF NOT EXISTS idx_system_logs_created_at ON system_logs(created_at)
 CREATE INDEX IF NOT EXISTS idx_system_logs_action_created_at ON system_logs(action, created_at);
 CREATE INDEX IF NOT EXISTS idx_system_logs_user_created_at ON system_logs(user_id, created_at);
 
--- Organizations (pondok/masjid/musholla)
+-- Organizations (TPQ-only)
 CREATE TABLE IF NOT EXISTS organizations (
   id TEXT PRIMARY KEY,
   type TEXT NOT NULL,
@@ -60,6 +60,23 @@ CREATE TABLE IF NOT EXISTS organizations (
 CREATE INDEX IF NOT EXISTS idx_org_type_status ON organizations(type, status);
 CREATE INDEX IF NOT EXISTS idx_org_slug ON organizations(slug);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_org_type_slug ON organizations(type, slug);
+
+-- Enforce TPQ-only organization type
+CREATE TRIGGER IF NOT EXISTS trg_tpq_only_org_insert
+BEFORE INSERT ON organizations
+FOR EACH ROW
+WHEN lower(trim(coalesce(NEW.type, ''))) <> 'tpq'
+BEGIN
+  SELECT RAISE(ABORT, 'TPQ_ONLY: organization.type must be tpq');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_tpq_only_org_update
+BEFORE UPDATE OF type ON organizations
+FOR EACH ROW
+WHEN lower(trim(coalesce(NEW.type, ''))) <> 'tpq'
+BEGIN
+  SELECT RAISE(ABORT, 'TPQ_ONLY: organization.type must be tpq');
+END;
 
 -- Organization media gallery
 CREATE TABLE IF NOT EXISTS org_media (
@@ -104,6 +121,23 @@ CREATE TABLE IF NOT EXISTS sessions (
   expires_at INTEGER NOT NULL -- Ini yang dicari oleh sistem Lucia v3
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+
+-- Block legacy community roles for TPQ-only mode
+CREATE TRIGGER IF NOT EXISTS trg_tpq_only_user_role_insert
+BEFORE INSERT ON users
+FOR EACH ROW
+WHEN lower(trim(coalesce(NEW.role, ''))) IN ('jamaah', 'tamir', 'bendahara')
+BEGIN
+  SELECT RAISE(ABORT, 'TPQ_ONLY: community roles are disabled');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_tpq_only_user_role_update
+BEFORE UPDATE OF role ON users
+FOR EACH ROW
+WHEN lower(trim(coalesce(NEW.role, ''))) IN ('jamaah', 'tamir', 'bendahara')
+BEGIN
+  SELECT RAISE(ABORT, 'TPQ_ONLY: community roles are disabled');
+END;
 
 CREATE TABLE IF NOT EXISTS google_accounts (
   id TEXT PRIMARY KEY,

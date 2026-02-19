@@ -27,7 +27,7 @@
 		{
 			value: 'owner',
 			title: 'Pemilik Lembaga / Perintis',
-			desc: 'Punya TPQ, pondok, atau komunitas yang akan didaftarkan.',
+			desc: "Punya TPQ (Taman Pendidikan Qur'an) yang akan didaftarkan.",
 			accent: 'from-sky-500 to-blue-600',
 			icon: 'M4 10l8-5 8 5v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8z'
 		},

@@ -40,9 +40,6 @@
 		{ value: 'ustadzah', label: 'Ustadzah' },
 		{ value: 'santri', label: 'Santri' },
 		{ value: 'alumni', label: 'Alumni' },
-		{ value: 'jamaah', label: 'Jamaah' },
-		{ value: 'tamir', label: 'Tamir' },
-		{ value: 'bendahara', label: 'Bendahara' },
 		{ value: 'guest', label: 'Pengunjung' }
 	];
 

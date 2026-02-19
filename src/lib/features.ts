@@ -23,19 +23,6 @@ export const FEATURES: Feature[] = [
 		]
 	},
 	{
-		slug: 'sholat-jamaah',
-		icon: '🕌',
-		title: 'Sholat Jamaah',
-		desc: 'Membangun kedisiplinan ibadah bersama',
-		cta: 'Ikuti jadwal jamaah',
-		highlight: 'Pengingat sholat lima waktu dengan laporan kehadiran.',
-		bullets: [
-			'Panduan niat, bacaan, dan tata cara sholat lengkap',
-			'Jurnal sholat harian untuk menjaga konsistensi',
-			'Pengingat adzan dan tips kekhusyukan'
-		]
-	},
-	{
 		slug: 'dzikir-doa',
 		icon: '🤲',
 		title: 'Dzikir & Doa',

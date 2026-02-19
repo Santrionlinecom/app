@@ -2,11 +2,14 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getOrganizationBySlug, listPublicOrgMembers } from '$lib/server/organizations';
 import { listOrgMedia } from '$lib/server/org-media';
+import { getInstitutionComingSoonLoad } from '$lib/server/institution-guards';
 
 export const ssr = true;
 export const prerender = false;
 
 export const load: PageServerLoad = async ({ params, locals }) => {
+	getInstitutionComingSoonLoad('rumah-tahfidz');
+
 	const db = locals.db;
 	if (!db) {
 		throw error(500, 'Database tidak tersedia');

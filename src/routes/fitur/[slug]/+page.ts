@@ -78,8 +78,8 @@ const FEATURE_DETAILS: Record<string, FeatureDetail> = {
 		],
 		access: [
 			{ label: 'Kalender Kegiatan', desc: 'Jadwal ibadah, kajian, dan agenda lembaga.', href: '/kalender' },
-			{ label: 'Direktori Masjid', desc: 'Kelola profil masjid dan layanan jamaah.', href: '/masjid' },
-			{ label: 'Direktori Musholla', desc: 'Informasi musholla di sekitar lembaga.', href: '/musholla' }
+			{ label: 'Direktori TPQ', desc: 'Profil dan aktivitas TPQ dalam satu halaman.', href: '/tpq' },
+			{ label: 'Dashboard TPQ', desc: 'Pantau progres kegiatan harian TPQ.', href: '/dashboard' }
 		],
 		theme: {
 			hero: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600',
@@ -170,7 +170,7 @@ const FEATURE_DETAILS: Record<string, FeatureDetail> = {
 		],
 		access: [
 			{ label: 'Agenda Kegiatan', desc: 'Jadwalkan dan simpan agenda ibadah.', href: '/kalender' },
-			{ label: 'Direktori Masjid', desc: 'Informasi tempat kegiatan jamaah.', href: '/masjid' },
+			{ label: 'Direktori TPQ', desc: 'Informasi TPQ tempat kegiatan belajar dan ibadah.', href: '/tpq' },
 			{ label: 'Materi dan Panduan', desc: 'Referensi bacaan lewat artikel pilihan.', href: '/blog' }
 		],
 		theme: {

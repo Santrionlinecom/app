@@ -1,5 +1,8 @@
 # Quick Guide - Fitur Hafalan Mandiri & Kalender
 
+> Update 19 Februari 2026:
+> Sistem sekarang **TPQ-only**. Data lembaga non-TPQ (masjid/musholla/pondok/rumah tahfidz) dan role komunitas (`jamaah`, `tamir`, `bendahara`) sudah dibersihkan dari D1 remote.
+
 ## 🔐 Aturan Akses Fitur (RBAC)
 
 - **Lembaga Pendidikan** (pondok, TPQ, rumah tahfidz): fitur akademik **aktif** → hafalan, setoran, ujian, raport/sertifikat.

@@ -8,10 +8,7 @@ const allowedRoles: OrgRole[] = [
 	'ustadz',
 	'ustadzah',
 	'santri',
-	'alumni',
-	'jamaah',
-	'tamir',
-	'bendahara'
+	'alumni'
 ];
 
 export const POST: RequestHandler = async ({ locals, request }) => {

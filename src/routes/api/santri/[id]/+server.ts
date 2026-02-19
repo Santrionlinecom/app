@@ -3,8 +3,8 @@ import { Scrypt } from '$lib/server/password';
 import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
 
-const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'jamaah', 'tamir', 'bendahara', 'admin'] as const;
-const managerRoles = ['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah', 'tamir', 'bendahara'] as const;
+const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'admin'] as const;
+const managerRoles = ['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah'] as const;
 
 const ensureAuth = (locals: App.Locals) => {
 	if (!locals.user) {

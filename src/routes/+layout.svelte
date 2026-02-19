@@ -112,6 +112,12 @@ const baseNav = [
 		isActive: (path: string) => path === '/'
 	},
 	{
+		label: 'TPQ',
+		href: '/tpq',
+		icon: 'M4 6a2 2 0 012-2h9l5 4v10a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm9-2v4h4',
+		isActive: (path: string) => path === '/tpq' || path.startsWith('/tpq/')
+	},
+	{
 		label: 'Blog',
 		href: '/blog',
 		icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
@@ -174,6 +180,7 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 			</a>
 			<nav class="hidden md:flex items-center gap-5">
 				<a href="/" class:active={pathname === '/'} class="text-base-content/60 hover:text-primary">Beranda</a>
+				<a href="/tpq" class:active={pathname.startsWith('/tpq')} class="text-base-content/60 hover:text-primary">TPQ</a>
 				<a href="/blog" class:active={pathname.startsWith('/blog')} class="text-base-content/60 hover:text-primary">Blog</a>
 				<a href="/nabi" class:active={pathname.startsWith('/nabi')} class="text-base-content/60 hover:text-primary">Nabi</a>
 				<a href="/sahabat" class:active={pathname.startsWith('/sahabat')} class="text-base-content/60 hover:text-primary">Sahabat</a>
@@ -206,7 +213,7 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 				{:else}
 					<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
 					<a href="/auth" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Login</a>
-					<a href="/register" class="btn btn-sm btn-primary">Daftar Lembaga</a>
+					<a href="/register" class="btn btn-sm btn-primary">Daftar TPQ</a>
 				{/if}
 			</div>
 		</div>
@@ -256,7 +263,7 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0M15 12h4m0 0l-2-2m2 2l-2 2" />
 						</svg>
-						<span class="text-[10px]">Daftar Lembaga</span>
+						<span class="text-[10px]">Daftar TPQ</span>
 					</a>
 				{/if}
 			</div>

@@ -3,7 +3,17 @@ import { initializeLucia } from '$lib/server/lucia';
 import type { Handle } from '@sveltejs/kit';
 import type { D1Database } from '@cloudflare/workers-types';
 
+const TPQ_ONLY_BLOCKED_PREFIXES = ['/pondok', '/masjid', '/musholla', '/rumah-tahfidz', '/keuangan', '/org'];
+
+const isTpqOnlyBlockedRoute = (pathname: string) =>
+	TPQ_ONLY_BLOCKED_PREFIXES.some(
+		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+	);
+
 export const handle: Handle = async ({ event, resolve }) => {
+	if (isTpqOnlyBlockedRoute(event.url.pathname)) {
+		return Response.redirect(new URL('/tpq', event.url), 302);
+	}
 	
 	const db = event.platform?.env.DB;
 
