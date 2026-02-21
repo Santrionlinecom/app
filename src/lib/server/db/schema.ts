@@ -9,7 +9,19 @@ export const users = sqliteTable('users', {
 	whatsapp: text('whatsapp'),
 	balance: integer('balance').notNull().default(0),
 	role: text('role', {
-		enum: ['ustadz', 'admin', 'santri', 'ustadzah', 'jamaah', 'tamir', 'bendahara', 'alumni', 'SUPER_ADMIN']
+		enum: [
+			'ustadz',
+			'admin',
+			'koordinator',
+			'santri',
+			'ustadzah',
+			'jamaah',
+			'tamir',
+			'bendahara',
+			'alumni',
+			'SUPER_ADMIN',
+			'super_admin'
+		]
 	})
 		.notNull()
 		.default('ustadz'),

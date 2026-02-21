@@ -114,6 +114,41 @@ CREATE TABLE IF NOT EXISTS santri_ustadz (
 CREATE INDEX IF NOT EXISTS idx_santri_ustadz_ustadz ON santri_ustadz(ustadz_id);
 CREATE INDEX IF NOT EXISTS idx_santri_ustadz_org ON santri_ustadz(org_id);
 
+-- TPQ Academic Workflow v1 (setoran harian -> review -> riwayat)
+CREATE TABLE IF NOT EXISTS tpq_halaqoh (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  ustadz_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  schedule_json TEXT NOT NULL DEFAULT '{}',
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+);
+CREATE INDEX IF NOT EXISTS idx_tpq_halaqoh_institution_created ON tpq_halaqoh(institution_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tpq_halaqoh_institution_ustadz ON tpq_halaqoh(institution_id, ustadz_user_id);
+
+CREATE TABLE IF NOT EXISTS tpq_setoran (
+  id TEXT PRIMARY KEY,
+  institution_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  santri_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  ustadz_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  halaqoh_id TEXT REFERENCES tpq_halaqoh(id) ON DELETE SET NULL,
+  date TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('hafalan', 'murojaah')),
+  surah TEXT NOT NULL,
+  ayat_from INTEGER NOT NULL CHECK (ayat_from > 0),
+  ayat_to INTEGER NOT NULL CHECK (ayat_to > 0),
+  quality TEXT NOT NULL CHECK (quality IN ('lancar', 'cukup', 'belum')),
+  notes TEXT,
+  status TEXT NOT NULL CHECK (status IN ('submitted', 'approved', 'rejected')),
+  reviewed_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+  reviewed_at INTEGER,
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+  CHECK (ayat_from <= ayat_to)
+);
+CREATE INDEX IF NOT EXISTS idx_tpq_setoran_institution_date ON tpq_setoran(institution_id, date);
+CREATE INDEX IF NOT EXISTS idx_tpq_setoran_institution_santri_date ON tpq_setoran(institution_id, santri_user_id, date);
+CREATE INDEX IF NOT EXISTS idx_tpq_setoran_institution_ustadz_date ON tpq_setoran(institution_id, ustadz_user_id, date);
+
 -- PERUBAHAN DI SINI (Lucia v3 Format)
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,
@@ -322,3 +357,39 @@ CREATE TABLE IF NOT EXISTS jadwal_tarawih (
 );
 CREATE INDEX IF NOT EXISTS idx_jadwal_tarawih_org ON jadwal_tarawih(organization_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_jadwal_tarawih_org_urut ON jadwal_tarawih(organization_id, urut);
+
+-- Licensing (Santri Streamer desktop)
+CREATE TABLE IF NOT EXISTS licenses (
+  license_key TEXT PRIMARY KEY,
+  user_id TEXT NULL REFERENCES users(id) ON DELETE SET NULL,
+  user_email TEXT NULL,
+  plan TEXT NOT NULL CHECK (plan IN ('starter', 'pro', 'studio')),
+  status TEXT NOT NULL CHECK (status IN ('active', 'revoked', 'expired')),
+  device_limit INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NULL,
+  notes TEXT NULL
+);
+
+CREATE TABLE IF NOT EXISTS devices (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  license_key TEXT NOT NULL REFERENCES licenses(license_key) ON DELETE CASCADE,
+  device_id TEXT NOT NULL,
+  device_name TEXT NULL,
+  activated_at INTEGER NOT NULL,
+  last_seen_at INTEGER NOT NULL,
+  UNIQUE (license_key, device_id)
+);
+
+CREATE TABLE IF NOT EXISTS license_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  license_key TEXT NULL REFERENCES licenses(license_key) ON DELETE SET NULL,
+  event_type TEXT NOT NULL CHECK (event_type IN ('generate', 'verify', 'activate', 'deactivate', 'revoke', 'reset_devices', 'fail')),
+  created_at INTEGER NOT NULL,
+  meta TEXT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_devices_license_key ON devices(license_key);
+CREATE INDEX IF NOT EXISTS idx_devices_device_id ON devices(device_id);
+CREATE INDEX IF NOT EXISTS idx_licenses_user_email ON licenses(user_email);
+CREATE INDEX IF NOT EXISTS idx_license_events_key_time ON license_events(license_key, created_at DESC);

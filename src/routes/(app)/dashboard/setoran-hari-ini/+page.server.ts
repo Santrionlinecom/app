@@ -1,18 +1,18 @@
-import { error } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
-import { getOrganizationById } from '$lib/server/organizations';
+import {
+	canInputSetoran,
+	canReviewSetoran,
+	requireTpqAcademicContext
+} from '$lib/server/tpq-academic';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const user = assertLoggedIn({ locals });
-	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+	const { role } = await requireTpqAcademicContext(locals);
+	if (canInputSetoran(role)) {
+		throw redirect(302, '/tpq/akademik/setoran');
 	}
-	const orgId = assertOrgMember(user);
-	const org = await getOrganizationById(locals.db, orgId);
-	if (!org) {
-		throw error(404, 'Lembaga tidak ditemukan');
+	if (canReviewSetoran(role)) {
+		throw redirect(302, '/tpq/akademik/review');
 	}
-	assertFeature(org.type, user.role, 'setoran');
-	return {};
+	throw redirect(302, '/tpq/akademik/riwayat');
 };

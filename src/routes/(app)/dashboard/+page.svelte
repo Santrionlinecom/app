@@ -245,7 +245,7 @@
 				{
 					label: 'Review Setoran',
 					desc: 'Validasi setoran santri',
-					href: '/dashboard/review-setoran',
+					href: '/tpq/akademik/review',
 					tone: 'from-amber-50 to-orange-100 text-amber-800'
 				},
 				{
@@ -271,7 +271,7 @@
 				{
 					label: 'Setoran Menunggu',
 					value: String(pending.length),
-					href: '/dashboard/review-setoran'
+					href: '/tpq/akademik/review'
 				},
 				{
 					label: 'Santri Aktif',
@@ -806,7 +806,7 @@
 			<div class="fade-in rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur" style="animation-delay: 200ms;">
 				<div class="flex items-center justify-between">
 					<h3 class="app-title text-xl font-semibold text-slate-900">Setoran Menunggu</h3>
-					<a class="text-xs font-semibold text-emerald-700 hover:text-emerald-800" href="/dashboard/review-setoran">
+					<a class="text-xs font-semibold text-emerald-700 hover:text-emerald-800" href="/tpq/akademik/review">
 						Lihat semua
 					</a>
 				</div>

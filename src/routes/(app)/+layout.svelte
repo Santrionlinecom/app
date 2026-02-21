@@ -33,7 +33,9 @@
 	};
 	const roleLabelMap: Record<string, string> = {
 		SUPER_ADMIN: 'Super Admin',
+		super_admin: 'Super Admin',
 		admin: 'Admin',
+		koordinator: 'Koordinator',
 		ustadz: 'Ustadz',
 		ustadzah: 'Ustadzah',
 		santri: 'Santri',
@@ -53,7 +55,7 @@
 	const educationalAdminItems: MenuItem[] = [
 		{
 			label: 'Akademik',
-			href: '/akademik',
+			href: '/tpq/akademik/setoran',
 			icon: 'M3.5 7.5l8.5-4 8.5 4-8.5 4-8.5-4zm1.5 5.5l7 3.25 7-3.25v5.5l-7 3.25-7-3.25v-5.5z',
 			feature: 'setoran'
 		},
@@ -64,7 +66,7 @@
 		},
 		{
 			label: 'Review Setoran',
-			href: '/dashboard/review-setoran',
+			href: '/tpq/akademik/review',
 			icon: 'M5 12l5 5L20 7',
 			feature: 'setoran'
 		},
@@ -85,13 +87,13 @@
 	const educationalTeacherItems: MenuItem[] = [
 		{
 			label: 'Akademik',
-			href: '/akademik',
+			href: '/tpq/akademik/setoran',
 			icon: 'M3.5 7.5l8.5-4 8.5 4-8.5 4-8.5-4zm1.5 5.5l7 3.25 7-3.25v5.5l-7 3.25-7-3.25v-5.5z',
 			feature: 'setoran'
 		},
 		{
 			label: 'Review Setoran',
-			href: '/dashboard/review-setoran',
+			href: '/tpq/akademik/review',
 			icon: 'M5 12l5 5L20 7',
 			feature: 'setoran'
 		},
@@ -114,6 +116,27 @@
 		}
 	];
 
+	const educationalCoordinatorItems: MenuItem[] = [
+		{
+			label: 'Review Setoran',
+			href: '/tpq/akademik/review',
+			icon: 'M5 12l5 5L20 7',
+			feature: 'setoran'
+		},
+		{
+			label: 'Riwayat Setoran',
+			href: '/tpq/akademik/riwayat',
+			icon: 'M4 6h16M4 12h16M4 18h10',
+			feature: 'setoran'
+		},
+		{
+			label: 'Pencapaian',
+			href: '/dashboard/pencapaian-hafalan',
+			icon: 'M4 17l5-5 4 4 7-7',
+			feature: 'raport'
+		}
+	];
+
 	const educationalStudentItems: MenuItem[] = [
 		{
 			label: "Muroja'ah",
@@ -122,8 +145,8 @@
 			feature: 'hafalan'
 		},
 		{
-			label: 'Setoran',
-			href: '/dashboard/setoran-hari-ini',
+			label: 'Riwayat Setoran',
+			href: '/tpq/akademik/riwayat',
 			icon: 'M4 12h16M4 6h16M4 18h10',
 			feature: 'setoran'
 		},
@@ -174,6 +197,13 @@
 			feature: 'kalender'
 		}
 	];
+	const superAdminItems: MenuItem[] = [
+		{
+			label: 'Licenses',
+			href: '/admin/licenses',
+			icon: 'M4 7.5V6a2 2 0 012-2h12a2 2 0 012 2v1.5M3 9.5h18v8.5a2 2 0 01-2 2H5a2 2 0 01-2-2V9.5zm6 4.5h6'
+		}
+	];
 
 	const footerItems: MenuItem[] = [
 		{
@@ -187,6 +217,7 @@
 		!item.feature || Boolean(featureAccess[item.feature]);
 
 	const resolveRoleItems = () => {
+		if (isSuperAdmin) return superAdminItems;
 		if (!hasOrg) return [];
 		if (isCommunityOrg) {
 			if (role === 'admin' || role === 'tamir' || role === 'bendahara') {
@@ -196,6 +227,7 @@
 		}
 
 		if (role === 'admin') return educationalAdminItems;
+		if (role === 'koordinator') return educationalCoordinatorItems;
 		if (role === 'ustadz' || role === 'ustadzah') return educationalTeacherItems;
 		if (role === 'santri' || role === 'alumni') return educationalStudentItems;
 		return [];
@@ -208,9 +240,9 @@
 		orgType = data?.org?.type ?? null;
 		isCommunityOrg = orgType === 'masjid' || orgType === 'musholla';
 		hasOrg = Boolean(data?.org);
-		isSuperAdmin = role === 'SUPER_ADMIN';
+		isSuperAdmin = role === 'SUPER_ADMIN' || role === 'super_admin';
 		featureAccess = (data?.featureAccess ?? {}) as Record<string, boolean>;
-		orgLabel = orgType ? orgLabelMap[orgType] ?? orgType : 'Lembaga';
+		orgLabel = isSuperAdmin ? 'System' : orgType ? orgLabelMap[orgType] ?? orgType : 'Lembaga';
 		roleLabel = roleLabelMap[role] ?? 'Pengguna';
 		headerTitle = isSuperAdmin
 			? 'Panel Super Admin'
