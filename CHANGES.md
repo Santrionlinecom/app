@@ -32,3 +32,8 @@
 - Dashboard dibuat lebih lebar:
   - Shell dashboard diperluas (lebih banyak ruang konten).
   - Halaman dashboard berbasis `.container` tidak lagi dibatasi `max-width` di tengah.
+
+## Header Bahasa + Flag Favicon
+- Header kini menampilkan pilihan bahasa dengan aset bendera lokal (`static/flags`) yang disinkronkan dari daftar bahasa.
+- Favicon otomatis menyesuaikan bendera negara dari bahasa yang dipilih pengguna.
+- Preferensi bahasa disimpan di localStorage agar tetap konsisten saat reload/navigasi.

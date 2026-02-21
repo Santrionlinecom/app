@@ -10,7 +10,7 @@ export let data;
 let pathname = '/';
 $: pathname = $page.url.pathname as string;
 const isSuperAdmin = data?.user?.role === 'SUPER_ADMIN';
-const appRoutePrefixes = ['/dashboard', '/keuangan', '/akademik', '/org'];
+const appRoutePrefixes = ['/dashboard', '/keuangan', '/akademik', '/tpq/akademik', '/org'];
 const isAppRoute = (path: string) =>
 	appRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 const isAdminRoute = (path: string) => path === '/admin' || path.startsWith('/admin/');
@@ -21,8 +21,81 @@ const apkUrl = 'https://files.santrionline.com/Santrionline.apk';
 const installPromptKey = 'so_install_prompt_v1';
 let showInstallPopup = false;
 const translateScriptId = 'google-translate-script';
+const languageStorageKey = 'so_selected_language';
+const defaultFaviconPath = '/favicon.ico';
 let selectedLanguage = '';
 let pendingLanguage = '';
+
+const REGIONAL_INDICATOR_A = 0x1f1e6;
+const REGIONAL_INDICATOR_Z = 0x1f1ff;
+
+type LanguageHeaderOption = (typeof LANGUAGE_OPTIONS)[number] & {
+	flagCode?: string;
+	flagIcon?: string;
+};
+
+const toCountryCodeFromEmoji = (emoji: string) => {
+	const points = Array.from(emoji ?? '').map((char) => char.codePointAt(0) ?? 0);
+	if (points.length !== 2) return null;
+	if (
+		points[0] < REGIONAL_INDICATOR_A ||
+		points[0] > REGIONAL_INDICATOR_Z ||
+		points[1] < REGIONAL_INDICATOR_A ||
+		points[1] > REGIONAL_INDICATOR_Z
+	) {
+		return null;
+	}
+	const first = String.fromCharCode(points[0] - REGIONAL_INDICATOR_A + 65);
+	const second = String.fromCharCode(points[1] - REGIONAL_INDICATOR_A + 65);
+	return `${first}${second}`;
+};
+
+const languageOptionsWithFlags: LanguageHeaderOption[] = LANGUAGE_OPTIONS.map((option) => {
+	const flagCode = toCountryCodeFromEmoji(option.emoji ?? '');
+	return {
+		...option,
+		flagCode: flagCode ?? undefined,
+		flagIcon: flagCode ? `/flags/${flagCode.toLowerCase()}.svg` : undefined
+	};
+});
+
+const languageOptionMap = new Map(languageOptionsWithFlags.map((option) => [option.value, option]));
+let selectedLanguageOption: LanguageHeaderOption | null = null;
+$: selectedLanguageOption = languageOptionMap.get(selectedLanguage) ?? null;
+
+const setHtmlLanguage = (lang: string) => {
+	if (typeof document === 'undefined') return;
+	document.documentElement.lang = (lang || 'id').split('-')[0].toLowerCase();
+};
+
+const setFavicon = (href: string) => {
+	if (typeof document === 'undefined') return;
+	const normalizedHref = href || defaultFaviconPath;
+	let icon = document.querySelector('link#site-favicon-dynamic') as HTMLLinkElement | null;
+	if (!icon) {
+		icon = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+		if (!icon) {
+			icon = document.createElement('link');
+			document.head.appendChild(icon);
+		}
+		icon.id = 'site-favicon-dynamic';
+		icon.rel = 'icon';
+	}
+	icon.href = normalizedHref;
+	icon.type = normalizedHref.endsWith('.svg') ? 'image/svg+xml' : 'image/x-icon';
+
+	const shortcut = document.querySelector('link[rel="shortcut icon"]') as HTMLLinkElement | null;
+	if (shortcut) {
+		shortcut.href = normalizedHref;
+		shortcut.type = icon.type;
+	}
+};
+
+const syncLanguageAppearance = (lang: string) => {
+	const option = languageOptionMap.get(lang);
+	setFavicon(option?.flagIcon ?? defaultFaviconPath);
+	setHtmlLanguage(lang);
+};
 
 const dismissInstallPopup = (persist = true) => {
 	showInstallPopup = false;
@@ -54,6 +127,18 @@ onMount(() => {
 	} catch {
 		showInstallPopup = true;
 	}
+
+	try {
+		const savedLanguage = localStorage.getItem(languageStorageKey) ?? '';
+		if (savedLanguage && languageOptionMap.has(savedLanguage)) {
+			selectedLanguage = savedLanguage;
+			pendingLanguage = savedLanguage;
+		}
+	} catch {
+		// ignore storage issue
+	}
+
+	syncLanguageAppearance(selectedLanguage);
 	loadTranslateWidget();
 });
 
@@ -88,6 +173,7 @@ const loadTranslateWidget = () => {
 };
 
 const setTranslateLanguage = (lang: string) => {
+	if (!lang) return;
 	const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
 	if (!combo) {
 		pendingLanguage = lang;
@@ -99,6 +185,16 @@ const setTranslateLanguage = (lang: string) => {
 
 const handleLanguageChange = (event: CustomEvent<{ value: string }>) => {
 	selectedLanguage = event.detail.value;
+	try {
+		if (selectedLanguage) {
+			localStorage.setItem(languageStorageKey, selectedLanguage);
+		} else {
+			localStorage.removeItem(languageStorageKey);
+		}
+	} catch {
+		// Ignore storage failures.
+	}
+	syncLanguageAppearance(selectedLanguage);
 	if (selectedLanguage) {
 		setTranslateLanguage(selectedLanguage);
 	}
@@ -189,13 +285,24 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 			</nav>
 			<div class="flex items-center gap-2">
 				<div class="hidden md:flex items-center gap-2">
+					{#if selectedLanguageOption?.flagIcon}
+						<img
+							src={selectedLanguageOption.flagIcon}
+							alt={`Bendera ${selectedLanguageOption.label}`}
+							class="h-4 w-6 rounded-[2px] border border-slate-200 object-cover shadow-sm"
+							loading="lazy"
+							decoding="async"
+						/>
+					{:else if selectedLanguageOption?.emoji}
+						<span class="text-base leading-none">{selectedLanguageOption.emoji}</span>
+					{/if}
 					<SearchableSelect
-						options={LANGUAGE_OPTIONS}
+						options={languageOptionsWithFlags}
 						bind:value={selectedLanguage}
 						placeholder="Pilih Bahasa"
 						searchPlaceholder="Cari bahasa..."
 						emptyText="Bahasa tidak ditemukan"
-						wrapperClass="w-48"
+						wrapperClass="w-52"
 						inputClass="text-xs h-9"
 						on:change={handleLanguageChange}
 					/>

@@ -5,6 +5,7 @@
 		value: string;
 		label: string;
 		emoji?: string;
+		flagIcon?: string;
 		disabled?: boolean;
 	};
 
@@ -165,7 +166,15 @@
 							} ${option.disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-emerald-50'}`}
 							on:mousedown|preventDefault={() => selectOption(option)}
 						>
-							{#if option.emoji}
+							{#if option.flagIcon}
+								<img
+									src={option.flagIcon}
+									alt=""
+									class="h-4 w-5 rounded-[2px] border border-slate-200 object-cover"
+									loading="lazy"
+									decoding="async"
+								/>
+							{:else if option.emoji}
 								<span class="text-base leading-none">{option.emoji}</span>
 							{/if}
 							<span class="truncate">{option.label}</span>
