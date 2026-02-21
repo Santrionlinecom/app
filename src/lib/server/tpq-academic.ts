@@ -65,16 +65,76 @@ export const requireTpqAcademicContext = async (locals: App.Locals) => {
 const isMissingTableError = (err: unknown) =>
 	`${(err as Error)?.message ?? err}`.toLowerCase().includes('no such table');
 
+const ensureTpqAcademicSchema = async (db: D1Database) => {
+	await db
+		.prepare(
+			`CREATE TABLE IF NOT EXISTS tpq_halaqoh (
+				id TEXT PRIMARY KEY,
+				institution_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+				name TEXT NOT NULL,
+				ustadz_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+				schedule_json TEXT NOT NULL DEFAULT '{}',
+				created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000)
+			)`
+		)
+		.run();
+	await db
+		.prepare(
+			'CREATE INDEX IF NOT EXISTS idx_tpq_halaqoh_institution_created ON tpq_halaqoh(institution_id, created_at DESC)'
+		)
+		.run();
+	await db
+		.prepare(
+			'CREATE INDEX IF NOT EXISTS idx_tpq_halaqoh_institution_ustadz ON tpq_halaqoh(institution_id, ustadz_user_id)'
+		)
+		.run();
+
+	await db
+		.prepare(
+			`CREATE TABLE IF NOT EXISTS tpq_setoran (
+				id TEXT PRIMARY KEY,
+				institution_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+				santri_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+				ustadz_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+				halaqoh_id TEXT REFERENCES tpq_halaqoh(id) ON DELETE SET NULL,
+				date TEXT NOT NULL,
+				type TEXT NOT NULL CHECK (type IN ('hafalan', 'murojaah')),
+				surah TEXT NOT NULL,
+				ayat_from INTEGER NOT NULL CHECK (ayat_from > 0),
+				ayat_to INTEGER NOT NULL CHECK (ayat_to > 0),
+				quality TEXT NOT NULL CHECK (quality IN ('lancar', 'cukup', 'belum')),
+				notes TEXT,
+				status TEXT NOT NULL CHECK (status IN ('submitted', 'approved', 'rejected')),
+				reviewed_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+				reviewed_at INTEGER,
+				created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
+				CHECK (ayat_from <= ayat_to)
+			)`
+		)
+		.run();
+	await db
+		.prepare('CREATE INDEX IF NOT EXISTS idx_tpq_setoran_institution_date ON tpq_setoran(institution_id, date)')
+		.run();
+	await db
+		.prepare(
+			'CREATE INDEX IF NOT EXISTS idx_tpq_setoran_institution_santri_date ON tpq_setoran(institution_id, santri_user_id, date)'
+		)
+		.run();
+	await db
+		.prepare(
+			'CREATE INDEX IF NOT EXISTS idx_tpq_setoran_institution_ustadz_date ON tpq_setoran(institution_id, ustadz_user_id, date)'
+		)
+		.run();
+};
+
 export const assertTpqAcademicTables = async (db: D1Database) => {
 	try {
 		await db.prepare('SELECT id FROM tpq_halaqoh LIMIT 1').first();
 		await db.prepare('SELECT id FROM tpq_setoran LIMIT 1').first();
 	} catch (err) {
 		if (isMissingTableError(err)) {
-			throw error(
-				500,
-				'Tabel TPQ akademik belum tersedia. Jalankan migration 0016_tpq_academic_workflow.sql terlebih dahulu.'
-			);
+			await ensureTpqAcademicSchema(db);
+			return;
 		}
 		throw err;
 	}
