@@ -1,9 +1,10 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { ensureSantriUstadzSchema } from '$lib/server/santri-ustadz';
 import {
 	assertTpqAcademicTables,
 	canInputSetoran,
+	canReviewSetoran,
 	isValidIsoDate,
 	requireTpqAcademicContext,
 	todayIsoDate,
@@ -66,7 +67,10 @@ type SetoranRow = {
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db, user, institutionId, role } = await requireTpqAcademicContext(locals);
 	if (!canInputSetoran(role)) {
-		throw error(403, 'Hanya ustadz/ustadzah/admin yang boleh input setoran.');
+		if (canReviewSetoran(role)) {
+			throw redirect(302, '/tpq/akademik/review');
+		}
+		throw redirect(302, '/tpq/akademik/riwayat');
 	}
 
 	await assertTpqAcademicTables(db);
