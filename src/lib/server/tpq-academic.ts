@@ -18,6 +18,10 @@ const QUALITY_TO_HAFALAN = {
 	belum: 'merah'
 } as const;
 
+export const MAX_SETORAN_NOTES_LENGTH = 1000;
+export const MAX_HALAQOH_NAME_LENGTH = 80;
+export const MAX_FILTER_RANGE_DAYS = 366;
+
 export type TpqSetoranType = (typeof TPQ_SETORAN_TYPES)[number];
 export type TpqSetoranQuality = (typeof TPQ_SETORAN_QUALITIES)[number];
 export type TpqSetoranStatus = (typeof TPQ_SETORAN_STATUSES)[number];
@@ -32,6 +36,44 @@ export const isValidIsoDate = (value: string) => {
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
 	const date = new Date(`${value}T00:00:00Z`);
 	return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+};
+
+const SAFE_ID_REGEX = /^[a-zA-Z0-9_-]{8,64}$/;
+
+export const isSafeScopedId = (value: string) => SAFE_ID_REGEX.test(value.trim());
+
+export const assertSafeScopedId = (value: string, label: string) => {
+	if (!isSafeScopedId(value)) {
+		throw error(400, `${label} tidak valid.`);
+	}
+	return value.trim();
+};
+
+export const sanitizePlainText = (value: string, maxLength: number) =>
+	value
+		.replace(/[\u0000-\u001F\u007F]/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim()
+		.slice(0, maxLength);
+
+export const sanitizeOptionalNotes = (value: string, maxLength = MAX_SETORAN_NOTES_LENGTH) => {
+	const cleaned = value
+		.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, ' ')
+		.replace(/\r\n/g, '\n')
+		.trim()
+		.slice(0, maxLength);
+	return cleaned || null;
+};
+
+export const validateDateRangeDays = (from: string, to: string, maxDays = MAX_FILTER_RANGE_DAYS) => {
+	if (!from || !to || !isValidIsoDate(from) || !isValidIsoDate(to)) return;
+	const fromTs = Date.parse(`${from}T00:00:00Z`);
+	const toTs = Date.parse(`${to}T00:00:00Z`);
+	if (Number.isNaN(fromTs) || Number.isNaN(toTs)) return;
+	const days = Math.floor((toTs - fromTs) / 86400000);
+	if (days > maxDays) {
+		throw error(400, `Rentang tanggal terlalu panjang. Maksimal ${maxDays} hari.`);
+	}
 };
 
 export const todayIsoDate = () => new Date().toISOString().slice(0, 10);
@@ -49,6 +91,12 @@ export const requireTpqAcademicContext = async (locals: App.Locals) => {
 	}
 	if (org.type !== 'tpq') {
 		throw error(403, 'Workflow akademik ini hanya untuk TPQ.');
+	}
+	if (org.status !== 'active') {
+		throw error(403, 'Lembaga TPQ belum aktif.');
+	}
+	if ((user.orgStatus ?? 'active') !== 'active') {
+		throw error(403, 'Akun lembaga belum aktif.');
 	}
 
 	assertFeature(org.type, user.role, 'setoran');

@@ -289,7 +289,7 @@
 	</div>
 
 	<div class="relative flex min-h-screen">
-		<aside class="hidden w-72 flex-col border-r border-white/70 bg-white/70 px-6 py-8 shadow-xl backdrop-blur md:flex">
+		<aside class="hidden w-64 flex-col border-r border-white/70 bg-white/70 px-5 py-8 shadow-xl backdrop-blur xl:w-72 md:flex">
 			<div class="flex items-center justify-between">
 				<div>
 					<p class="app-title text-xl font-semibold">SantriOnline</p>
@@ -359,14 +359,14 @@
 				</div>
 			</header>
 
-			<main class="flex-1 px-4 py-6 md:px-8">
+			<main class="flex-1 px-3 py-6 md:px-6 xl:px-8 2xl:px-10">
 				<slot />
 			</main>
 		</div>
 	</div>
 
 	<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-white/70 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] md:hidden safe-area-bottom">
-		<div class="mx-auto flex max-w-2xl items-center justify-between px-2 py-3 pb-safe">
+		<div class="flex w-full items-center justify-between px-2 py-3 pb-safe">
 			{#each menuItems as item}
 				<a
 					href={item.href}

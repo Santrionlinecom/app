@@ -1,12 +1,16 @@
-import { error, fail, redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { ensureSantriUstadzSchema } from '$lib/server/santri-ustadz';
 import {
+	assertSafeScopedId,
 	assertTpqAcademicTables,
 	canInputSetoran,
 	canReviewSetoran,
 	isValidIsoDate,
+	MAX_HALAQOH_NAME_LENGTH,
 	requireTpqAcademicContext,
+	sanitizeOptionalNotes,
+	sanitizePlainText,
 	todayIsoDate,
 	TPQ_SETORAN_QUALITIES,
 	TPQ_SETORAN_TYPES
@@ -90,7 +94,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				 FROM tpq_halaqoh h
 				 LEFT JOIN users u ON u.id = h.ustadz_user_id
 				 WHERE h.institution_id = ?
-				 ORDER BY h.name ASC`
+				 ORDER BY h.name ASC
+				 LIMIT 300`
 			).bind(institutionId)
 		: db.prepare(
 				`SELECT h.id,
@@ -102,7 +107,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				 FROM tpq_halaqoh h
 				 LEFT JOIN users u ON u.id = h.ustadz_user_id
 				 WHERE h.institution_id = ? AND h.ustadz_user_id = ?
-				 ORDER BY h.name ASC`
+				 ORDER BY h.name ASC
+				 LIMIT 300`
 			).bind(institutionId, user.id)
 	).all<HalaqohRow>();
 
@@ -113,7 +119,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			 WHERE org_id = ?
 			   AND (org_status IS NULL OR org_status = 'active')
 			   AND role IN ('admin', 'ustadz', 'ustadzah')
-			 ORDER BY CASE WHEN role = 'admin' THEN 0 ELSE 1 END, COALESCE(username, email) ASC`
+			 ORDER BY CASE WHEN role = 'admin' THEN 0 ELSE 1 END, COALESCE(username, email) ASC
+			 LIMIT 500`
 		)
 		.bind(institutionId)
 		.all<TeacherRow>();
@@ -125,7 +132,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				 WHERE org_id = ?
 				   AND (org_status IS NULL OR org_status = 'active')
 				   AND role IN ('santri', 'alumni')
-				 ORDER BY COALESCE(username, email) ASC`
+				 ORDER BY COALESCE(username, email) ASC
+				 LIMIT 1000`
 			).bind(institutionId)
 		: db.prepare(
 				`SELECT u.id, u.username, u.email
@@ -134,7 +142,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				 WHERE su.org_id = ?
 				   AND su.ustadz_id = ?
 				   AND (u.org_status IS NULL OR u.org_status = 'active')
-				 ORDER BY COALESCE(u.username, u.email) ASC`
+				 ORDER BY COALESCE(u.username, u.email) ASC
+				 LIMIT 1000`
 			).bind(institutionId, user.id)
 	).all<SantriRow>();
 
@@ -225,7 +234,7 @@ export const actions: Actions = {
 		await ensureSantriUstadzSchema(db);
 
 		const form = await request.formData();
-		const santriUserId = `${form.get('santri_user_id') ?? ''}`.trim();
+		const santriUserIdRaw = `${form.get('santri_user_id') ?? ''}`.trim();
 		const date = `${form.get('date') ?? ''}`.trim();
 		const type = `${form.get('type') ?? ''}`.trim().toLowerCase();
 		const surah = `${form.get('surah') ?? ''}`.trim();
@@ -233,13 +242,19 @@ export const actions: Actions = {
 		const ayatTo = parsePositiveInt(form.get('ayat_to'));
 		const quality = `${form.get('quality') ?? ''}`.trim().toLowerCase();
 		const notesRaw = `${form.get('notes') ?? ''}`;
-		const notes = notesRaw.trim() ? notesRaw.trim().slice(0, 1000) : null;
+		const notes = sanitizeOptionalNotes(notesRaw);
 		const halaqohIdRaw = `${form.get('halaqoh_id') ?? ''}`.trim();
 		const halaqohId = halaqohIdRaw || null;
 		const requestedUstadzUserId = `${form.get('ustadz_user_id') ?? ''}`.trim();
 
-		if (!santriUserId) {
+		if (!santriUserIdRaw) {
 			return fail(400, { createError: 'Santri wajib dipilih.' });
+		}
+		let santriUserId = '';
+		try {
+			santriUserId = assertSafeScopedId(santriUserIdRaw, 'ID santri');
+		} catch (err) {
+			return fail(400, { createError: (err as Error)?.message ?? 'ID santri tidak valid.' });
 		}
 		if (!date || !isValidIsoDate(date)) {
 			return fail(400, { createError: 'Tanggal tidak valid (format YYYY-MM-DD).' });
@@ -263,6 +278,20 @@ export const actions: Actions = {
 		if (!SETORAN_QUALITY_SET.has(quality)) {
 			return fail(400, { createError: 'Kualitas tidak valid.' });
 		}
+		if (halaqohId) {
+			try {
+				assertSafeScopedId(halaqohId, 'ID halaqoh');
+			} catch (err) {
+				return fail(400, { createError: (err as Error)?.message ?? 'ID halaqoh tidak valid.' });
+			}
+		}
+		if (requestedUstadzUserId) {
+			try {
+				assertSafeScopedId(requestedUstadzUserId, 'ID ustadz');
+			} catch (err) {
+				return fail(400, { createError: (err as Error)?.message ?? 'ID ustadz tidak valid.' });
+			}
+		}
 
 		const santriInScope =
 			role === 'admin'
@@ -272,6 +301,7 @@ export const actions: Actions = {
 							 FROM users
 							 WHERE id = ?
 							   AND org_id = ?
+							   AND (org_status IS NULL OR org_status = 'active')
 							   AND role IN ('santri', 'alumni')
 							 LIMIT 1`
 						)
@@ -279,11 +309,13 @@ export const actions: Actions = {
 						.first<{ id: string }>()
 				: await db
 						.prepare(
-							`SELECT santri_id as id
-							 FROM santri_ustadz
-							 WHERE santri_id = ?
-							   AND ustadz_id = ?
-							   AND org_id = ?
+							`SELECT su.santri_id as id
+							 FROM santri_ustadz su
+							 JOIN users u ON u.id = su.santri_id
+							 WHERE su.santri_id = ?
+							   AND su.ustadz_id = ?
+							   AND su.org_id = ?
+							   AND (u.org_status IS NULL OR u.org_status = 'active')
 							 LIMIT 1`
 						)
 						.bind(santriUserId, user.id, institutionId)
@@ -342,6 +374,29 @@ export const actions: Actions = {
 			}
 		}
 
+		const duplicateSubmitted = await db
+			.prepare(
+				`SELECT id
+				 FROM tpq_setoran
+				 WHERE institution_id = ?
+				   AND santri_user_id = ?
+				   AND date = ?
+				   AND type = ?
+				   AND surah = ?
+				   AND ayat_from = ?
+				   AND ayat_to = ?
+				   AND status = 'submitted'
+				 LIMIT 1`
+			)
+			.bind(institutionId, santriUserId, date, type, String(surahNumber), ayatFrom, ayatTo)
+			.first<{ id: string }>();
+
+		if (duplicateSubmitted) {
+			return fail(409, {
+				createError: 'Setoran yang sama masih berstatus submitted. Mohon review dulu sebelum input ulang.'
+			});
+		}
+
 		await db
 			.prepare(
 				`INSERT INTO tpq_setoran (
@@ -389,7 +444,7 @@ export const actions: Actions = {
 		await assertTpqAcademicTables(db);
 
 		const form = await request.formData();
-		const name = `${form.get('name') ?? ''}`.trim();
+		const name = sanitizePlainText(`${form.get('name') ?? ''}`, MAX_HALAQOH_NAME_LENGTH);
 		const daysRaw = `${form.get('days') ?? ''}`;
 		const startTimeRaw = `${form.get('start_time') ?? ''}`;
 		const endTimeRaw = `${form.get('end_time') ?? ''}`;
@@ -406,6 +461,16 @@ export const actions: Actions = {
 		const endTime = normalizeTime(endTimeRaw);
 		if (endTimeRaw.trim() && !endTime) {
 			return fail(400, { halaqohError: 'Format jam selesai tidak valid (HH:MM).' });
+		}
+		if (startTime && endTime && startTime >= endTime) {
+			return fail(400, { halaqohError: 'Jam selesai harus lebih besar dari jam mulai.' });
+		}
+		if (requestedUstadzUserId) {
+			try {
+				assertSafeScopedId(requestedUstadzUserId, 'ID ustadz');
+			} catch (err) {
+				return fail(400, { halaqohError: (err as Error)?.message ?? 'ID ustadz tidak valid.' });
+			}
 		}
 
 		let ustadzUserId = role === 'admin' ? requestedUstadzUserId || user.id : user.id;
@@ -427,10 +492,31 @@ export const actions: Actions = {
 			}
 		}
 
-		const days = daysRaw
-			.split(',')
-			.map((item) => item.trim())
-			.filter(Boolean);
+		const days = Array.from(
+			new Set(
+				daysRaw
+					.split(',')
+					.map((item) => item.trim().toLowerCase())
+					.filter((item) => /^[a-zA-Z\- ]{2,16}$/.test(item))
+					.slice(0, 7)
+			)
+		);
+
+		const duplicateHalaqoh = await db
+			.prepare(
+				`SELECT id
+				 FROM tpq_halaqoh
+				 WHERE institution_id = ?
+				   AND ustadz_user_id = ?
+				   AND lower(name) = lower(?)
+				 LIMIT 1`
+			)
+			.bind(institutionId, ustadzUserId, name)
+			.first<{ id: string }>();
+
+		if (duplicateHalaqoh) {
+			return fail(409, { halaqohError: 'Nama halaqoh sudah digunakan oleh ustadz ini.' });
+		}
 
 		const scheduleJson = JSON.stringify({
 			days,

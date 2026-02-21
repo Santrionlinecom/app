@@ -316,9 +316,10 @@ let toggling = new Set<number>();
 	}
 
 	.container {
-		max-width: 1200px;
-		margin: 0 auto;
-		padding: 1.5rem;
+		width: 100%;
+		max-width: none;
+		margin: 0;
+		padding: 1rem 0;
 	}
 
 	.header {

@@ -2,11 +2,14 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { ensureSantriUstadzSchema } from '$lib/server/santri-ustadz';
 import {
+	assertSafeScopedId,
 	assertTpqAcademicTables,
 	canViewSetoranHistory,
 	isValidIsoDate,
+	MAX_FILTER_RANGE_DAYS,
 	requireTpqAcademicContext,
-	todayIsoDate
+	todayIsoDate,
+	validateDateRangeDays
 } from '$lib/server/tpq-academic';
 
 const STATUS_FILTERS = new Set(['submitted', 'approved', 'rejected']);
@@ -63,6 +66,15 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	if (dateFrom && dateTo && dateFrom > dateTo) {
 		throw error(400, 'Filter tanggal tidak valid: date_from harus <= date_to.');
 	}
+	validateDateRangeDays(dateFrom, dateTo, MAX_FILTER_RANGE_DAYS);
+
+	const validatedHalaqohId = halaqohId ? assertSafeScopedId(halaqohId, 'ID halaqoh') : '';
+	const validatedSantriUserId = santriUserId
+		? assertSafeScopedId(santriUserId, 'ID santri')
+		: '';
+	const validatedUstadzUserId = ustadzUserId
+		? assertSafeScopedId(ustadzUserId, 'ID ustadz')
+		: '';
 
 	const conditions = ['s.institution_id = ?'];
 	const params: Array<string | number> = [institutionId];
@@ -99,23 +111,23 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		conditions.push('s.type = ?');
 		params.push(type);
 	}
-	if (halaqohId) {
+	if (validatedHalaqohId) {
 		conditions.push('s.halaqoh_id = ?');
-		params.push(halaqohId);
+		params.push(validatedHalaqohId);
 	}
 
 	if (ADMIN_HISTORY_ROLES.has(role)) {
-		if (santriUserId) {
+		if (validatedSantriUserId) {
 			conditions.push('s.santri_user_id = ?');
-			params.push(santriUserId);
+			params.push(validatedSantriUserId);
 		}
-		if (ustadzUserId) {
+		if (validatedUstadzUserId) {
 			conditions.push('s.ustadz_user_id = ?');
-			params.push(ustadzUserId);
+			params.push(validatedUstadzUserId);
 		}
-	} else if (USTADZ_HISTORY_ROLES.has(role) && santriUserId) {
+	} else if (USTADZ_HISTORY_ROLES.has(role) && validatedSantriUserId) {
 		conditions.push('s.santri_user_id = ?');
-		params.push(santriUserId);
+		params.push(validatedSantriUserId);
 	}
 
 	const whereClause = conditions.join(' AND ');
@@ -196,13 +208,15 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				`SELECT id, name as label
 				 FROM tpq_halaqoh
 				 WHERE institution_id = ? AND ustadz_user_id = ?
-				 ORDER BY name ASC`
+				 ORDER BY name ASC
+				 LIMIT 300`
 			).bind(institutionId, user.id)
 		: db.prepare(
 				`SELECT id, name as label
 				 FROM tpq_halaqoh
 				 WHERE institution_id = ?
-				 ORDER BY name ASC`
+				 ORDER BY name ASC
+				 LIMIT 300`
 			).bind(institutionId)
 	).all<SelectOption>();
 
@@ -213,7 +227,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				 WHERE org_id = ?
 				   AND role IN ('santri', 'alumni')
 				   AND (org_status IS NULL OR org_status = 'active')
-				 ORDER BY COALESCE(username, email) ASC`
+				 ORDER BY COALESCE(username, email) ASC
+				 LIMIT 1000`
 			).bind(institutionId)
 		: USTADZ_HISTORY_ROLES.has(role)
 			? db.prepare(
@@ -223,7 +238,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 					 WHERE su.org_id = ?
 					   AND su.ustadz_id = ?
 					   AND (u.org_status IS NULL OR u.org_status = 'active')
-					 ORDER BY COALESCE(u.username, u.email) ASC`
+					 ORDER BY COALESCE(u.username, u.email) ASC
+					 LIMIT 1000`
 				).bind(institutionId, user.id)
 			: db.prepare(`SELECT '' as id, '' as label WHERE 1 = 0`)
 	).all<SelectOption>();
@@ -235,7 +251,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				 WHERE org_id = ?
 				   AND role IN ('admin', 'ustadz', 'ustadzah')
 				   AND (org_status IS NULL OR org_status = 'active')
-				 ORDER BY COALESCE(username, email) ASC`
+				 ORDER BY COALESCE(username, email) ASC
+				 LIMIT 500`
 			).bind(institutionId)
 		: db.prepare(`SELECT '' as id, '' as label WHERE 1 = 0`)
 	).all<SelectOption>();
@@ -254,9 +271,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			dateTo,
 			status,
 			type,
-			halaqohId,
-			santriUserId,
-			ustadzUserId
+			halaqohId: validatedHalaqohId,
+			santriUserId: validatedSantriUserId,
+			ustadzUserId: validatedUstadzUserId
 		},
 		filterOptions: {
 			halaqoh: (halaqohRaw ?? []) as SelectOption[],

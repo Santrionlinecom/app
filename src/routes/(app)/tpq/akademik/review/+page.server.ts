@@ -1,9 +1,11 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import {
+	assertSafeScopedId,
 	assertTpqAcademicTables,
 	canReviewSetoran,
 	isValidIsoDate,
+	isSafeScopedId,
 	requireTpqAcademicContext,
 	syncApprovedHafalanFromSetoran,
 	todayIsoDate
@@ -41,8 +43,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const today = todayIsoDate();
 	const dateFilterRaw = (url.searchParams.get('date') ?? '').trim();
 	const dateFilter = dateFilterRaw && isValidIsoDate(dateFilterRaw) ? dateFilterRaw : today;
-	const halaqohFilter = (url.searchParams.get('halaqoh_id') ?? '').trim();
-	const ustadzFilter = (url.searchParams.get('ustadz_user_id') ?? '').trim();
+	const halaqohFilterRaw = (url.searchParams.get('halaqoh_id') ?? '').trim();
+	const ustadzFilterRaw = (url.searchParams.get('ustadz_user_id') ?? '').trim();
+	const halaqohFilter = isSafeScopedId(halaqohFilterRaw) ? halaqohFilterRaw : '';
+	const ustadzFilter = isSafeScopedId(ustadzFilterRaw) ? ustadzFilterRaw : '';
 
 	const conditions = ['s.institution_id = ?', "s.status = 'submitted'", 's.date = ?'];
 	const params: Array<string | number> = [institutionId, dateFilter];
@@ -86,7 +90,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			`SELECT id, name
 			 FROM tpq_halaqoh
 			 WHERE institution_id = ?
-			 ORDER BY name ASC`
+			 ORDER BY name ASC
+			 LIMIT 300`
 		)
 		.bind(institutionId)
 		.all<{ id: string; name: string }>();
@@ -98,7 +103,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			 WHERE org_id = ?
 			   AND role IN ('admin', 'ustadz', 'ustadzah')
 			   AND (org_status IS NULL OR org_status = 'active')
-			 ORDER BY COALESCE(username, email) ASC`
+			 ORDER BY COALESCE(username, email) ASC
+			 LIMIT 500`
 		)
 		.bind(institutionId)
 		.all<FilterOption>();
@@ -148,11 +154,17 @@ export const actions: Actions = {
 		await assertTpqAcademicTables(db);
 
 		const form = await request.formData();
-		const setoranId = `${form.get('setoran_id') ?? ''}`.trim();
+		const setoranIdRaw = `${form.get('setoran_id') ?? ''}`.trim();
 		const decision = `${form.get('decision') ?? ''}`.trim().toLowerCase();
 
-		if (!setoranId) {
+		if (!setoranIdRaw) {
 			return fail(400, { reviewError: 'Data setoran tidak ditemukan.' });
+		}
+		let setoranId = '';
+		try {
+			setoranId = assertSafeScopedId(setoranIdRaw, 'ID setoran');
+		} catch (err) {
+			return fail(400, { reviewError: (err as Error)?.message ?? 'ID setoran tidak valid.' });
 		}
 		if (!REVIEW_DECISIONS.has(decision)) {
 			return fail(400, { reviewError: 'Keputusan review tidak valid.' });
@@ -192,16 +204,19 @@ export const actions: Actions = {
 		}
 
 		const reviewedAt = Date.now();
-		await db
+		const updateResult = await db
 			.prepare(
 				`UPDATE tpq_setoran
 				 SET status = ?,
 				     reviewed_by = ?,
 				     reviewed_at = ?
-				 WHERE id = ? AND institution_id = ?`
+				 WHERE id = ? AND institution_id = ? AND status = 'submitted'`
 			)
 			.bind(decision, user.id, reviewedAt, setoranId, institutionId)
 			.run();
+		if (Number(updateResult.meta?.changes ?? 0) < 1) {
+			return fail(409, { reviewError: 'Setoran sudah diproses oleh pengguna lain.' });
+		}
 
 		if (decision === 'approved' && setoran.type === 'hafalan') {
 			try {

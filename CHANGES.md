@@ -20,3 +20,15 @@
   - Review approve/reject: `koordinator`/`admin`
   - Riwayat: scoped per role (`santri` diri sendiri, `ustadz` santri bimbingan, `admin/koordinator` semua)
 - Integrasi approval setoran `hafalan` ke `hafalan_progress` otomatis saat status berubah menjadi `approved`.
+
+## Hardening TPQ Akademik + Dashboard Layout
+- Hardening backend alur TPQ:
+  - Validasi format ID scope (`setoran`, `halaqoh`, `santri`, `ustadz`) sebelum query.
+  - Sanitasi input teks (`notes`, nama halaqoh) dan batas panjang input.
+  - Cek status aktif akun/lembaga pada context TPQ (`org.status` dan `user.orgStatus`).
+  - Cegah duplikasi setoran `submitted` dengan data yang sama.
+  - Cegah race-condition review dengan update bersyarat (`status='submitted'`) + verifikasi perubahan.
+  - Batasi hasil list/filter (halaqoh, santri, ustadz) untuk menjaga performa.
+- Dashboard dibuat lebih lebar:
+  - Shell dashboard diperluas (lebih banyak ruang konten).
+  - Halaman dashboard berbasis `.container` tidak lagi dibatasi `max-width` di tengah.
