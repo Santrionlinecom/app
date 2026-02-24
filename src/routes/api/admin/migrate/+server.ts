@@ -18,6 +18,7 @@ import { ensureImamScheduleTable } from '$lib/server/jadwal-imam';
 import { ensureKhotibScheduleTable } from '$lib/server/jadwal-khotib';
 import { ensureSystemLogsTable } from '$lib/server/system-logs';
 import { ensureApiRateLimitTable } from '$lib/server/rate-limit';
+import { ensureStreamerLicenseTables } from '$lib/server/license/streamer-db';
 
 const assertAuthorized = (locals: App.Locals, secret: string | undefined, token: string | null) => {
 	if (!locals.user || (locals.user.role !== 'admin' && locals.user.role !== 'SUPER_ADMIN')) {
@@ -57,6 +58,7 @@ export const POST: RequestHandler = async ({ locals, platform, request, url }) =
 	await ensureCmsSchema(db);
 	await ensureMediaSchema(db);
 	await ensureApiRateLimitTable(db);
+	await ensureStreamerLicenseTables(db);
 
 	return json({
 		ok: true,

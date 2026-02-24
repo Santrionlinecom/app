@@ -6,15 +6,34 @@ import {
 	assertOrgRoleAllowed,
 	canAccessFeature
 } from '$lib/server/auth/rbac';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const user = assertLoggedIn({ locals });
-	if (user.role === 'jamaah' || user.role === 'tamir' || user.role === 'bendahara') {
+	const superAdmin = isSuperAdminRole(user.role);
+	if (!superAdmin && (user.role === 'jamaah' || user.role === 'tamir' || user.role === 'bendahara')) {
 		throw redirect(302, '/tpq');
 	}
 
 	if (!locals.db) {
 		throw error(500, 'Database tidak tersedia');
+	}
+
+	if (superAdmin) {
+		return {
+			user,
+			org: null,
+			featureAccess: {
+				hafalan: true,
+				setoran: true,
+				ujian: true,
+				raport: true,
+				kas_masjid: true,
+				zakat_infaq: true,
+				jadwal_kegiatan: true,
+				kalender: true
+			}
+		};
 	}
 
 	const isDashboardRoute = url.pathname === '/dashboard' || url.pathname.startsWith('/dashboard/');

@@ -7,6 +7,8 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
 [vars]
 R2_PUBLIC_BASE_URL = "https://files.santrionline.com"
 # SEED_SECRET = "ganti-dengan-secret-acak"
+# LICENSE_SIGNING_SECRET set via:
+# wrangler secret put LICENSE_SIGNING_SECRET
 
 # --- Konfigurasi Database D1 ---
 [[d1_databases]]

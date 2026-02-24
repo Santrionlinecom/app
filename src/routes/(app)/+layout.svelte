@@ -202,6 +202,11 @@
 			label: 'Licenses',
 			href: '/admin/licenses',
 			icon: 'M4 7.5V6a2 2 0 012-2h12a2 2 0 012 2v1.5M3 9.5h18v8.5a2 2 0 01-2 2H5a2 2 0 01-2-2V9.5zm6 4.5h6'
+		},
+		{
+			label: 'Generate License',
+			href: '/admin/licenses/generate',
+			icon: 'M12 5v14m-7-7h14M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z'
 		}
 	];
 
