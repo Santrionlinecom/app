@@ -65,7 +65,14 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		.prepare(
 			`SELECT l.id, l.plan_type, l.status, l.max_devices, l.created_at, l.expires_at,
 				(SELECT COUNT(*) FROM streamer_license_devices d WHERE d.license_id = l.id) AS device_count,
-				(SELECT MAX(d.last_seen_at) FROM streamer_license_devices d WHERE d.license_id = l.id) AS last_seen_at
+				(SELECT MAX(d.last_seen_at) FROM streamer_license_devices d WHERE d.license_id = l.id) AS last_seen_at,
+				(
+					SELECT e.event_type
+					FROM streamer_license_events e
+					WHERE e.license_id = l.id
+					ORDER BY e.created_at DESC
+					LIMIT 1
+				) AS last_event_type
 			 FROM streamer_licenses l
 			 ORDER BY l.created_at DESC
 			 LIMIT ?`
@@ -83,7 +90,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			created_at: Number(row.created_at ?? 0),
 			expires_at: row.expires_at == null ? null : Number(row.expires_at),
 			device_count: Number(row.device_count ?? 0),
-			last_seen_at: row.last_seen_at == null ? null : Number(row.last_seen_at)
+			last_seen_at: row.last_seen_at == null ? null : Number(row.last_seen_at),
+			last_event_type: typeof row.last_event_type === 'string' ? row.last_event_type : null
 		}))
 	});
 };
@@ -160,7 +168,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 				created_at: now,
 				expires_at: expiresAt,
 				device_count: 0,
-				last_seen_at: null
+				last_seen_at: null,
+				last_event_type: 'generate'
 			}
 		},
 		{ status: 201 }

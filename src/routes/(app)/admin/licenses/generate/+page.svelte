@@ -12,6 +12,7 @@
 		expires_at: number | null;
 		device_count: number;
 		last_seen_at: number | null;
+		last_event_type: string | null;
 	};
 
 	type ListResponse =
@@ -54,6 +55,16 @@
 		if (plan === 'monthly') return 'Bulanan';
 		if (plan === 'yearly') return 'Tahunan';
 		return 'Lifetime';
+	};
+
+	const getStatusDisplay = (item: StreamerLicenseItem) => {
+		if (item.status === 'revoked') {
+			return { label: 'revoked', badgeClass: 'badge-error' };
+		}
+		if (item.last_event_type === 'deactivate') {
+			return { label: 'deactivate', badgeClass: 'badge-error' };
+		}
+		return { label: 'active', badgeClass: 'badge-success' };
 	};
 
 	const suggestedExpiryMs = (plan: PlanType) => {
@@ -355,14 +366,15 @@
 					</thead>
 					<tbody>
 						{#each items as item}
+							{@const statusDisplay = getStatusDisplay(item)}
 							<tr>
 								<td>
 									<code class="text-xs">{item.id.slice(0, 8)}...</code>
 								</td>
 								<td>{item.plan_type}</td>
 								<td>
-									<span class="badge {item.status === 'active' ? 'badge-success' : 'badge-error'} badge-outline">
-										{item.status}
+									<span class="badge {statusDisplay.badgeClass} badge-outline">
+										{statusDisplay.label}
 									</span>
 								</td>
 								<td>{item.device_count} / {item.max_devices}</td>
