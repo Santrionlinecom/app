@@ -4,6 +4,7 @@ import { generateId } from 'lucia';
 import { Scrypt } from '$lib/server/password';
 import { getOrganizationById } from '$lib/server/organizations';
 import { logActivity } from '$lib/server/activity-logs';
+import { isSuperAdminRole, requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 
 const memberRoles = ['santri'];
 
@@ -25,14 +26,7 @@ const safeLogQuery = async <T>(fn: () => Promise<T>, fallback: T): Promise<T> =>
 };
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-	if (!locals.user || locals.user.role !== 'SUPER_ADMIN') {
-		throw error(403, 'Tidak memiliki akses');
-	}
-	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
-	}
-
-	const db = locals.db!;
+	const { db } = requireSuperAdmin(locals);
 
 	const totalInstitutions = await countTable(db, 'organizations');
 	const totalUsers = await countTable(db, 'users');
@@ -158,7 +152,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		.prepare(
 			`SELECT id, username, email, role, org_id as orgId, created_at as createdAt
 			 FROM users
-			 WHERE role NOT IN ('admin', 'SUPER_ADMIN')
+			 WHERE role != 'admin'
+				AND UPPER(REPLACE(COALESCE(role, ''), '-', '_')) != 'SUPER_ADMIN'
 			 ORDER BY created_at DESC
 			 LIMIT 200`
 		)
@@ -273,16 +268,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	};
 };
 
-const requireSuperAdmin = (locals: App.Locals) => {
-	if (!locals.user || locals.user.role !== 'SUPER_ADMIN') {
-		throw error(403, 'Tidak memiliki akses');
-	}
-	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
-	}
-	return locals.db;
-};
-
 const ensureOrgHasNoAdmin = async (db: App.Locals['db'], orgId: string) => {
 	const row = await db!
 		.prepare("SELECT COUNT(1) as total FROM users WHERE org_id = ? AND role = 'admin'")
@@ -295,7 +280,7 @@ const ensureOrgHasNoAdmin = async (db: App.Locals['db'], orgId: string) => {
 
 export const actions: Actions = {
 	assignExistingAdmin: async ({ request, locals }) => {
-		const db = requireSuperAdmin(locals);
+		const { db } = requireSuperAdmin(locals);
 		const form = await request.formData();
 		const orgId = form.get('orgId');
 		const userId = form.get('userId');
@@ -321,7 +306,7 @@ export const actions: Actions = {
 		if (!user) {
 			return fail(404, { error: 'User tidak ditemukan.' });
 		}
-		if (user.role === 'admin' || user.role === 'SUPER_ADMIN') {
+		if (user.role === 'admin' || isSuperAdminRole(user.role)) {
 			return fail(400, { error: 'User sudah admin/super admin.' });
 		}
 
@@ -333,7 +318,7 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	createAdmin: async ({ request, locals }) => {
-		const db = requireSuperAdmin(locals);
+		const { db, user: actingUser } = requireSuperAdmin(locals);
 		const form = await request.formData();
 		const orgId = form.get('orgId');
 		const name = form.get('name');
@@ -381,7 +366,7 @@ export const actions: Actions = {
 		await logActivity(db!, {
 			userId,
 			action: 'REGISTER',
-			metadata: { orgId, role: 'admin', createdBy: locals.user?.id ?? null, source: 'super-admin/create-admin' }
+			metadata: { orgId, role: 'admin', createdBy: actingUser.id, source: 'super-admin/create-admin' }
 		});
 
 		return { success: true };

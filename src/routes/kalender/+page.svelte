@@ -351,13 +351,14 @@
 		editId = note.id;
 	};
 
-	const isSystemAdmin = (user: any) => user?.role === 'SUPER_ADMIN';
+	const isSystemAdmin = (user: any) =>
+		(user?.role ?? '').replace('-', '_').toUpperCase() === 'SUPER_ADMIN';
 
 	const canEdit = (note: CalendarNote) => {
 		if (note.isHoliday) return false;
 		if (!currentUser) return false;
 		if (currentUser.id === note.userId) return true;
-		if (currentUser.role !== 'admin' && currentUser.role !== 'SUPER_ADMIN') return false;
+		if (currentUser.role !== 'admin' && !isSystemAdmin(currentUser)) return false;
 		if (isSystemAdmin(currentUser)) return true;
 		return !!note.orgId && note.orgId === currentUser.orgId;
 	};

@@ -33,7 +33,6 @@
 	};
 	const roleLabelMap: Record<string, string> = {
 		SUPER_ADMIN: 'Super Admin',
-		super_admin: 'Super Admin',
 		admin: 'Admin',
 		koordinator: 'Koordinator',
 		ustadz: 'Ustadz',
@@ -245,10 +244,11 @@
 		orgType = data?.org?.type ?? null;
 		isCommunityOrg = orgType === 'masjid' || orgType === 'musholla';
 		hasOrg = Boolean(data?.org);
-		isSuperAdmin = role === 'SUPER_ADMIN' || role === 'super_admin';
+		isSuperAdmin = role.replace('-', '_').toUpperCase() === 'SUPER_ADMIN';
 		featureAccess = (data?.featureAccess ?? {}) as Record<string, boolean>;
+		const roleKey = isSuperAdmin ? 'SUPER_ADMIN' : role;
 		orgLabel = isSuperAdmin ? 'System' : orgType ? orgLabelMap[orgType] ?? orgType : 'Lembaga';
-		roleLabel = roleLabelMap[role] ?? 'Pengguna';
+		roleLabel = roleLabelMap[roleKey] ?? 'Pengguna';
 		headerTitle = isSuperAdmin
 			? 'Panel Super Admin'
 			: isCommunityOrg

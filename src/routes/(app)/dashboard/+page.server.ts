@@ -9,6 +9,7 @@ import { getOrgFinanceSummary } from '$lib/server/ummah';
 import { isCommunityOrgType, isEducationalOrgType } from '$lib/server/utils';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import { assertLoggedIn, assertOrgMember, assertOrgRoleAllowed } from '$lib/server/auth/rbac';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import { listOrgAssets } from '$lib/server/org-assets';
 import * as XLSX from 'xlsx';
 
@@ -193,7 +194,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth');
 	}
-	if (locals.user.role === 'SUPER_ADMIN') {
+	if (isSuperAdminRole(locals.user.role)) {
 		throw redirect(302, '/admin/super/overview');
 	}
 
@@ -238,7 +239,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 	};
 
 	// Load data based on user role
-	if (role === 'admin' || role === 'SUPER_ADMIN') {
+	if (role === 'admin' || isSuperAdminRole(role)) {
 		// Admin: list all users + santri & surah options
 		const baseQuery = 'SELECT id, username, email, role, created_at FROM users';
 		const { results } = await (scopedOrgId
@@ -254,7 +255,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			status: string;
 			createdAt: number;
 		}> = [];
-		if (role === 'SUPER_ADMIN') {
+		if (isSuperAdminRole(role)) {
 			const { results: orgResults } = await db
 				.prepare(
 					`SELECT id, type, name, slug, status, created_at as createdAt

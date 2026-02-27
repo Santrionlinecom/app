@@ -8,6 +8,7 @@ import type { D1Database } from '@cloudflare/workers-types';
 import { env as privateEnv } from '$env/dynamic/private';
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 
 type GoogleProfile = {
 	sub: string;
@@ -73,7 +74,7 @@ const getUserColumns = async (db: D1Database) => {
 const buildRedirectForRole = (role?: string | null) => {
 	if (!role) return '/akun';
 	const normalized = role.toLowerCase();
-	if (role === 'SUPER_ADMIN' || normalized === 'super_admin') return '/admin/super/overview';
+	if (isSuperAdminRole(role)) return '/admin/super/overview';
 	if (['ustadz', 'ustadzah', 'admin_lembaga', 'admin'].includes(normalized)) {
 		return '/dashboard';
 	}
@@ -184,7 +185,10 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 
 		if (existingUser) {
 			userId = existingUser.id;
-			finalRole = existingUser.role ?? finalRole;
+			const existingCanonicalRole = isSuperAdminRole(existingUser.role)
+				? 'SUPER_ADMIN'
+				: existingUser.role ?? null;
+			finalRole = isSuperAdmin ? 'SUPER_ADMIN' : existingCanonicalRole ?? finalRole;
 
 			const updates: string[] = [];
 			const updateValues: Array<string | number | null> = [];
@@ -204,7 +208,13 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 				updateValues.push(googleUser.picture);
 			}
 
-			if (isSuperAdmin && columns.has('role') && existingUser.role !== 'SUPER_ADMIN') {
+			if (columns.has('role') && existingCanonicalRole === 'SUPER_ADMIN' && existingUser.role !== 'SUPER_ADMIN') {
+				updates.push('role = ?');
+				updateValues.push('SUPER_ADMIN');
+				finalRole = 'SUPER_ADMIN';
+			}
+
+			if (isSuperAdmin && columns.has('role') && existingCanonicalRole !== 'SUPER_ADMIN') {
 				updates.push('role = ?');
 				updateValues.push('SUPER_ADMIN');
 				finalRole = 'SUPER_ADMIN';

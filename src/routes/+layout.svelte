@@ -9,7 +9,7 @@ export let data;
 
 let pathname = '/';
 $: pathname = $page.url.pathname as string;
-const isSuperAdmin = data?.user?.role === 'SUPER_ADMIN';
+const isSuperAdmin = (data?.user?.role ?? '').replace('-', '_').toUpperCase() === 'SUPER_ADMIN';
 const appRoutePrefixes = ['/dashboard', '/keuangan', '/akademik', '/tpq/akademik', '/org'];
 const isAppRoute = (path: string) =>
 	appRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));

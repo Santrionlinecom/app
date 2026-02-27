@@ -48,7 +48,6 @@
   },
   "dependencies": {
     "@lucia-auth/adapter-sqlite": "^3.0.2",
-    "@tauri-apps/plugin-sql": "^2.3.1",
     "@tiptap/core": "^3.13.0",
     "@tiptap/extension-image": "^3.13.0",
     "@tiptap/extension-link": "^3.13.0",
@@ -57,8 +56,6 @@
     "@tiptap/extension-underline": "^3.13.0",
     "@tiptap/starter-kit": "^3.13.0",
     "arctic": "^1.9.2",
-    "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.45.1",
     "lucia": "^3.2.2",
     "lucide-svelte": "^0.562.0",
     "oslo": "^1.2.1",

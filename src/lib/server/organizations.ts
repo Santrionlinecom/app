@@ -243,7 +243,7 @@ export const listPublicOrgMembers = async (db: D1Database, orgId: string) => {
 				 WHERE org_id = ?
 				   AND (org_status IS NULL OR org_status = 'active')
 				   AND role IS NOT NULL
-				   AND role != 'SUPER_ADMIN'
+				   AND UPPER(REPLACE(COALESCE(role, ''), '-', '_')) != 'SUPER_ADMIN'
 				 ORDER BY created_at ASC`
 			)
 			.bind(orgId)

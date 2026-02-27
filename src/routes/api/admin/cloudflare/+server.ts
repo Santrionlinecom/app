@@ -1,6 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getD1, getR2Bucket, getR2PublicBaseUrl } from '$lib/server/cloudflare';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 
 const adminRoles = new Set(['admin', 'SUPER_ADMIN']);
 
@@ -10,7 +11,8 @@ const toErrorMessage = (err: unknown) => {
 };
 
 export const GET: RequestHandler = async ({ locals, platform }) => {
-	if (!locals.user || !adminRoles.has(locals.user.role ?? '')) {
+	const role = locals.user?.role ?? null;
+	if (!locals.user || (!adminRoles.has(role ?? '') && !isSuperAdminRole(role))) {
 		throw error(403, 'Forbidden');
 	}
 

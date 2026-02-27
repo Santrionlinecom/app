@@ -4,7 +4,12 @@ import { recordMedia } from '$lib/server/media';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB
-const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']);
+const allowedMimeToExt: Record<string, string> = {
+	'image/jpeg': 'jpg',
+	'image/png': 'png',
+	'image/webp': 'webp',
+	'image/gif': 'gif'
+};
 const UPLOAD_RATE_LIMIT_MAX = 20;
 const UPLOAD_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 
@@ -50,12 +55,11 @@ export async function POST({ request, locals, platform }) {
   if (file.size > MAX_UPLOAD_BYTES) {
     return json({ error: 'File too large. Max 10MB.' }, { status: 413 });
   }
-  if (!allowedMimeTypes.has(file.type)) {
+  if (!(file.type in allowedMimeToExt)) {
     return json({ error: 'Only image files are allowed.' }, { status: 415 });
   }
 
-  const rawExt = file.name.includes('.') ? file.name.split('.').pop() ?? '' : '';
-  const fileExtension = rawExt.trim().toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
+  const fileExtension = allowedMimeToExt[file.type];
   const filename = `uploads/${locals.user.id}/${crypto.randomUUID()}.${fileExtension}`;
 
   try {

@@ -80,7 +80,7 @@
 
 	$: {
 		role = data?.role ?? '';
-		isAdmin = role === 'admin' || role === 'SUPER_ADMIN';
+		isAdmin = role === 'admin' || role.replace('-', '_').toUpperCase() === 'SUPER_ADMIN';
 		isUstadz = role === 'ustadz' || role === 'ustadzah';
 		isStaff = isAdmin || isUstadz;
 		isStudent = role === 'santri' || role === 'alumni';

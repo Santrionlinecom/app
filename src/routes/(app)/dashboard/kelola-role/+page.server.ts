@@ -1,21 +1,29 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { isSuperAdminRole, requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) throw redirect(302, '/auth');
-	if (locals.user.role !== 'SUPER_ADMIN') throw redirect(302, '/dashboard');
+	if (!isSuperAdminRole(locals.user.role)) throw redirect(302, '/dashboard');
 
+	const { db } = requireSuperAdmin(locals);
 	const baseQuery = `
 		SELECT id, username, email, role, gender, org_id as orgId, org_status as orgStatus, created_at 
 		FROM users`;
-	const { results } = await locals.db!.prepare(`${baseQuery} ORDER BY created_at DESC`).all();
+	const { results } = await db.prepare(`${baseQuery} ORDER BY created_at DESC`).all();
 
 	return { users: results || [] };
 };
 
 export const actions: Actions = {
 	updateRole: async ({ request, locals }) => {
-		if (!locals.user || locals.user.role !== 'SUPER_ADMIN') {
+		let db: NonNullable<App.Locals['db']>;
+		let actor: NonNullable<App.Locals['user']>;
+		try {
+			const access = requireSuperAdmin(locals);
+			db = access.db;
+			actor = access.user;
+		} catch {
 			return fail(403, { error: 'Tidak memiliki akses' });
 		}
 
@@ -38,11 +46,13 @@ export const actions: Actions = {
 			'bendahara',
 			'SUPER_ADMIN'
 		];
-		if (!validRoles.includes(newRole)) {
+		const requestedRole =
+			newRole.trim().replace(/-/g, '_').toUpperCase() === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : newRole;
+		if (!validRoles.includes(requestedRole)) {
 			return fail(400, { error: 'Role tidak valid' });
 		}
 
-		const { results } = await locals.db!
+		const { results } = await db
 			.prepare('SELECT role, gender, org_id as orgId FROM users WHERE id = ?')
 			.bind(userId)
 			.all();
@@ -53,15 +63,15 @@ export const actions: Actions = {
 		}
 
 		const normalizedRole =
-			newRole === 'ustadz' || newRole === 'ustadzah'
+			requestedRole === 'ustadz' || requestedRole === 'ustadzah'
 				? user.gender === 'wanita'
 					? 'ustadzah'
 					: 'ustadz'
-				: newRole;
+				: requestedRole;
 
-		await locals.db!.prepare('UPDATE users SET role = ? WHERE id = ?').bind(normalizedRole, userId).run();
+		await db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(normalizedRole, userId).run();
 
-		await locals.db!.prepare(`
+		await db.prepare(`
 			INSERT INTO user_role_history (id, user_id, old_role, new_role, changed_by)
 			VALUES (?, ?, ?, ?, ?)
 		`).bind(
@@ -69,7 +79,7 @@ export const actions: Actions = {
 			userId,
 			user.role,
 			normalizedRole,
-			locals.user.id
+			actor.id
 		).run();
 
 		return { success: true };

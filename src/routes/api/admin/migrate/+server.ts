@@ -19,9 +19,10 @@ import { ensureKhotibScheduleTable } from '$lib/server/jadwal-khotib';
 import { ensureSystemLogsTable } from '$lib/server/system-logs';
 import { ensureApiRateLimitTable } from '$lib/server/rate-limit';
 import { ensureStreamerLicenseTables } from '$lib/server/license/streamer-db';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 
 const assertAuthorized = (locals: App.Locals, secret: string | undefined, token: string | null) => {
-	if (!locals.user || (locals.user.role !== 'admin' && locals.user.role !== 'SUPER_ADMIN')) {
+	if (!locals.user || (locals.user.role !== 'admin' && !isSuperAdminRole(locals.user.role))) {
 		throw error(403, 'Forbidden');
 	}
 	if (secret && token !== secret) {

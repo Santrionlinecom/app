@@ -1,6 +1,7 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import { ensureSystemLogsTable } from '$lib/server/system-logs';
 import type { RequestHandler } from './$types';
+import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 
 const resolveRangeMs = (range: string) => {
 	switch (range) {
@@ -20,14 +21,7 @@ const resolveRangeMs = (range: string) => {
 };
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-	if (!locals.user || locals.user.role !== 'SUPER_ADMIN') {
-		throw error(403, 'Tidak memiliki akses');
-	}
-	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
-	}
-
-	const db = locals.db;
+	const { db } = requireSuperAdmin(locals);
 	await ensureSystemLogsTable(db);
 	const roleFilter = (url.searchParams.get('role') || 'all').trim();
 	const actionFilter = (url.searchParams.get('action') || 'all').trim();

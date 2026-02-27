@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import { isCommunityOrgType, isEducationalOrgType, normalizeOrgType } from '$lib/server/utils';
 
-export type SystemRole = 'SUPER_ADMIN' | 'super_admin';
+export type SystemRole = 'SUPER_ADMIN';
 export type OrgType = 'pondok' | 'masjid' | 'musholla' | 'tpq' | 'rumah-tahfidz';
 export type OrgRole =
 	| 'admin'
@@ -17,7 +17,6 @@ export type UserRole = OrgRole | SystemRole;
 
 export const ROLE_LABELS: Record<UserRole, string> = {
 	SUPER_ADMIN: 'Super Admin',
-	super_admin: 'Super Admin',
 	admin: 'Admin',
 	koordinator: 'Koordinator',
 	ustadz: 'Ustadz',
@@ -55,15 +54,16 @@ const COMMUNITY_FEATURES = new Set<FeatureKey>([
 	'kalender'
 ]);
 
+const normalizeSystemRole = (role?: string | null) =>
+	role?.trim().replace(/-/g, '_').toUpperCase();
+
 export const isSystemAdmin = (role?: string | null): role is SystemRole =>
-	role === 'SUPER_ADMIN' || role === 'super_admin';
+	normalizeSystemRole(role) === 'SUPER_ADMIN';
 
 export const normalizeRole = (role?: string | null): UserRole | null => {
 	if (!role) return null;
-	if (role === 'SUPER_ADMIN') return 'SUPER_ADMIN';
-	if (role === 'super_admin') return 'super_admin';
+	if (normalizeSystemRole(role) === 'SUPER_ADMIN') return 'SUPER_ADMIN';
 	const normalized = role.toLowerCase().trim();
-	if (normalized === 'super_admin' || normalized === 'super-admin') return 'super_admin';
 	if (normalized === 'admin_lembaga') return 'admin';
 	const allowed: OrgRole[] = [
 		'admin',
@@ -98,7 +98,7 @@ export const assertOrgRoleAllowed = (orgType: OrgType, role?: string | null) => 
 	if (isSystemAdmin(role)) return;
 	const normalized = normalizeRole(role);
 	const normalizedOrgType = normalizeOrgType(orgType);
-	if (!normalized || normalized === 'SUPER_ADMIN' || normalized === 'super_admin') {
+	if (!normalized || normalized === 'SUPER_ADMIN') {
 		throw error(403, 'Role tidak valid untuk lembaga ini.');
 	}
 	if (!normalizedOrgType || !(normalizedOrgType in allowedRolesByType)) {

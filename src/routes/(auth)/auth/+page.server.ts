@@ -3,12 +3,13 @@ import { initializeLucia } from '$lib/server/lucia';
 import { Scrypt } from '$lib/server/password'; // HANYA IMPORT SCRYPT (JANGAN ARGON2)
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import type { Actions, PageServerLoad } from './$types';
 
 // Jika user sudah login, lempar ke dashboard
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.user) {
-		const target = locals.user.role === 'SUPER_ADMIN' ? '/admin/super/overview' : '/dashboard';
+		const target = isSuperAdminRole(locals.user.role) ? '/admin/super/overview' : '/dashboard';
 		throw redirect(302, target);
 	}
 	return {};
@@ -89,7 +90,7 @@ export const actions: Actions = {
 
 			// 6. Lempar ke Dashboard
 			const role = user?.role ?? '';
-			const target = role === 'SUPER_ADMIN' ? '/admin/super/overview' : '/dashboard';
+			const target = isSuperAdminRole(role) ? '/admin/super/overview' : '/dashboard';
 			throw redirect(302, target);
 		}
 	};

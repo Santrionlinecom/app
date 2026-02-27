@@ -4,6 +4,7 @@ import { insertDokumen } from '$lib/server/rag';
 import { getOrganizationById } from '$lib/server/organizations';
 import { isEducationalOrgType } from '$lib/server/utils';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import type { RequestHandler } from './$types';
 
 const MAX_PDF_BYTES = 20 * 1024 * 1024;
@@ -18,10 +19,10 @@ const assertKitabAccess = async (locals: App.Locals) => {
 		throw error(401, 'Unauthorized');
 	}
 	const role = locals.user.role ?? '';
-	if (!allowedRoles.has(role)) {
+	if (!allowedRoles.has(role) && !isSuperAdminRole(role)) {
 		throw error(403, 'Forbidden');
 	}
-	if (role === 'SUPER_ADMIN') {
+	if (isSuperAdminRole(role)) {
 		return locals.user;
 	}
 	if (!locals.db) {

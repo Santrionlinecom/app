@@ -8,6 +8,15 @@ node_modules
 /.svelte-kit
 /build
 
+# Local artifacts / secrets
+*.db
+*.sqlite
+*.sqlite3
+*.keystore
+*.bak
+*:Zone.Identifier
+.github/java-upgrade/
+
 # OS
 .DS_Store
 Thumbs.db

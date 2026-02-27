@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { assertLoggedIn, assertOrgMember, assertOrgRoleAllowed } from '$lib/server/auth/rbac';
 import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
 import { listOrgAssets } from '$lib/server/org-assets';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import * as XLSX from 'xlsx';
 
 const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
@@ -97,7 +98,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) throw redirect(302, '/dashboard');
 
-	if (user.role === 'SUPER_ADMIN') {
+	if (isSuperAdminRole(user.role)) {
 		const { results } = await locals.db!
 			.prepare(
 				`SELECT id, type, name, slug, status, address, city, contact_phone as contactPhone, created_at as createdAt
@@ -128,7 +129,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	approve: async ({ request, locals }) => {
-		if (!locals.user || locals.user.role !== 'SUPER_ADMIN') {
+		if (!locals.user || !isSuperAdminRole(locals.user.role)) {
 			return fail(403, { error: 'Tidak memiliki akses' });
 		}
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
@@ -147,7 +148,7 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	reject: async ({ request, locals }) => {
-		if (!locals.user || locals.user.role !== 'SUPER_ADMIN') {
+		if (!locals.user || !isSuperAdminRole(locals.user.role)) {
 			return fail(403, { error: 'Tidak memiliki akses' });
 		}
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
@@ -166,7 +167,7 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	remove: async ({ request, locals }) => {
-		if (!locals.user || locals.user.role !== 'SUPER_ADMIN') {
+		if (!locals.user || !isSuperAdminRole(locals.user.role)) {
 			return fail(403, { error: 'Tidak memiliki akses' });
 		}
 		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });

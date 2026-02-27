@@ -11,6 +11,7 @@ import {
 	logStreamerLicenseEvent
 } from '$lib/server/license/streamer-db';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
+import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 
 const RATE_LIMIT = {
 	scope: 'streamer-license:status',
@@ -33,8 +34,9 @@ const handleStatusLookup = async (params: {
 	db: D1Database;
 	licenseKey: string;
 	ip: string | null;
+	adminUserId: string;
 }) => {
-	const { db, licenseKey, ip } = params;
+	const { db, licenseKey, ip, adminUserId } = params;
 	if (!licenseKey) {
 		return bad(400, 'invalid_payload', 'license_key wajib diisi');
 	}
@@ -58,7 +60,7 @@ const handleStatusLookup = async (params: {
 	await logStreamerLicenseEvent(db, {
 		licenseId: license.id,
 		eventType: 'status_lookup',
-		meta: { ip, device_count: devices.length },
+		meta: { ip, device_count: devices.length, by_user_id: adminUserId },
 		now
 	});
 
@@ -82,12 +84,13 @@ const handleStatusLookup = async (params: {
 const enforceRateLimit = async (params: {
 	db: D1Database;
 	request: Request;
+	userId: string;
 }) => {
 	const ip = getRequestIp(params.request);
 	const limiter = await consumeApiRateLimit({
 		db: params.db,
 		scope: RATE_LIMIT.scope,
-		key: `ip:${ip ?? 'unknown'}`,
+		key: `user:${params.userId}`,
 		limit: RATE_LIMIT.limit,
 		windowMs: RATE_LIMIT.windowMs
 	});
@@ -102,26 +105,24 @@ const enforceRateLimit = async (params: {
 	};
 };
 
-export const GET: RequestHandler = async ({ request, url, locals, platform }) => {
-	const db = locals.db ?? platform?.env?.DB;
-	if (!db) return bad(503, 'db_unavailable', 'Database D1 tidak tersedia');
+export const GET: RequestHandler = async ({ request, url, locals }) => {
+	const { db, user } = requireSuperAdmin(locals);
 	await ensureStreamerLicenseTables(db);
 
-	const limitCheck = await enforceRateLimit({ db, request });
+	const limitCheck = await enforceRateLimit({ db, request, userId: user.id });
 	if (!limitCheck.ok) return limitCheck.response;
 
 	const licenseKey = (url.searchParams.get('license_key') ?? '').trim();
-	return handleStatusLookup({ db, licenseKey, ip: limitCheck.ip });
+	return handleStatusLookup({ db, licenseKey, ip: limitCheck.ip, adminUserId: user.id });
 };
 
-export const POST: RequestHandler = async ({ request, locals, platform }) => {
-	const db = locals.db ?? platform?.env?.DB;
-	if (!db) return bad(503, 'db_unavailable', 'Database D1 tidak tersedia');
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const { db, user } = requireSuperAdmin(locals);
 	await ensureStreamerLicenseTables(db);
 
-	const limitCheck = await enforceRateLimit({ db, request });
+	const limitCheck = await enforceRateLimit({ db, request, userId: user.id });
 	if (!limitCheck.ok) return limitCheck.response;
 
 	const licenseKey = await parseLicenseKeyFromBody(request);
-	return handleStatusLookup({ db, licenseKey, ip: limitCheck.ip });
+	return handleStatusLookup({ db, licenseKey, ip: limitCheck.ip, adminUserId: user.id });
 };

@@ -1,6 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import { generateId } from 'lucia';
 import { Scrypt } from '$lib/server/password';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import type { RequestHandler } from './$types';
 
 const adminRoles = new Set(['admin', 'SUPER_ADMIN']);
@@ -12,7 +13,8 @@ const assertSeedAccess = (params: {
 	token?: string | null;
 }) => {
 	const { locals, secret, token } = params;
-	if (!locals.user || !adminRoles.has(locals.user.role ?? '')) {
+	const role = locals.user?.role ?? null;
+	if (!locals.user || (!adminRoles.has(role ?? '') && !isSuperAdminRole(role))) {
 		throw error(403, 'Forbidden');
 	}
 	if (secret && token !== secret) {

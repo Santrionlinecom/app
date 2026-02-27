@@ -4,6 +4,7 @@ import type { RequestHandler } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
 import { getOrgScope } from '$lib/server/organizations';
 import { assertLoggedIn } from '$lib/server/auth/rbac';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 
 const requireDb = (locals: App.Locals) => {
 	if (!locals.db) {
@@ -39,7 +40,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			return json({ notes: [] });
 		}
 		const { isSystemAdmin } = getOrgScope(user);
-		const isAdmin = user.role === 'admin' || user.role === 'SUPER_ADMIN';
+		const isAdmin = user.role === 'admin' || isSuperAdminRole(user.role);
 		const orgId = user.orgId ?? null;
 
 		const baseSelect = `SELECT cn.id,

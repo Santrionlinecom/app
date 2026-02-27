@@ -5,14 +5,19 @@ import { getDefaultMemberRole, getOrgScope, getOrganizationById, memberRoleByTyp
 import type { OrgType } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
 import { logActivity } from '$lib/server/activity-logs';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'admin'] as const;
-const managerRoles = ['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah'] as const;
+const managerRoles = new Set(['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah']);
+const hasManagerAccess = (role?: string | null) =>
+	managerRoles.has(role ?? '') || isSuperAdminRole(role);
+const isAdminRole = (role?: string | null) => role === 'admin' || isSuperAdminRole(role);
 
 const ensureAuth = (locals: App.Locals) => {
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
 	}
+	return locals.user;
 };
 
 const normalizePagination = (page = 1, limit = 10) => {
@@ -24,8 +29,8 @@ const normalizePagination = (page = 1, limit = 10) => {
 };
 
 export const GET: RequestHandler = async ({ locals, url }) => {
-	ensureAuth(locals);
-	if (!locals.user?.role || !managerRoles.includes(locals.user.role as any)) {
+	const user = ensureAuth(locals);
+	if (!hasManagerAccess(user.role)) {
 		throw error(403, 'Forbidden');
 	}
 	const db = locals.db!;
@@ -33,8 +38,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const page = Number(url.searchParams.get('page') ?? '1');
 	const limit = Number(url.searchParams.get('limit') ?? '10');
 	const pagination = normalizePagination(page, limit);
-	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
-	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const isAdmin = isAdminRole(user.role);
+	const { orgId, isSystemAdmin } = getOrgScope(user);
 	if (isAdmin && !isSystemAdmin && !orgId) {
 		throw error(403, 'Akun belum terhubung ke lembaga.');
 	}
@@ -125,14 +130,14 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-	ensureAuth(locals);
-	if (!locals.user?.role || !managerRoles.includes(locals.user.role as any)) {
+	const user = ensureAuth(locals);
+	if (!hasManagerAccess(user.role)) {
 		throw error(403, 'Forbidden');
 	}
 	const db = locals.db!;
 	if (!db) throw error(500, 'Database tidak tersedia');
 	const body = await request.json().catch(() => ({}));
-	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
+	const isAdmin = isAdminRole(user.role);
 
 	const username = typeof body.username === 'string' ? body.username.trim() : '';
 	const email = typeof body.email === 'string' ? body.email.trim() : '';
@@ -141,7 +146,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		typeof body.role === 'string' && allowedRoles.includes(body.role) ? body.role : null;
 	const genderRaw = typeof body.gender === 'string' ? body.gender.trim() : '';
 	const gender = genderRaw === 'pria' || genderRaw === 'wanita' ? genderRaw : null;
-	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const { orgId, isSystemAdmin } = getOrgScope(user);
 	if (isAdmin && !isSystemAdmin && !orgId) {
 		throw error(403, 'Akun belum terhubung ke lembaga.');
 	}

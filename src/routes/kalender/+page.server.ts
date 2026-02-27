@@ -1,10 +1,11 @@
 import { fail } from '@sveltejs/kit';
 import { assertLoggedIn } from '$lib/server/auth/rbac';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const currentUser = locals.user ?? null;
-	const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'SUPER_ADMIN';
+	const isAdmin = currentUser?.role === 'admin' || isSuperAdminRole(currentUser?.role);
 	let orgs: {
 		id: string;
 		type: string;
@@ -78,7 +79,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Data tidak lengkap' });
 		}
 
-		const isSuperAdmin = user.role === 'SUPER_ADMIN';
+		const isSuperAdmin = isSuperAdminRole(user.role);
 		const isAdmin = user.role === 'admin' || isSuperAdmin;
 		const condition = isSuperAdmin
 			? 'WHERE id = ?'
@@ -112,7 +113,7 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const id = data.get('id') as string;
 
-		const isSuperAdmin = user.role === 'SUPER_ADMIN';
+		const isSuperAdmin = isSuperAdminRole(user.role);
 		const condition = isSuperAdmin
 			? 'WHERE id = ?'
 			: user.role === 'admin'

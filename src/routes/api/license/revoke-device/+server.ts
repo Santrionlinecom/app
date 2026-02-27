@@ -10,6 +10,7 @@ import {
 	removeStreamerDevice
 } from '$lib/server/license/streamer-db';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
+import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 
 const RATE_LIMIT = {
 	scope: 'streamer-license:revoke-device',
@@ -19,16 +20,15 @@ const RATE_LIMIT = {
 
 const bad = (status: number, error: string, message: string) => json({ ok: false, error, message }, { status });
 
-export const POST: RequestHandler = async ({ request, locals, platform }) => {
-	const db = locals.db ?? platform?.env?.DB;
-	if (!db) return bad(503, 'db_unavailable', 'Database D1 tidak tersedia');
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const { db, user } = requireSuperAdmin(locals);
 	await ensureStreamerLicenseTables(db);
 
 	const ip = getRequestIp(request) ?? 'unknown';
 	const limiter = await consumeApiRateLimit({
 		db,
 		scope: RATE_LIMIT.scope,
-		key: `ip:${ip}`,
+		key: `user:${user.id}`,
 		limit: RATE_LIMIT.limit,
 		windowMs: RATE_LIMIT.windowMs
 	});
@@ -77,9 +77,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	await logStreamerLicenseEvent(db, {
 		licenseId: license.id,
 		eventType: 'revoke_device',
-		meta: { device_id_hash: deviceIdHash, removed, ip }
+		meta: { device_id_hash: deviceIdHash, removed, ip, by_user_id: user.id }
 	});
 
 	return json({ ok: true, removed });
 };
-

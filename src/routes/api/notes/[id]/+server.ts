@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
 import { getOrgScope } from '$lib/server/organizations';
 import { assertLoggedIn } from '$lib/server/auth/rbac';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 
 const requireUser = (locals: App.Locals) => {
 	const user = assertLoggedIn({ locals });
@@ -13,7 +14,7 @@ const requireUser = (locals: App.Locals) => {
 };
 
 const canEdit = (user: NonNullable<App.Locals['user']>, ownerId: string) =>
-	user.role === 'admin' || user.role === 'SUPER_ADMIN' || user.id === ownerId;
+	user.role === 'admin' || isSuperAdminRole(user.role) || user.id === ownerId;
 
 const fetchNote = async (db: D1Database, id: string) => {
 	return (

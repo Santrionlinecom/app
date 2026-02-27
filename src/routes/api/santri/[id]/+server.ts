@@ -1,15 +1,20 @@
 import { json, error } from '@sveltejs/kit';
 import { Scrypt } from '$lib/server/password';
 import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
+import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import type { RequestHandler } from './$types';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'admin'] as const;
-const managerRoles = ['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah'] as const;
+const managerRoles = new Set(['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah']);
+const hasManagerAccess = (role?: string | null) =>
+	managerRoles.has(role ?? '') || isSuperAdminRole(role);
+const isAdminRole = (role?: string | null) => role === 'admin' || isSuperAdminRole(role);
 
 const ensureAuth = (locals: App.Locals) => {
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
 	}
+	return locals.user;
 };
 
 const normalizeUstadzRole = (role?: string, gender?: string | null) => {
@@ -20,8 +25,8 @@ const normalizeUstadzRole = (role?: string, gender?: string | null) => {
 };
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
-	ensureAuth(locals);
-	if (!locals.user?.role || !managerRoles.includes(locals.user.role as any)) {
+	const user = ensureAuth(locals);
+	if (!hasManagerAccess(user.role)) {
 		throw error(403, 'Forbidden');
 	}
 	const db = locals.db!;
@@ -38,8 +43,8 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const targetGender = targetRows?.[0]?.gender;
 	const targetRole = targetRows?.[0]?.role;
 	const targetOrgId = targetRows?.[0]?.orgId ?? null;
-	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
-	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const isAdmin = isAdminRole(user.role);
+	const { orgId, isSystemAdmin } = getOrgScope(user);
 	if (isAdmin && !isSystemAdmin && !orgId) {
 		throw error(403, 'Akun belum terhubung ke lembaga.');
 	}
@@ -134,8 +139,8 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-	ensureAuth(locals);
-	if (!locals.user?.role || !managerRoles.includes(locals.user.role as any)) {
+	const user = ensureAuth(locals);
+	if (!hasManagerAccess(user.role)) {
 		throw error(403, 'Forbidden');
 	}
 	const db = locals.db!;
@@ -143,8 +148,8 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 	const id = params.id;
 	if (!id) throw error(400, 'ID tidak valid');
 
-	const isAdmin = locals.user.role === 'admin' || locals.user.role === 'SUPER_ADMIN';
-	const { orgId, isSystemAdmin } = getOrgScope(locals.user);
+	const isAdmin = isAdminRole(user.role);
+	const { orgId, isSystemAdmin } = getOrgScope(user);
 	if (isAdmin && !isSystemAdmin && !orgId) {
 		throw error(403, 'Akun belum terhubung ke lembaga.');
 	}
