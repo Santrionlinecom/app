@@ -4,6 +4,8 @@ import type { StreamerLicenseRow } from '$lib/server/license/streamer-db';
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
+type StreamerTokenAlg = 'HS256' | 'EdDSA';
+
 export type StreamerLicenseTokenClaims = {
 	kind: 'santri_streamer_license';
 	license_id: string;
@@ -22,6 +24,10 @@ export const STREAMER_PREMIUM_FEATURES = [
 ] as const;
 
 const DEFAULT_STREAMER_FEATURES = [...STREAMER_PREMIUM_FEATURES];
+const DEFAULT_STREAMER_TOKEN_ALG: StreamerTokenAlg = 'EdDSA';
+const ED25519_PKCS8_PREFIX = Uint8Array.from([
+	0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20
+]);
 
 const getSecret = (secretOverride?: string) => {
 	const secret = (
@@ -84,6 +90,25 @@ const importHmacKey = async (secretOverride?: string) =>
 		false,
 		['sign', 'verify']
 	);
+
+const importEd25519PrivateKey = async (secretOverride?: string) => {
+	const secret = encoder.encode(getSecret(secretOverride));
+	const digest = await crypto.subtle.digest('SHA-256', secret);
+	const seed = new Uint8Array(digest);
+	const pkcs8 = new Uint8Array(ED25519_PKCS8_PREFIX.length + seed.length);
+	pkcs8.set(ED25519_PKCS8_PREFIX, 0);
+	pkcs8.set(seed, ED25519_PKCS8_PREFIX.length);
+	return crypto.subtle.importKey('pkcs8', pkcs8, { name: 'Ed25519' }, false, ['sign']);
+};
+
+const equalBytes = (left: Uint8Array, right: Uint8Array) => {
+	if (left.length !== right.length) return false;
+	let mismatch = 0;
+	for (let i = 0; i < left.length; i += 1) {
+		mismatch |= left[i] ^ right[i];
+	}
+	return mismatch === 0;
+};
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
 	typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -148,38 +173,52 @@ export const generateLicenseToken = async (
 	claims: Omit<StreamerLicenseTokenClaims, 'kind'>,
 	secretOverride?: string
 ) => {
-	const header = { alg: 'HS256', typ: 'JWT' } as const;
+	const header = { alg: DEFAULT_STREAMER_TOKEN_ALG, typ: 'JWT' } as const;
 	const payload: StreamerLicenseTokenClaims = { kind: 'santri_streamer_license', ...claims };
 
 	const headerPart = toBase64Url(encoder.encode(JSON.stringify(header)));
 	const payloadPart = toBase64Url(encoder.encode(JSON.stringify(payload)));
 	const signingInput = `${headerPart}.${payloadPart}`;
 
-	const key = await importHmacKey(secretOverride);
-	const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(signingInput));
-	const sigPart = toBase64Url(new Uint8Array(signature));
+	let signature: Uint8Array;
+	if (header.alg === 'EdDSA') {
+		const key = await importEd25519PrivateKey(secretOverride);
+		signature = new Uint8Array(await crypto.subtle.sign('Ed25519', key, encoder.encode(signingInput)));
+	} else {
+		const key = await importHmacKey(secretOverride);
+		signature = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(signingInput)));
+	}
+
+	const sigPart = toBase64Url(signature);
 
 	return `${signingInput}.${sigPart}`;
 };
 
 export const verifyLicenseToken = async (token: string, secretOverride?: string) => {
 	if (typeof token !== 'string' || !token.trim()) return null;
-	// Resolve secret up front so missing env is surfaced as server error by callers.
-	const key = await importHmacKey(secretOverride);
 	const parts = token.trim().split('.');
 	if (parts.length !== 3) return null;
 	const [headerPart, payloadPart, sigPart] = parts;
 
 	try {
 		const header = JSON.parse(decoder.decode(fromBase64Url(headerPart)));
-		if (!isObject(header) || header.alg !== 'HS256' || header.typ !== 'JWT') return null;
-		const ok = await crypto.subtle.verify(
-			'HMAC',
-			key,
-			fromBase64Url(sigPart),
-			encoder.encode(`${headerPart}.${payloadPart}`)
-		);
-		if (!ok) return null;
+		if (!isObject(header) || header.typ !== 'JWT') return null;
+		const algorithm = header.alg;
+		const signed = encoder.encode(`${headerPart}.${payloadPart}`);
+		const givenSignature = fromBase64Url(sigPart);
+
+		if (algorithm === 'HS256') {
+			// Backward compatibility for tokens issued before EdDSA migration.
+			const key = await importHmacKey(secretOverride);
+			const ok = await crypto.subtle.verify('HMAC', key, givenSignature, signed);
+			if (!ok) return null;
+		} else if (algorithm === 'EdDSA') {
+			const key = await importEd25519PrivateKey(secretOverride);
+			const expected = new Uint8Array(await crypto.subtle.sign('Ed25519', key, signed));
+			if (!equalBytes(givenSignature, expected)) return null;
+		} else {
+			return null;
+		}
 
 		const payload = JSON.parse(decoder.decode(fromBase64Url(payloadPart)));
 		return parseClaims(payload);
