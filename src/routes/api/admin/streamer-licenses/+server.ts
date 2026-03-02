@@ -63,7 +63,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 	const { results } = await db
 		.prepare(
-			`SELECT l.id, l.plan_type, l.status, l.max_devices, l.created_at, l.expires_at,
+			`SELECT l.id, l.license_key_plain, l.plan_type, l.status, l.max_devices, l.created_at, l.expires_at,
 				(SELECT COUNT(*) FROM streamer_license_devices d WHERE d.license_id = l.id) AS device_count,
 				(SELECT MAX(d.last_seen_at) FROM streamer_license_devices d WHERE d.license_id = l.id) AS last_seen_at,
 				(
@@ -84,6 +84,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		ok: true,
 		items: (results ?? []).map((row) => ({
 			id: row.id,
+			license_key: typeof row.license_key_plain === 'string' ? row.license_key_plain : null,
 			plan_type: row.plan_type,
 			status: row.status,
 			max_devices: Number(row.max_devices ?? 0),
@@ -137,10 +138,10 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	await db
 		.prepare(
 			`INSERT INTO streamer_licenses (
-				id, license_key_hash, plan_type, expires_at, status, max_devices, created_at
-			) VALUES (?, ?, ?, ?, ?, ?, ?)`
+				id, license_key_hash, license_key_plain, plan_type, expires_at, status, max_devices, created_at
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 		)
-		.bind(licenseId, licenseKeyHash, planTypeRaw, expiresAt, 'active', maxDevices, now)
+		.bind(licenseId, licenseKeyHash, licenseKey, planTypeRaw, expiresAt, 'active', maxDevices, now)
 		.run();
 
 	await logStreamerLicenseEvent(db, {
@@ -162,6 +163,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			license_key: licenseKey,
 			item: {
 				id: licenseId,
+				license_key: licenseKey,
 				plan_type: planTypeRaw,
 				status: 'active',
 				max_devices: maxDevices,

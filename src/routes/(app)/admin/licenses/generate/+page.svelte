@@ -5,6 +5,7 @@
 
 	type StreamerLicenseItem = {
 		id: string;
+		license_key: string | null;
 		plan_type: PlanType;
 		status: 'active' | 'revoked';
 		max_devices: number;
@@ -96,6 +97,7 @@
 	let generatedLicenseKey = '';
 	let generatedItem: StreamerLicenseItem | null = null;
 	let copyMessage = '';
+	let copyError = '';
 
 	$: if (planType === 'lifetime' && customExpiryEnabled) {
 		customExpiryEnabled = false;
@@ -121,14 +123,18 @@
 		}
 	};
 
-	const copyText = async (value: string) => {
+	const copyText = async (value: string, successMessage = 'License key berhasil disalin.') => {
 		copyMessage = '';
-		if (!value) return;
+		copyError = '';
+		if (!value.trim()) {
+			copyError = 'License key belum tersedia untuk data ini.';
+			return;
+		}
 		try {
 			await navigator.clipboard.writeText(value);
-			copyMessage = 'License key berhasil disalin.';
+			copyMessage = successMessage;
 		} catch {
-			copyMessage = 'Gagal menyalin otomatis. Silakan copy manual.';
+			copyError = 'Gagal menyalin otomatis. Silakan copy manual.';
 		}
 	};
 
@@ -137,6 +143,7 @@
 		errorMessage = '';
 		infoMessage = '';
 		copyMessage = '';
+		copyError = '';
 
 		let expiresAt: number | undefined;
 		if (customExpiryEnabled && planType !== 'lifetime') {
@@ -170,7 +177,7 @@
 
 			generatedLicenseKey = data.license_key;
 			generatedItem = data.item;
-			infoMessage = 'License berhasil dibuat. Simpan/copy key sekarang karena plaintext tidak disimpan.';
+			infoMessage = 'License berhasil dibuat. Key juga tersimpan di daftar License Terbaru dan bisa dicopy ulang.';
 			items = [data.item, ...items.filter((item) => item.id !== data.item.id)].slice(0, 50);
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Gagal generate license';
@@ -195,7 +202,7 @@
 				<p class="text-xs uppercase tracking-[0.2em] text-white/70">Santri Streamer Desktop</p>
 				<h1 class="mt-2 text-2xl font-bold">Generate License</h1>
 				<p class="mt-2 text-sm text-white/85">
-					Buat license baru untuk aplikasi desktop Santri Streamer. Sistem hanya menyimpan hash license key.
+					Buat license baru untuk aplikasi desktop Santri Streamer. Key akan tersimpan di panel admin agar bisa dicopy ulang.
 				</p>
 			</div>
 			<div class="flex gap-2">
@@ -290,15 +297,22 @@
 						<p class="text-xs font-medium uppercase tracking-wide text-emerald-800">License Key</p>
 						<div class="mt-2 flex flex-col gap-2 sm:flex-row">
 							<input class="input input-bordered w-full font-mono text-sm" readonly value={generatedLicenseKey} />
-							<button class="btn btn-success btn-outline" type="button" on:click={() => copyText(generatedLicenseKey)}>
+							<button
+								class="btn btn-success btn-outline"
+								type="button"
+								on:click={() => copyText(generatedLicenseKey, 'License key terbaru berhasil disalin.')}
+							>
 								Copy
 							</button>
 						</div>
 						<p class="mt-2 text-xs text-emerald-800/80">
-							Key plaintext tidak bisa ditampilkan lagi setelah halaman ditutup/reload.
+							Key ini juga tersedia di tabel License Terbaru agar bisa dicopy kembali saat dibutuhkan.
 						</p>
 						{#if copyMessage}
 							<p class="mt-2 text-xs text-emerald-900">{copyMessage}</p>
+						{/if}
+						{#if copyError}
+							<p class="mt-2 text-xs text-red-700">{copyError}</p>
 						{/if}
 					</div>
 
@@ -345,8 +359,14 @@
 			</button>
 		</div>
 		<p class="mt-1 text-xs text-slate-500">
-			Daftar ini tidak menampilkan plaintext license key karena yang tersimpan di database hanya hash.
+			License key bisa dicopy langsung dari daftar ini. Data lama sebelum update mungkin belum memiliki key plaintext.
 		</p>
+		{#if copyMessage}
+			<p class="mt-2 text-xs text-emerald-700">{copyMessage}</p>
+		{/if}
+		{#if copyError}
+			<p class="mt-2 text-xs text-red-600">{copyError}</p>
+		{/if}
 
 		{#if items.length === 0}
 			<p class="mt-4 text-sm text-slate-500">{loadingList ? 'Memuat data...' : 'Belum ada data license.'}</p>
@@ -356,12 +376,14 @@
 					<thead>
 						<tr>
 							<th>ID</th>
+							<th>License Key</th>
 							<th>Plan</th>
 							<th>Status</th>
 							<th>Device</th>
 							<th>Expires</th>
 							<th>Created</th>
 							<th>Last Seen</th>
+							<th class="text-right">Aksi</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -370,6 +392,13 @@
 							<tr>
 								<td>
 									<code class="text-xs">{item.id.slice(0, 8)}...</code>
+								</td>
+								<td>
+									{#if item.license_key}
+										<code class="text-xs">{item.license_key}</code>
+									{:else}
+										<span class="text-xs text-slate-400">Tidak tersedia</span>
+									{/if}
 								</td>
 								<td>{item.plan_type}</td>
 								<td>
@@ -381,6 +410,17 @@
 								<td>{formatDate(item.expires_at)}</td>
 								<td>{formatDate(item.created_at)}</td>
 								<td>{formatDate(item.last_seen_at)}</td>
+								<td class="text-right">
+									<button
+										class="btn btn-xs btn-outline"
+										type="button"
+										on:click={() =>
+											copyText(item.license_key ?? '', `License key ${item.id.slice(0, 8)} berhasil disalin.`)}
+										disabled={!item.license_key}
+									>
+										Copy
+									</button>
+								</td>
 							</tr>
 						{/each}
 					</tbody>

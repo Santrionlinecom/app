@@ -6,6 +6,7 @@ export type StreamerLicenseStatus = 'active' | 'revoked';
 export type StreamerLicenseRow = {
 	id: string;
 	license_key_hash: string;
+	license_key_plain: string | null;
 	plan_type: StreamerPlanType;
 	expires_at: number | null;
 	status: StreamerLicenseStatus;
@@ -53,12 +54,23 @@ const serializeMeta = (meta: unknown) => {
 	}
 };
 
+const addColumnIfMissing = async (db: D1Database, tableName: string, name: string, type: string) => {
+	try {
+		await db.prepare(`ALTER TABLE ${tableName} ADD COLUMN ${name} ${type}`).run();
+	} catch (err: any) {
+		if (!`${err?.message ?? ''}`.includes('duplicate column name')) {
+			throw err;
+		}
+	}
+};
+
 export const ensureStreamerLicenseTables = async (db: D1Database) => {
 	await db
 		.prepare(
 			`CREATE TABLE IF NOT EXISTS streamer_licenses (
 				id TEXT PRIMARY KEY,
 				license_key_hash TEXT NOT NULL UNIQUE,
+				license_key_plain TEXT NULL,
 				plan_type TEXT NOT NULL CHECK (plan_type IN ('monthly', 'yearly', 'lifetime')),
 				expires_at INTEGER NULL,
 				status TEXT NOT NULL CHECK (status IN ('active', 'revoked')),
@@ -109,6 +121,8 @@ export const ensureStreamerLicenseTables = async (db: D1Database) => {
 			'CREATE INDEX IF NOT EXISTS idx_streamer_license_events_license_time ON streamer_license_events(license_id, created_at DESC)'
 		)
 		.run();
+
+	await addColumnIfMissing(db, 'streamer_licenses', 'license_key_plain', 'TEXT');
 };
 
 export const logStreamerLicenseEvent = async (
@@ -132,7 +146,7 @@ export const logStreamerLicenseEvent = async (
 export const getStreamerLicenseByHash = async (db: D1Database, licenseKeyHash: string) =>
 	(await db
 		.prepare(
-			`SELECT id, license_key_hash, plan_type, expires_at, status, max_devices, created_at
+			`SELECT id, license_key_hash, license_key_plain, plan_type, expires_at, status, max_devices, created_at
 			 FROM streamer_licenses
 			 WHERE license_key_hash = ?`
 		)
@@ -142,7 +156,7 @@ export const getStreamerLicenseByHash = async (db: D1Database, licenseKeyHash: s
 export const getStreamerLicenseById = async (db: D1Database, licenseId: string) =>
 	(await db
 		.prepare(
-			`SELECT id, license_key_hash, plan_type, expires_at, status, max_devices, created_at
+			`SELECT id, license_key_hash, license_key_plain, plan_type, expires_at, status, max_devices, created_at
 			 FROM streamer_licenses
 			 WHERE id = ?`
 		)
