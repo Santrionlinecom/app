@@ -1,6 +1,12 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getRequestIp } from '$lib/server/logger';
 import {
+	deactivateDesktopLicense,
+	desktopLicenseResponseStatus,
+	desktopServerError,
+	isDesktopLicenseContractRequest
+} from '$lib/server/license/streamer-desktop';
+import {
 	ensureLicenseTables,
 	logLicenseEvent,
 	normalizeLicenseKey
@@ -39,7 +45,7 @@ export const OPTIONS = notAllowedHandler;
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const db = locals.db ?? platform?.env?.DB;
 	if (!db) {
-		return json({ ok: false, message: 'Database tidak tersedia' }, { status: 503 });
+		return json(desktopServerError(), { status: 503 });
 	}
 
 	const ip = getRequestIp(request) ?? 'unknown';
@@ -61,7 +67,20 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	try {
 		body = (await request.json()) as Record<string, unknown>;
 	} catch {
-		// noop
+		return json({ ok: false, reason: 'request invalid' }, { status: 400 });
+	}
+
+	if (isDesktopLicenseContractRequest(body)) {
+		try {
+			const result = await deactivateDesktopLicense({
+				body,
+				db,
+				ip
+			});
+			return json(result, { status: desktopLicenseResponseStatus(result) });
+		} catch {
+			return json(desktopServerError(), { status: 500 });
+		}
 	}
 
 	const token = typeof body?.token === 'string' ? body.token.trim() : '';

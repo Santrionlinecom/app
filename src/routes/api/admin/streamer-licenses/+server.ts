@@ -8,6 +8,7 @@ import {
 	logStreamerLicenseEvent,
 	type StreamerPlanType
 } from '$lib/server/license/streamer-db';
+import { buildStrmLicenseKey } from '$lib/server/license/key-format';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -16,26 +17,12 @@ const PLAN_DURATION_MS: Record<Exclude<StreamerPlanType, 'lifetime'>, number> = 
 	yearly: 365 * DAY_MS
 };
 
-const STREAMER_KEY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
 const isPlanType = (value: string): value is StreamerPlanType =>
 	value === 'monthly' || value === 'yearly' || value === 'lifetime';
 
-const randomChunk = (length: number) => {
-	const bytes = crypto.getRandomValues(new Uint8Array(length));
-	let out = '';
-	for (let i = 0; i < bytes.length; i += 1) {
-		out += STREAMER_KEY_ALPHABET[bytes[i] % STREAMER_KEY_ALPHABET.length];
-	}
-	return out;
-};
-
-const buildStreamerLicenseKey = () =>
-	`STRM-${randomChunk(5)}-${randomChunk(5)}-${randomChunk(5)}-${randomChunk(5)}`;
-
 const generateUniqueStreamerLicenseKey = async (db: D1Database) => {
 	for (let i = 0; i < 25; i += 1) {
-		const licenseKey = buildStreamerLicenseKey();
+		const licenseKey = buildStrmLicenseKey();
 		const licenseKeyHash = await hashLicenseKey(licenseKey);
 		const existing = await getStreamerLicenseByHash(db, licenseKeyHash);
 		if (!existing) {

@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { buildStrmLicenseKey } from '$lib/server/license/key-format';
 
 export const LICENSE_GRACE_DAYS = 14;
 
@@ -185,26 +186,7 @@ export const normalizeLicenseStatus = async (db: D1Database, license: LicenseRow
 	return license;
 };
 
-const LICENSE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
-const randomSegment = (length: number) => {
-	const bytes = new Uint8Array(length);
-	crypto.getRandomValues(bytes);
-	let out = '';
-	for (let i = 0; i < bytes.length; i += 1) {
-		out += LICENSE_CHARS[bytes[i] % LICENSE_CHARS.length];
-	}
-	return out;
-};
-
-const PLAN_CODE: Record<LicensePlan, string> = {
-	starter: 'STR',
-	pro: 'PRO',
-	studio: 'STD'
-};
-
-export const buildLicenseKey = (plan: LicensePlan) =>
-	`SANTRI-${PLAN_CODE[plan]}-${randomSegment(4)}-${randomSegment(4)}`;
+export const buildLicenseKey = (_plan: LicensePlan) => buildStrmLicenseKey();
 
 export const generateUniqueLicenseKey = async (db: D1Database, plan: LicensePlan) => {
 	for (let i = 0; i < 10; i += 1) {

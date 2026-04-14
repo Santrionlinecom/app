@@ -67,3 +67,12 @@ Berikut adalah sistem/teknologi yang ada di dalam proyek ini dan yang digunakan:
 Catatan:
 - Konfigurasi Tailwind ada di `tailwind.config.ts`, PWA di `vite.config.ts` (plugin) dan `twa-manifest.json` untuk WebAPK/TWA.
 - File database/seed: `tahfidz.db`, `tahlil_data.sql`, `schema.sql`.
+
+## Santri Streamer License
+
+- Route kompatibilitas desktop app: `POST /api/license/activate`, `POST /api/license/validate`, `POST /api/license/deactivate`.
+- Body request desktop app: `{ "key": "STRM-XXXXX-XXXXX-XXXXX-XXXXX", "machineId": "..." }`.
+- Response sukses desktop app: `{ "ok": true, "plan": "...", "email": "" }`.
+- Response gagal desktop app: `{ "ok": false, "reason": "..." }`.
+- Key baru yang digenerate untuk license memakai format final `STRM-XXXXX-XXXXX-XXXXX-XXXXX`.
+- Key lama prefix `SANTRI` tidak lagi digenerate untuk aktivasi baru; route legacy lain tetap dipertahankan untuk kompatibilitas web/internal yang masih memakainya.
