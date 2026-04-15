@@ -39,6 +39,17 @@
 				message?: string;
 		  };
 
+	type DeleteResponse =
+		| {
+				ok: true;
+				id: string;
+		  }
+		| {
+				ok?: false;
+				error?: string;
+				message?: string;
+		  };
+
 	const DAY_MS = 24 * 60 * 60 * 1000;
 
 	const formatDate = (value: number | null | undefined) => {
@@ -98,6 +109,7 @@
 	let generatedItem: StreamerLicenseItem | null = null;
 	let copyMessage = '';
 	let copyError = '';
+	let deletingId = '';
 
 	$: if (planType === 'lifetime' && customExpiryEnabled) {
 		customExpiryEnabled = false;
@@ -183,6 +195,38 @@
 			errorMessage = err instanceof Error ? err.message : 'Gagal generate license';
 		} finally {
 			submitting = false;
+		}
+	};
+
+	const deleteLicense = async (item: StreamerLicenseItem) => {
+		errorMessage = '';
+		infoMessage = '';
+		copyMessage = '';
+		copyError = '';
+
+		const label = item.license_key ?? item.id;
+		if (!confirm(`Hapus license ${label}? Tindakan ini tidak bisa dibatalkan.`)) return;
+
+		deletingId = item.id;
+		try {
+			const response = await fetch(`/api/admin/streamer-licenses/${item.id}`, {
+				method: 'DELETE'
+			});
+			const data = (await response.json().catch(() => ({}))) as DeleteResponse;
+			if (!response.ok || !('ok' in data) || data.ok !== true) {
+				throw new Error((data as { message?: string }).message || 'Gagal menghapus license');
+			}
+
+			items = items.filter((current) => current.id !== item.id);
+			if (generatedItem?.id === item.id) {
+				generatedItem = null;
+				generatedLicenseKey = '';
+			}
+			infoMessage = 'License berhasil dihapus.';
+		} catch (err) {
+			errorMessage = err instanceof Error ? err.message : 'Gagal menghapus license';
+		} finally {
+			deletingId = '';
 		}
 	};
 
@@ -411,15 +455,25 @@
 								<td>{formatDate(item.created_at)}</td>
 								<td>{formatDate(item.last_seen_at)}</td>
 								<td class="text-right">
-									<button
-										class="btn btn-xs btn-outline"
-										type="button"
-										on:click={() =>
-											copyText(item.license_key ?? '', `License key ${item.id.slice(0, 8)} berhasil disalin.`)}
-										disabled={!item.license_key}
-									>
-										Copy
-									</button>
+									<div class="flex justify-end gap-2">
+										<button
+											class="btn btn-xs btn-outline"
+											type="button"
+											on:click={() =>
+												copyText(item.license_key ?? '', `License key ${item.id.slice(0, 8)} berhasil disalin.`)}
+											disabled={!item.license_key || deletingId === item.id}
+										>
+											Copy
+										</button>
+										<button
+											class="btn btn-xs btn-outline btn-error"
+											type="button"
+											on:click={() => deleteLicense(item)}
+											disabled={deletingId === item.id}
+										>
+											{deletingId === item.id ? 'Menghapus...' : 'Hapus'}
+										</button>
+									</div>
 								</td>
 							</tr>
 						{/each}
