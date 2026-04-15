@@ -36,7 +36,7 @@
     <img src={data.post.thumbnail_url} alt={`Thumbnail ${data.post.title}`} class="w-full rounded-lg border border-base-300 mb-6" loading="lazy" />
   {/if}
   
-  <div class="prose max-w-none">
+  <div class="prose prose-lg max-w-none prose-slate prose-headings:text-slate-900 prose-p:text-slate-700 prose-img:rounded-xl">
     {@html data.post.content}
   </div>
 </article>
