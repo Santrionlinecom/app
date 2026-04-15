@@ -1,10 +1,11 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { isSuperAdminRole, requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
+import { isSuperAdminUser } from '$lib/auth/session-user';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) throw redirect(302, '/auth');
-	if (!isSuperAdminRole(locals.user.role)) throw redirect(302, '/dashboard');
+	if (!isSuperAdminUser(locals.user)) throw redirect(302, '/dashboard');
 
 	const { db } = requireSuperAdmin(locals);
 	const baseQuery = `

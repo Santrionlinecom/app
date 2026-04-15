@@ -7,7 +7,15 @@ declare global {
 
         // Mendefinisikan data User & Session agar dikenali di hooks
         interface Locals {
-            user: import('lucia').User | null;
+            user:
+                | (import('lucia').User & {
+                        originalRole?: string | null;
+                        actualRole?: string | null;
+                        actualOrgId?: string | null;
+                        isImpersonating?: boolean;
+                        impersonatedOrgId?: string | null;
+                  })
+                | null;
             session: import('lucia').Session | null;
             // Saya beri tanda tanya (?) jaga-jaga jika di hooks belum di-set
             db?: D1Database; 

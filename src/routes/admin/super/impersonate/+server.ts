@@ -1,7 +1,7 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { initializeLucia } from '$lib/server/lucia';
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
+import { setImpersonatedOrgId } from '$lib/server/auth/impersonation';
 
 export const GET: RequestHandler = async ({ locals, url, cookies }) => {
 	const { db } = requireSuperAdmin(locals);
@@ -11,22 +11,16 @@ export const GET: RequestHandler = async ({ locals, url, cookies }) => {
 		throw error(400, 'Organisasi tidak valid');
 	}
 
-	const adminUser = await db
-		.prepare('SELECT id FROM users WHERE org_id = ? AND role = ? ORDER BY created_at ASC LIMIT 1')
-		.bind(orgId, 'admin')
+	const org = await db
+		.prepare('SELECT id FROM organizations WHERE id = ?')
+		.bind(orgId)
 		.first<{ id: string }>();
 
-	if (!adminUser?.id) {
-		throw error(404, 'Admin lembaga tidak ditemukan');
+	if (!org?.id) {
+		throw error(404, 'Lembaga tidak ditemukan');
 	}
 
-	const lucia = initializeLucia(db);
-	const session = await lucia.createSession(adminUser.id, {});
-	const sessionCookie = lucia.createSessionCookie(session.id);
-	cookies.set(sessionCookie.name, sessionCookie.value, {
-		path: '/',
-		...sessionCookie.attributes
-	});
+	setImpersonatedOrgId(cookies, orgId);
 
 	throw redirect(302, '/dashboard');
 };

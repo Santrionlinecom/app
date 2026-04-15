@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { initializeLucia } from '$lib/server/lucia';
+import { clearImpersonatedOrgId } from '$lib/server/auth/impersonation';
 
 const clearSessionCookie = (cookies: Parameters<RequestHandler>[0]['cookies']) => {
 	// fallback cookie clear even when DB binding is unavailable
@@ -21,6 +22,8 @@ const clearSessionCookie = (cookies: Parameters<RequestHandler>[0]['cookies']) =
 };
 
 const doLogout: RequestHandler = async ({ locals, cookies }) => {
+	clearImpersonatedOrgId(cookies);
+
 	if (locals.db && locals.session) {
 		const lucia = initializeLucia(locals.db);
 		await lucia.invalidateSession(locals.session.id);

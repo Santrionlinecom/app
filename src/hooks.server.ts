@@ -2,6 +2,12 @@
 import { initializeLucia } from '$lib/server/lucia';
 import type { Handle } from '@sveltejs/kit';
 import type { D1Database } from '@cloudflare/workers-types';
+import { isSuperAdminUser } from '$lib/auth/session-user';
+import {
+	applySuperAdminImpersonation,
+	clearImpersonatedOrgId,
+	getImpersonatedOrgId
+} from '$lib/server/auth/impersonation';
 
 const TPQ_ONLY_BLOCKED_PREFIXES = ['/pondok', '/masjid', '/musholla', '/rumah-tahfidz', '/keuangan', '/org'];
 
@@ -37,6 +43,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const { session, user } = await lucia.validateSession(sessionId);
+	let resolvedUser = user;
+	const impersonatedOrgId = getImpersonatedOrgId(event.cookies);
+
+	if (resolvedUser && impersonatedOrgId && isSuperAdminUser(resolvedUser)) {
+		resolvedUser = applySuperAdminImpersonation(resolvedUser, impersonatedOrgId);
+	} else if (impersonatedOrgId && (!resolvedUser || !isSuperAdminUser(resolvedUser))) {
+		clearImpersonatedOrgId(event.cookies);
+	}
 
 	if (session && session.fresh) {
 		const sessionCookie = lucia.createSessionCookie(session.id);
@@ -54,7 +68,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		});
 	}
 
-	event.locals.user = user;
+	event.locals.user = resolvedUser;
 	event.locals.session = session;
 
 	return resolve(event);

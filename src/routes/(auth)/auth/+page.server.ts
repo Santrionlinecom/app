@@ -4,12 +4,13 @@ import { Scrypt } from '$lib/server/password'; // HANYA IMPORT SCRYPT (JANGAN AR
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
+import { isSuperAdminUser } from '$lib/auth/session-user';
 import type { Actions, PageServerLoad } from './$types';
 
 // Jika user sudah login, lempar ke dashboard
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.user) {
-		const target = isSuperAdminRole(locals.user.role) ? '/admin/super/overview' : '/dashboard';
+		const target = isSuperAdminUser(locals.user) ? '/admin/super/overview' : '/dashboard';
 		throw redirect(302, target);
 	}
 	return {};

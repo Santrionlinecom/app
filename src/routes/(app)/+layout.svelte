@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
 	import type { LayoutData } from './$types';
 
 	export let data: LayoutData;
@@ -19,6 +20,7 @@
 	let isCommunityOrg = false;
 	let hasOrg = false;
 	let isSuperAdmin = false;
+	let isImpersonating = false;
 	let orgLabel = 'Lembaga';
 	let roleLabel = 'Pengguna';
 	let headerTitle = 'Ringkasan Harian';
@@ -221,7 +223,6 @@
 		!item.feature || Boolean(featureAccess[item.feature]);
 
 	const resolveRoleItems = () => {
-		if (isSuperAdmin) return superAdminItems;
 		if (!hasOrg) return [];
 		if (isCommunityOrg) {
 			if (role === 'admin' || role === 'tamir' || role === 'bendahara') {
@@ -244,12 +245,14 @@
 		orgType = data?.org?.type ?? null;
 		isCommunityOrg = orgType === 'masjid' || orgType === 'musholla';
 		hasOrg = Boolean(data?.org);
-		isSuperAdmin = role.replace('-', '_').toUpperCase() === 'SUPER_ADMIN';
+		isSuperAdmin = isSuperAdminUser(data?.user);
+		isImpersonating = isImpersonatingUser(data?.user);
 		featureAccess = (data?.featureAccess ?? {}) as Record<string, boolean>;
-		const roleKey = isSuperAdmin ? 'SUPER_ADMIN' : role;
-		orgLabel = isSuperAdmin ? 'System' : orgType ? orgLabelMap[orgType] ?? orgType : 'Lembaga';
+		const roleKey = isSuperAdmin && !isImpersonating ? 'SUPER_ADMIN' : role;
+		orgLabel =
+			isSuperAdmin && !isImpersonating ? 'System' : orgType ? orgLabelMap[orgType] ?? orgType : 'Lembaga';
 		roleLabel = roleLabelMap[roleKey] ?? 'Pengguna';
-		headerTitle = isSuperAdmin
+		headerTitle = isSuperAdmin && !isImpersonating
 			? 'Panel Super Admin'
 			: isCommunityOrg
 				? 'Dasbor Komunitas'
@@ -257,14 +260,31 @@
 					? 'Dasbor Santri'
 					: 'Dasbor Pengajar';
 
-		const dashboardItem: MenuItem = {
-			label: isSuperAdmin ? 'Super Admin' : 'Dashboard',
-			href: isSuperAdmin ? '/admin/super/overview' : '/dashboard',
-			icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z'
-		};
-
 		roleItems = resolveRoleItems().filter(featureAllowed);
-		menuItems = [dashboardItem, ...roleItems, ...footerItems];
+		const primaryItems: MenuItem[] = isImpersonating
+			? [
+					{
+						label: 'Dashboard',
+						href: '/dashboard',
+						icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z'
+					},
+					{
+						label: 'Super Admin',
+						href: '/admin/super/overview',
+						icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z'
+					}
+				]
+			: [
+					{
+						label: isSuperAdmin ? 'Super Admin' : 'Dashboard',
+						href: isSuperAdmin ? '/admin/super/overview' : '/dashboard',
+						icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z'
+					}
+				];
+		const utilityItems = isSuperAdmin ? superAdminItems : [];
+		menuItems = isImpersonating
+			? [...primaryItems, ...utilityItems, ...roleItems, ...footerItems]
+			: [...primaryItems, ...(isSuperAdmin ? utilityItems : roleItems), ...footerItems];
 	}
 
 	let sidebarOpen = false;
@@ -327,7 +347,13 @@
 				style="border: 1px solid var(--app-warm-soft); background: var(--app-warm-wash); color: var(--app-warm);"
 			>
 				<p class="font-semibold">Akses Role</p>
-				<p class="mt-1">Menu ditampilkan sesuai peran {roleLabel} di {orgLabel}.</p>
+				<p class="mt-1">
+					{#if isImpersonating}
+						Super admin sedang memakai konteks admin {orgLabel} tanpa kehilangan akses global.
+					{:else}
+						Menu ditampilkan sesuai peran {roleLabel} di {orgLabel}.
+					{/if}
+				</p>
 			</div>
 		</aside>
 
@@ -365,6 +391,22 @@
 			</header>
 
 			<main class="flex-1 px-3 py-6 md:px-6 xl:px-8 2xl:px-10">
+				{#if isImpersonating}
+					<div class="mb-5 flex flex-col gap-3 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900 shadow-sm md:flex-row md:items-center md:justify-between">
+						<div>
+							<p class="font-semibold">Mode Admin Lembaga Aktif</p>
+							<p class="mt-1 text-amber-800/90">Akses dashboard organisasi sedang aktif, tetapi menu super admin dan license tetap tersedia.</p>
+						</div>
+						<div class="flex flex-wrap gap-2">
+							<a href="/admin/super/overview" class="rounded-full border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-900 transition hover:bg-amber-100">
+								Buka Super Admin
+							</a>
+							<a href="/admin/super/impersonate/stop" class="rounded-full bg-amber-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-950">
+								Keluar Mode Admin
+							</a>
+						</div>
+					</div>
+				{/if}
 				<slot />
 			</main>
 		</div>

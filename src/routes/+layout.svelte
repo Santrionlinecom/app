@@ -4,12 +4,16 @@ import { page } from '$app/stores';
 import { onMount } from 'svelte';
 import SearchableSelect from '$lib/components/SearchableSelect.svelte';
 import { LANGUAGE_OPTIONS } from '$lib/data/languages';
+import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
 
 export let data;
 
 let pathname = '/';
 $: pathname = $page.url.pathname as string;
-const isSuperAdmin = (data?.user?.role ?? '').replace('-', '_').toUpperCase() === 'SUPER_ADMIN';
+let isSuperAdmin = false;
+let isImpersonating = false;
+$: isSuperAdmin = isSuperAdminUser(data?.user);
+$: isImpersonating = isImpersonatingUser(data?.user);
 const appRoutePrefixes = ['/dashboard', '/keuangan', '/akademik', '/tpq/akademik', '/org'];
 const isAppRoute = (path: string) =>
 	appRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
@@ -253,6 +257,12 @@ const adminNav = [
 		isActive: (path: string) => path === '/admin/super/overview' || path.startsWith('/admin/super/overview/')
 	},
 	{
+		label: 'Licenses',
+		href: '/admin/licenses',
+		icon: 'M4 7.5V6a2 2 0 012-2h12a2 2 0 012 2v1.5M3 9.5h18v8.5a2 2 0 01-2 2H5a2 2 0 01-2-2V9.5zm6 4.5h6',
+		isActive: (path: string) => path === '/admin/licenses' || path.startsWith('/admin/licenses/')
+	},
+	{
 		label: 'Settings',
 		href: '/akun',
 		icon: 'M12 8a4 4 0 100 8 4 4 0 000-8zm9 4a7.5 7.5 0 01-.2 1.8l2 1.5-2 3.4-2.3-.7a7.4 7.4 0 01-1.6.9l-.3 2.4H9l-.3-2.4a7.4 7.4 0 01-1.6-.9l-2.3.7-2-3.4 2-1.5A7.5 7.5 0 015 12c0-.6.1-1.2.2-1.8L3.2 8.7l2-3.4 2.3.7c.5-.4 1-.7 1.6-.9L9 2.7h4l.3 2.4c.6.2 1.1.5 1.6.9l2.3-.7 2 3.4-2 1.5c.1.6.2 1.2.2 1.8z',
@@ -312,6 +322,12 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 					<a href={isSuperAdmin ? '/admin/super/overview' : '/dashboard'} class="btn btn-sm btn-ghost">
 						{isSuperAdmin ? 'Super Admin' : 'Dashboard'}
 					</a>
+					{#if isSuperAdmin}
+						<a href="/admin/licenses" class="btn btn-sm btn-ghost">Licenses</a>
+					{/if}
+					{#if isImpersonating}
+						<a href="/admin/super/impersonate/stop" class="btn btn-sm btn-outline">Keluar Mode Admin</a>
+					{/if}
 					<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
 					<a href="/akun" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Profil</a>
 					<form method="POST" action="/logout">
