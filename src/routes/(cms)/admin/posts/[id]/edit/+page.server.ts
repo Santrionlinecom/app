@@ -1,5 +1,6 @@
 import { redirect, fail, error } from '@sveltejs/kit';
-import { getPostById, updatePost } from '$lib/server/cms';
+import { ensureCmsSchema, getPostById, updatePost } from '$lib/server/cms';
+import { canManageCms } from '$lib/server/auth/cms-access';
 import type { PageServerLoad, Actions } from './$types';
 
 const toJakartaEpoch = (dateStr: string | null, timeStr: string | null) => {
@@ -11,11 +12,12 @@ const toJakartaEpoch = (dateStr: string | null, timeStr: string | null) => {
 
 export const load: PageServerLoad = async ({ locals, params, platform }) => {
   if (!locals.user) throw redirect(302, '/auth');
-  if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah') {
+  if (!canManageCms(locals.user)) {
     throw redirect(302, '/dashboard');
   }
-  const db = platform?.env?.DB;
+  const db = locals.db ?? platform?.env?.DB;
   if (!db) throw error(500, 'Database (D1) tidak tersedia');
+  await ensureCmsSchema(db as any);
 
   const post = await getPostById(db, params.id);
   if (!post) throw error(404, 'Post not found');
@@ -25,14 +27,12 @@ export const load: PageServerLoad = async ({ locals, params, platform }) => {
 
 export const actions: Actions = {
   default: async ({ request, params, platform, locals }) => {
-    if (
-      !locals.user ||
-      (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah')
-    ) {
+    if (!canManageCms(locals.user)) {
       return fail(403, { error: 'Tidak diizinkan' });
     }
-    const db = platform?.env?.DB;
+    const db = locals.db ?? platform?.env?.DB;
     if (!db) return fail(500, { error: 'Database (D1) tidak tersedia' });
+    await ensureCmsSchema(db as any);
     const data = await request.formData();
     const title = data.get('title') as string;
     const slug = data.get('slug') as string;

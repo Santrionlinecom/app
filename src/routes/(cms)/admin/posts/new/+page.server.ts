@@ -1,6 +1,7 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { D1Database } from '@cloudflare/workers-types';
-import { createPost } from '$lib/server/cms';
+import { createPost, ensureCmsSchema } from '$lib/server/cms';
+import { canManageCms } from '$lib/server/auth/cms-access';
 import type { PageServerLoad, Actions } from './$types';
 
 const toJakartaEpoch = (dateStr: string | null, timeStr: string | null) => {
@@ -12,7 +13,7 @@ const toJakartaEpoch = (dateStr: string | null, timeStr: string | null) => {
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(302, '/auth');
-  if (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah') {
+  if (!canManageCms(locals.user)) {
     throw redirect(302, '/dashboard');
   }
   return {};
@@ -20,10 +21,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   default: async ({ request, platform, locals }) => {
-    if (
-      !locals.user ||
-      (locals.user.role !== 'admin' && locals.user.role !== 'ustadz' && locals.user.role !== 'ustadzah')
-    ) {
+    if (!canManageCms(locals.user)) {
       return fail(403, { error: 'Tidak diizinkan' });
     }
     const data = await request.formData();
@@ -45,7 +43,7 @@ export const actions: Actions = {
     }
 
     // Pastikan binding D1 tersedia (saat dev pakai `npx wrangler pages dev` / `wrangler dev`)
-    const db = platform?.env?.DB as unknown as D1Database | undefined;
+    const db = (locals.db ?? platform?.env?.DB) as unknown as D1Database | undefined;
     if (!db) {
       return fail(500, {
         error:
@@ -54,6 +52,7 @@ export const actions: Actions = {
     }
 
     try {
+      await ensureCmsSchema(db as any);
       const id = crypto.randomUUID();
       await createPost(db as any, {
         id,

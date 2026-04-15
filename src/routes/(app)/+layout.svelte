@@ -200,6 +200,11 @@
 	];
 	const superAdminItems: MenuItem[] = [
 		{
+			label: 'CMS',
+			href: '/admin/posts',
+			icon: 'M5 4.5h11a2 2 0 012 2V19a1 1 0 01-1.6.8L12 16.5l-4.4 3.3A1 1 0 016 19V6.5a2 2 0 012-2z'
+		},
+		{
 			label: 'Licenses',
 			href: '/admin/licenses',
 			icon: 'M4 7.5V6a2 2 0 012-2h12a2 2 0 012 2v1.5M3 9.5h18v8.5a2 2 0 01-2 2H5a2 2 0 01-2-2V9.5zm6 4.5h6'

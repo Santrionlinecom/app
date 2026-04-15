@@ -1,12 +1,26 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { generateId } from 'lucia';
 import { Scrypt } from '$lib/server/password';
 import { getOrganizationById } from '$lib/server/organizations';
 import { logActivity } from '$lib/server/activity-logs';
 import { isSuperAdminRole, requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
+import { ensureCmsSchema, getAllPosts } from '$lib/server/cms';
+import {
+	createDigitalSale,
+	deleteDigitalPaymentMethod,
+	deleteDigitalProduct,
+	ensureDigitalCommerceSchema,
+	getDigitalCommerceOverview,
+	updateDigitalProductStatus,
+	upsertDigitalPaymentMethod,
+	upsertDigitalProduct
+} from '$lib/server/digital-commerce';
 
 const memberRoles = ['santri'];
+const allowedProductStatuses = new Set(['draft', 'published', 'archived']);
+const allowedPaymentTypes = new Set(['bank', 'ewallet', 'qris', 'manual']);
+const allowedSaleStatuses = new Set(['pending', 'paid', 'failed', 'refunded']);
 
 const countTable = async (db: App.Locals['db'], table: string) => {
 	try {
@@ -25,8 +39,33 @@ const safeLogQuery = async <T>(fn: () => Promise<T>, fallback: T): Promise<T> =>
 	}
 };
 
+const normalizeText = (value: FormDataEntryValue | null) =>
+	typeof value === 'string' ? value.trim() : '';
+
+const normalizeSlug = (value: string) =>
+	value
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '')
+		.replace(/-{2,}/g, '-');
+
+const parseInteger = (value: FormDataEntryValue | null, fallback = 0) => {
+	const parsed = Number.parseInt(normalizeText(value), 10);
+	return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const parseCurrency = (value: FormDataEntryValue | null) => {
+	const normalized = normalizeText(value).replace(/[^\d]/g, '');
+	if (!normalized) return null;
+	const parsed = Number.parseInt(normalized, 10);
+	return Number.isFinite(parsed) ? parsed : null;
+};
+
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db } = requireSuperAdmin(locals);
+	await ensureCmsSchema(db);
+	await ensureDigitalCommerceSchema(db);
 
 	const totalInstitutions = await countTable(db, 'organizations');
 	const totalUsers = await countTable(db, 'users');
@@ -248,6 +287,32 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		role: string | null;
 	}>);
 
+	const recentCmsPosts = await getAllPosts(db, { page: 1, limit: 6 });
+	const cmsStatsRow = await db
+		.prepare(
+			`SELECT
+				COUNT(1) as totalPosts,
+				COALESCE(SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END), 0) as publishedPosts,
+				COALESCE(SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END), 0) as draftPosts,
+				COALESCE(SUM(CASE WHEN scheduled_at IS NOT NULL AND scheduled_at > ? THEN 1 ELSE 0 END), 0) as scheduledPosts
+			 FROM cms_posts`
+		)
+		.bind(Date.now())
+		.first<{
+			totalPosts: number | null;
+			publishedPosts: number | null;
+			draftPosts: number | null;
+			scheduledPosts: number | null;
+		}>();
+
+	const digitalCommerce = await getDigitalCommerceOverview(db, { chartDays: 14 });
+	const editingProductId = (url.searchParams.get('product') ?? '').trim();
+	const editingPaymentMethodId = (url.searchParams.get('payment') ?? '').trim();
+	const editingProduct =
+		digitalCommerce.products.find((product) => product.id === editingProductId) ?? null;
+	const editingPaymentMethod =
+		digitalCommerce.paymentMethods.find((payment) => payment.id === editingPaymentMethodId) ?? null;
+
 	return {
 		stats: {
 			totalInstitutions,
@@ -264,7 +329,21 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		institutionSummary,
 		availableUsers: candidateUsers ?? [],
 		searchQuery,
-		searchResults
+		searchResults,
+		cms: {
+			stats: {
+				totalPosts: Number(cmsStatsRow?.totalPosts ?? 0),
+				publishedPosts: Number(cmsStatsRow?.publishedPosts ?? 0),
+				draftPosts: Number(cmsStatsRow?.draftPosts ?? 0),
+				scheduledPosts: Number(cmsStatsRow?.scheduledPosts ?? 0)
+			},
+			posts: recentCmsPosts.posts
+		},
+		digitalCommerce: {
+			...digitalCommerce,
+			editingProduct,
+			editingPaymentMethod
+		}
 	};
 };
 
@@ -279,6 +358,165 @@ const ensureOrgHasNoAdmin = async (db: App.Locals['db'], orgId: string) => {
 };
 
 export const actions: Actions = {
+	savePaymentMethod: async ({ request, locals }) => {
+		const { db } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+		const form = await request.formData();
+		const id = normalizeText(form.get('id'));
+		const name = normalizeText(form.get('name'));
+		const type = normalizeText(form.get('type'));
+		const accountName = normalizeText(form.get('accountName'));
+		const accountNumber = normalizeText(form.get('accountNumber'));
+		const instructions = normalizeText(form.get('instructions'));
+		const displayOrder = parseInteger(form.get('displayOrder'));
+		const isActive = form.get('isActive') === 'on';
+
+		if (!name) {
+			return fail(400, { error: 'Nama metode pembayaran wajib diisi.' });
+		}
+		if (!allowedPaymentTypes.has(type)) {
+			return fail(400, { error: 'Tipe metode pembayaran tidak valid.' });
+		}
+
+		await upsertDigitalPaymentMethod(db, {
+			id: id || null,
+			name,
+			type: type as 'bank' | 'ewallet' | 'qris' | 'manual',
+			accountName,
+			accountNumber,
+			instructions,
+			displayOrder,
+			isActive
+		});
+
+		throw redirect(303, '/admin/super/overview#payment-methods');
+	},
+	deletePaymentMethod: async ({ request, locals }) => {
+		const { db } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+		const form = await request.formData();
+		const id = normalizeText(form.get('id'));
+		if (!id) {
+			return fail(400, { error: 'Metode pembayaran tidak ditemukan.' });
+		}
+
+		await deleteDigitalPaymentMethod(db, id);
+		throw redirect(303, '/admin/super/overview#payment-methods');
+	},
+	saveProduct: async ({ request, locals }) => {
+		const { db } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+		const form = await request.formData();
+		const id = normalizeText(form.get('id'));
+		const title = normalizeText(form.get('title'));
+		const slug = normalizeSlug(normalizeText(form.get('slug')) || title);
+		const summary = normalizeText(form.get('summary'));
+		const description = normalizeText(form.get('description'));
+		const coverUrl = normalizeText(form.get('coverUrl'));
+		const fileUrl = normalizeText(form.get('fileUrl'));
+		const featured = form.get('featured') === 'on';
+		const price = parseCurrency(form.get('price')) ?? 0;
+		const status = normalizeText(form.get('status'));
+		const paymentMethodIds = form
+			.getAll('paymentMethodIds')
+			.map((value) => normalizeText(value))
+			.filter(Boolean);
+
+		if (!title) {
+			return fail(400, { error: 'Nama produk digital wajib diisi.' });
+		}
+		if (!slug) {
+			return fail(400, { error: 'Slug produk tidak valid.' });
+		}
+		if (!allowedProductStatuses.has(status)) {
+			return fail(400, { error: 'Status produk tidak valid.' });
+		}
+		if (status === 'published' && !fileUrl) {
+			return fail(400, { error: 'Produk yang dipublish wajib memiliki file atau link digital.' });
+		}
+
+		try {
+			await upsertDigitalProduct(db, {
+				id: id || null,
+				title,
+				slug,
+				summary,
+				description,
+				price,
+				coverUrl,
+				fileUrl,
+				status: status as 'draft' | 'published' | 'archived',
+				featured,
+				paymentMethodIds
+			});
+		} catch (err: any) {
+			const message = String(err?.message || err || '');
+			if (message.includes('UNIQUE') && message.toLowerCase().includes('slug')) {
+				return fail(400, { error: 'Slug produk sudah dipakai. Gunakan slug lain.' });
+			}
+			return fail(500, { error: 'Gagal menyimpan produk digital.' });
+		}
+
+		throw redirect(303, '/admin/super/overview#cms-digital');
+	},
+	toggleProduct: async ({ request, locals }) => {
+		const { db } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+		const form = await request.formData();
+		const id = normalizeText(form.get('id'));
+		const next = normalizeText(form.get('next'));
+		if (!id || !allowedProductStatuses.has(next)) {
+			return fail(400, { error: 'Produk atau status berikutnya tidak valid.' });
+		}
+
+		await updateDigitalProductStatus(db, id, next as 'draft' | 'published' | 'archived');
+		throw redirect(303, '/admin/super/overview#cms-digital');
+	},
+	deleteProduct: async ({ request, locals }) => {
+		const { db } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+		const form = await request.formData();
+		const id = normalizeText(form.get('id'));
+		if (!id) {
+			return fail(400, { error: 'Produk digital tidak ditemukan.' });
+		}
+
+		await deleteDigitalProduct(db, id);
+		throw redirect(303, '/admin/super/overview#cms-digital');
+	},
+	recordSale: async ({ request, locals }) => {
+		const { db } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+		const form = await request.formData();
+		const productId = normalizeText(form.get('productId'));
+		const buyerName = normalizeText(form.get('buyerName'));
+		const buyerContact = normalizeText(form.get('buyerContact'));
+		const paymentMethodId = normalizeText(form.get('paymentMethodId'));
+		const status = normalizeText(form.get('status')) || 'paid';
+		const amount = parseCurrency(form.get('amount'));
+
+		if (!productId) {
+			return fail(400, { error: 'Produk penjualan wajib dipilih.' });
+		}
+		if (!allowedSaleStatuses.has(status)) {
+			return fail(400, { error: 'Status penjualan tidak valid.' });
+		}
+
+		try {
+			await createDigitalSale(db, {
+				productId,
+				buyerName,
+				buyerContact,
+				paymentMethodId: paymentMethodId || null,
+				status: status as 'pending' | 'paid' | 'failed' | 'refunded',
+				amount
+			});
+		} catch (err: any) {
+			return fail(400, { error: String(err?.message || 'Gagal mencatat penjualan.') });
+		}
+
+		throw redirect(303, '/admin/super/overview#sales-chart');
+	},
 	assignExistingAdmin: async ({ request, locals }) => {
 		const { db } = requireSuperAdmin(locals);
 		const form = await request.formData();

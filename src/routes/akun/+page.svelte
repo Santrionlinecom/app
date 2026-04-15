@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import OrgLocationFields from '$lib/components/org/OrgLocationFields.svelte';
 	export let data: PageData;
@@ -32,6 +33,7 @@
 	let slugManual = false;
 	let copyMessage = '';
 	let bioCopyMessage = '';
+	let canNativeShare = false;
 
 	const baseUrl = 'https://app.santrionline.com';
 	$: bioLink = profile?.id ? `${baseUrl}/u/${profile.id}` : '';
@@ -39,6 +41,7 @@
 		tpq: 'Santri'
 	};
 	$: memberLabel = org ? memberLabelByType[org.type] ?? 'Anggota' : 'Anggota';
+	$: orgPublicUrl = org ? `${baseUrl}/${org.type}/${org.slug}` : '';
 	$: shareLink = org ? `${baseUrl}/${org.type}/${org.slug}/daftar?ref=anggota` : '';
 	$: shareMessage =
 		org && shareLink
@@ -46,43 +49,39 @@
 			: '';
 	$: waShareLink = shareMessage ? `https://wa.me/?text=${encodeURIComponent(shareMessage)}` : '';
 
-	const copyBioLink = async () => {
-		if (!bioLink) return;
-		bioCopyMessage = '';
-		try {
-			if (navigator?.clipboard?.writeText) {
-				await navigator.clipboard.writeText(bioLink);
-			} else {
-				const temp = document.createElement('textarea');
-				temp.value = bioLink;
-				temp.setAttribute('readonly', 'true');
-				temp.style.position = 'absolute';
-				temp.style.left = '-9999px';
-				document.body.appendChild(temp);
-				temp.select();
-				document.execCommand('copy');
-				document.body.removeChild(temp);
-			}
-			bioCopyMessage = 'Link bio berhasil disalin.';
-		} catch (err) {
-			console.error('Copy bio link error:', err);
-			bioCopyMessage = 'Gagal menyalin link bio.';
-		} finally {
+	onMount(() => {
+		canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+	});
+
+	const flashMessage = (target: 'bio' | 'share', message: string) => {
+		if (target === 'bio') {
+			bioCopyMessage = message;
 			setTimeout(() => {
 				bioCopyMessage = '';
 			}, 2500);
+			return;
 		}
+
+		copyMessage = message;
+		setTimeout(() => {
+			copyMessage = '';
+		}, 2500);
 	};
 
-	const copyShareLink = async () => {
-		if (!shareLink) return;
-		copyMessage = '';
+	const copyText = async (params: {
+		value: string;
+		target: 'bio' | 'share';
+		successMessage: string;
+		errorMessage: string;
+	}) => {
+		if (!params.value) return;
+
 		try {
 			if (navigator?.clipboard?.writeText) {
-				await navigator.clipboard.writeText(shareLink);
+				await navigator.clipboard.writeText(params.value);
 			} else {
 				const temp = document.createElement('textarea');
-				temp.value = shareLink;
+				temp.value = params.value;
 				temp.setAttribute('readonly', 'true');
 				temp.style.position = 'absolute';
 				temp.style.left = '-9999px';
@@ -91,15 +90,69 @@
 				document.execCommand('copy');
 				document.body.removeChild(temp);
 			}
-			copyMessage = 'Link berhasil disalin.';
+
+			flashMessage(params.target, params.successMessage);
 		} catch (err) {
-			console.error('Copy link error:', err);
-			copyMessage = 'Gagal menyalin link. Silakan salin manual.';
-		} finally {
-			setTimeout(() => {
-				copyMessage = '';
-			}, 2500);
+			console.error('Copy text error:', err);
+			flashMessage(params.target, params.errorMessage);
 		}
+	};
+
+	const copyBioLink = async () => {
+		await copyText({
+			value: bioLink,
+			target: 'bio',
+			successMessage: 'Link bio berhasil disalin.',
+			errorMessage: 'Gagal menyalin link bio.'
+		});
+	};
+
+	const copyShareLink = async () => {
+		await copyText({
+			value: shareLink,
+			target: 'share',
+			successMessage: 'Link berhasil disalin.',
+			errorMessage: 'Gagal menyalin link. Silakan salin manual.'
+		});
+	};
+
+	const shareNative = async (params: {
+		title: string;
+		text: string;
+		url: string;
+		target: 'bio' | 'share';
+	}) => {
+		if (!canNativeShare || !params.url || typeof navigator?.share !== 'function') return;
+
+		try {
+			await navigator.share({
+				title: params.title,
+				text: params.text,
+				url: params.url
+			});
+		} catch (err) {
+			if ((err as DOMException)?.name === 'AbortError') return;
+			console.error('Native share error:', err);
+			flashMessage(params.target, 'Gagal membuka menu bagikan.');
+		}
+	};
+
+	const shareBioLink = async () => {
+		await shareNative({
+			title: `Profil ${profile?.username || profile?.email || 'Santri Online'}`,
+			text: 'Lihat profil publik saya di Santri Online.',
+			url: bioLink,
+			target: 'bio'
+		});
+	};
+
+	const shareOrgLink = async () => {
+		await shareNative({
+			title: `Pendaftaran ${org?.name || 'Lembaga'}`,
+			text: shareMessage || 'Gunakan link ini untuk mendaftar ke lembaga di Santri Online.',
+			url: shareLink,
+			target: 'share'
+		});
 	};
 
 	const toSlug = (value: string) =>
@@ -117,12 +170,37 @@
 		return value;
 	};
 
+	const formatRole = (value?: string | null) => {
+		if (!value) return 'Pengguna';
+		if (value === 'SUPER_ADMIN') return 'Super Admin';
+		return value
+			.replace(/[_-]/g, ' ')
+			.replace(/\b\w/g, (char) => char.toUpperCase());
+	};
+
+	const formatStatus = (value?: string | null) => {
+		if (!value) return '-';
+		if (value === 'active') return 'Aktif';
+		if (value === 'pending') return 'Menunggu verifikasi';
+		if (value === 'rejected') return 'Ditolak';
+		return value;
+	};
+
 	const formatDate = (value: number) =>
 		new Date(value).toLocaleDateString('id-ID', {
 			day: '2-digit',
 			month: 'short',
 			year: 'numeric'
 		});
+
+	const formatLongDate = (value?: number | null) =>
+		value
+			? new Intl.DateTimeFormat('id-ID', {
+					day: 'numeric',
+					month: 'long',
+					year: 'numeric'
+				}).format(value)
+			: '-';
 
 	const handleOrgMediaUpload = async (event: Event) => {
 		const target = event.target as HTMLInputElement;
@@ -200,397 +278,533 @@
 	<title>Profil & Pengaturan</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12">
-	<div class="mx-auto max-w-4xl px-4">
-		<!-- Hero Profile -->
-		<div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-8 text-white shadow-2xl mb-8">
-			<div class="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-white/10 blur-3xl"></div>
-			<div class="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-white/10 blur-3xl"></div>
-			<div class="relative z-10 flex items-center gap-6">
-				<div class="flex h-24 w-24 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-5xl">
-					{profile?.gender === 'wanita' ? '👩' : '👨'}
-				</div>
-				<div>
-					<h1 class="text-4xl font-bold mb-2">{profile?.username || profile?.email}</h1>
-					<div class="flex flex-wrap gap-3">
-						<span class="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1 text-sm">
-							📧 {profile?.email}
-						</span>
-						<span class="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1 text-sm">
-							👤 {profile?.role || 'santri'}
-						</span>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		{#if bioLink}
-			<div class="rounded-3xl border-2 border-slate-200 bg-white p-6 shadow-xl mb-8">
-				<div class="flex flex-wrap items-center justify-between gap-3">
-					<div>
-						<h2 class="text-2xl font-bold text-gray-900">Link Bio Publik</h2>
-						<p class="text-sm text-gray-600">Tautan ini menampilkan peran Anda di lembaga.</p>
-					</div>
-					<a class="btn btn-outline btn-sm" href={bioLink} target="_blank" rel="noopener">
-						Buka Link
-					</a>
-				</div>
-				<div class="mt-4 flex flex-col gap-2 md:flex-row">
-					<input class="input input-bordered w-full" readonly value={bioLink} />
-					<button class="btn btn-primary" type="button" on:click={copyBioLink}>Salin Link</button>
-				</div>
-				{#if bioCopyMessage}
-					<p class="mt-2 text-sm text-emerald-600">{bioCopyMessage}</p>
-				{/if}
-			</div>
-		{/if}
-
-		<!-- Forms Grid -->
-		<div class="grid gap-6 lg:grid-cols-2">
-			{#if !profile?.orgId}
-				<form method="POST" action="?/registerOrg" class="rounded-3xl border-2 border-emerald-200 bg-white p-6 shadow-xl lg:col-span-2">
-					<div class="flex items-center gap-3 mb-6">
-						<span class="text-4xl">🏛️</span>
-						<div>
-							<h2 class="text-2xl font-bold text-gray-900">Lengkapi Data Lembaga</h2>
-							<p class="text-sm text-gray-600">Isi data lembaga agar akun Anda terhubung.</p>
+<div class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_32%),linear-gradient(180deg,_#f8fafc_0%,_#f0fdf4_48%,_#ffffff_100%)] py-6 md:py-10">
+	<div class="mx-auto max-w-6xl space-y-6 px-4">
+		<section class="overflow-hidden rounded-[32px] border border-slate-200/80 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.10)]">
+			<div class="grid lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.9fr)]">
+				<div class="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 p-6 text-white md:p-8">
+					<div class="absolute -right-20 top-0 h-48 w-48 rounded-full bg-white/10 blur-3xl"></div>
+					<div class="absolute -left-16 bottom-0 h-44 w-44 rounded-full bg-cyan-200/20 blur-3xl"></div>
+					<div class="relative flex flex-col gap-5 sm:flex-row sm:items-center">
+						<div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-[28px] border border-white/20 bg-white/15 text-5xl backdrop-blur-sm">
+							{profile?.gender === 'wanita' ? '👩' : '👨'}
 						</div>
-					</div>
-
-					<div class="grid gap-4 md:grid-cols-2">
-						<div>
-							<label for="org-type" class="block text-sm font-semibold text-gray-700 mb-2">🏷️ Jenis Lembaga</label>
-							<select id="org-type" name="orgType" class="select select-bordered w-full" bind:value={orgType} required>
-								<option value="tpq">TPQ</option>
-							</select>
-						</div>
-						<div>
-							<label for="org-name" class="block text-sm font-semibold text-gray-700 mb-2">🕌 Nama Lembaga</label>
-							<input id="org-name" name="orgName" class="input input-bordered w-full" bind:value={orgName} required />
-						</div>
-						<div>
-							<label for="org-slug" class="block text-sm font-semibold text-gray-700 mb-2">🔗 Slug (opsional)</label>
-							<input
-								id="org-slug"
-								name="orgSlug"
-								class="input input-bordered w-full"
-								placeholder="contoh: al-ikhlas"
-								bind:value={orgSlug}
-								on:input={() => {
-									slugManual = true;
-								}}
-							/>
-						</div>
-						<div>
-							<label for="org-phone" class="block text-sm font-semibold text-gray-700 mb-2">📞 Kontak WA/HP</label>
-							<input id="org-phone" name="orgPhone" class="input input-bordered w-full" bind:value={orgPhone} placeholder="+62812xxxx" />
-						</div>
-						<div class="md:col-span-2">
-							<OrgLocationFields />
-						</div>
-					</div>
-
-					<div class="divider my-6">Akun Admin Lembaga</div>
-
-					<div class="grid gap-4 md:grid-cols-2">
-						<div>
-							<label for="admin-name" class="block text-sm font-semibold text-gray-700 mb-2">👤 Nama Admin</label>
-							<input id="admin-name" name="adminName" class="input input-bordered w-full" bind:value={adminName} required />
-						</div>
-						<div>
-							<label for="admin-email" class="block text-sm font-semibold text-gray-700 mb-2">📧 Email Admin</label>
-							<input id="admin-email" name="adminEmail" class="input input-bordered w-full bg-gray-50" value={adminEmail} readonly />
-						</div>
-					</div>
-
-					{#if form?.success && form?.type === 'org'}
-						<div class="mt-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl">
-							<p class="text-green-800 font-semibold">✅ {form.message}</p>
-						</div>
-					{:else if form?.message && form?.type === 'org'}
-						<div class="mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
-							<p class="text-red-800">❌ {form.message}</p>
-						</div>
-					{/if}
-
-					<button type="submit" class="btn mt-6 w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg">
-						✅ Simpan Data Lembaga
-					</button>
-				</form>
-			{:else if org}
-				<div class="rounded-3xl border-2 border-emerald-200 bg-white p-6 shadow-xl lg:col-span-2">
-					<div class="flex items-center gap-3 mb-4">
-						<span class="text-4xl">🏛️</span>
-						<div>
-							<h2 class="text-2xl font-bold text-gray-900">Lembaga Terdaftar</h2>
-							<p class="text-sm text-gray-600">Akun Anda sudah terhubung dengan lembaga berikut.</p>
-						</div>
-					</div>
-					<div class="grid gap-3 md:grid-cols-2 text-sm text-gray-700">
-						<div>
-							<p class="font-semibold">Nama</p>
-							<p>{org.name}</p>
-						</div>
-						<div>
-							<p class="font-semibold">Tipe</p>
-							<p>{formatOrgType(org.type)}</p>
-						</div>
-						<div>
-							<p class="font-semibold">Slug</p>
-							<p>/{org.slug}</p>
-						</div>
-						<div>
-							<p class="font-semibold">Status</p>
-							<p>{org.status}</p>
-						</div>
-					</div>
-					{#if shareLink}
-						<div class="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-							<p class="text-sm text-emerald-800 font-semibold">
-								Untuk {memberLabel.toLowerCase()} yang ingin mendaftar ke {org.slug} anda berikan link ini ke mereka.
+						<div class="min-w-0 flex-1">
+							<p class="text-xs uppercase tracking-[0.38em] text-white/70">Profil & Pengaturan</p>
+							<h1 class="mt-2 break-words text-3xl font-semibold md:text-4xl">
+								{profile?.username || profile?.email}
+							</h1>
+							<p class="mt-3 max-w-2xl text-sm leading-6 text-white/85">
+								Kelola identitas akun, link publik, dan akses lembaga dari satu halaman yang nyaman dipakai di mobile maupun desktop.
 							</p>
-							<div class="mt-3 space-y-2">
-								<a href={shareLink} class="text-xs text-emerald-700 underline break-all" target="_blank" rel="noreferrer">
-									{shareLink}
-								</a>
-								<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-									<input class="input input-bordered w-full text-xs" value={shareLink} readonly />
-									<div class="flex gap-2">
-										<button type="button" class="btn btn-sm btn-outline" on:click={copyShareLink}>Copy Link</button>
-										{#if waShareLink}
-											<a href={waShareLink} class="btn btn-sm btn-success text-white" target="_blank" rel="noreferrer">
-												Share WA
-											</a>
-										{/if}
-									</div>
-								</div>
-								{#if copyMessage}
-									<p class="text-xs text-emerald-700">{copyMessage}</p>
-								{/if}
+							<div class="mt-4 flex flex-wrap gap-2 text-sm">
+								<span class="rounded-full border border-white/15 bg-white/15 px-3 py-1.5 backdrop-blur-sm">
+									{profile?.email}
+								</span>
+								<span class="rounded-full border border-white/15 bg-white/15 px-3 py-1.5 backdrop-blur-sm">
+									{formatRole(profile?.role)}
+								</span>
+								<span class="rounded-full border border-white/15 bg-white/15 px-3 py-1.5 backdrop-blur-sm">
+									Bergabung {formatLongDate(profile?.createdAt)}
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-slate-50/90 p-5 md:p-6">
+					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Akses Cepat</p>
+					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Hal yang sering dipakai</h2>
+					<p class="mt-2 text-sm leading-6 text-slate-600">
+						Tombol utama dibuat ringkas agar mudah dijangkau dengan satu tangan di mobile dan tetap rapi di desktop.
+					</p>
+
+					<div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+						<a
+							href="/dashboard"
+							class="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
+						>
+							<p class="text-sm font-semibold text-slate-900">Dashboard</p>
+							<p class="mt-1 text-xs text-slate-500">Buka ringkasan aktivitas harian</p>
+						</a>
+						<a
+							href="/kalender"
+							class="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-md"
+						>
+							<p class="text-sm font-semibold text-slate-900">Kalender</p>
+							<p class="mt-1 text-xs text-slate-500">Lihat jadwal dan catatan agenda</p>
+						</a>
+						{#if bioLink}
+							<a
+								href={bioLink}
+								target="_blank"
+								rel="noopener"
+								class="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-md"
+							>
+								<p class="text-sm font-semibold text-slate-900">Profil Publik</p>
+								<p class="mt-1 text-xs text-slate-500">Cek tampilan publik akun Anda</p>
+							</a>
+						{:else}
+							<div class="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-left">
+								<p class="text-sm font-semibold text-slate-900">Profil Publik</p>
+								<p class="mt-1 text-xs text-slate-500">Lengkapi identitas untuk membagikan profil publik</p>
+							</div>
+						{/if}
+						<form method="POST" action="/logout" class="contents">
+							<button
+								type="submit"
+								class="rounded-2xl border border-red-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-red-300 hover:shadow-md"
+							>
+								<p class="text-sm font-semibold text-red-600">Logout</p>
+								<p class="mt-1 text-xs text-slate-500">Keluar aman dari akun ini</p>
+							</button>
+						</form>
+					</div>
+
+					{#if org}
+						<div class="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Lembaga Aktif</p>
+							<p class="mt-2 text-lg font-semibold text-slate-900">{org.name}</p>
+							<div class="mt-3 flex flex-wrap gap-2 text-xs">
+								<span class="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">
+									{formatOrgType(org.type)}
+								</span>
+								<span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
+									{formatStatus(org.status)}
+								</span>
 							</div>
 						</div>
 					{/if}
 				</div>
-			{/if}
+			</div>
+		</section>
 
-			{#if org && canManageOrgMedia}
-				<div class="rounded-3xl border-2 border-slate-200 bg-white p-6 shadow-xl lg:col-span-2">
-					<div class="flex flex-wrap items-start justify-between gap-4">
-						<div>
-							<h2 class="text-2xl font-bold text-gray-900">Galeri Lembaga</h2>
-							<p class="text-sm text-gray-600">
-								Foto terbaru otomatis jadi thumbnail di listing lembaga.
+		{#if bioLink || shareLink}
+			<section class="grid gap-4 xl:grid-cols-2">
+				{#if bioLink}
+					<div class="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-6">
+						<div class="flex flex-wrap items-start justify-between gap-3">
+							<div>
+								<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Link Publik</p>
+								<h2 class="mt-2 text-2xl font-semibold text-slate-900">Bio Profil</h2>
+								<p class="mt-2 text-sm leading-6 text-slate-600">
+									Bagikan halaman bio publik agar orang lain bisa melihat peran Anda di lembaga.
+								</p>
+							</div>
+							<span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+								Siap dibagikan
+							</span>
+						</div>
+
+						<div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">URL</p>
+							<p class="mt-2 break-all text-sm font-medium leading-6 text-slate-700">{bioLink}</p>
+						</div>
+
+						<div class={`mt-4 grid gap-2 ${canNativeShare ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+							<a class="btn btn-outline w-full" href={bioLink} target="_blank" rel="noopener">
+								Buka Link
+							</a>
+							<button class="btn btn-primary w-full" type="button" on:click={copyBioLink}>
+								Salin Link
+							</button>
+							{#if canNativeShare}
+								<button class="btn btn-ghost w-full border border-slate-200" type="button" on:click={shareBioLink}>
+									Bagikan
+								</button>
+							{/if}
+						</div>
+
+						{#if bioCopyMessage}
+							<p class="mt-3 text-sm text-emerald-700">{bioCopyMessage}</p>
+						{/if}
+					</div>
+				{/if}
+
+				{#if shareLink}
+					<div class="rounded-[28px] border border-emerald-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-6">
+						<div class="flex flex-wrap items-start justify-between gap-3">
+							<div>
+								<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Link Pendaftaran</p>
+								<h2 class="mt-2 text-2xl font-semibold text-slate-900">Bagikan ke {memberLabel}</h2>
+								<p class="mt-2 text-sm leading-6 text-slate-600">
+									Kirim link ini ke calon {memberLabel.toLowerCase()} agar mereka bisa daftar langsung ke lembaga Anda.
+								</p>
+							</div>
+							<span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+								Lembaga aktif
+							</span>
+						</div>
+
+						<div class="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700/70">URL</p>
+							<p class="mt-2 break-all text-sm font-medium leading-6 text-emerald-900">{shareLink}</p>
+						</div>
+
+						<div class="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+							<a class="btn btn-outline w-full" href={shareLink} target="_blank" rel="noopener noreferrer">
+								Buka Form
+							</a>
+							<button class="btn btn-primary w-full" type="button" on:click={copyShareLink}>
+								Salin Link
+							</button>
+							{#if canNativeShare}
+								<button class="btn btn-ghost w-full border border-slate-200" type="button" on:click={shareOrgLink}>
+									Bagikan
+								</button>
+							{/if}
+							{#if waShareLink}
+								<a class="btn btn-success w-full text-white" href={waShareLink} target="_blank" rel="noopener noreferrer">
+									WhatsApp
+								</a>
+							{/if}
+						</div>
+
+						{#if copyMessage}
+							<p class="mt-3 text-sm text-emerald-700">{copyMessage}</p>
+						{/if}
+					</div>
+				{/if}
+			</section>
+		{/if}
+
+		<div class="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(340px,0.92fr)]">
+			<div class="space-y-6">
+				{#if !profile?.orgId}
+					<form method="POST" action="?/registerOrg" class="rounded-[28px] border border-emerald-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-6">
+						<div class="flex flex-wrap items-start justify-between gap-4">
+							<div>
+								<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Koneksi Lembaga</p>
+								<h2 class="mt-2 text-2xl font-semibold text-slate-900">Lengkapi Data Lembaga</h2>
+								<p class="mt-2 text-sm leading-6 text-slate-600">
+									Isi data lembaga agar akun Anda terhubung dan link pendaftaran bisa dibagikan dengan rapi.
+								</p>
+							</div>
+							<span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+								Admin lembaga
+							</span>
+						</div>
+
+						<div class="mt-6 grid gap-4 md:grid-cols-2">
+							<div>
+								<label for="org-type" class="mb-2 block text-sm font-semibold text-slate-700">Jenis lembaga</label>
+								<select id="org-type" name="orgType" class="select select-bordered w-full" bind:value={orgType} required>
+									<option value="tpq">TPQ</option>
+								</select>
+							</div>
+							<div>
+								<label for="org-name" class="mb-2 block text-sm font-semibold text-slate-700">Nama lembaga</label>
+								<input id="org-name" name="orgName" class="input input-bordered w-full" bind:value={orgName} required />
+							</div>
+							<div>
+								<label for="org-slug" class="mb-2 block text-sm font-semibold text-slate-700">Slug publik</label>
+								<input
+									id="org-slug"
+									name="orgSlug"
+									class="input input-bordered w-full"
+									placeholder="contoh: al-ikhlas"
+									bind:value={orgSlug}
+									on:input={() => {
+										slugManual = true;
+									}}
+								/>
+								<p class="mt-1 text-xs text-slate-500">Opsional. Kalau kosong, slug dibuat otomatis dari nama lembaga.</p>
+							</div>
+							<div>
+								<label for="org-phone" class="mb-2 block text-sm font-semibold text-slate-700">Kontak WA/HP</label>
+								<input id="org-phone" name="orgPhone" class="input input-bordered w-full" bind:value={orgPhone} placeholder="+62812xxxx" />
+							</div>
+							<div class="md:col-span-2">
+								<OrgLocationFields />
+							</div>
+						</div>
+
+						<div class="my-6 border-t border-dashed border-slate-200 pt-6">
+							<h3 class="text-lg font-semibold text-slate-900">Akun admin lembaga</h3>
+							<p class="mt-1 text-sm text-slate-600">
+								Nama admin bisa Anda atur langsung, sementara email mengikuti akun yang sedang login.
 							</p>
 						</div>
-						<div class="flex items-center gap-3">
-							<button
-								type="button"
-								class="btn btn-sm btn-outline"
-								disabled={uploadingOrgMedia}
-								on:click={() => orgMediaInput?.click()}
-							>
-								{uploadingOrgMedia ? 'Mengunggah...' : 'Upload Foto'}
-							</button>
+
+						<div class="grid gap-4 md:grid-cols-2">
+							<div>
+								<label for="admin-name" class="mb-2 block text-sm font-semibold text-slate-700">Nama admin</label>
+								<input id="admin-name" name="adminName" class="input input-bordered w-full" bind:value={adminName} required />
+							</div>
+							<div>
+								<label for="admin-email" class="mb-2 block text-sm font-semibold text-slate-700">Email admin</label>
+								<input id="admin-email" name="adminEmail" class="input input-bordered w-full bg-slate-50" value={adminEmail} readonly />
+							</div>
+						</div>
+
+						{#if form?.success && form?.type === 'org'}
+							<div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+								{form.message}
+							</div>
+						{:else if form?.message && form?.type === 'org'}
+							<div class="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+								{form.message}
+							</div>
+						{/if}
+
+						<button type="submit" class="btn mt-6 w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700">
+							Simpan Data Lembaga
+						</button>
+					</form>
+				{:else if org}
+					<div class="rounded-[28px] border border-emerald-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-6">
+						<div class="flex flex-wrap items-start justify-between gap-4">
+							<div>
+								<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Lembaga Aktif</p>
+								<h2 class="mt-2 text-2xl font-semibold text-slate-900">Lembaga Terdaftar</h2>
+								<p class="mt-2 text-sm leading-6 text-slate-600">
+									Akun Anda saat ini sudah terhubung ke lembaga berikut dan siap menerima pendaftaran dari link publik.
+								</p>
+							</div>
+							<div class="rounded-2xl bg-emerald-50 px-4 py-3 text-left sm:text-right">
+								<p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700/70">Status</p>
+								<p class="mt-1 text-sm font-semibold text-emerald-900">{formatStatus(org.status)}</p>
+							</div>
+						</div>
+
+						<div class="mt-6 grid gap-3 sm:grid-cols-2">
+							<div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+								<p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Nama</p>
+								<p class="mt-2 text-sm font-semibold text-slate-900">{org.name}</p>
+							</div>
+							<div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+								<p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Tipe</p>
+								<p class="mt-2 text-sm font-semibold text-slate-900">{formatOrgType(org.type)}</p>
+							</div>
+							<div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+								<p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Slug</p>
+								<p class="mt-2 break-all text-sm font-semibold text-slate-900">/{org.slug}</p>
+							</div>
+							<div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+								<p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Dibuat</p>
+								<p class="mt-2 text-sm font-semibold text-slate-900">{formatLongDate(org.createdAt)}</p>
+							</div>
+						</div>
+
+						<div class="mt-6 flex flex-col gap-2 sm:flex-row">
+							{#if orgPublicUrl}
+								<a
+									href={orgPublicUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="btn btn-outline w-full sm:w-auto"
+								>
+									Buka Halaman Publik
+								</a>
+							{/if}
+							{#if shareLink}
+								<a
+									href={shareLink}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="btn btn-ghost w-full border border-slate-200 sm:w-auto"
+								>
+									Buka Form Daftar
+								</a>
+							{/if}
+						</div>
+					</div>
+				{/if}
+
+				{#if org && canManageOrgMedia}
+					<div class="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-6">
+						<div class="flex flex-wrap items-start justify-between gap-4">
+							<div>
+								<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Galeri Publik</p>
+								<h2 class="mt-2 text-2xl font-semibold text-slate-900">Foto Lembaga</h2>
+								<p class="mt-2 text-sm leading-6 text-slate-600">
+									Foto terbaru akan membantu halaman lembaga terlihat lebih hidup dan otomatis dipakai sebagai thumbnail listing.
+								</p>
+							</div>
+							<div class="flex w-full items-center gap-3 sm:w-auto">
+								<button
+									type="button"
+									class="btn btn-outline w-full sm:w-auto"
+									disabled={uploadingOrgMedia}
+									on:click={() => orgMediaInput?.click()}
+								>
+									{uploadingOrgMedia ? 'Mengunggah...' : 'Upload Foto'}
+								</button>
+								<input
+									class="hidden"
+									type="file"
+									accept="image/*"
+									on:change={handleOrgMediaUpload}
+									bind:this={orgMediaInput}
+								/>
+							</div>
+						</div>
+
+						{#if orgMediaError}
+							<div class="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+								{orgMediaError}
+							</div>
+						{:else if orgMediaSuccess}
+							<div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+								{orgMediaSuccess}
+							</div>
+						{/if}
+
+						{#if orgMedia.length === 0}
+							<div class="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+								Belum ada foto lembaga. Upload foto agar halaman publik tampil lebih meyakinkan.
+							</div>
+						{:else}
+							<div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+								{#each orgMedia as item}
+									<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+										<div class="aspect-video bg-slate-100">
+											<img src={item.url} alt="Foto lembaga" class="h-full w-full object-cover" loading="lazy" />
+										</div>
+										<div class="flex items-center justify-between gap-3 px-3 py-3 text-xs text-slate-500">
+											<span>{formatDate(item.createdAt)}</span>
+											<button
+												type="button"
+												class="btn btn-xs btn-ghost text-red-600"
+												on:click={() => deleteOrgMedia(item.id)}
+												disabled={deletingMediaId === item.id}
+											>
+												{deletingMediaId === item.id ? 'Menghapus...' : 'Hapus'}
+											</button>
+										</div>
+									</div>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				{/if}
+			</div>
+
+			<div class="space-y-6">
+				<form method="POST" action="?/updateProfile" class="rounded-[28px] border border-blue-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-6">
+					<div class="flex items-start justify-between gap-4">
+						<div>
+							<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Akun</p>
+							<h2 class="mt-2 text-2xl font-semibold text-slate-900">Ubah Profil</h2>
+							<p class="mt-2 text-sm leading-6 text-slate-600">Atur nama, gender, dan username yang tampil di halaman publik.</p>
+						</div>
+					</div>
+
+					<div class="mt-6 space-y-4">
+						<div>
+							<label for="profile-email" class="mb-2 block text-sm font-semibold text-slate-700">Email</label>
+							<input id="profile-email" class="input input-bordered w-full bg-slate-50" value={profile?.email} readonly />
+						</div>
+
+						<div>
+							<label for="profile-name" class="mb-2 block text-sm font-semibold text-slate-700">Nama lengkap</label>
+							<input id="profile-name" name="displayName" class="input input-bordered w-full" value={profile?.username ?? ''} placeholder="Masukkan nama lengkap" />
+						</div>
+
+						<div>
+							<label for="profile-gender" class="mb-2 block text-sm font-semibold text-slate-700">Jenis kelamin</label>
+							<select id="profile-gender" name="gender" class="select select-bordered w-full" value={profile?.gender || ''}>
+								<option value="">Pilih jenis kelamin</option>
+								<option value="pria">Laki-laki</option>
+								<option value="wanita">Perempuan</option>
+							</select>
+						</div>
+
+						<div>
+							<label for="profile-username" class="mb-2 block text-sm font-semibold text-slate-700">Username publik</label>
+							<input id="profile-username" name="handle" class="input input-bordered w-full" value={profile?.id ?? ''} placeholder="username_unik" />
+							<p class="mt-1 text-xs text-slate-500">Gunakan huruf, angka, titik, strip, atau underscore.</p>
+						</div>
+
+						{#if form?.success && form?.type === undefined}
+							<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+								Profil berhasil diperbarui.
+							</div>
+						{:else if form?.message && form?.type === undefined}
+							<div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+								{form.message}
+							</div>
+						{/if}
+
+						<button type="submit" class="btn w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700">
+							Simpan Profil
+						</button>
+					</div>
+				</form>
+
+				<form method="POST" action="?/updateWhatsapp" class="rounded-[28px] border border-emerald-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-6">
+					<div>
+						<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Kontak</p>
+						<h2 class="mt-2 text-2xl font-semibold text-slate-900">Nomor WhatsApp</h2>
+						<p class="mt-2 text-sm leading-6 text-slate-600">Gunakan nomor aktif agar pengingat dan komunikasi lebih mudah.</p>
+					</div>
+
+					<div class="mt-6 space-y-4">
+						<div>
+							<label for="profile-whatsapp" class="mb-2 block text-sm font-semibold text-slate-700">Nomor WhatsApp</label>
 							<input
-								class="hidden"
-								type="file"
-								accept="image/*"
-								on:change={handleOrgMediaUpload}
-								bind:this={orgMediaInput}
+								id="profile-whatsapp"
+								name="whatsapp"
+								type="tel"
+								inputmode="tel"
+								placeholder="Contoh 087854545274"
+								class="input input-bordered w-full"
+								value={profile?.whatsapp ?? ''}
+								required
 							/>
+							<p class="mt-1 text-xs text-slate-500">Angka saja, 9-15 digit. Boleh diawali +62.</p>
 						</div>
+
+						{#if form?.success && form?.type === 'whatsapp'}
+							<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+								Nomor WhatsApp tersimpan.
+							</div>
+						{:else if form?.message && form?.type === 'whatsapp'}
+							<div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+								{form.message}
+							</div>
+						{/if}
+
+						<button type="submit" class="btn w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700">
+							Simpan Nomor
+						</button>
 					</div>
+				</form>
 
-					{#if orgMediaError}
-						<div class="mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl text-sm text-red-800">
-							{orgMediaError}
-						</div>
-					{:else if orgMediaSuccess}
-						<div class="mt-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl text-sm text-green-800">
-							{orgMediaSuccess}
-						</div>
-					{/if}
-
-					{#if orgMedia.length === 0}
-						<div class="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
-							Belum ada foto lembaga. Upload foto untuk ditampilkan di halaman publik.
-						</div>
-					{:else}
-						<div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-							{#each orgMedia as item}
-								<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-									<div class="aspect-video bg-slate-100">
-										<img src={item.url} alt="Foto lembaga" class="h-full w-full object-cover" loading="lazy" />
-									</div>
-									<div class="flex items-center justify-between gap-3 px-3 py-2 text-xs text-slate-500">
-										<span>{formatDate(item.createdAt)}</span>
-										<button
-											type="button"
-											class="btn btn-xs btn-ghost text-red-600"
-											on:click={() => deleteOrgMedia(item.id)}
-											disabled={deletingMediaId === item.id}
-										>
-											{deletingMediaId === item.id ? 'Menghapus...' : 'Hapus'}
-										</button>
-									</div>
-								</div>
-							{/each}
-						</div>
-					{/if}
-				</div>
-			{/if}
-
-			<!-- Update Profile -->
-			<form method="POST" action="?/updateProfile" class="rounded-3xl border-2 border-blue-200 bg-white p-6 shadow-xl">
-				<div class="flex items-center gap-3 mb-6">
-					<span class="text-4xl">✏️</span>
+				<form method="POST" action="?/updatePassword" class="rounded-[28px] border border-purple-200/80 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-6">
 					<div>
-						<h2 class="text-2xl font-bold text-gray-900">Ubah Profil</h2>
-						<p class="text-sm text-gray-600">Atur nama dan informasi pribadi</p>
-					</div>
-				</div>
-
-				<div class="space-y-4">
-					<div>
-						<label for="profile-email" class="block text-sm font-semibold text-gray-700 mb-2">📧 Email</label>
-						<input id="profile-email" class="input input-bordered w-full bg-gray-50" value={profile?.email} readonly />
+						<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Keamanan</p>
+						<h2 class="mt-2 text-2xl font-semibold text-slate-900">Ubah Password</h2>
+						<p class="mt-2 text-sm leading-6 text-slate-600">Gunakan kombinasi yang kuat agar akun tetap aman di semua perangkat.</p>
 					</div>
 
-					<div>
-						<label for="profile-name" class="block text-sm font-semibold text-gray-700 mb-2">👤 Nama Lengkap</label>
-						<input id="profile-name" name="displayName" class="input input-bordered w-full" value={profile?.username ?? ''} placeholder="Masukkan nama lengkap" />
-					</div>
-
-					<div>
-						<label for="profile-gender" class="block text-sm font-semibold text-gray-700 mb-2">⚧️ Jenis Kelamin</label>
-						<select id="profile-gender" name="gender" class="select select-bordered w-full" value={profile?.gender || ''}>
-							<option value="">Pilih jenis kelamin</option>
-							<option value="pria">👨 Laki-laki</option>
-							<option value="wanita">👩 Perempuan</option>
-						</select>
-					</div>
-
-					<div>
-						<label for="profile-username" class="block text-sm font-semibold text-gray-700 mb-2">🆔 Username</label>
-						<input id="profile-username" name="handle" class="input input-bordered w-full" value={profile?.id ?? ''} placeholder="username_unik" />
-						<p class="text-xs text-gray-500 mt-1">Gunakan huruf, angka, atau underscore</p>
-					</div>
-
-					{#if form?.success && form?.type === undefined}
-						<div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl">
-							<p class="text-green-800 font-semibold">✅ Profil berhasil diperbarui!</p>
+					<div class="mt-6 space-y-4">
+						<div>
+							<label for="password-new" class="mb-2 block text-sm font-semibold text-slate-700">Password baru</label>
+							<input id="password-new" name="password" type="password" class="input input-bordered w-full" required minlength="6" placeholder="Masukkan password baru" />
 						</div>
-					{:else if form?.message && form?.type === undefined}
-						<div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
-							<p class="text-red-800">❌ {form.message}</p>
+
+						<div>
+							<label for="password-confirm" class="mb-2 block text-sm font-semibold text-slate-700">Konfirmasi password</label>
+							<input id="password-confirm" name="confirm" type="password" class="input input-bordered w-full" required minlength="6" placeholder="Ulangi password baru" />
 						</div>
-					{/if}
 
-					<button type="submit" class="btn w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg">
-						💾 Simpan Profil
-					</button>
-				</div>
-			</form>
+						{#if form?.success && form?.type === 'password'}
+							<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+								Password berhasil diperbarui.
+							</div>
+						{:else if form?.message && form?.type === 'password'}
+							<div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+								{form.message}
+							</div>
+						{/if}
 
-			<!-- Update Password -->
-			<form method="POST" action="?/updatePassword" class="rounded-3xl border-2 border-purple-200 bg-white p-6 shadow-xl">
-				<div class="flex items-center gap-3 mb-6">
-					<span class="text-4xl">🔒</span>
-					<div>
-						<h2 class="text-2xl font-bold text-gray-900">Ubah Password</h2>
-						<p class="text-sm text-gray-600">Minimal 6 karakter untuk keamanan</p>
+						<button type="submit" class="btn w-full bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white hover:from-purple-700 hover:to-fuchsia-700">
+							Simpan Password
+						</button>
 					</div>
-				</div>
-
-				<div class="space-y-4">
-					<div>
-						<label for="password-new" class="block text-sm font-semibold text-gray-700 mb-2">🔑 Password Baru</label>
-						<input id="password-new" name="password" type="password" class="input input-bordered w-full" required minlength="6" placeholder="Masukkan password baru" />
-					</div>
-
-					<div>
-						<label for="password-confirm" class="block text-sm font-semibold text-gray-700 mb-2">✅ Konfirmasi Password</label>
-						<input id="password-confirm" name="confirm" type="password" class="input input-bordered w-full" required minlength="6" placeholder="Ulangi password baru" />
-					</div>
-
-					{#if form?.success && form?.type === 'password'}
-						<div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl">
-							<p class="text-green-800 font-semibold">✅ Password berhasil diperbarui!</p>
-						</div>
-					{:else if form?.message && form?.type === 'password'}
-						<div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
-							<p class="text-red-800">❌ {form.message}</p>
-						</div>
-					{/if}
-
-					<button type="submit" class="btn w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-lg">
-						🔐 Simpan Password
-					</button>
-				</div>
-			</form>
-
-			<!-- Update WhatsApp -->
-			<form method="POST" action="?/updateWhatsapp" class="rounded-3xl border-2 border-emerald-200 bg-white p-6 shadow-xl">
-				<div class="flex items-center gap-3 mb-6">
-					<span class="text-4xl">📱</span>
-					<div>
-						<h2 class="text-2xl font-bold text-gray-900">Nomor WhatsApp</h2>
-						<p class="text-sm text-gray-600">Gunakan nomor aktif untuk pengingat</p>
-					</div>
-				</div>
-
-				<div class="space-y-4">
-					<div>
-						<label for="profile-whatsapp" class="block text-sm font-semibold text-gray-700 mb-2">📲 Nomor WhatsApp</label>
-						<input
-							id="profile-whatsapp"
-							name="whatsapp"
-							type="tel"
-							inputmode="tel"
-							placeholder="Contoh 087854545274"
-							class="input input-bordered w-full"
-							value={profile?.whatsapp ?? ''}
-							required
-						/>
-						<p class="text-xs text-gray-500 mt-1">Angka saja, 9-15 digit (boleh diawali +62)</p>
-					</div>
-
-					{#if form?.success && form?.type === 'whatsapp'}
-						<div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl">
-							<p class="text-green-800 font-semibold">✅ Nomor WhatsApp tersimpan!</p>
-						</div>
-					{:else if form?.message && form?.type === 'whatsapp'}
-						<div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
-							<p class="text-red-800">❌ {form.message}</p>
-						</div>
-					{/if}
-
-					<button type="submit" class="btn w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg">
-						💾 Simpan Nomor
-					</button>
-				</div>
-			</form>
-		</div>
-
-		<!-- Quick Actions -->
-		<div class="mt-8 grid gap-4 md:grid-cols-3">
-			<a href="/dashboard" class="rounded-2xl border-2 border-blue-200 bg-white p-6 text-center hover:shadow-lg transition">
-				<span class="text-4xl mb-2 block">📊</span>
-				<h3 class="font-bold text-gray-900">Dashboard</h3>
-				<p class="text-sm text-gray-600">Lihat progres hafalan</p>
-			</a>
-			<a href="/kalender" class="rounded-2xl border-2 border-purple-200 bg-white p-6 text-center hover:shadow-lg transition">
-				<span class="text-4xl mb-2 block">📅</span>
-				<h3 class="font-bold text-gray-900">Kalender</h3>
-				<p class="text-sm text-gray-600">Jadwal & catatan</p>
-			</a>
-			<form method="POST" action="/logout" class="rounded-2xl border-2 border-red-200 bg-white p-6 text-center hover:shadow-lg transition">
-				<button type="submit" class="w-full">
-					<span class="text-4xl mb-2 block">🚪</span>
-					<h3 class="font-bold text-red-600">Logout</h3>
-					<p class="text-sm text-gray-600">Keluar dari akun</p>
-				</button>
-			</form>
+				</form>
+			</div>
 		</div>
 	</div>
 </div>

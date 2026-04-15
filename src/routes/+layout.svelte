@@ -257,6 +257,12 @@ const adminNav = [
 		isActive: (path: string) => path === '/admin/super/overview' || path.startsWith('/admin/super/overview/')
 	},
 	{
+		label: 'CMS',
+		href: '/admin/posts',
+		icon: 'M5 4.5h11a2 2 0 012 2V19a1 1 0 01-1.6.8L12 16.5l-4.4 3.3A1 1 0 016 19V6.5a2 2 0 012-2z',
+		isActive: (path: string) => path === '/admin/posts' || path.startsWith('/admin/posts/')
+	},
+	{
 		label: 'Licenses',
 		href: '/admin/licenses',
 		icon: 'M4 7.5V6a2 2 0 012-2h12a2 2 0 012 2v1.5M3 9.5h18v8.5a2 2 0 01-2 2H5a2 2 0 01-2-2V9.5zm6 4.5h6',
@@ -323,6 +329,7 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 						{isSuperAdmin ? 'Super Admin' : 'Dashboard'}
 					</a>
 					{#if isSuperAdmin}
+						<a href="/admin/posts" class="btn btn-sm btn-ghost">CMS</a>
 						<a href="/admin/licenses" class="btn btn-sm btn-ghost">Licenses</a>
 					{/if}
 					{#if isImpersonating}

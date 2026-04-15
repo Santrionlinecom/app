@@ -11,6 +11,7 @@ import { ensureTrafficTable } from '$lib/server/traffic';
 import { ensureUmmahTables } from '$lib/server/ummah';
 import { ensureChatTable } from '$lib/server/chat';
 import { ensureCmsSchema } from '$lib/server/cms';
+import { ensureDigitalCommerceSchema } from '$lib/server/digital-commerce';
 import { ensureMediaSchema } from '$lib/server/media';
 import { ensureSantriUstadzSchema } from '$lib/server/santri-ustadz';
 import { ensureTarawihScheduleTable } from '$lib/server/tarawih';
@@ -57,6 +58,7 @@ export const POST: RequestHandler = async ({ locals, platform, request, url }) =
 	await ensureKhotibScheduleTable(db);
 	await ensureChatTable(db);
 	await ensureCmsSchema(db);
+	await ensureDigitalCommerceSchema(db);
 	await ensureMediaSchema(db);
 	await ensureApiRateLimitTable(db);
 	await ensureStreamerLicenseTables(db);

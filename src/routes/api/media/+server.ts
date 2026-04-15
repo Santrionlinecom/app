@@ -1,14 +1,15 @@
 import { json } from '@sveltejs/kit';
+import { isSuperAdminUser } from '$lib/auth/session-user';
 import { getD1 } from '$lib/server/cloudflare';
 import { ensureMediaSchema, listMedia } from '$lib/server/media';
 
-const allowedRoles = new Set(['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara', 'SUPER_ADMIN']);
+const allowedRoles = new Set(['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara']);
 
 export async function GET({ locals, platform, url }) {
   if (!locals.user) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
-  if (!allowedRoles.has(locals.user.role ?? '')) {
+  if (!allowedRoles.has(locals.user.role ?? '') && !isSuperAdminUser(locals.user)) {
     return json({ error: 'Forbidden' }, { status: 403 });
   }
 
