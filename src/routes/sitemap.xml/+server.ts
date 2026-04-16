@@ -1,11 +1,16 @@
 import type { RequestHandler } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
+import { ensureDigitalCommerceSchema } from '$lib/server/digital-commerce';
 
 type SitemapRow = {
   slug: string;
   updated_at: number;
   created_at: number;
   scheduled_at: number | null;
+};
+
+type DigitalStoreRow = {
+  updated_at: number;
 };
 
 const escapeXml = (value: string) =>
@@ -22,16 +27,38 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
     return new Response('Database not available', { status: 500 });
   }
 
+  await ensureDigitalCommerceSchema(db);
+
   const { results } = await db
     .prepare(
       "SELECT slug, updated_at, created_at, scheduled_at FROM cms_posts WHERE status = 'published' AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now')*1000) ORDER BY COALESCE(scheduled_at, created_at) DESC"
     )
     .all();
+  const digitalStoreRow = await db
+    .prepare("SELECT MAX(updated_at) as updated_at FROM digital_products WHERE status = 'published'")
+    .first<DigitalStoreRow>();
 
   const rows = (results ?? []) as SitemapRow[];
   const origin = url.origin.replace(/\/+$/, '');
 
-  const urls = rows.map((row) => {
+  const urls: string[] = [];
+
+  if (digitalStoreRow?.updated_at) {
+    urls.push([
+      '  <url>',
+      `    <loc>${escapeXml(new URL('/digital-store', origin).toString())}</loc>`,
+      `    <lastmod>${new Date(digitalStoreRow.updated_at).toISOString()}</lastmod>`,
+      '  </url>'
+    ].join('\n'));
+  } else {
+    urls.push([
+      '  <url>',
+      `    <loc>${escapeXml(new URL('/digital-store', origin).toString())}</loc>`,
+      '  </url>'
+    ].join('\n'));
+  }
+
+  urls.push(...rows.map((row) => {
     const lastmodTs = row.updated_at ?? row.scheduled_at ?? row.created_at;
     const lastmod = lastmodTs ? new Date(lastmodTs).toISOString() : null;
     const loc = new URL(`/blog/${row.slug}`, origin).toString();
@@ -43,7 +70,7 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
     ]
       .filter(Boolean)
       .join('\n');
-  });
+  }));
 
   const body = [
     '<?xml version="1.0" encoding="UTF-8"?>',

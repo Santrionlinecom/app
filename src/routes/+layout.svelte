@@ -20,6 +20,7 @@ const isAppRoute = (path: string) =>
 const isAdminRoute = (path: string) => path === '/admin' || path.startsWith('/admin/');
 let isAppRouteActive = false;
 let isAdminRouteActive = false;
+const isBlogMenuActive = (path: string) => path.startsWith('/blog') || path.startsWith('/digital-store');
 
 const apkUrl = 'https://files.santrionline.com/Santrionline.apk';
 const installPromptKey = 'so_install_prompt_v1';
@@ -221,7 +222,7 @@ const baseNav = [
 		label: 'Blog',
 		href: '/blog',
 		icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
-		isActive: (path: string) => path.startsWith('/blog')
+		isActive: (path: string) => isBlogMenuActive(path)
 	},
 	{
 		label: 'Nabi',
@@ -293,7 +294,45 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 			<nav class="hidden md:flex items-center gap-5">
 				<a href="/" class:active={pathname === '/'} class="text-base-content/60 hover:text-primary">Beranda</a>
 				<a href="/tpq" class:active={pathname.startsWith('/tpq')} class="text-base-content/60 hover:text-primary">TPQ</a>
-				<a href="/blog" class:active={pathname.startsWith('/blog')} class="text-base-content/60 hover:text-primary">Blog</a>
+				<div class="group relative">
+					<a
+						href="/blog"
+						class:active={isBlogMenuActive(pathname)}
+						class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
+					>
+						<span>Blog</span>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							class="h-4 w-4 transition group-hover:translate-y-px"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+					</a>
+					<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-56 -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
+						<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+							<a
+								href="/blog"
+								class="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+							>
+								<span>Semua Artikel</span>
+								<span class="text-xs text-slate-400">/blog</span>
+							</a>
+							<a
+								href="/digital-store"
+								class="mt-1 flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+							>
+								<span>Digital Store</span>
+								<span class="text-xs text-slate-400">produk</span>
+							</a>
+						</div>
+					</div>
+				</div>
 				<a href="/nabi" class:active={pathname.startsWith('/nabi')} class="text-base-content/60 hover:text-primary">Nabi</a>
 				<a href="/sahabat" class:active={pathname.startsWith('/sahabat')} class="text-base-content/60 hover:text-primary">Sahabat</a>
 				<a href="/kitab" class:active={pathname === '/kitab'} class="text-base-content/60 hover:text-primary">Kitab</a>

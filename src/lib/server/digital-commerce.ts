@@ -84,6 +84,19 @@ export interface DigitalProductListItem {
 	paymentMethodIds: string[];
 }
 
+export interface PublicDigitalProductListItem {
+	id: string;
+	title: string;
+	slug: string;
+	summary: string | null;
+	description: string | null;
+	price: number;
+	coverUrl: string | null;
+	featured: boolean;
+	updatedAt: number;
+	paymentMethods: DigitalProductPaymentMethodSummary[];
+}
+
 export interface DigitalSaleListItem {
 	id: string;
 	productId: string;
@@ -189,6 +202,22 @@ const mapProduct = (
 		paymentMethodIds: paymentMethods.map((method) => method.id)
 	};
 };
+
+const mapPublicProduct = (
+	row: ProductRow,
+	methodsByProduct: Map<string, DigitalProductPaymentMethodSummary[]>
+): PublicDigitalProductListItem => ({
+	id: row.id,
+	title: row.title,
+	slug: row.slug,
+	summary: row.summary,
+	description: row.description,
+	price: normalizeMoney(row.price),
+	coverUrl: row.cover_url,
+	featured: normalizeFlag(row.featured),
+	updatedAt: row.updated_at,
+	paymentMethods: (methodsByProduct.get(row.id) ?? []).filter((method) => method.isActive)
+});
 
 export async function ensureDigitalCommerceSchema(db: D1Database) {
 	await db
@@ -352,6 +381,36 @@ export async function listDigitalProducts(db: D1Database): Promise<DigitalProduc
 		.all<ProductRow>();
 
 	return (results ?? []).map((row) => mapProduct(row, methodsByProduct));
+}
+
+export async function listPublishedDigitalProducts(
+	db: D1Database
+): Promise<PublicDigitalProductListItem[]> {
+	const methodsByProduct = await listProductPaymentMethods(db);
+	const { results } = await db
+		.prepare(
+			`SELECT
+				p.id,
+				p.title,
+				p.slug,
+				p.summary,
+				p.description,
+				p.price,
+				p.cover_url,
+				p.file_url,
+				p.status,
+				p.featured,
+				p.created_at,
+				p.updated_at,
+				0 as salesCount,
+				0 as revenue
+			FROM digital_products p
+			WHERE p.status = 'published'
+			ORDER BY p.featured DESC, p.updated_at DESC`
+		)
+		.all<ProductRow>();
+
+	return (results ?? []).map((row) => mapPublicProduct(row, methodsByProduct));
 }
 
 export async function getDigitalCommerceOverview(
