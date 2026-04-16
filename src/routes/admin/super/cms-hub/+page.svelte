@@ -1,14 +1,11 @@
 <script lang="ts">
-	import MediaGalleryModal from '$lib/components/MediaGalleryModal.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	export let data: PageData;
 	export let form: ActionData | undefined;
 
-	type CmsPost = PageData['cms']['posts'][number];
 	type DigitalProduct = PageData['digitalCommerce']['products'][number];
 	type DigitalPaymentMethod = PageData['digitalCommerce']['paymentMethods'][number];
-	type DigitalSale = PageData['digitalCommerce']['recentSales'][number];
 	type DigitalSalesPoint = PageData['digitalCommerce']['salesChart'][number];
 
 	const formatNumber = (value: number | null | undefined) =>
@@ -17,6 +14,13 @@
 		new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(
 			value ?? 0
 		);
+	const formatBytes = (value: number | null | undefined) => {
+		const size = Number(value ?? 0);
+		if (!size) return '0 B';
+		if (size < 1024) return `${size} B`;
+		if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+		return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+	};
 	const formatDate = (value?: number | null) =>
 		value ? new Date(value).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 	const formatDateTime = (value?: number | null) =>
@@ -145,6 +149,9 @@
 		1
 	);
 
+	let formError = '';
+	$: formError = form && 'error' in form ? form.error ?? '' : '';
+
 	let coverInput: HTMLInputElement | null = null;
 	let digitalFileInput: HTMLInputElement | null = null;
 	let uploadingCover = false;
@@ -183,7 +190,7 @@
 		productPrice = product ? String(product.price) : '';
 		productCoverUrl = product?.coverUrl ?? '';
 		productFileUrl = product?.fileUrl ?? '';
-		productFileSize = product?.fileSize ?? 0;
+		productFileSize = 0;
 		productStatus = (product?.status ?? 'draft') as 'draft' | 'published' | 'archived';
 		productFeatured = Boolean(product?.featured);
 		productPaymentMethodIds = [...(product?.paymentMethodIds ?? [])];
@@ -289,6 +296,12 @@
 		<h1 class="text-3xl font-bold text-slate-900">CMS Hub</h1>
 		<p class="text-slate-600">Blog dan Produk Digital dalam satu ruang super admin</p>
 	</div>
+
+	{#if formError}
+		<div class="rounded-[1.5rem] border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700 shadow-sm">
+			{formError}
+		</div>
+	{/if}
 
 	<!-- CMS Hub Overview Section -->
 	<section class="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-lg backdrop-blur">
@@ -456,7 +469,7 @@
 					{/if}
 				</div>
 
-				<input type="hidden" name="product-id" bind:value={productId} />
+				<input type="hidden" name="id" bind:value={productId} />
 
 				<div class="mt-5 grid gap-4 md:grid-cols-2">
 					<label class="block">
@@ -466,6 +479,9 @@
 							class="input input-bordered mt-2 w-full"
 							placeholder="E-book Tahsin Premium"
 							bind:value={productTitle}
+							on:blur={() => {
+								if (!productSlug) generateProductSlug();
+							}}
 						/>
 					</label>
 					<label class="block">
@@ -474,7 +490,7 @@
 					</label>
 				</div>
 
-				<div class="mt-4 grid gap-4 md:grid-cols-2">
+				<div class="mt-4 grid gap-4 md:grid-cols-[1.1fr,0.9fr]">
 					<label class="block">
 						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Ringkasan Singkat</span>
 						<input
@@ -485,12 +501,41 @@
 						/>
 					</label>
 					<label class="block">
+						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Slug Produk</span>
+						<div class="mt-2 flex gap-2">
+							<input
+								name="slug"
+								class="input input-bordered w-full"
+								placeholder="ebook-tahsin-premium"
+								bind:value={productSlug}
+							/>
+							<button type="button" class="btn btn-outline btn-sm shrink-0" on:click={generateProductSlug}>
+								Auto
+							</button>
+						</div>
+					</label>
+				</div>
+
+				<div class="mt-4 grid gap-4 md:grid-cols-[0.9fr,1.1fr]">
+					<label class="block">
 						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Status</span>
 						<select name="status" class="select select-bordered mt-2 w-full" bind:value={productStatus}>
 							<option value="draft">Draft</option>
 							<option value="published">Published</option>
 							<option value="archived">Archived</option>
 						</select>
+					</label>
+					<label class="flex items-center gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-4">
+						<input
+							type="checkbox"
+							name="featured"
+							class="checkbox checkbox-sm border-slate-300"
+							bind:checked={productFeatured}
+						/>
+						<span class="min-w-0">
+							<span class="block text-sm font-semibold text-slate-900">Produk unggulan</span>
+							<span class="mt-1 block text-xs text-slate-500">Tandai produk penting agar mudah diprioritaskan.</span>
+						</span>
 					</label>
 				</div>
 
@@ -513,7 +558,7 @@
 							on:change={onPickCover}
 						/>
 						{#if productCoverUrl}
-							<p class="mt-2 text-xs text-emerald-600">✓ Cover sudah diupload</p>
+							<p class="mt-2 text-xs text-emerald-600">✓ Cover siap dipakai untuk kartu produk</p>
 						{/if}
 					</label>
 					<label class="block">
@@ -533,7 +578,9 @@
 							on:change={onPickDigitalFile}
 						/>
 						{#if productFileUrl}
-							<p class="mt-2 text-xs text-emerald-600">✓ File sudah diupload</p>
+							<p class="mt-2 text-xs text-emerald-600">
+								✓ File siap diunduh{#if productFileSize > 0} ({formatBytes(productFileSize)}){/if}
+							</p>
 						{/if}
 					</label>
 				</div>
@@ -550,28 +597,54 @@
 					</label>
 				</div>
 
-				<input type="hidden" name="file-url" bind:value={productFileUrl} />
-				<input type="hidden" name="file-size" bind:value={productFileSize} />
-				<input type="hidden" name="cover-url" bind:value={productCoverUrl} />
-				<input type="hidden" name="payment-methods" bind:value={productPaymentMethodIds.join(',')} />
+				<div class="mt-4">
+					<p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Metode Pembayaran</p>
+					{#if data.digitalCommerce.paymentMethods.length === 0}
+						<div class="mt-2 rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+							Tambahkan metode pembayaran terlebih dulu agar produk bisa dihubungkan ke checkout.
+						</div>
+					{:else}
+						<div class="mt-3 grid gap-3 md:grid-cols-2">
+							{#each data.digitalCommerce.paymentMethods as method}
+								<label class="flex items-start gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3">
+									<input
+										type="checkbox"
+										name="paymentMethodIds"
+										value={method.id}
+										class="checkbox checkbox-sm mt-0.5 border-slate-300"
+										bind:group={productPaymentMethodIds}
+									/>
+									<span class="min-w-0">
+										<span class="block text-sm font-semibold text-slate-900">{method.name}</span>
+										<span class="mt-1 block text-xs text-slate-500">
+											{paymentTypeLabel[method.type] ?? method.type}{#if !method.isActive} • Nonaktif{/if}
+										</span>
+									</span>
+								</label>
+							{/each}
+						</div>
+					{/if}
+				</div>
+
+				<input type="hidden" name="fileUrl" bind:value={productFileUrl} />
+				<input type="hidden" name="coverUrl" bind:value={productCoverUrl} />
 
 				<div class="mt-6 flex gap-2">
 					<button type="submit" class="btn btn-primary">
 						{data.digitalCommerce.editingProduct ? 'Update Produk' : 'Simpan Produk'}
 					</button>
 					{#if data.digitalCommerce.editingProduct}
-						<form method="POST" action="?/deleteProduct" class="inline">
-							<input type="hidden" name="product-id" value={productId} />
-							<button
-								type="submit"
-								class="btn btn-outline btn-error"
-								on:click={(e) => {
-									if (!confirm('Hapus produk ini?')) e.preventDefault();
-								}}
-							>
-								Hapus
-							</button>
-						</form>
+						<button
+							type="submit"
+							formaction="?/deleteProduct"
+							formnovalidate
+							class="btn btn-outline btn-error"
+							on:click={(e) => {
+								if (!confirm('Hapus produk ini?')) e.preventDefault();
+							}}
+						>
+							Hapus
+						</button>
 					{/if}
 				</div>
 			</form>
@@ -657,7 +730,7 @@
 										Edit
 									</a>
 									<form method="POST" action="?/deleteProduct" class="inline">
-										<input type="hidden" name="product-id" value={product.id} />
+										<input type="hidden" name="id" value={product.id} />
 										<button
 											type="submit"
 											class="rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
@@ -708,7 +781,7 @@
 					{/if}
 				</div>
 
-				<input type="hidden" name="payment-id" bind:value={paymentMethodId} />
+				<input type="hidden" name="id" bind:value={paymentMethodId} />
 
 				<div class="mt-5 grid gap-4 md:grid-cols-2">
 					<label class="block">
@@ -735,7 +808,7 @@
 					<label class="block">
 						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Nama Pemilik Akun</span>
 						<input
-							name="account-name"
+							name="accountName"
 							class="input input-bordered mt-2 w-full"
 							placeholder="Contoh: Pondok Pesantren Nurul Qur'an"
 							bind:value={paymentAccountName}
@@ -744,7 +817,7 @@
 					<label class="block">
 						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Nomor Akun/Rekening</span>
 						<input
-							name="account-number"
+							name="accountNumber"
 							class="input input-bordered mt-2 w-full"
 							placeholder="Contoh: 123456789"
 							bind:value={paymentAccountNumber}
@@ -752,11 +825,36 @@
 					</label>
 				</div>
 
+				<div class="mt-4 grid gap-4 md:grid-cols-[0.8fr,1.2fr]">
+					<label class="block">
+						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Urutan Tampil</span>
+						<input
+							name="displayOrder"
+							type="number"
+							min="0"
+							class="input input-bordered mt-2 w-full"
+							bind:value={paymentDisplayOrder}
+						/>
+					</label>
+					<label class="flex items-center gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-4">
+						<input
+							type="checkbox"
+							name="isActive"
+							class="checkbox checkbox-sm border-slate-300"
+							bind:checked={paymentIsActive}
+						/>
+						<span class="min-w-0">
+							<span class="block text-sm font-semibold text-slate-900">Metode aktif</span>
+							<span class="mt-1 block text-xs text-slate-500">Hanya metode aktif yang sebaiknya dipilih di produk.</span>
+						</span>
+					</label>
+				</div>
+
 				<div class="mt-4">
 					<label class="block">
 						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Instruksi Pembayaran</span>
 						<textarea
-							name="details"
+							name="instructions"
 							class="textarea textarea-bordered mt-2 w-full"
 							placeholder="Instruksi detail untuk pembayaran..."
 							bind:value={paymentInstructions}
@@ -769,18 +867,17 @@
 						{data.digitalCommerce.editingPaymentMethod ? 'Update Metode' : 'Simpan Metode'}
 					</button>
 					{#if data.digitalCommerce.editingPaymentMethod}
-						<form method="POST" action="?/deletePaymentMethod" class="inline">
-							<input type="hidden" name="payment-id" value={paymentMethodId} />
-							<button
-								type="submit"
-								class="btn btn-outline btn-error"
-								on:click={(e) => {
-									if (!confirm('Hapus metode pembayaran ini?')) e.preventDefault();
-								}}
-							>
-								Hapus
-							</button>
-						</form>
+						<button
+							type="submit"
+							formaction="?/deletePaymentMethod"
+							formnovalidate
+							class="btn btn-outline btn-error"
+							on:click={(e) => {
+								if (!confirm('Hapus metode pembayaran ini?')) e.preventDefault();
+							}}
+						>
+							Hapus
+						</button>
 					{/if}
 				</div>
 			</form>
@@ -853,7 +950,7 @@
 										Edit
 									</a>
 									<form method="POST" action="?/deletePaymentMethod">
-										<input type="hidden" name="payment-id" value={method.id} />
+										<input type="hidden" name="id" value={method.id} />
 										<button
 											type="submit"
 											class="rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
@@ -914,7 +1011,7 @@
 							style={`height: ${Math.max((point.revenue / salesChartMax) * 100, 2)}%; min-height: 2px;`}
 							title={`${point.date}: ${formatCurrency(point.revenue)}`}
 						></div>
-						<p class="text-[10px] text-slate-500">{point.date}</p>
+						<p class="text-[10px] text-slate-500">{point.label}</p>
 					</div>
 				{/each}
 			</div>
@@ -935,13 +1032,18 @@
 								<div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 									<div class="min-w-0">
 										<div class="flex flex-wrap items-center gap-2">
-											<p class="text-sm font-semibold text-slate-900">{sale.productTitle}</p>
+											<p class="text-sm font-semibold text-slate-900">{sale.productTitle || 'Produk digital'}</p>
 											<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${saleStatusClass(sale.status)}`}>
 												{sale.status}
 											</span>
 										</div>
-										<p class="mt-2 text-sm text-slate-600">{sale.buyerEmail}</p>
-										<p class="mt-1 text-xs text-slate-500">{formatDateTime(sale.createdAt)}</p>
+										<p class="mt-2 text-sm text-slate-600">
+											{sale.buyerName || sale.buyerContact || 'Pembeli belum tercatat'}
+										</p>
+										{#if sale.paymentMethodName}
+											<p class="mt-1 text-xs text-slate-500">{sale.paymentMethodName}</p>
+										{/if}
+										<p class="mt-1 text-xs text-slate-500">{formatDateTime(sale.paidAt || sale.createdAt)}</p>
 									</div>
 									<p class="shrink-0 text-lg font-semibold text-emerald-700">{formatCurrency(sale.amount)}</p>
 								</div>

@@ -1,7 +1,5 @@
-import { error, fail, redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { generateId } from 'lucia';
-import { Scrypt } from '$lib/server/password';
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 import { ensureCmsSchema, getAllPosts } from '$lib/server/cms';
 import {
@@ -14,17 +12,13 @@ import {
 	upsertDigitalProduct
 } from '$lib/server/digital-commerce';
 
-const allowedProductStatuses = new Set(['draft', 'published', 'archived']);
-const allowedPaymentTypes = new Set(['bank', 'ewallet', 'qris', 'manual']);
-const allowedSaleStatuses = new Set(['pending', 'paid', 'failed', 'refunded']);
+const productStatuses = ['draft', 'published', 'archived'] as const;
+type ProductStatus = (typeof productStatuses)[number];
+const allowedProductStatuses = new Set<ProductStatus>(productStatuses);
 
-const safeLogQuery = async <T>(fn: () => Promise<T>, fallback: T): Promise<T> => {
-	try {
-		return await fn();
-	} catch {
-		return fallback;
-	}
-};
+const paymentTypes = ['bank', 'ewallet', 'qris', 'manual'] as const;
+type PaymentType = (typeof paymentTypes)[number];
+const allowedPaymentTypes = new Set<PaymentType>(paymentTypes);
 
 const normalizeText = (value: FormDataEntryValue | null) =>
 	typeof value === 'string' ? value.trim() : '';
@@ -36,6 +30,36 @@ const normalizeSlug = (value: string) =>
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-+|-+$/g, '')
 		.replace(/-{2,}/g, '-');
+
+const parseInteger = (value: FormDataEntryValue | null, fallback = 0) => {
+	const parsed = Number.parseInt(normalizeText(value), 10);
+	return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const parseCurrency = (value: FormDataEntryValue | null) => {
+	const normalized = normalizeText(value).replace(/[^\d]/g, '');
+	if (!normalized) return null;
+	const parsed = Number.parseInt(normalized, 10);
+	return Number.isFinite(parsed) ? parsed : null;
+};
+
+const readFirstValue = (formData: FormData, ...names: string[]) => {
+	for (const name of names) {
+		const value = normalizeText(formData.get(name));
+		if (value) return value;
+	}
+	return '';
+};
+
+const readManyValues = (formData: FormData, ...names: string[]) => {
+	const values = names.flatMap((name) =>
+		formData
+			.getAll(name)
+			.map((value) => normalizeText(value))
+			.filter(Boolean)
+	);
+	return Array.from(new Set(values));
+};
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db } = requireSuperAdmin(locals);
@@ -89,144 +113,144 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 export const actions: Actions = {
 	saveProduct: async ({ request, locals }) => {
 		const { db } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+
 		const formData = await request.formData();
-
-		const id = normalizeText(formData.get('product-id'));
+		const id = readFirstValue(formData, 'id', 'product-id');
 		const title = normalizeText(formData.get('title'));
+		const slug = normalizeSlug(readFirstValue(formData, 'slug') || title);
+		const summary = normalizeText(formData.get('summary'));
 		const description = normalizeText(formData.get('description'));
-		const price = Number(normalizeText(formData.get('price')));
-		const fileUrl = normalizeText(formData.get('file-url'));
-		const fileSize = Number(normalizeText(formData.get('file-size')));
-		const coverUrl = normalizeText(formData.get('cover-url'));
-		const status = normalizeText(formData.get('status'));
-		const paymentMethods = normalizeText(formData.get('payment-methods')).split(',').filter(Boolean);
+		const coverUrl = readFirstValue(formData, 'coverUrl', 'cover-url');
+		const fileUrl = readFirstValue(formData, 'fileUrl', 'file-url');
+		const price = parseCurrency(formData.get('price')) ?? 0;
+		const status = readFirstValue(formData, 'status');
+		const featured = (formData.get('featured') ?? '').toString() === 'on';
+		const paymentMethodIds = [
+			...readManyValues(formData, 'paymentMethodIds'),
+			...readFirstValue(formData, 'payment-methods')
+				.split(',')
+				.map((value) => value.trim())
+				.filter(Boolean)
+		].filter((value, index, all) => all.indexOf(value) === index);
 
-		if (!title || !price || price <= 0) {
-			return fail(400, { error: 'Judul dan harga diperlukan.' });
+		if (!title) {
+			return fail(400, { error: 'Nama produk digital wajib diisi.' });
 		}
-
-		if (!allowedProductStatuses.has(status)) {
+		if (!slug) {
+			return fail(400, { error: 'Slug produk tidak valid.' });
+		}
+		if (!allowedProductStatuses.has(status as ProductStatus)) {
 			return fail(400, { error: 'Status produk tidak valid.' });
 		}
-
-		const slug = normalizeSlug(title);
+		if (status === 'published' && !fileUrl) {
+			return fail(400, { error: 'Produk yang dipublish wajib memiliki file atau link digital.' });
+		}
 
 		try {
-			if (id) {
-				await upsertDigitalProduct(db, {
-					id,
-					title,
-					description,
-					price,
-					fileUrl,
-					fileSize,
-					coverUrl,
-					status,
-					paymentMethods,
-					slug
-				});
-			} else {
-				const newId = generateId(15);
-				await upsertDigitalProduct(db, {
-					id: newId,
-					title,
-					description,
-					price,
-					fileUrl,
-					fileSize,
-					coverUrl,
-					status,
-					paymentMethods,
-					slug
-				});
-			}
-
-			return { success: true };
+			await upsertDigitalProduct(db, {
+				id: id || null,
+				title,
+				slug,
+				summary,
+				description,
+				price,
+				coverUrl,
+				fileUrl,
+				status: status as ProductStatus,
+				featured,
+				paymentMethodIds
+			});
 		} catch (err: any) {
-			return fail(500, { error: err?.message ?? 'Gagal menyimpan produk.' });
+			const message = String(err?.message || err || '');
+			if (message.includes('UNIQUE') && message.toLowerCase().includes('slug')) {
+				return fail(400, { error: 'Slug produk sudah dipakai. Gunakan slug lain.' });
+			}
+			return fail(500, { error: 'Gagal menyimpan produk digital.' });
 		}
+
+		throw redirect(303, '/admin/super/cms-hub#cms-digital');
 	},
 
 	deleteProduct: async ({ request, locals }) => {
 		const { db } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+
 		const formData = await request.formData();
-		const id = normalizeText(formData.get('product-id'));
+		const id = readFirstValue(formData, 'id', 'product-id');
 
 		if (!id) {
-			return fail(400, { error: 'ID produk diperlukan.' });
+			return fail(400, { error: 'Produk digital tidak ditemukan.' });
 		}
 
-		try {
-			await deleteDigitalProduct(db, id);
-			return { success: true };
-		} catch (err: any) {
-			return fail(500, { error: err?.message ?? 'Gagal menghapus produk.' });
-		}
+		await deleteDigitalProduct(db, id);
+		throw redirect(303, '/admin/super/cms-hub#cms-digital');
 	},
 
 	updateProductStatus: async ({ request, locals }) => {
 		const { db } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+
 		const formData = await request.formData();
-		const id = normalizeText(formData.get('product-id'));
-		const status = normalizeText(formData.get('status'));
+		const id = readFirstValue(formData, 'id', 'product-id');
+		const status = readFirstValue(formData, 'status', 'next');
 
-		if (!id || !allowedProductStatuses.has(status)) {
-			return fail(400, { error: 'Data tidak valid.' });
+		if (!id || !allowedProductStatuses.has(status as ProductStatus)) {
+			return fail(400, { error: 'Produk atau status berikutnya tidak valid.' });
 		}
 
-		try {
-			await updateDigitalProductStatus(db, id, status);
-			return { success: true };
-		} catch (err: any) {
-			return fail(500, { error: err?.message ?? 'Gagal mengubah status.' });
-		}
+		await updateDigitalProductStatus(db, id, status as ProductStatus);
+		throw redirect(303, '/admin/super/cms-hub#cms-digital');
 	},
 
 	savePaymentMethod: async ({ request, locals }) => {
 		const { db } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+
 		const formData = await request.formData();
-
-		const id = normalizeText(formData.get('payment-id'));
-		const type = normalizeText(formData.get('type'));
+		const id = readFirstValue(formData, 'id', 'payment-id');
+		const type = readFirstValue(formData, 'type');
 		const name = normalizeText(formData.get('name'));
-		const details = normalizeText(formData.get('details'));
+		const accountName = readFirstValue(formData, 'accountName', 'account-name');
+		const accountNumber = readFirstValue(formData, 'accountNumber', 'account-number');
+		const instructions = readFirstValue(formData, 'instructions', 'details');
+		const displayOrder = parseInteger(formData.get('displayOrder') ?? formData.get('display-order'));
+		const isActiveValue = formData.get('isActive') ?? formData.get('is-active');
+		const isActive = isActiveValue === 'on' || isActiveValue === 'true' || isActiveValue === '1';
 
-		if (!type || !name) {
-			return fail(400, { error: 'Tipe dan nama metode pembayaran diperlukan.' });
+		if (!name) {
+			return fail(400, { error: 'Nama metode pembayaran wajib diisi.' });
+		}
+		if (!allowedPaymentTypes.has(type as PaymentType)) {
+			return fail(400, { error: 'Tipe metode pembayaran tidak valid.' });
 		}
 
-		if (!allowedPaymentTypes.has(type)) {
-			return fail(400, { error: 'Tipe pembayaran tidak valid.' });
-		}
+		await upsertDigitalPaymentMethod(db, {
+			id: id || null,
+			name,
+			type: type as PaymentType,
+			accountName,
+			accountNumber,
+			instructions,
+			displayOrder,
+			isActive
+		});
 
-		try {
-			const result = await upsertDigitalPaymentMethod(db, {
-				id: id || generateId(15),
-				type,
-				name,
-				details
-			});
-
-			return { success: true };
-		} catch (err: any) {
-			return fail(500, { error: err?.message ?? 'Gagal menyimpan metode pembayaran.' });
-		}
+		throw redirect(303, '/admin/super/cms-hub#payment-methods');
 	},
 
 	deletePaymentMethod: async ({ request, locals }) => {
 		const { db } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+
 		const formData = await request.formData();
-		const id = normalizeText(formData.get('payment-id'));
+		const id = readFirstValue(formData, 'id', 'payment-id');
 
 		if (!id) {
-			return fail(400, { error: 'ID metode pembayaran diperlukan.' });
+			return fail(400, { error: 'Metode pembayaran tidak ditemukan.' });
 		}
 
-		try {
-			await deleteDigitalPaymentMethod(db, id);
-			return { success: true };
-		} catch (err: any) {
-			return fail(500, { error: err?.message ?? 'Gagal menghapus metode pembayaran.' });
-		}
+		await deleteDigitalPaymentMethod(db, id);
+		throw redirect(303, '/admin/super/cms-hub#payment-methods');
 	}
 };
