@@ -5,6 +5,7 @@ import { onMount } from 'svelte';
 import SearchableSelect from '$lib/components/SearchableSelect.svelte';
 import { LANGUAGE_OPTIONS } from '$lib/data/languages';
 import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
+import { islamicDynasties } from '$lib/data/dinasti';
 
 export let data;
 
@@ -21,6 +22,46 @@ const isAdminRoute = (path: string) => path === '/admin' || path.startsWith('/ad
 let isAppRouteActive = false;
 let isAdminRouteActive = false;
 const isBlogMenuActive = (path: string) => path.startsWith('/blog') || path.startsWith('/digital-store');
+const isTokohMenuActive = (path: string) =>
+	['/tokoh', '/nabi', '/sahabat', '/tabiin', '/tabiut-tabiin', '/ulama'].some(
+		(prefix) => path === prefix || path.startsWith(`${prefix}/`)
+	);
+const isDynastyMenuActive = (path: string) => path === '/dinasti' || path.startsWith('/dinasti/');
+
+const tokohMenuItems = [
+	{
+		label: 'Nabi',
+		href: '/nabi',
+		note: '25 rasul yang wajib diimani'
+	},
+	{
+		label: 'Sahabat',
+		href: '/sahabat',
+		note: 'Khulafaur Rasyidin dan Ahlul Badr'
+	},
+	{
+		label: "Tabi'in",
+		href: '/tabiin',
+		note: 'Murid para sahabat'
+	},
+	{
+		label: "Tabi'ut Tabi'in",
+		href: '/tabiut-tabiin',
+		note: 'Generasi kodifikasi awal'
+	},
+	{
+		label: 'Ulama',
+		href: '/ulama',
+		note: 'Jaringan sanad Aswaja'
+	}
+];
+
+const dynastyMenuItems = islamicDynasties.map((dynasty) => ({
+	label: dynasty.name,
+	href: `/dinasti#${dynasty.slug}`,
+	note: dynasty.periodCE,
+	order: dynasty.order
+}));
 
 const apkUrl = 'https://files.santrionline.com/Santrionline.apk';
 const installPromptKey = 'so_install_prompt_v1';
@@ -225,28 +266,22 @@ const baseNav = [
 		isActive: (path: string) => isBlogMenuActive(path)
 	},
 	{
-		label: 'Nabi',
-		href: '/nabi',
-		icon: 'M12 3l7 4v6c0 4-3 7-7 8-4-1-7-4-7-8V7l7-4z',
-		isActive: (path: string) => path.startsWith('/nabi')
+		label: 'Tokoh',
+		href: '/tokoh',
+		icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2m5-2a3 3 0 100-6 3 3 0 000 6z',
+		isActive: (path: string) => isTokohMenuActive(path)
 	},
 	{
-		label: 'Sahabat',
-		href: '/sahabat',
-		icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2m5-2a3 3 0 100-6 3 3 0 000 6z',
-		isActive: (path: string) => path.startsWith('/sahabat')
+		label: 'Dinasti',
+		href: '/dinasti',
+		icon: 'M3 21h18M5 21V7l7-4 7 4v14M10 9h.01M14 9h.01M10 13h.01M14 13h.01M9 21v-4h6v4',
+		isActive: (path: string) => isDynastyMenuActive(path)
 	},
 	{
 		label: 'Kitab',
 		href: '/kitab',
 		icon: 'M4 6a2 2 0 012-2h9l5 4v10a2 2 0 01-2 2H6a2 2 0 01-2-2V6z',
 		isActive: (path: string) => path.startsWith('/kitab')
-	},
-	{
-		label: 'Ulama',
-		href: '/ulama',
-		icon: 'M5.121 17.804A9 9 0 1119 10.5v1.25a5.25 5.25 0 01-5.25 5.25H9a4 4 0 00-3.879 2.804z',
-		isActive: (path: string) => path.startsWith('/ulama')
 	}
 ];
 
@@ -333,10 +368,98 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 						</div>
 					</div>
 				</div>
-				<a href="/nabi" class:active={pathname.startsWith('/nabi')} class="text-base-content/60 hover:text-primary">Nabi</a>
-				<a href="/sahabat" class:active={pathname.startsWith('/sahabat')} class="text-base-content/60 hover:text-primary">Sahabat</a>
-				<a href="/kitab" class:active={pathname === '/kitab'} class="text-base-content/60 hover:text-primary">Kitab</a>
-				<a href="/ulama" class:active={pathname === '/ulama'} class="text-base-content/60 hover:text-primary">Ulama</a>
+				<div class="group relative">
+					<a
+						href="/tokoh"
+						class:active={isTokohMenuActive(pathname)}
+						class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
+					>
+						<span>Tokoh</span>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							class="h-4 w-4 transition group-hover:translate-y-px"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+					</a>
+					<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-72 -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
+						<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+							<a
+								href="/tokoh"
+								class="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700 transition hover:bg-slate-100"
+							>
+								<div>
+									<p class="font-semibold text-slate-900">Overview Tokoh</p>
+									<p class="text-xs text-slate-500">Rantai generasi dari nabi sampai ulama</p>
+								</div>
+								<span class="text-xs text-slate-400">/tokoh</span>
+							</a>
+							<div class="mt-2 space-y-1">
+								{#each tokohMenuItems as item}
+									<a
+										href={item.href}
+										class="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+									>
+										<div>
+											<p class="font-medium text-slate-900">{item.label}</p>
+											<p class="text-xs text-slate-400">{item.note}</p>
+										</div>
+									</a>
+								{/each}
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="group relative">
+					<a
+						href="/dinasti"
+						class:active={isDynastyMenuActive(pathname)}
+						class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
+					>
+						<span>Dinasti</span>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							class="h-4 w-4 transition group-hover:translate-y-px"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+					</a>
+					<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-[34rem] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
+						<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+							<a
+								href="/dinasti"
+								class="block rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
+							>
+								<p class="text-sm font-semibold text-slate-900">Overview Dinasti Islam</p>
+								<p class="mt-1 text-xs text-slate-500">Urutan pasca-Khulafaur Rasyidin dan peta dinasti yang saling overlap</p>
+							</a>
+							<div class="mt-2 grid max-h-[24rem] grid-cols-2 gap-1 overflow-y-auto pr-1">
+								{#each dynastyMenuItems as item}
+									<a
+										href={item.href}
+										class="rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-sky-50 hover:text-sky-700"
+									>
+										<p class="font-medium text-slate-900">{item.order}. {item.label}</p>
+										<p class="text-xs text-slate-400">{item.note}</p>
+									</a>
+								{/each}
+							</div>
+						</div>
+					</div>
+				</div>
+				<a href="/kitab" class:active={pathname.startsWith('/kitab')} class="text-base-content/60 hover:text-primary">Kitab</a>
 			</nav>
 			<div class="flex items-center gap-2">
 				<div class="hidden md:flex items-center gap-2">

@@ -40,23 +40,25 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 
   const rows = (results ?? []) as SitemapRow[];
   const origin = url.origin.replace(/\/+$/, '');
+  const staticRoutes = ['/blog', '/digital-store', '/tokoh', '/nabi', '/sahabat', '/tabiin', '/tabiut-tabiin', '/ulama', '/dinasti'];
 
   const urls: string[] = [];
 
-  if (digitalStoreRow?.updated_at) {
-    urls.push([
+  urls.push(...staticRoutes.map((route) => {
+    const lastmod =
+      route === '/digital-store' && digitalStoreRow?.updated_at
+        ? new Date(digitalStoreRow.updated_at).toISOString()
+        : null;
+
+    return [
       '  <url>',
-      `    <loc>${escapeXml(new URL('/digital-store', origin).toString())}</loc>`,
-      `    <lastmod>${new Date(digitalStoreRow.updated_at).toISOString()}</lastmod>`,
+      `    <loc>${escapeXml(new URL(route, origin).toString())}</loc>`,
+      lastmod ? `    <lastmod>${lastmod}</lastmod>` : '',
       '  </url>'
-    ].join('\n'));
-  } else {
-    urls.push([
-      '  <url>',
-      `    <loc>${escapeXml(new URL('/digital-store', origin).toString())}</loc>`,
-      '  </url>'
-    ].join('\n'));
-  }
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }));
 
   urls.push(...rows.map((row) => {
     const lastmodTs = row.updated_at ?? row.scheduled_at ?? row.created_at;
