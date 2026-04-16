@@ -69,6 +69,9 @@
 		return 'Lifetime';
 	};
 
+	const shortId = (value: string, length = 8) =>
+		value.length <= length ? value : `${value.slice(0, length)}...`;
+
 	const getStatusDisplay = (item: StreamerLicenseItem) => {
 		if (item.status === 'revoked') {
 			return { label: 'revoked', badgeClass: 'badge-error' };
@@ -239,18 +242,18 @@
 	<title>Generate Streamer License</title>
 </svelte:head>
 
-<div class="mx-auto max-w-6xl space-y-5 p-4 md:p-6">
-	<section class="rounded-2xl border bg-gradient-to-r from-emerald-900 via-teal-800 to-cyan-700 p-6 text-white shadow-sm">
+<div class="mx-auto max-w-6xl space-y-5 px-3 py-4 sm:px-4 md:px-6">
+	<section class="rounded-2xl border bg-gradient-to-r from-emerald-900 via-teal-800 to-cyan-700 p-4 text-white shadow-sm sm:p-6">
 		<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 			<div>
 				<p class="text-xs uppercase tracking-[0.2em] text-white/70">Santri Streamer Desktop</p>
-				<h1 class="mt-2 text-2xl font-bold">Generate License</h1>
-				<p class="mt-2 text-sm text-white/85">
+				<h1 class="mt-2 text-xl font-bold sm:text-2xl">Generate License</h1>
+				<p class="mt-2 max-w-2xl text-sm text-white/85">
 					Buat license baru untuk aplikasi desktop Santri Streamer. Key akan tersimpan di panel admin agar bisa dicopy ulang.
 				</p>
 			</div>
-			<div class="flex gap-2">
-				<a class="btn btn-sm border-white/40 bg-white/10 text-white hover:bg-white/20" href="/admin/licenses">
+			<div class="flex w-full gap-2 md:w-auto">
+				<a class="btn btn-sm w-full border-white/40 bg-white/10 text-white hover:bg-white/20 md:w-auto" href="/admin/licenses">
 					Portal Cek License
 				</a>
 			</div>
@@ -264,7 +267,7 @@
 				<div class="grid gap-4 sm:grid-cols-2">
 					<label class="form-control">
 						<span class="label-text text-xs">Plan</span>
-						<select class="select select-bordered" bind:value={planType}>
+						<select class="select select-bordered w-full" bind:value={planType}>
 							<option value="monthly">Bulanan</option>
 							<option value="yearly">Tahunan</option>
 							<option value="lifetime">Lifetime</option>
@@ -273,7 +276,7 @@
 					<label class="form-control">
 						<span class="label-text text-xs">Max Devices</span>
 						<input
-							class="input input-bordered"
+							class="input input-bordered w-full"
 							type="number"
 							min="1"
 							max="50"
@@ -283,9 +286,9 @@
 					</label>
 				</div>
 
-				<div class="rounded-xl border p-3">
-					<div class="flex items-start justify-between gap-3">
-						<div>
+				<div class="rounded-xl border p-3 sm:p-4">
+					<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+						<div class="min-w-0">
 							<p class="text-sm font-medium text-slate-900">Expiry</p>
 							<p class="text-xs text-slate-500">
 								{#if planType === 'lifetime'}
@@ -297,7 +300,7 @@
 								{/if}
 							</p>
 						</div>
-						<label class="label cursor-pointer gap-2">
+						<label class="label cursor-pointer justify-start gap-2 self-start rounded-lg border border-slate-200 px-3 py-2 sm:border-0 sm:px-0 sm:py-0">
 							<span class="label-text text-xs">Custom expiry</span>
 							<input
 								class="toggle toggle-sm"
@@ -311,16 +314,16 @@
 					{#if customExpiryEnabled && planType !== 'lifetime'}
 						<label class="form-control mt-3">
 							<span class="label-text text-xs">Tanggal Kadaluarsa</span>
-							<input class="input input-bordered" type="datetime-local" bind:value={expiresAtInput} />
+							<input class="input input-bordered w-full" type="datetime-local" bind:value={expiresAtInput} />
 						</label>
 					{/if}
 				</div>
 
-				<div class="flex flex-wrap items-center gap-2">
-					<button class="btn btn-primary" type="submit" disabled={submitting}>
+				<div class="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
+					<button class="btn btn-primary w-full sm:w-auto" type="submit" disabled={submitting}>
 						{submitting ? 'Membuat...' : 'Generate License'}
 					</button>
-					<button class="btn btn-outline" type="button" on:click={loadItems} disabled={loadingList || submitting}>
+					<button class="btn btn-outline w-full sm:w-auto" type="button" on:click={loadItems} disabled={loadingList || submitting}>
 						{loadingList ? 'Memuat...' : 'Refresh Daftar'}
 					</button>
 				</div>
@@ -337,12 +340,15 @@
 			<h2 class="text-lg font-semibold text-slate-900">Hasil Generate Terakhir</h2>
 			{#if generatedLicenseKey && generatedItem}
 				<div class="mt-4 space-y-4">
-					<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+					<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 sm:p-4">
 						<p class="text-xs font-medium uppercase tracking-wide text-emerald-800">License Key</p>
 						<div class="mt-2 flex flex-col gap-2 sm:flex-row">
-							<input class="input input-bordered w-full font-mono text-sm" readonly value={generatedLicenseKey} />
+							<textarea
+								class="textarea textarea-bordered min-h-[88px] w-full resize-none font-mono text-sm leading-6 sm:min-h-[52px]"
+								readonly
+							>{generatedLicenseKey}</textarea>
 							<button
-								class="btn btn-success btn-outline"
+								class="btn btn-success btn-outline w-full sm:w-auto"
 								type="button"
 								on:click={() => copyText(generatedLicenseKey, 'License key terbaru berhasil disalin.')}
 							>
@@ -363,7 +369,7 @@
 					<div class="grid gap-3 sm:grid-cols-2">
 						<div class="rounded-xl border p-3">
 							<p class="text-xs text-slate-500">Plan</p>
-							<p class="mt-1 font-semibold text-slate-900">{generatedItem.plan_type}</p>
+							<p class="mt-1 font-semibold text-slate-900">{planLabel(generatedItem.plan_type)}</p>
 						</div>
 						<div class="rounded-xl border p-3">
 							<p class="text-xs text-slate-500">Max Devices</p>
@@ -381,8 +387,8 @@
 
 					<div class="rounded-xl border p-3">
 						<p class="text-xs text-slate-500">Petunjuk Singkat</p>
-						<p class="mt-1 text-sm text-slate-700">
-							Masukkan <code class="rounded bg-slate-100 px-1 py-0.5">{generatedLicenseKey}</code> ke form aktivasi di aplikasi
+						<p class="mt-1 break-words text-sm text-slate-700">
+							Masukkan <code class="break-all rounded bg-slate-100 px-1 py-0.5">{generatedLicenseKey}</code> ke form aktivasi di aplikasi
 							desktop Santri Streamer.
 						</p>
 					</div>
@@ -396,9 +402,9 @@
 	</section>
 
 	<section class="rounded-2xl border bg-white p-4 shadow-sm">
-		<div class="flex items-center justify-between gap-3">
+		<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 			<h2 class="text-lg font-semibold text-slate-900">License Terbaru</h2>
-			<button class="btn btn-sm btn-outline" type="button" on:click={loadItems} disabled={loadingList || submitting}>
+			<button class="btn btn-sm btn-outline w-full sm:w-auto" type="button" on:click={loadItems} disabled={loadingList || submitting}>
 				{loadingList ? 'Memuat...' : 'Refresh'}
 			</button>
 		</div>
@@ -415,8 +421,73 @@
 		{#if items.length === 0}
 			<p class="mt-4 text-sm text-slate-500">{loadingList ? 'Memuat data...' : 'Belum ada data license.'}</p>
 		{:else}
-			<div class="mt-4 overflow-x-auto">
-				<table class="table table-zebra">
+			<div class="mt-4 space-y-3 lg:hidden">
+				{#each items as item}
+					{@const statusDisplay = getStatusDisplay(item)}
+					<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+						<div class="flex items-start justify-between gap-3">
+							<div class="min-w-0">
+								<p class="text-xs uppercase tracking-[0.18em] text-slate-400">License</p>
+								<p class="mt-1 font-mono text-sm font-semibold break-all text-slate-900">
+									{item.license_key ?? 'Tidak tersedia'}
+								</p>
+							</div>
+							<span class="badge {statusDisplay.badgeClass} badge-outline shrink-0">
+								{statusDisplay.label}
+							</span>
+						</div>
+
+						<div class="mt-4 grid grid-cols-2 gap-3">
+							<div class="rounded-lg border bg-white p-3">
+								<p class="text-[11px] text-slate-500">ID</p>
+								<p class="mt-1 font-mono text-xs text-slate-900">{shortId(item.id)}</p>
+							</div>
+							<div class="rounded-lg border bg-white p-3">
+								<p class="text-[11px] text-slate-500">Plan</p>
+								<p class="mt-1 text-sm font-semibold text-slate-900">{planLabel(item.plan_type)}</p>
+							</div>
+							<div class="rounded-lg border bg-white p-3">
+								<p class="text-[11px] text-slate-500">Device</p>
+								<p class="mt-1 text-sm font-semibold text-slate-900">{item.device_count} / {item.max_devices}</p>
+							</div>
+							<div class="rounded-lg border bg-white p-3">
+								<p class="text-[11px] text-slate-500">Last Seen</p>
+								<p class="mt-1 text-sm font-semibold text-slate-900">{formatDate(item.last_seen_at)}</p>
+							</div>
+							<div class="rounded-lg border bg-white p-3">
+								<p class="text-[11px] text-slate-500">Expires</p>
+								<p class="mt-1 text-sm font-semibold text-slate-900">{formatDate(item.expires_at)}</p>
+							</div>
+							<div class="rounded-lg border bg-white p-3">
+								<p class="text-[11px] text-slate-500">Created</p>
+								<p class="mt-1 text-sm font-semibold text-slate-900">{formatDate(item.created_at)}</p>
+							</div>
+						</div>
+
+						<div class="mt-4 grid gap-2 sm:grid-cols-2">
+							<button
+								class="btn btn-sm btn-outline w-full"
+								type="button"
+								on:click={() => copyText(item.license_key ?? '', `License key ${item.id.slice(0, 8)} berhasil disalin.`)}
+								disabled={!item.license_key || deletingId === item.id}
+							>
+								Copy
+							</button>
+							<button
+								class="btn btn-sm btn-outline btn-error w-full"
+								type="button"
+								on:click={() => deleteLicense(item)}
+								disabled={deletingId === item.id}
+							>
+								{deletingId === item.id ? 'Menghapus...' : 'Hapus'}
+							</button>
+						</div>
+					</div>
+				{/each}
+			</div>
+
+			<div class="mt-4 hidden overflow-x-auto lg:block">
+				<table class="table table-zebra min-w-[980px]">
 					<thead>
 						<tr>
 							<th>ID</th>
@@ -430,12 +501,12 @@
 							<th class="text-right">Aksi</th>
 						</tr>
 					</thead>
-					<tbody>
-						{#each items as item}
-							{@const statusDisplay = getStatusDisplay(item)}
+						<tbody>
+							{#each items as item}
+								{@const statusDisplay = getStatusDisplay(item)}
 							<tr>
 								<td>
-									<code class="text-xs">{item.id.slice(0, 8)}...</code>
+									<code class="text-xs">{shortId(item.id)}</code>
 								</td>
 								<td>
 									{#if item.license_key}
@@ -444,7 +515,7 @@
 										<span class="text-xs text-slate-400">Tidak tersedia</span>
 									{/if}
 								</td>
-								<td>{item.plan_type}</td>
+								<td>{planLabel(item.plan_type)}</td>
 								<td>
 									<span class="badge {statusDisplay.badgeClass} badge-outline">
 										{statusDisplay.label}

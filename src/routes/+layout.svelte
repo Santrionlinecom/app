@@ -328,10 +328,6 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 					<a href={isSuperAdmin ? '/admin/super/overview' : '/dashboard'} class="btn btn-sm btn-ghost">
 						{isSuperAdmin ? 'Super Admin' : 'Dashboard'}
 					</a>
-					{#if isSuperAdmin}
-						<a href="/admin/posts" class="btn btn-sm btn-ghost">CMS</a>
-						<a href="/admin/licenses" class="btn btn-sm btn-ghost">Licenses</a>
-					{/if}
 					{#if isImpersonating}
 						<a href="/admin/super/impersonate/stop" class="btn btn-sm btn-outline">Keluar Mode Admin</a>
 					{/if}
