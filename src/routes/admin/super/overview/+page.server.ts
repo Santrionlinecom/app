@@ -6,6 +6,7 @@ import { getOrganizationById } from '$lib/server/organizations';
 import { logActivity } from '$lib/server/activity-logs';
 import { isSuperAdminRole, requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 import { ensureCmsSchema, getAllPosts } from '$lib/server/cms';
+import { ensureDefaultManualPaymentMethods } from '$lib/server/default-manual-payments';
 import {
 	createDigitalSale,
 	deleteDigitalPaymentMethod,
@@ -66,6 +67,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db } = requireSuperAdmin(locals);
 	await ensureCmsSchema(db);
 	await ensureDigitalCommerceSchema(db);
+	await ensureDefaultManualPaymentMethods(db);
 
 	const totalInstitutions = await countTable(db, 'organizations');
 	const totalUsers = await countTable(db, 'users');

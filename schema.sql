@@ -418,6 +418,7 @@ CREATE TABLE IF NOT EXISTS digital_payment_methods (
   type TEXT NOT NULL DEFAULT 'manual' CHECK (type IN ('bank', 'ewallet', 'qris', 'manual')),
   account_name TEXT,
   account_number TEXT,
+  asset_url TEXT,
   instructions TEXT,
   is_active INTEGER NOT NULL DEFAULT 1,
   display_order INTEGER NOT NULL DEFAULT 0,
@@ -440,15 +441,27 @@ CREATE TABLE IF NOT EXISTS digital_product_sales (
   buyer_name TEXT,
   buyer_contact TEXT,
   amount INTEGER NOT NULL,
+  reference_code TEXT UNIQUE,
   payment_method_id TEXT REFERENCES digital_payment_methods(id) ON DELETE SET NULL,
   payment_method_name TEXT,
   status TEXT NOT NULL DEFAULT 'paid' CHECK (status IN ('pending', 'paid', 'failed', 'refunded')),
+  proof_url TEXT,
+  proof_key TEXT,
+  proof_mime_type TEXT,
+  proof_size INTEGER,
+  proof_uploaded_at INTEGER,
+  admin_notes TEXT,
+  verified_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+  verified_at INTEGER,
+  access_token TEXT,
   paid_at INTEGER,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_digital_product_sales_created ON digital_product_sales(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_digital_product_sales_product ON digital_product_sales(product_id, status);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_reference_code ON digital_product_sales(reference_code);
+CREATE INDEX IF NOT EXISTS idx_digital_product_sales_status_created ON digital_product_sales(status, created_at DESC);
 
 -- Public kitab library managed from CMS Hub
 CREATE TABLE IF NOT EXISTS kitab_catalog (

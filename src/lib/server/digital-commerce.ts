@@ -51,6 +51,7 @@ export interface DigitalPaymentMethod {
 	type: DigitalPaymentMethodType;
 	accountName: string | null;
 	accountNumber: string | null;
+	assetUrl: string | null;
 	instructions: string | null;
 	isActive: boolean;
 	displayOrder: number;
@@ -62,6 +63,10 @@ export interface DigitalProductPaymentMethodSummary {
 	id: string;
 	name: string;
 	type: DigitalPaymentMethodType;
+	accountName?: string | null;
+	accountNumber?: string | null;
+	assetUrl?: string | null;
+	instructions?: string | null;
 	isActive: boolean;
 }
 
@@ -99,7 +104,9 @@ export interface PublicDigitalProductListItem {
 
 export interface DigitalSaleListItem {
 	id: string;
+	referenceCode: string;
 	productId: string;
+	productSlug: string | null;
 	productTitle: string | null;
 	buyerName: string | null;
 	buyerContact: string | null;
@@ -107,6 +114,11 @@ export interface DigitalSaleListItem {
 	paymentMethodId: string | null;
 	paymentMethodName: string | null;
 	status: DigitalSaleStatus;
+	proofUrl: string | null;
+	proofUploadedAt: number | null;
+	adminNotes: string | null;
+	verifiedAt: number | null;
+	verifiedBy: string | null;
 	createdAt: number;
 	paidAt: number | null;
 }
@@ -131,6 +143,7 @@ export interface DigitalCommerceOverview {
 	};
 	products: DigitalProductListItem[];
 	paymentMethods: DigitalPaymentMethod[];
+	pendingSales: DigitalSaleListItem[];
 	recentSales: DigitalSaleListItem[];
 	salesChart: DigitalSalesPoint[];
 }
@@ -158,6 +171,7 @@ type PaymentMethodRow = {
 	type: DigitalPaymentMethodType;
 	account_name: string | null;
 	account_number: string | null;
+	asset_url: string | null;
 	instructions: string | null;
 	is_active: number | null;
 	display_order: number | null;
@@ -171,6 +185,7 @@ const mapPaymentMethod = (row: PaymentMethodRow): DigitalPaymentMethod => ({
 	type: row.type,
 	accountName: row.account_name,
 	accountNumber: row.account_number,
+	assetUrl: row.asset_url,
 	instructions: row.instructions,
 	isActive: normalizeFlag(row.is_active),
 	displayOrder: Number(row.display_order ?? 0),
@@ -246,6 +261,7 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 				type TEXT NOT NULL DEFAULT 'manual' CHECK (type IN ('bank', 'ewallet', 'qris', 'manual')),
 				account_name TEXT,
 				account_number TEXT,
+				asset_url TEXT,
 				instructions TEXT,
 				is_active INTEGER NOT NULL DEFAULT 1,
 				display_order INTEGER NOT NULL DEFAULT 0,
@@ -272,15 +288,81 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 				buyer_name TEXT,
 				buyer_contact TEXT,
 				amount INTEGER NOT NULL,
+				reference_code TEXT UNIQUE,
 				payment_method_id TEXT REFERENCES digital_payment_methods(id) ON DELETE SET NULL,
 				payment_method_name TEXT,
 				status TEXT NOT NULL DEFAULT 'paid' CHECK (status IN ('pending', 'paid', 'failed', 'refunded')),
+				proof_url TEXT,
+				proof_key TEXT,
+				proof_mime_type TEXT,
+				proof_size INTEGER,
+				proof_uploaded_at INTEGER,
+				admin_notes TEXT,
+				verified_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+				verified_at INTEGER,
+				access_token TEXT,
 				paid_at INTEGER,
 				created_at INTEGER NOT NULL,
 				updated_at INTEGER NOT NULL
 			)`
 		)
 		.run();
+
+	try {
+		await db.prepare('ALTER TABLE digital_payment_methods ADD COLUMN asset_url TEXT').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_product_sales ADD COLUMN reference_code TEXT').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_product_sales ADD COLUMN proof_url TEXT').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_product_sales ADD COLUMN proof_key TEXT').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_product_sales ADD COLUMN proof_mime_type TEXT').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_product_sales ADD COLUMN proof_size INTEGER').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_product_sales ADD COLUMN proof_uploaded_at INTEGER').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_product_sales ADD COLUMN admin_notes TEXT').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_product_sales ADD COLUMN verified_by TEXT REFERENCES users(id) ON DELETE SET NULL').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_product_sales ADD COLUMN verified_at INTEGER').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_product_sales ADD COLUMN access_token TEXT').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
 
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_digital_products_slug ON digital_products(slug)').run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_digital_products_status ON digital_products(status)').run();
@@ -304,12 +386,24 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 			'CREATE INDEX IF NOT EXISTS idx_digital_product_sales_product ON digital_product_sales(product_id, status)'
 		)
 		.run();
+	await db
+		.prepare(
+			'CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_reference_code ON digital_product_sales(reference_code)'
+		)
+		.run();
+	await db
+		.prepare(
+			'CREATE INDEX IF NOT EXISTS idx_digital_product_sales_status_created ON digital_product_sales(status, created_at DESC)'
+		)
+		.run();
 }
 
 export async function listDigitalPaymentMethods(db: D1Database): Promise<DigitalPaymentMethod[]> {
 	const { results } = await db
 		.prepare(
 			`SELECT id, name, type, account_name, account_number, instructions, is_active, display_order, created_at, updated_at
+			 ,
+			 asset_url
 			 FROM digital_payment_methods
 			 ORDER BY is_active DESC, display_order ASC, updated_at DESC`
 		)
@@ -321,7 +415,7 @@ export async function listDigitalPaymentMethods(db: D1Database): Promise<Digital
 const listProductPaymentMethods = async (db: D1Database) => {
 	const { results } = await db
 		.prepare(
-			`SELECT ppm.product_id as productId, m.id, m.name, m.type, m.is_active as isActive
+			`SELECT ppm.product_id as productId, m.id, m.name, m.type, m.account_name as accountName, m.account_number as accountNumber, m.asset_url as assetUrl, m.instructions, m.is_active as isActive
 			 FROM digital_product_payment_methods ppm
 			 INNER JOIN digital_payment_methods m ON m.id = ppm.payment_method_id
 			 ORDER BY m.display_order ASC, m.updated_at DESC`
@@ -331,6 +425,10 @@ const listProductPaymentMethods = async (db: D1Database) => {
 			id: string;
 			name: string;
 			type: DigitalPaymentMethodType;
+			accountName: string | null;
+			accountNumber: string | null;
+			assetUrl: string | null;
+			instructions: string | null;
 			isActive: number | null;
 		}>();
 
@@ -341,11 +439,36 @@ const listProductPaymentMethods = async (db: D1Database) => {
 			id: row.id,
 			name: row.name,
 			type: row.type,
+			accountName: row.accountName,
+			accountNumber: row.accountNumber,
+			assetUrl: row.assetUrl,
+			instructions: row.instructions,
 			isActive: normalizeFlag(row.isActive)
 		});
 		methodsByProduct.set(row.productId, list);
 	}
 	return methodsByProduct;
+};
+
+const resolvePublicMethods = (
+	allMethods: DigitalPaymentMethod[],
+	methodsByProduct: Map<string, DigitalProductPaymentMethodSummary[]>,
+	productId: string
+) => {
+	const assigned = (methodsByProduct.get(productId) ?? []).filter((method) => method.isActive);
+	if (assigned.length > 0) return assigned;
+	return allMethods
+		.filter((method) => method.isActive)
+		.map((method) => ({
+			id: method.id,
+			name: method.name,
+			type: method.type,
+			accountName: method.accountName,
+			accountNumber: method.accountNumber,
+			assetUrl: method.assetUrl,
+			instructions: method.instructions,
+			isActive: method.isActive
+		}));
 };
 
 export async function listDigitalProducts(db: D1Database): Promise<DigitalProductListItem[]> {
@@ -386,7 +509,10 @@ export async function listDigitalProducts(db: D1Database): Promise<DigitalProduc
 export async function listPublishedDigitalProducts(
 	db: D1Database
 ): Promise<PublicDigitalProductListItem[]> {
-	const methodsByProduct = await listProductPaymentMethods(db);
+	const [methodsByProduct, allMethods] = await Promise.all([
+		listProductPaymentMethods(db),
+		listDigitalPaymentMethods(db)
+	]);
 	const { results } = await db
 		.prepare(
 			`SELECT
@@ -410,7 +536,50 @@ export async function listPublishedDigitalProducts(
 		)
 		.all<ProductRow>();
 
-	return (results ?? []).map((row) => mapPublicProduct(row, methodsByProduct));
+	return (results ?? []).map((row) => ({
+		...mapPublicProduct(row, methodsByProduct),
+		paymentMethods: resolvePublicMethods(allMethods, methodsByProduct, row.id)
+	}));
+}
+
+export async function getPublishedDigitalProductBySlug(
+	db: D1Database,
+	slug: string
+): Promise<PublicDigitalProductListItem | null> {
+	const [methodsByProduct, allMethods, row] = await Promise.all([
+		listProductPaymentMethods(db),
+		listDigitalPaymentMethods(db),
+		db
+			.prepare(
+				`SELECT
+					p.id,
+					p.title,
+					p.slug,
+					p.summary,
+					p.description,
+					p.price,
+					p.cover_url,
+					p.file_url,
+					p.status,
+					p.featured,
+					p.created_at,
+					p.updated_at,
+					0 as salesCount,
+					0 as revenue
+				FROM digital_products p
+				WHERE p.slug = ? AND p.status = 'published'
+				LIMIT 1`
+			)
+			.bind(slug)
+			.first<ProductRow>()
+	]);
+
+	if (!row) return null;
+
+	return {
+		...mapPublicProduct(row, methodsByProduct),
+		paymentMethods: resolvePublicMethods(allMethods, methodsByProduct, row.id)
+	};
 }
 
 export async function getDigitalCommerceOverview(
@@ -492,7 +661,9 @@ export async function getDigitalCommerceOverview(
 		.prepare(
 			`SELECT
 				s.id,
+				s.reference_code as referenceCode,
 				s.product_id as productId,
+				p.slug as productSlug,
 				p.title as productTitle,
 				s.buyer_name as buyerName,
 				s.buyer_contact as buyerContact,
@@ -500,16 +671,32 @@ export async function getDigitalCommerceOverview(
 				s.payment_method_id as paymentMethodId,
 				s.payment_method_name as paymentMethodName,
 				s.status,
+				s.proof_url as proofUrl,
+				s.proof_uploaded_at as proofUploadedAt,
+				s.admin_notes as adminNotes,
+				s.verified_at as verifiedAt,
+				u.username as verifiedByUsername,
+				u.email as verifiedByEmail,
 				s.created_at as createdAt,
 				s.paid_at as paidAt
 			 FROM digital_product_sales s
 			 LEFT JOIN digital_products p ON p.id = s.product_id
-			 ORDER BY COALESCE(s.paid_at, s.created_at) DESC
-			 LIMIT 8`
+			 LEFT JOIN users u ON u.id = s.verified_by
+			 ORDER BY
+			 	CASE s.status
+					WHEN 'pending' THEN 0
+					WHEN 'paid' THEN 1
+					WHEN 'failed' THEN 2
+					ELSE 3
+				END,
+				COALESCE(s.paid_at, s.created_at) DESC
+			 LIMIT 16`
 		)
 		.all<{
 			id: string;
+			referenceCode: string | null;
 			productId: string;
+			productSlug: string | null;
 			productTitle: string | null;
 			buyerName: string | null;
 			buyerContact: string | null;
@@ -517,12 +704,60 @@ export async function getDigitalCommerceOverview(
 			paymentMethodId: string | null;
 			paymentMethodName: string | null;
 			status: DigitalSaleStatus;
+			proofUrl: string | null;
+			proofUploadedAt: number | null;
+			adminNotes: string | null;
+			verifiedAt: number | null;
+			verifiedByUsername: string | null;
+			verifiedByEmail: string | null;
 			createdAt: number;
 			paidAt: number | null;
 		}>();
 
+	const mapSaleRow = (row: {
+		id: string;
+		referenceCode: string | null;
+		productId: string;
+		productSlug: string | null;
+		productTitle: string | null;
+		buyerName: string | null;
+		buyerContact: string | null;
+		amount: number | null;
+		paymentMethodId: string | null;
+		paymentMethodName: string | null;
+		status: DigitalSaleStatus;
+		proofUrl: string | null;
+		proofUploadedAt: number | null;
+		adminNotes: string | null;
+		verifiedAt: number | null;
+		verifiedByUsername: string | null;
+		verifiedByEmail: string | null;
+		createdAt: number;
+		paidAt: number | null;
+	}): DigitalSaleListItem => ({
+		id: row.id,
+		referenceCode: row.referenceCode ?? row.id,
+		productId: row.productId,
+		productSlug: row.productSlug,
+		productTitle: row.productTitle,
+		buyerName: row.buyerName,
+		buyerContact: row.buyerContact,
+		amount: normalizeMoney(row.amount),
+		paymentMethodId: row.paymentMethodId,
+		paymentMethodName: row.paymentMethodName,
+		status: row.status,
+		proofUrl: row.proofUrl,
+		proofUploadedAt: row.proofUploadedAt,
+		adminNotes: row.adminNotes,
+		verifiedAt: row.verifiedAt,
+		verifiedBy: row.verifiedByUsername || row.verifiedByEmail || null,
+		createdAt: row.createdAt,
+		paidAt: row.paidAt
+	});
+
 	const totalSales = Number(salesStats?.totalSales ?? 0);
 	const totalRevenue = normalizeMoney(salesStats?.totalRevenue);
+	const recentSales = (recentSalesRows ?? []).map(mapSaleRow);
 
 	return {
 		stats: {
@@ -537,19 +772,8 @@ export async function getDigitalCommerceOverview(
 		},
 		products,
 		paymentMethods,
-		recentSales: (recentSalesRows ?? []).map((row) => ({
-			id: row.id,
-			productId: row.productId,
-			productTitle: row.productTitle,
-			buyerName: row.buyerName,
-			buyerContact: row.buyerContact,
-			amount: normalizeMoney(row.amount),
-			paymentMethodId: row.paymentMethodId,
-			paymentMethodName: row.paymentMethodName,
-			status: row.status,
-			createdAt: row.createdAt,
-			paidAt: row.paidAt
-		})),
+		pendingSales: recentSales.filter((sale) => sale.status === 'pending'),
+		recentSales,
 		salesChart
 	};
 }
@@ -562,6 +786,7 @@ export async function upsertDigitalPaymentMethod(
 		type: DigitalPaymentMethodType;
 		accountName?: string | null;
 		accountNumber?: string | null;
+		assetUrl?: string | null;
 		instructions?: string | null;
 		isActive?: boolean;
 		displayOrder?: number;
@@ -573,8 +798,8 @@ export async function upsertDigitalPaymentMethod(
 	if (input.id?.trim()) {
 		await db
 			.prepare(
-				`UPDATE digital_payment_methods
-				 SET name = ?, type = ?, account_name = ?, account_number = ?, instructions = ?, is_active = ?, display_order = ?, updated_at = ?
+			`UPDATE digital_payment_methods
+				 SET name = ?, type = ?, account_name = ?, account_number = ?, asset_url = ?, instructions = ?, is_active = ?, display_order = ?, updated_at = ?
 				 WHERE id = ?`
 			)
 			.bind(
@@ -582,6 +807,7 @@ export async function upsertDigitalPaymentMethod(
 				input.type,
 				input.accountName?.trim() || null,
 				input.accountNumber?.trim() || null,
+				input.assetUrl?.trim() || null,
 				input.instructions?.trim() || null,
 				input.isActive ? 1 : 0,
 				Math.max(0, Math.floor(input.displayOrder ?? 0)),
@@ -595,8 +821,8 @@ export async function upsertDigitalPaymentMethod(
 	await db
 		.prepare(
 			`INSERT INTO digital_payment_methods
-				(id, name, type, account_name, account_number, instructions, is_active, display_order, created_at, updated_at)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				(id, name, type, account_name, account_number, asset_url, instructions, is_active, display_order, created_at, updated_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 		)
 		.bind(
 			id,
@@ -604,6 +830,7 @@ export async function upsertDigitalPaymentMethod(
 			input.type,
 			input.accountName?.trim() || null,
 			input.accountNumber?.trim() || null,
+			input.assetUrl?.trim() || null,
 			input.instructions?.trim() || null,
 			input.isActive ? 1 : 0,
 			Math.max(0, Math.floor(input.displayOrder ?? 0)),
@@ -772,8 +999,8 @@ export async function createDigitalSale(
 	await db
 		.prepare(
 			`INSERT INTO digital_product_sales
-				(id, product_id, buyer_name, buyer_contact, amount, payment_method_id, payment_method_name, status, paid_at, created_at, updated_at)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				(id, product_id, buyer_name, buyer_contact, amount, reference_code, payment_method_id, payment_method_name, status, access_token, paid_at, created_at, updated_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 		)
 		.bind(
 			crypto.randomUUID(),
@@ -781,12 +1008,294 @@ export async function createDigitalSale(
 			input.buyerName?.trim() || null,
 			input.buyerContact?.trim() || null,
 			amount,
+			`LEGACY-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
 			paymentMethodId,
 			paymentMethodName,
 			status,
+			crypto.randomUUID(),
 			status === 'paid' ? now : null,
 			now,
 			now
 		)
 		.run();
+}
+
+const createReferenceCode = () => {
+	const date = new Date();
+	const y = date.getFullYear().toString().slice(-2);
+	const m = `${date.getMonth() + 1}`.padStart(2, '0');
+	const d = `${date.getDate()}`.padStart(2, '0');
+	const random = crypto.randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase();
+	return `SO-DIG-${y}${m}${d}-${random}`;
+};
+
+const createAccessToken = () => `${crypto.randomUUID()}${crypto.randomUUID().replace(/-/g, '')}`;
+
+export async function createManualDigitalOrder(
+	db: D1Database,
+	input: {
+		productId: string;
+		buyerName: string;
+		buyerContact: string;
+		paymentMethodId: string;
+	}
+) {
+	const product = await db
+		.prepare(
+			`SELECT id, title, slug, price, status
+			 FROM digital_products
+			 WHERE id = ?`
+		)
+		.bind(input.productId)
+		.first<{
+			id: string;
+			title: string;
+			slug: string;
+			price: number | null;
+			status: DigitalProductStatus;
+		}>();
+	if (!product || product.status !== 'published') {
+		throw new Error('Produk digital tidak tersedia untuk checkout.');
+	}
+
+	const method = await db
+		.prepare(
+			`SELECT id, name, type, account_name as accountName, account_number as accountNumber, asset_url as assetUrl, instructions, is_active as isActive
+			 FROM digital_payment_methods
+			 WHERE id = ?`
+		)
+		.bind(input.paymentMethodId)
+		.first<{
+			id: string;
+			name: string;
+			type: DigitalPaymentMethodType;
+			accountName: string | null;
+			accountNumber: string | null;
+			assetUrl: string | null;
+			instructions: string | null;
+			isActive: number | null;
+		}>();
+	if (!method || !normalizeFlag(method.isActive)) {
+		throw new Error('Metode pembayaran tidak tersedia.');
+	}
+
+	const productMethod = await db
+		.prepare(
+			`SELECT 1 as enabled
+			 FROM digital_product_payment_methods
+			 WHERE product_id = ? AND payment_method_id = ?
+			 LIMIT 1`
+		)
+		.bind(product.id, method.id)
+		.first<{ enabled: number | null }>();
+	const hasSpecificMethods = await db
+		.prepare(
+			`SELECT COUNT(1) as total
+			 FROM digital_product_payment_methods
+			 WHERE product_id = ?`
+		)
+		.bind(product.id)
+		.first<{ total: number | null }>();
+	if (Number(hasSpecificMethods?.total ?? 0) > 0 && !productMethod) {
+		throw new Error('Metode pembayaran tidak tersedia untuk produk ini.');
+	}
+
+	const referenceCode = createReferenceCode();
+	const accessToken = createAccessToken();
+	const now = Date.now();
+	const amount = Math.max(0, Math.floor(product.price ?? 0));
+	const id = crypto.randomUUID();
+
+	await db
+		.prepare(
+			`INSERT INTO digital_product_sales
+				(id, product_id, buyer_name, buyer_contact, amount, reference_code, payment_method_id, payment_method_name, status, access_token, created_at, updated_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`
+		)
+		.bind(
+			id,
+			product.id,
+			input.buyerName.trim(),
+			input.buyerContact.trim(),
+			amount,
+			referenceCode,
+			method.id,
+			method.name,
+			accessToken,
+			now,
+			now
+		)
+		.run();
+
+	return {
+		id,
+		referenceCode,
+		accessToken,
+		product: {
+			id: product.id,
+			title: product.title,
+			slug: product.slug,
+			price: amount
+		},
+		paymentMethod: {
+			id: method.id,
+			name: method.name,
+			type: method.type,
+			accountName: method.accountName,
+			accountNumber: method.accountNumber,
+			assetUrl: method.assetUrl,
+			instructions: method.instructions
+		}
+	};
+}
+
+export async function attachDigitalSaleProof(
+	db: D1Database,
+	input: {
+		referenceCode: string;
+		accessToken: string;
+		proofUrl: string;
+		proofKey?: string | null;
+		proofMimeType?: string | null;
+		proofSize?: number | null;
+	}
+) {
+	const order = await db
+		.prepare(
+			`SELECT id, status
+			 FROM digital_product_sales
+			 WHERE reference_code = ? AND access_token = ?
+			 LIMIT 1`
+		)
+		.bind(input.referenceCode, input.accessToken)
+		.first<{ id: string; status: DigitalSaleStatus }>();
+	if (!order) {
+		throw new Error('Pesanan tidak ditemukan.');
+	}
+	if (order.status === 'paid') {
+		throw new Error('Pesanan sudah lunas dan tidak perlu upload bukti lagi.');
+	}
+
+	const now = Date.now();
+	await db
+		.prepare(
+			`UPDATE digital_product_sales
+			 SET proof_url = ?, proof_key = ?, proof_mime_type = ?, proof_size = ?, proof_uploaded_at = ?, status = 'pending', updated_at = ?
+			 WHERE id = ?`
+		)
+		.bind(
+			input.proofUrl,
+			input.proofKey?.trim() || null,
+			input.proofMimeType?.trim() || null,
+			input.proofSize ?? null,
+			now,
+			now,
+			order.id
+		)
+		.run();
+}
+
+export async function updateDigitalSaleStatus(
+	db: D1Database,
+	input: {
+		id: string;
+		status: DigitalSaleStatus;
+		adminNotes?: string | null;
+		verifiedBy?: string | null;
+	}
+) {
+	const now = Date.now();
+	const shouldMarkPaid = input.status === 'paid';
+	const shouldMarkVerified = input.status === 'paid' || input.status === 'failed' || input.status === 'refunded';
+
+	await db
+		.prepare(
+			`UPDATE digital_product_sales
+			 SET status = ?, admin_notes = ?, verified_by = ?, verified_at = ?, paid_at = CASE WHEN ? = 1 THEN COALESCE(paid_at, ?) ELSE paid_at END, updated_at = ?
+			 WHERE id = ?`
+		)
+		.bind(
+			input.status,
+			input.adminNotes?.trim() || null,
+			shouldMarkVerified ? input.verifiedBy?.trim() || null : null,
+			shouldMarkVerified ? now : null,
+			shouldMarkPaid ? 1 : 0,
+			now,
+			now,
+			input.id
+		)
+		.run();
+}
+
+export async function getDigitalOrderByReference(
+	db: D1Database,
+	referenceCode: string,
+	accessToken: string
+) {
+	return await db
+		.prepare(
+			`SELECT
+				s.id,
+				s.reference_code as referenceCode,
+				s.access_token as accessToken,
+				s.product_id as productId,
+				p.slug as productSlug,
+				p.title as productTitle,
+				p.summary as productSummary,
+				p.description as productDescription,
+				p.cover_url as productCoverUrl,
+				p.file_url as productFileUrl,
+				s.buyer_name as buyerName,
+				s.buyer_contact as buyerContact,
+				s.amount,
+				s.payment_method_id as paymentMethodId,
+				s.payment_method_name as paymentMethodName,
+				m.type as paymentMethodType,
+				m.account_name as paymentAccountName,
+				m.account_number as paymentAccountNumber,
+				m.asset_url as paymentAssetUrl,
+				m.instructions as paymentInstructions,
+				s.status,
+				s.proof_url as proofUrl,
+				s.proof_uploaded_at as proofUploadedAt,
+				s.admin_notes as adminNotes,
+				s.verified_at as verifiedAt,
+				s.created_at as createdAt,
+				s.paid_at as paidAt
+			 FROM digital_product_sales s
+			 INNER JOIN digital_products p ON p.id = s.product_id
+			 LEFT JOIN digital_payment_methods m ON m.id = s.payment_method_id
+			 WHERE s.reference_code = ? AND s.access_token = ?
+			 LIMIT 1`
+		)
+		.bind(referenceCode, accessToken)
+		.first<{
+			id: string;
+			referenceCode: string;
+			accessToken: string;
+			productId: string;
+			productSlug: string | null;
+			productTitle: string | null;
+			productSummary: string | null;
+			productDescription: string | null;
+			productCoverUrl: string | null;
+			productFileUrl: string | null;
+			buyerName: string | null;
+			buyerContact: string | null;
+			amount: number | null;
+			paymentMethodId: string | null;
+			paymentMethodName: string | null;
+			paymentMethodType: DigitalPaymentMethodType | null;
+			paymentAccountName: string | null;
+			paymentAccountNumber: string | null;
+			paymentAssetUrl: string | null;
+			paymentInstructions: string | null;
+			status: DigitalSaleStatus;
+			proofUrl: string | null;
+			proofUploadedAt: number | null;
+			adminNotes: string | null;
+			verifiedAt: number | null;
+			createdAt: number;
+			paidAt: number | null;
+		}>();
 }

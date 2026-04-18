@@ -243,6 +243,7 @@
 	let paymentMethodType: 'bank' | 'ewallet' | 'qris' | 'manual' = 'bank';
 	let paymentAccountName = '';
 	let paymentAccountNumber = '';
+	let paymentAssetUrl = '';
 	let paymentInstructions = '';
 	let paymentDisplayOrder = 0;
 	let paymentIsActive = true;
@@ -283,6 +284,7 @@
 		paymentMethodType = (payment?.type ?? 'bank') as 'bank' | 'ewallet' | 'qris' | 'manual';
 		paymentAccountName = payment?.accountName ?? '';
 		paymentAccountNumber = payment?.accountNumber ?? '';
+		paymentAssetUrl = payment?.assetUrl ?? '';
 		paymentInstructions = payment?.instructions ?? '';
 		paymentDisplayOrder = payment?.displayOrder ?? 0;
 		paymentIsActive = payment ? Boolean(payment.isActive) : true;
@@ -1239,7 +1241,7 @@
 				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Metode Pembayaran</p>
 				<h2 class="section-title mt-2 text-2xl font-semibold text-slate-900">Atur cara pembayaran produk digital</h2>
 				<p class="mt-2 text-sm text-slate-500">
-					Aktifkan berbagai metode pembayaran untuk memudahkan pelanggan. Produk akan menampilkan metode yang sudah diaktifkan.
+					Aktifkan berbagai metode pembayaran untuk memudahkan pelanggan. Produk akan menampilkan metode yang sudah diaktifkan, termasuk rekening dan e-wallet manual yang sudah Anda set.
 				</p>
 			</div>
 		</div>
@@ -1303,6 +1305,24 @@
 							bind:value={paymentAccountNumber}
 						/>
 					</label>
+				</div>
+
+				<div class="mt-4">
+					<label class="block">
+						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">URL Aset Pembayaran</span>
+						<input
+							name="assetUrl"
+							class="input input-bordered mt-2 w-full"
+							placeholder="Khusus QRIS atau gambar referensi pembayaran"
+							bind:value={paymentAssetUrl}
+						/>
+						<p class="mt-2 text-xs text-slate-500">Gunakan untuk gambar QRIS atau aset visual lain yang ingin ditampilkan di checkout.</p>
+					</label>
+					{#if paymentAssetUrl}
+						<div class="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3">
+							<img src={paymentAssetUrl} alt={`Aset ${paymentMethodName || 'pembayaran'}`} class="max-h-72 w-full rounded-xl border border-slate-200 bg-white object-contain" />
+						</div>
+					{/if}
 				</div>
 
 				<div class="mt-4 grid gap-4 md:grid-cols-[0.8fr,1.2fr]">
@@ -1423,6 +1443,9 @@
 											Belum ada detail akun.
 										{/if}
 									</p>
+									{#if method.assetUrl}
+										<p class="mt-1 text-xs text-slate-500">Memiliki aset visual untuk checkout.</p>
+									{/if}
 									<p class="mt-1 text-xs text-slate-500">{shortText(method.instructions, 120)}</p>
 								</div>
 								<div class="flex shrink-0 gap-2">
@@ -1457,9 +1480,86 @@
 				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Grafik Penjualan</p>
 				<h2 class="section-title mt-2 text-2xl font-semibold text-slate-900">Ringkasan penjualan 14 hari terakhir</h2>
 				<p class="mt-2 text-sm text-slate-500">
-					Visualisasi omzet harian dan daftar transaksi terbaru untuk membantu Anda memantau performa penjualan.
+					Visualisasi omzet harian, order yang menunggu verifikasi, dan transaksi terbaru untuk membantu Anda memantau performa penjualan.
 				</p>
 			</div>
+		</div>
+
+		<div class="mb-8">
+			<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+				<div>
+					<h3 class="text-lg font-semibold text-slate-900">Butuh Verifikasi</h3>
+					<p class="text-sm text-slate-500">Order manual yang masih menunggu pemeriksaan bukti pembayaran.</p>
+				</div>
+				<span class="rounded-full border border-amber-200 bg-amber-50 px-4 py-1 text-xs font-semibold text-amber-700">
+					{formatNumber(data.digitalCommerce.pendingSales.length)} order pending
+				</span>
+			</div>
+
+			{#if data.digitalCommerce.pendingSales.length === 0}
+				<div class="mt-4 rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
+					Tidak ada order yang menunggu verifikasi.
+				</div>
+			{:else}
+				<div class="mt-4 grid gap-4 xl:grid-cols-2">
+					{#each data.digitalCommerce.pendingSales as sale}
+						<form method="POST" action="?/updateSaleStatus" class="rounded-[1.75rem] border border-amber-200 bg-white p-5 shadow-sm">
+							<input type="hidden" name="id" value={sale.id} />
+							<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+								<div class="min-w-0">
+									<div class="flex flex-wrap items-center gap-2">
+										<p class="text-base font-semibold text-slate-900">{sale.productTitle || 'Produk digital'}</p>
+										<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${saleStatusClass(sale.status)}`}>
+											{sale.status}
+										</span>
+									</div>
+									<p class="mt-2 text-sm text-slate-600">{sale.referenceCode}</p>
+									<p class="mt-1 text-sm text-slate-600">{sale.buyerName || sale.buyerContact || 'Pembeli belum tercatat'}</p>
+									<p class="mt-1 text-xs text-slate-500">
+										{sale.paymentMethodName || 'Metode manual'} • {formatDateTime(sale.createdAt)}
+									</p>
+								</div>
+								<p class="shrink-0 text-lg font-semibold text-emerald-700">{formatCurrency(sale.amount)}</p>
+							</div>
+
+							{#if sale.proofUrl}
+								<div class="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
+									<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Bukti Bayar</p>
+									{#if sale.proofUrl.endsWith('.pdf')}
+										<a href={sale.proofUrl} target="_blank" rel="noreferrer" class="mt-3 inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+											Buka Bukti PDF
+										</a>
+									{:else}
+										<img src={sale.proofUrl} alt={`Bukti ${sale.referenceCode}`} class="mt-4 w-full rounded-xl border border-slate-200 bg-white object-contain" />
+									{/if}
+								</div>
+							{:else}
+								<div class="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+									Bukti bayar belum diunggah.
+								</div>
+							{/if}
+
+							<label class="mt-4 block">
+								<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Catatan Admin</span>
+								<textarea
+									name="adminNotes"
+									class="textarea textarea-bordered mt-2 w-full"
+									placeholder="Catatan verifikasi atau alasan penolakan..."
+								>{sale.adminNotes ?? ''}</textarea>
+							</label>
+
+							<div class="mt-4 flex flex-wrap gap-2">
+								<button type="submit" name="status" value="paid" class="btn btn-primary">
+									Tandai Lunas
+								</button>
+								<button type="submit" name="status" value="failed" class="btn btn-outline btn-error">
+									Tandai Gagal
+								</button>
+							</div>
+						</form>
+					{/each}
+				</div>
+			{/if}
 		</div>
 
 		<!-- Sales Chart -->
@@ -1517,11 +1617,25 @@
 												{sale.status}
 											</span>
 										</div>
+										<p class="mt-2 text-xs uppercase tracking-[0.22em] text-slate-400">{sale.referenceCode}</p>
 										<p class="mt-2 text-sm text-slate-600">
 											{sale.buyerName || sale.buyerContact || 'Pembeli belum tercatat'}
 										</p>
 										{#if sale.paymentMethodName}
 											<p class="mt-1 text-xs text-slate-500">{sale.paymentMethodName}</p>
+										{/if}
+										{#if sale.proofUrl}
+											<a href={sale.proofUrl} target="_blank" rel="noreferrer" class="mt-1 inline-flex text-xs font-semibold text-emerald-700 hover:text-emerald-800">
+												Lihat bukti bayar
+											</a>
+										{/if}
+										{#if sale.adminNotes}
+											<p class="mt-1 text-xs text-slate-500">{sale.adminNotes}</p>
+										{/if}
+										{#if sale.verifiedBy || sale.verifiedAt}
+											<p class="mt-1 text-xs text-slate-500">
+												Diverifikasi {sale.verifiedBy || 'admin'} • {formatDateTime(sale.verifiedAt)}
+											</p>
 										{/if}
 										<p class="mt-1 text-xs text-slate-500">{formatDateTime(sale.paidAt || sale.createdAt)}</p>
 									</div>

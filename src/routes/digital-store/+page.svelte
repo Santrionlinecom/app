@@ -67,7 +67,7 @@
 				<h1 class="mt-3 text-3xl font-bold md:text-5xl">Produk digital yang tampil langsung dari CMS Hub</h1>
 				<p class="mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
 					Halaman ini menampilkan katalog produk digital yang sudah dipublish dari panel super admin. Cocok
-					untuk e-book, modul, file panduan, atau materi premium lain yang Anda jual.
+					untuk e-book, modul, file panduan, atau materi premium lain yang Anda jual dengan alur pembayaran manual yang rapi.
 				</p>
 				<div class="mt-6 flex flex-wrap gap-3">
 					<a href="#katalog" class="btn border-none bg-white text-slate-900 hover:bg-emerald-50">
@@ -150,6 +150,9 @@
 										{/each}
 									</div>
 								{/if}
+								<div class="mt-5 flex gap-2">
+									<a href={`/digital-store/${product.slug}`} class="btn btn-primary">Lihat Detail</a>
+								</div>
 							</div>
 						</div>
 					</article>
@@ -207,7 +210,7 @@
 							</div>
 						</div>
 
-						<div class="space-y-4 p-5">
+							<div class="space-y-4 p-5">
 							<div>
 								<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Terakhir update {formatDate(product.updatedAt)}</p>
 								<h3 class="mt-2 text-xl font-semibold text-slate-900">{product.title}</h3>
@@ -221,11 +224,11 @@
 								<p class="mt-2 text-2xl font-semibold text-emerald-700">{formatPrice(product.price)}</p>
 							</div>
 
-							<div>
-								<p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Metode pembayaran</p>
-								{#if product.paymentMethods.length > 0}
-									<div class="mt-3 flex flex-wrap gap-2">
-										{#each product.paymentMethods as method}
+								<div>
+									<p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Metode pembayaran</p>
+									{#if product.paymentMethods.length > 0}
+										<div class="mt-3 flex flex-wrap gap-2">
+											{#each product.paymentMethods as method}
 											<span class="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600">
 												{method.name}
 											</span>
@@ -234,9 +237,18 @@
 								{:else}
 									<p class="mt-3 text-sm text-slate-500">Metode pembayaran belum dihubungkan untuk produk ini.</p>
 								{/if}
+								</div>
+
+								<div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+									<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Akses File</p>
+									<p class="mt-2 text-sm font-semibold text-slate-900">File dibuka setelah bukti pembayaran diverifikasi admin.</p>
+								</div>
+
+								<div class="flex gap-2">
+									<a href={`/digital-store/${product.slug}`} class="btn btn-primary flex-1">Beli Sekarang</a>
+								</div>
 							</div>
-						</div>
-					</article>
+						</article>
 				{/each}
 			</div>
 		{/if}

@@ -4,11 +4,13 @@ import { isGoogleDriveUrl, normalizeKitabSlug, type KitabSourceType, type KitabS
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 import { ensureCmsSchema, getAllPosts } from '$lib/server/cms';
 import { buildR2PublicUrl, requireR2Bucket } from '$lib/server/cloudflare';
+import { ensureDefaultManualPaymentMethods } from '$lib/server/default-manual-payments';
 import {
 	deleteDigitalPaymentMethod,
 	deleteDigitalProduct,
 	ensureDigitalCommerceSchema,
 	getDigitalCommerceOverview,
+	updateDigitalSaleStatus,
 	updateDigitalProductStatus,
 	upsertDigitalPaymentMethod,
 	upsertDigitalProduct
@@ -35,6 +37,9 @@ const MAX_KITAB_PDF_BYTES = 50 * 1024 * 1024;
 const paymentTypes = ['bank', 'ewallet', 'qris', 'manual'] as const;
 type PaymentType = (typeof paymentTypes)[number];
 const allowedPaymentTypes = new Set<PaymentType>(paymentTypes);
+const saleStatuses = ['pending', 'paid', 'failed', 'refunded'] as const;
+type SaleStatus = (typeof saleStatuses)[number];
+const allowedSaleStatuses = new Set<SaleStatus>(saleStatuses);
 
 const normalizeText = (value: FormDataEntryValue | null) =>
 	typeof value === 'string' ? value.trim() : '';
@@ -81,6 +86,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db } = requireSuperAdmin(locals);
 	await ensureCmsSchema(db);
 	await ensureDigitalCommerceSchema(db);
+	await ensureDefaultManualPaymentMethods(db);
 	await ensureKitabCatalogSchema(db);
 
 	const recentCmsPosts = await getAllPosts(db, { page: 1, limit: 10 });
@@ -378,6 +384,7 @@ export const actions: Actions = {
 		const name = normalizeText(formData.get('name'));
 		const accountName = readFirstValue(formData, 'accountName', 'account-name');
 		const accountNumber = readFirstValue(formData, 'accountNumber', 'account-number');
+		const assetUrl = readFirstValue(formData, 'assetUrl', 'asset-url');
 		const instructions = readFirstValue(formData, 'instructions', 'details');
 		const displayOrder = parseInteger(formData.get('displayOrder') ?? formData.get('display-order'));
 		const isActiveValue = formData.get('isActive') ?? formData.get('is-active');
@@ -396,6 +403,7 @@ export const actions: Actions = {
 			type: type as PaymentType,
 			accountName,
 			accountNumber,
+			assetUrl,
 			instructions,
 			displayOrder,
 			isActive
@@ -417,5 +425,31 @@ export const actions: Actions = {
 
 		await deleteDigitalPaymentMethod(db, id);
 		throw redirect(303, '/admin/super/cms-hub#payment-methods');
+	},
+
+	updateSaleStatus: async ({ request, locals }) => {
+		const { db, user } = requireSuperAdmin(locals);
+		await ensureDigitalCommerceSchema(db);
+
+		const formData = await request.formData();
+		const id = readFirstValue(formData, 'id', 'sale-id');
+		const status = readFirstValue(formData, 'status', 'next');
+		const adminNotes = readFirstValue(formData, 'adminNotes', 'admin-notes');
+
+		if (!id) {
+			return fail(400, { error: 'Transaksi tidak ditemukan.' });
+		}
+		if (!allowedSaleStatuses.has(status as SaleStatus)) {
+			return fail(400, { error: 'Status transaksi tidak valid.' });
+		}
+
+		await updateDigitalSaleStatus(db, {
+			id,
+			status: status as SaleStatus,
+			adminNotes,
+			verifiedBy: user.id
+		});
+
+		throw redirect(303, '/admin/super/cms-hub#sales-chart');
 	}
 };

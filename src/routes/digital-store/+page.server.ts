@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { ensureDefaultManualPaymentMethods } from '$lib/server/default-manual-payments';
 import {
 	ensureDigitalCommerceSchema,
 	listPublishedDigitalProducts
@@ -11,6 +12,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	await ensureDigitalCommerceSchema(locals.db);
+	await ensureDefaultManualPaymentMethods(locals.db);
 
 	const products = await listPublishedDigitalProducts(locals.db);
 	const paymentMethodIds = new Set(
