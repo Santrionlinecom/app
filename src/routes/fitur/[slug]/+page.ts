@@ -102,7 +102,7 @@ const FEATURE_DETAILS: Record<string, FeatureDetail> = {
 		access: [
 			{ label: 'Artikel Dzikir dan Doa', desc: 'Materi praktis dan ringan untuk diamalkan.', href: '/blog' },
 			{ label: 'Rujukan Ulama', desc: 'Kenali ulama sebagai rujukan sanad ilmu.', href: '/ulama' },
-			{ label: 'Tanya Kitab', desc: 'Cari dalil dan penjelasan dari kitab mu\'tabar.', href: '/kitab' }
+			{ label: 'Perpustakaan Kitab', desc: 'Buka katalog kitab mu\'tabar yang dikelola dari CMS Hub.', href: '/kitab' }
 		],
 		theme: {
 			hero: 'bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600',
@@ -120,10 +120,10 @@ const FEATURE_DETAILS: Record<string, FeatureDetail> = {
 		steps: [
 			{ title: 'Pilih kitab rujukan', desc: 'Fokus pada kitab fiqih, aqidah, dan tasawuf.' },
 			{ title: 'Ringkas inti bab', desc: 'Ambil poin penting untuk bahan penguatan.' },
-			{ title: 'Diskusi dan tanya', desc: 'Gunakan Tanya Kitab untuk mencari rujukan.' }
+			{ title: 'Baca dari katalog', desc: 'Akses kitab yang sudah dipublish dari perpustakaan digital.' }
 		],
 		access: [
-			{ label: 'Tanya Kitab dan Upload PDF', desc: 'Cari jawaban dan referensi kitab.', href: '/kitab' },
+			{ label: 'Perpustakaan Kitab', desc: 'Jelajahi kitab PDF dan Google Drive yang sudah dipublish.', href: '/kitab' },
 			{ label: 'Ringkasan Kajian', desc: 'Bacaan ringan dari materi pesantren.', href: '/blog' },
 			{ label: 'Jejak Ulama', desc: 'Belajar dari sanad ulama Ahlussunnah.', href: '/ulama' }
 		],

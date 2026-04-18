@@ -4,6 +4,7 @@
 	export let data: PageData;
 	export let form: ActionData | undefined;
 
+	type KitabItem = PageData['kitabLibrary']['items'][number];
 	type DigitalProduct = PageData['digitalCommerce']['products'][number];
 	type DigitalPaymentMethod = PageData['digitalCommerce']['paymentMethods'][number];
 	type DigitalSalesPoint = PageData['digitalCommerce']['salesChart'][number];
@@ -49,6 +50,10 @@
 		qris: 'QRIS',
 		manual: 'Manual'
 	};
+	const kitabSourceLabel: Record<string, string> = {
+		pdf: 'PDF',
+		drive: 'Google Drive'
+	};
 
 	const cmsStatusClass = (status?: string | null) => {
 		switch ((status ?? '').toLowerCase()) {
@@ -71,6 +76,28 @@
 				return 'border-slate-200 bg-slate-100 text-slate-600';
 			default:
 				return 'border-slate-200 bg-slate-100 text-slate-600';
+		}
+	};
+
+	const kitabStatusClass = (status?: string | null) => {
+		switch ((status ?? '').toLowerCase()) {
+			case 'published':
+				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+			case 'draft':
+				return 'border-sky-200 bg-sky-50 text-sky-700';
+			case 'archived':
+				return 'border-slate-200 bg-slate-100 text-slate-600';
+			default:
+				return 'border-slate-200 bg-slate-100 text-slate-600';
+		}
+	};
+
+	const kitabSourceTone = (type?: string | null) => {
+		switch ((type ?? '').toLowerCase()) {
+			case 'drive':
+				return 'border-amber-200 bg-amber-50 text-amber-700';
+			default:
+				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
 		}
 	};
 
@@ -143,6 +170,29 @@
 		}
 	];
 
+	const kitabCards = [
+		{
+			label: 'Kitab Live',
+			value: data.kitabLibrary.stats.publishedItems,
+			note: 'Sudah tayang di /kitab'
+		},
+		{
+			label: 'Draft',
+			value: data.kitabLibrary.stats.draftItems,
+			note: 'Belum dipublish'
+		},
+		{
+			label: 'Unggulan',
+			value: data.kitabLibrary.stats.featuredItems,
+			note: 'Diprioritaskan di katalog'
+		},
+		{
+			label: 'Total Koleksi',
+			value: data.kitabLibrary.stats.totalItems,
+			note: 'Semua item kitab'
+		}
+	];
+
 	let salesChartMax = 1;
 	$: salesChartMax = Math.max(
 		...data.digitalCommerce.salesChart.map((point: DigitalSalesPoint) => point.revenue),
@@ -154,8 +204,24 @@
 
 	let coverInput: HTMLInputElement | null = null;
 	let digitalFileInput: HTMLInputElement | null = null;
+	let kitabCoverInput: HTMLInputElement | null = null;
 	let uploadingCover = false;
 	let uploadingDigitalFile = false;
+	let uploadingKitabCover = false;
+
+	let kitabFormSeed = '';
+	let kitabId = '';
+	let kitabTitle = '';
+	let kitabSlug = '';
+	let kitabSummary = '';
+	let kitabDescription = '';
+	let kitabCoverUrl = '';
+	let kitabSourceType: 'pdf' | 'drive' = 'pdf';
+	let kitabSourceUrl = '';
+	let kitabCurrentSourceUrl = '';
+	let kitabFileSize = 0;
+	let kitabStatus: 'draft' | 'published' | 'archived' = 'draft';
+	let kitabFeatured = false;
 
 	let productFormSeed = '';
 	let productId = '';
@@ -180,6 +246,21 @@
 	let paymentInstructions = '';
 	let paymentDisplayOrder = 0;
 	let paymentIsActive = true;
+
+	const syncKitabForm = (item: KitabItem | null) => {
+		kitabId = item?.id ?? '';
+		kitabTitle = item?.title ?? '';
+		kitabSlug = item?.slug ?? '';
+		kitabSummary = item?.summary ?? '';
+		kitabDescription = item?.description ?? '';
+		kitabCoverUrl = item?.coverUrl ?? '';
+		kitabSourceType = (item?.sourceType ?? 'pdf') as 'pdf' | 'drive';
+		kitabSourceUrl = item?.sourceType === 'drive' ? item.sourceUrl : '';
+		kitabCurrentSourceUrl = item?.sourceType === 'pdf' ? item.sourceUrl : '';
+		kitabFileSize = Number(item?.fileSize ?? 0);
+		kitabStatus = (item?.status ?? 'draft') as 'draft' | 'published' | 'archived';
+		kitabFeatured = Boolean(item?.featured);
+	};
 
 	const syncProductForm = (product: DigitalProduct | null) => {
 		productId = product?.id ?? '';
@@ -218,6 +299,16 @@
 	}
 
 	$: {
+		const nextSeed = data.kitabLibrary.editingKitab
+			? `edit:${data.kitabLibrary.editingKitab.id}:${data.kitabLibrary.editingKitab.updatedAt}`
+			: 'new';
+		if (nextSeed !== kitabFormSeed) {
+			kitabFormSeed = nextSeed;
+			syncKitabForm(data.kitabLibrary.editingKitab);
+		}
+	}
+
+	$: {
 		const nextSeed = data.digitalCommerce.editingPaymentMethod
 			? `edit:${data.digitalCommerce.editingPaymentMethod.id}:${data.digitalCommerce.editingPaymentMethod.updatedAt}`
 			: 'new';
@@ -231,27 +322,69 @@
 		productSlug = normalizeSlug(productSlug || productTitle);
 	};
 
+	const generateKitabSlug = () => {
+		kitabSlug = normalizeSlug(kitabSlug || kitabTitle);
+	};
+
+	const uploadCoverAsset = async (
+		file: File,
+		onSuccess: (url: string) => void,
+		onError: string
+	) => {
+		const formData = new FormData();
+		formData.append('file', file);
+
+		const response = await fetch('/api/upload', { method: 'POST', body: formData });
+		if (!response.ok) {
+			const payload = await response.json().catch(() => ({}));
+			throw new Error(payload?.error || onError);
+		}
+		const payload = await response.json();
+		onSuccess(payload.url ?? '');
+	};
+
 	const onPickCover = async (event: Event) => {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (!file) return;
 		uploadingCover = true;
-		const formData = new FormData();
-		formData.append('file', file);
 
 		try {
-			const response = await fetch('/api/upload', { method: 'POST', body: formData });
-			if (!response.ok) {
-				const payload = await response.json().catch(() => ({}));
-				throw new Error(payload?.error || 'Upload cover gagal');
-			}
-			const payload = await response.json();
-			productCoverUrl = payload.url ?? '';
+			await uploadCoverAsset(
+				file,
+				(url) => {
+					productCoverUrl = url;
+				},
+				'Upload cover gagal'
+			);
 		} catch (err) {
 			console.error('Upload cover error:', err);
 			alert('Gagal mengunggah cover produk.');
 		} finally {
 			uploadingCover = false;
+			if (target) target.value = '';
+		}
+	};
+
+	const onPickKitabCover = async (event: Event) => {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (!file) return;
+		uploadingKitabCover = true;
+
+		try {
+			await uploadCoverAsset(
+				file,
+				(url) => {
+					kitabCoverUrl = url;
+				},
+				'Upload cover kitab gagal'
+			);
+		} catch (err) {
+			console.error('Upload kitab cover error:', err);
+			alert('Gagal mengunggah cover kitab.');
+		} finally {
+			uploadingKitabCover = false;
 			if (target) target.value = '';
 		}
 	};
@@ -294,7 +427,7 @@
 			<a href="/admin/super/overview" class="text-sm text-slate-500 hover:text-slate-700">← Kembali</a>
 		</div>
 		<h1 class="text-3xl font-bold text-slate-900">CMS Hub</h1>
-		<p class="text-slate-600">Blog dan Produk Digital dalam satu ruang super admin</p>
+		<p class="text-slate-600">Blog, Produk Digital, dan Perpustakaan Kitab dalam satu ruang super admin</p>
 	</div>
 
 	{#if formError}
@@ -376,14 +509,19 @@
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 					<div>
 						<p class="text-xs uppercase tracking-[0.32em] text-emerald-300/70">Digital Store</p>
-						<h3 class="mt-2 text-2xl font-semibold">Studio produk ala link-in-bio</h3>
+						<h3 class="mt-2 text-2xl font-semibold">Studio produk dan perpustakaan kitab</h3>
 						<p class="mt-2 text-sm text-white/70">
-							Upload file digital, aktifkan metode bayar, lalu pantau omzet dan order dari panel yang sama.
+							Upload produk digital, atur metode bayar, sekaligus kelola kitab publik dari panel super admin yang sama.
 						</p>
 					</div>
-					<a href="#sales-chart" class="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15">
-						Lihat Grafik
-					</a>
+					<div class="flex flex-wrap gap-2">
+						<a href="#kitab-library" class="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15">
+							Kelola Kitab
+						</a>
+						<a href="#sales-chart" class="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15">
+							Lihat Grafik
+						</a>
+					</div>
 				</div>
 
 				<div class="mt-6 grid gap-3 sm:grid-cols-2">
@@ -417,6 +555,9 @@
 						</div>
 					</div>
 					<div class="mt-4 flex flex-wrap gap-2">
+						<a href="#kitab-library" class="rounded-full border border-white/15 px-3 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10">
+							Perpustakaan Kitab
+						</a>
 						<a href="#payment-methods" class="rounded-full border border-white/15 px-3 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/10">
 							Metode Pembayaran
 						</a>
@@ -443,6 +584,9 @@
 				</p>
 			</div>
 			<div class="flex flex-wrap gap-2">
+				<a href="#kitab-library" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+					Perpustakaan Kitab
+				</a>
 				<a href="#payment-methods" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
 					Atur Metode Bayar
 				</a>
@@ -744,6 +888,342 @@
 								</div>
 
 								<p class="mt-4 text-xs text-slate-400">Diperbarui {formatDateTime(product.updatedAt)}</p>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	</section>
+
+	<section id="kitab-library" class="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-lg backdrop-blur">
+		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+			<div class="max-w-2xl">
+				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Perpustakaan Kitab</p>
+				<h2 class="section-title mt-2 text-2xl font-semibold text-slate-900">Upload PDF atau hubungkan Google Drive untuk halaman /kitab</h2>
+				<p class="mt-2 text-sm text-slate-500">
+					Bagian ini mengelola katalog kitab publik. Kitab berstatus <strong>published</strong> akan langsung tampil di <code>/kitab</code>.
+				</p>
+			</div>
+			<div class="flex flex-wrap gap-2">
+				<a href="/kitab" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+					Lihat Halaman Publik
+				</a>
+				<a href="/kitab/quran" class="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
+					Mushaf Al-Qur'an
+				</a>
+			</div>
+		</div>
+
+		<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+			{#each kitabCards as card}
+				<div class="rounded-3xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+					<p class="text-[11px] uppercase tracking-[0.24em] text-slate-400">{card.label}</p>
+					<p class="mt-3 text-3xl font-semibold text-slate-900">{formatNumber(card.value)}</p>
+					<p class="mt-1 text-xs text-slate-500">{card.note}</p>
+				</div>
+			{/each}
+		</div>
+
+		<div class="mt-6 grid gap-6 xl:grid-cols-[1.18fr,0.82fr]">
+			<form
+				method="POST"
+				action="?/saveKitab"
+				enctype="multipart/form-data"
+				class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm"
+			>
+				<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+					<div>
+						<p class="text-sm font-semibold text-slate-900">
+							{data.kitabLibrary.editingKitab ? 'Edit Kitab Publik' : 'Kitab Baru'}
+						</p>
+						<p class="text-xs text-slate-500">Upload file PDF atau tempel link Google Drive, lalu publish ke halaman kitab publik.</p>
+					</div>
+					<div class="flex flex-wrap gap-2">
+						{#if data.kitabLibrary.editingKitab?.status === 'published'}
+							<a href={`/kitab/${data.kitabLibrary.editingKitab.slug}`} class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">
+								Lihat Publik
+							</a>
+						{/if}
+						{#if data.kitabLibrary.editingKitab}
+							<a href="/admin/super/cms-hub#kitab-library" class="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
+								Batal Edit
+							</a>
+						{/if}
+					</div>
+				</div>
+
+				<input type="hidden" name="id" bind:value={kitabId} />
+				<input type="hidden" name="coverUrl" bind:value={kitabCoverUrl} />
+
+				<div class="mt-5 grid gap-4 md:grid-cols-2">
+					<label class="block">
+						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Judul Kitab</span>
+						<input
+							name="title"
+							class="input input-bordered mt-2 w-full"
+							placeholder="Contoh: Fathul Qarib"
+							bind:value={kitabTitle}
+							on:blur={() => {
+								if (!kitabSlug) generateKitabSlug();
+							}}
+						/>
+					</label>
+					<label class="block">
+						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Slug Kitab</span>
+						<div class="mt-2 flex gap-2">
+							<input
+								name="slug"
+								class="input input-bordered w-full"
+								placeholder="fathul-qarib"
+								bind:value={kitabSlug}
+							/>
+							<button type="button" class="btn btn-outline btn-sm shrink-0" on:click={generateKitabSlug}>
+								Auto
+							</button>
+						</div>
+					</label>
+				</div>
+
+				<div class="mt-4 grid gap-4 md:grid-cols-[1.1fr,0.9fr]">
+					<label class="block">
+						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Ringkasan Singkat</span>
+						<input
+							name="summary"
+							class="input input-bordered mt-2 w-full"
+							placeholder="Ringkasan yang tampil di kartu katalog"
+							bind:value={kitabSummary}
+						/>
+					</label>
+					<label class="block">
+						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Sumber Kitab</span>
+						<select name="sourceType" class="select select-bordered mt-2 w-full" bind:value={kitabSourceType}>
+							<option value="pdf">Upload PDF</option>
+							<option value="drive">Google Drive</option>
+						</select>
+					</label>
+				</div>
+
+				<div class="mt-4 grid gap-4 md:grid-cols-[0.9fr,1.1fr]">
+					<label class="block">
+						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Status</span>
+						<select name="status" class="select select-bordered mt-2 w-full" bind:value={kitabStatus}>
+							<option value="draft">Draft</option>
+							<option value="published">Published</option>
+							<option value="archived">Archived</option>
+						</select>
+					</label>
+					<label class="flex items-center gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-4">
+						<input
+							type="checkbox"
+							name="featured"
+							class="checkbox checkbox-sm border-slate-300"
+							bind:checked={kitabFeatured}
+						/>
+						<span class="min-w-0">
+							<span class="block text-sm font-semibold text-slate-900">Kitab unggulan</span>
+							<span class="mt-1 block text-xs text-slate-500">Kitab unggulan diprioritaskan di halaman katalog publik.</span>
+						</span>
+					</label>
+				</div>
+
+				<div class="mt-4 grid gap-4 md:grid-cols-2">
+					<label class="block">
+						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Cover Kitab</span>
+						<button
+							type="button"
+							class="btn btn-outline btn-sm mt-2 w-full"
+							on:click={() => kitabCoverInput?.click()}
+							disabled={uploadingKitabCover}
+						>
+							{uploadingKitabCover ? 'Uploading...' : 'Upload Cover'}
+						</button>
+						<input
+							bind:this={kitabCoverInput}
+							type="file"
+							accept="image/*"
+							class="hidden"
+							on:change={onPickKitabCover}
+						/>
+						{#if kitabCoverUrl}
+							<p class="mt-2 text-xs text-emerald-600">✓ Cover siap dipakai untuk katalog kitab</p>
+						{/if}
+					</label>
+
+					{#if kitabSourceType === 'drive'}
+						<label class="block">
+							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Link Google Drive</span>
+							<input
+								name="driveUrl"
+								type="url"
+								class="input input-bordered mt-2 w-full"
+								placeholder="https://drive.google.com/file/d/..."
+								bind:value={kitabSourceUrl}
+							/>
+							<p class="mt-2 text-xs text-slate-500">Gunakan link file Google Drive yang bisa dibuka publik.</p>
+						</label>
+					{:else}
+						<label class="block">
+							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">File PDF</span>
+							<input
+								name="pdfFile"
+								type="file"
+								accept="application/pdf,.pdf"
+								class="file-input file-input-bordered mt-2 w-full"
+							/>
+							{#if kitabCurrentSourceUrl}
+								<p class="mt-2 text-xs text-emerald-600">
+									✓ PDF aktif sudah tersimpan{#if kitabFileSize > 0} ({formatBytes(kitabFileSize)}){/if}
+								</p>
+							{:else}
+								<p class="mt-2 text-xs text-slate-500">Maksimal 50MB per file PDF.</p>
+							{/if}
+						</label>
+					{/if}
+				</div>
+
+				<div class="mt-4">
+					<label class="block">
+						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Deskripsi Lengkap</span>
+						<textarea
+							name="description"
+							class="textarea textarea-bordered mt-2 w-full"
+							placeholder="Deskripsi, konteks, atau catatan kitab..."
+							bind:value={kitabDescription}
+						></textarea>
+					</label>
+				</div>
+
+				<div class="mt-6 flex gap-2">
+					<button type="submit" class="btn btn-primary">
+						{data.kitabLibrary.editingKitab ? 'Update Kitab' : 'Simpan Kitab'}
+					</button>
+					{#if data.kitabLibrary.editingKitab}
+						<button
+							type="submit"
+							formaction="?/deleteKitab"
+							formnovalidate
+							class="btn btn-outline btn-error"
+							on:click={(event) => {
+								if (!confirm('Hapus kitab ini?')) event.preventDefault();
+							}}
+						>
+							Hapus
+						</button>
+					{/if}
+				</div>
+			</form>
+
+			<div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+				<h3 class="text-sm font-semibold text-slate-900">Kitab Terbaru</h3>
+				<div class="mt-4 space-y-3 max-h-96 overflow-y-auto">
+					{#if data.kitabLibrary.items.length === 0}
+						<div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-4 text-center text-sm text-slate-500">
+							Belum ada kitab
+						</div>
+					{:else}
+						{#each data.kitabLibrary.items.slice(0, 5) as item}
+							<div class="rounded-2xl border border-slate-200 bg-white px-3 py-3">
+								<div class="flex items-start justify-between gap-2">
+									<div class="min-w-0 flex-1">
+										<p class="font-semibold text-slate-900 text-sm">{item.title}</p>
+										<p class="text-xs text-slate-600 mt-1">{kitabSourceLabel[item.sourceType] ?? item.sourceType}</p>
+										<div class="mt-2 flex flex-wrap gap-2">
+											<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${kitabStatusClass(item.status)}`}>
+												{item.status}
+											</span>
+											<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${kitabSourceTone(item.sourceType)}`}>
+												{kitabSourceLabel[item.sourceType] ?? item.sourceType}
+											</span>
+										</div>
+									</div>
+									<a href={`/admin/super/cms-hub?kitab=${item.id}#kitab-library`} class="rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-100">
+										Edit
+									</a>
+								</div>
+							</div>
+						{/each}
+					{/if}
+				</div>
+			</div>
+		</div>
+
+		<div class="mt-8">
+			<div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+				<div>
+					<h3 class="text-xl font-semibold text-slate-900">Daftar Kitab Publik</h3>
+					<p class="text-sm text-slate-500">Kelola status, sumber, dan akses cepat ke halaman publik dari satu daftar.</p>
+				</div>
+				<span class="rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-xs font-semibold text-slate-600">
+					{formatNumber(data.kitabLibrary.items.length)} kitab
+				</span>
+			</div>
+
+			{#if data.kitabLibrary.items.length === 0}
+				<div class="mt-4 rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">
+					Belum ada kitab. Gunakan form di atas untuk menambahkan kitab pertama Anda.
+				</div>
+			{:else}
+				<div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+					{#each data.kitabLibrary.items as item}
+						<div class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+							<div class="relative h-44 overflow-hidden bg-gradient-to-br from-slate-100 via-emerald-50 to-cyan-50">
+								{#if item.coverUrl}
+									<img src={item.coverUrl} alt={item.title} class="h-full w-full object-cover" />
+								{:else}
+									<div class="flex h-full w-full items-center justify-center px-6 text-center text-sm font-semibold text-slate-400">
+										Belum ada cover kitab
+									</div>
+								{/if}
+								<div class="absolute left-4 top-4 flex flex-wrap gap-2">
+									<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${kitabStatusClass(item.status)}`}>
+										{item.status}
+									</span>
+									<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${kitabSourceTone(item.sourceType)}`}>
+										{kitabSourceLabel[item.sourceType] ?? item.sourceType}
+									</span>
+								</div>
+							</div>
+
+							<div class="p-5">
+								<div class="flex items-start justify-between gap-3">
+									<div class="min-w-0">
+										<p class="text-lg font-semibold text-slate-900">{item.title}</p>
+										<p class="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">/{item.slug}</p>
+									</div>
+									{#if item.featured}
+										<span class="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+											Unggulan
+										</span>
+									{/if}
+								</div>
+
+								<p class="mt-3 text-sm text-slate-600">{shortText(item.summary || item.description, 120)}</p>
+
+								<div class="mt-4 flex flex-wrap gap-2">
+									<a href={`/admin/super/cms-hub?kitab=${item.id}#kitab-library`} class="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
+										Edit
+									</a>
+									{#if item.status === 'published'}
+										<a href={`/kitab/${item.slug}`} class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">
+											Lihat Publik
+										</a>
+									{/if}
+									<form method="POST" action="?/deleteKitab" class="inline">
+										<input type="hidden" name="id" value={item.id} />
+										<button
+											type="submit"
+											class="rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+											on:click={(event) => {
+												if (!confirm('Hapus kitab ini?')) event.preventDefault();
+											}}
+										>
+											Hapus
+										</button>
+									</form>
+								</div>
+
+								<p class="mt-4 text-xs text-slate-400">Diperbarui {formatDateTime(item.updatedAt)}</p>
 							</div>
 						</div>
 					{/each}
