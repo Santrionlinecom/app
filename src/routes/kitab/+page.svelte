@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { featuredCuratedKitab } from '$lib/data/kitab-curated';
 
 	export let data: PageData;
 
@@ -34,7 +33,7 @@
 
 	$: items = Array.isArray(data.items) ? data.items : [];
 	$: featuredItems = items.filter((item: KitabItem) => item.featured);
-	$: curatedItems = featuredCuratedKitab;
+	$: curatedItems = Array.isArray(data.curatedItems) ? data.curatedItems : [];
 </script>
 
 <svelte:head>
@@ -148,18 +147,18 @@
 		<section class="space-y-4">
 			<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
 				<div>
-					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-amber-600">Materi Pilihan SantriOnline</p>
-					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Modul native yang ditulis ulang untuk web</h2>
+					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-amber-600">Seri Bahasa Arab SantriOnline</p>
+					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Jalur belajar dinamis dari jilid 1 sampai 4</h2>
 				</div>
-				<p class="text-sm text-slate-500">Cocok untuk belajar bertahap tanpa harus langsung membuka PDF penuh.</p>
+				<p class="text-sm text-slate-500">Semua jilid memakai model seri yang sama, sehingga mudah ditambah dan diteruskan.</p>
 			</div>
 
-			<div class="grid gap-5 lg:grid-cols-2">
+			<div class="grid gap-5 xl:grid-cols-2">
 				{#each curatedItems as item}
 					<article class="overflow-hidden rounded-[1.75rem] border border-amber-100 bg-white shadow-sm">
 						<div class="grid h-full gap-0 md:grid-cols-[0.44fr_0.56fr]">
 							<div class="bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.18),_transparent_34%),linear-gradient(145deg,_#111827_0%,_#1f2937_52%,_#14532d_100%)] p-6 text-white">
-								<p class="text-xs font-semibold uppercase tracking-[0.32em] text-amber-200/80">Materi Native</p>
+								<p class="text-xs font-semibold uppercase tracking-[0.32em] text-amber-200/80">Jilid {item.seriesOrder}</p>
 								<h3 class="mt-4 text-3xl font-semibold">{item.title}</h3>
 								<p class="mt-3 text-sm leading-7 text-white/75">{item.summary}</p>
 								<div class="mt-5 flex flex-wrap gap-2">
@@ -177,7 +176,7 @@
 									{shortText(item.description, 230)}
 								</p>
 
-								<div class="mt-5 grid gap-3 sm:grid-cols-2">
+								<div class="mt-5 grid gap-3 sm:grid-cols-3">
 									<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
 										<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Level</p>
 										<p class="mt-2 text-base font-semibold text-slate-900">{item.level}</p>
@@ -185,6 +184,10 @@
 									<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
 										<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Jalur</p>
 										<p class="mt-2 text-base font-semibold text-slate-900">{item.duration}</p>
+									</div>
+									<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+										<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Posisi</p>
+										<p class="mt-2 text-base font-semibold text-slate-900">Jilid {item.seriesOrder}</p>
 									</div>
 								</div>
 
