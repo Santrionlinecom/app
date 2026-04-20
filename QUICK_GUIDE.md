@@ -1,263 +1,195 @@
-# Quick Guide - Fitur Hafalan Mandiri & Kalender
+# QUICK GUIDE — SantriOnline TPQ
 
-> Update 19 Februari 2026:
-> Sistem sekarang **TPQ-only**. Data lembaga non-TPQ (masjid/musholla/pondok/rumah tahfidz) dan role komunitas (`jamaah`, `tamir`, `bendahara`) sudah dibersihkan dari D1 remote.
+> Update 20 April 2026:
+> Repo ini diarahkan ke **TPQ-only mode**. Beberapa route non-TPQ masih ada sebagai legacy, tetapi panduan utama di bawah ini memakai route dan role TPQ yang aktif.
 
-## 🔐 Aturan Akses Fitur (RBAC)
+## Alur Cepat Per Role
 
-- **Lembaga Pendidikan** (pondok, TPQ, rumah tahfidz): fitur akademik **aktif** → hafalan, setoran, ujian, raport/sertifikat.
-- **Lembaga Sosial** (masjid, musholla): fitur keumatan **aktif** → kas masjid, zakat/infaq, jadwal kegiatan, kalender.
-- Akses yang tidak sesuai tipe lembaga akan **ditolak server-side (403)**.
+### Santri / Alumni
 
-## 🚀 Quick Start
+1. Login ke aplikasi.
+2. Buka `/dashboard` untuk ringkasan progres.
+3. Catat murojaah mandiri di `/dashboard/hafalan-mandiri`.
+4. Lihat riwayat setoran resmi di `/tpq/akademik/riwayat`.
+5. Cek kalender di `/kalender`.
+6. Unduh sertifikat pribadi di `/sertifikat` jika sudah terbit.
 
-### Untuk Santri/Alumni
-1. **Login** ke sistem
-2. **Dashboard** → Klik "Hafalan Mandiri"
-3. **Tambah Muroja'ah**:
-   - Pilih Surah
-   - Masukkan Ayat Mulai & Selesai
-   - Pilih Kualitas (Lancar/Kurang Lancar/Belum Lancar)
-   - Tambah Catatan (opsional)
-   - Pilih Tanggal
-   - Klik **Simpan**
-4. **Lihat Kalender** → Muroja'ah otomatis muncul di kalender
+### Ustadz / Ustadzah
 
-### Untuk Admin
-1. **Login** sebagai admin
-2. **Dashboard** → Klik "Kalender"
-3. **Lihat Semua** aktivitas user:
-   - Muroja'ah semua user
-   - Catatan manual user
-4. **Monitoring** → Identifikasi user yang aktif/tidak aktif
+1. Login ke aplikasi.
+2. Input setoran santri di `/tpq/akademik/setoran`.
+3. Pantau riwayat setoran santri bimbingan di `/tpq/akademik/riwayat`.
+4. Lihat pencapaian hafalan di `/dashboard/pencapaian-hafalan`.
+5. Terbitkan atau pantau sertifikat di `/dashboard/sertifikat`.
 
-## 📍 URL Routes
+### Koordinator / Admin TPQ
 
-| Fitur | URL | Akses |
-|-------|-----|-------|
-| Hafalan Mandiri | `/dashboard/hafalan-mandiri` | Pendidikan (pondok/TPQ/rumah tahfidz) |
-| Setoran & Review | `/dashboard/setoran-hari-ini`, `/dashboard/review-setoran` | Pendidikan |
-| Ujian Tahfidz | `/dashboard/ujian-tahfidz` | Pendidikan |
-| Raport & Sertifikat | `/dashboard/pencapaian-hafalan`, `/dashboard/sertifikat` | Pendidikan |
-| Kalender | `/kalender` | Masjid/Musholla |
-| Keuangan Ummah | `/keuangan`, `/org/[slug]/ummah` | Masjid/Musholla |
-| Kelola Role | `/dashboard/kelola-role` | Admin only |
+1. Login ke aplikasi.
+2. Review setoran masuk di `/tpq/akademik/review`.
+3. Pantau seluruh riwayat setoran di `/tpq/akademik/riwayat`.
+4. Kelola santri dan role lewat dashboard admin.
+5. Pantau sertifikat di `/dashboard/sertifikat`.
+
+### Super Admin
+
+1. Login ke aplikasi.
+2. Masuk ke `/admin/super/overview` untuk monitoring lintas sistem.
+3. Gunakan endpoint admin seperti `/api/admin/cloudflare` untuk cek binding D1/R2 bila diperlukan.
 
 ---
 
-## ☁️ Integrasi Cloudflare D1 + R2
+## Route Penting
 
-Struktur integrasi D1 + R2 sudah disiapkan di project ini:
-- Binding ada di `wrangler.toml` (`DB`, `BUCKET`, `R2_PUBLIC_BASE_URL`).
-- Helper server terpusat: `src/lib/server/cloudflare.ts`.
-- Endpoint cek integrasi (admin): `GET /api/admin/cloudflare`.
-- Seed demo user (aman): `POST /api/seed-admin` (hanya `admin/SUPER_ADMIN`, opsional `x-seed-secret`).
-- Upload ke R2 + simpan metadata D1: `POST /api/upload`.
-- List metadata media dari D1: `GET /api/media`.
+| Fitur | Route Final | Akses | Catatan |
+| --- | --- | --- | --- |
+| Dashboard | `/dashboard` | semua user login | Ringkasan role-based |
+| Hafalan Mandiri | `/dashboard/hafalan-mandiri` | role pendidikan aktif | Simpan murojaah mandiri + integrasi kalender |
+| Input Setoran | `/tpq/akademik/setoran` | `admin`, `ustadz`, `ustadzah` | Route utama input setoran TPQ |
+| Review Setoran | `/tpq/akademik/review` | `admin`, `koordinator` | Approve/reject setoran |
+| Riwayat Setoran | `/tpq/akademik/riwayat` | `admin`, `koordinator`, `ustadz`, `ustadzah`, `santri`, `alumni` | Scope data mengikuti role |
+| Shortcut Lama | `/dashboard/setoran-hari-ini` | sesuai role | Redirect ke route TPQ akademik final |
+| Shortcut Lama | `/dashboard/review-setoran` | sesuai role | Redirect ke route TPQ akademik final |
+| Pencapaian Hafalan | `/dashboard/pencapaian-hafalan` | role TPQ | Ringkasan progres resmi + setoran terbaru |
+| Sertifikat Admin | `/dashboard/sertifikat` | `admin`, `ustadz`, `ustadzah` | Terbitkan sertifikat PDF |
+| Sertifikat Santri | `/sertifikat` | santri/alumni terkait | Lihat dan unduh sertifikat pribadi |
+| Kalender | `/kalender` | user login | Catatan kalender pribadi/lembaga |
+| Daftar TPQ | `/tpq/daftar` | publik atau user login | Registrasi lembaga TPQ |
+| Profil TPQ Publik | `/tpq` dan `/tpq/[slug]` | publik | Listing dan halaman publik TPQ |
 
-### Langkah cek cepat
+---
+
+## Workflow TPQ Akademik
+
+### Urutan kerja utama
+
+1. Ustadz/ustadzah/admin input setoran di `/tpq/akademik/setoran`.
+2. Status awal setoran adalah `submitted`.
+3. Koordinator/admin memvalidasi di `/tpq/akademik/review`.
+4. Setoran berubah menjadi `approved` atau `rejected`.
+5. Jika jenis setoran adalah `hafalan` dan status menjadi `approved`, data otomatis disinkronkan ke `hafalan_progress`.
+
+### Jenis setoran
+
+- `hafalan`
+- `murojaah`
+
+### Kualitas setoran
+
+- `lancar`
+- `cukup`
+- `belum`
+
+### Catatan hak akses
+
+- Santri dan alumni tidak input atau review setoran resmi.
+- Ustadz/ustadzah hanya melihat data sesuai scope bimbingan mereka.
+- Koordinator/admin dapat melihat dan mereview data sesuai lembaga TPQ.
+
+---
+
+## Hafalan Mandiri & Kalender
+
+### Hafalan Mandiri
+
+Route: `/dashboard/hafalan-mandiri`
+
+Fungsi utama:
+
+- mencatat murojaah mandiri
+- menyimpan range ayat, kualitas, catatan, dan tanggal
+- menampilkan statistik progres hafalan pribadi
+- menandai checklist surah
+
+Saat murojaah disimpan, sistem juga membuat catatan kalender otomatis.
+
+### Kalender
+
+Route: `/kalender`
+
+Fungsi utama:
+
+- melihat kalender pribadi
+- menambah, mengubah, dan menghapus catatan sendiri
+- admin dapat mengelola catatan user dalam scope lembaganya
+- ada kalender umum berbasis catatan publik dari role admin tertentu
+
+---
+
+## Sertifikat
+
+### Untuk Admin / Ustadz
+
+Route: `/dashboard/sertifikat`
+
+Fungsi:
+
+- memilih santri
+- melihat statistik capaian
+- menerbitkan sertifikat PDF
+- memantau 50 sertifikat terbaru
+
+### Untuk Santri
+
+Route: `/sertifikat`
+
+Fungsi:
+
+- melihat sertifikat yang sudah terbit
+- mengunduh file sertifikat sendiri
+
+Sertifikat disimpan di **Cloudflare R2**.
+
+Metadata sertifikat disimpan di **Cloudflare D1**.
+
+---
+
+## Cloudflare D1 + R2
+
+Binding yang dipakai project:
+
+- `DB` untuk Cloudflare D1
+- `BUCKET` untuk Cloudflare R2
+- `R2_PUBLIC_BASE_URL` untuk base URL file publik
+
+Command cepat:
 
 ```bash
-# wajib: token Cloudflare untuk mode non-interactive
+npm install
+npm run dev
+npm run check
+npm run build
+```
+
+Command Cloudflare:
+
+```bash
 export CLOUDFLARE_API_TOKEN=xxxxx
 
-# cek akses akun/resource
 npm run cf:whoami
 npm run cf:d1:list
 npm run cf:r2:list
-
-# jalankan migrasi schema ke D1 remote
 npm run cf:d1:migrate:remote
 ```
 
-### Catatan dev
-- Untuk memastikan binding Cloudflare aktif saat development, jalankan app via Wrangler (`wrangler pages dev`) saat perlu test D1/R2 live.
-- Jika `GET /api/admin/cloudflare` mengembalikan status `503`, artinya salah satu binding (D1/R2) belum aktif atau token belum valid.
+Cek binding dari aplikasi:
+
+- `GET /api/admin/cloudflare`
+
+Jika endpoint itu mengembalikan `503`, biasanya salah satu binding belum aktif atau token Cloudflare belum valid.
 
 ---
 
-## 🧾 Panduan Upload Excel Jadwal Imam
+## Role Sistem
 
-Template contoh tersedia di `static/templates/jadwal-imam-template.xlsx` (di web: `/templates/jadwal-imam-template.xlsx`).
+Role TPQ yang aktif dipakai sebagai acuan utama:
 
-### Kolom Wajib
-- `tanggal` → format `YYYY-MM-DD` atau `DD/MM/YYYY` (contoh: `2025-03-01`).
-- `waktu` / `sholat` → contoh: `Subuh`, `Dzuhur`, `Ashar`, `Maghrib`, `Isya`.
-- `imam` → nama imam.
+- `SUPER_ADMIN`
+- `admin`
+- `koordinator`
+- `ustadz`
+- `ustadzah`
+- `santri`
+- `alumni`
 
-### Kolom Opsional
-- `hari` → contoh: `Senin`, `Selasa`, dst (jika kosong akan dihitung otomatis dari tanggal).
-- `catatan` → keterangan tambahan (opsional).
+Role komunitas seperti `jamaah`, `tamir`, dan `bendahara` masih ada di sebagian codebase lama, tetapi bukan fokus mode TPQ-only.
 
-### Langkah Upload
-1. Buka `/dashboard/jadwal`.
-2. Pada bagian **Jadwal Imam Sholat**, klik **Upload Jadwal**.
-3. Pilih file Excel (`.xlsx` / `.xls` / `.csv`) sesuai template.
-4. Data dengan tanggal + waktu yang sama akan **di-update** otomatis.
-
-### Catatan Penting
-- Sistem membaca **sheet pertama** saja.
-- Baris kosong atau kolom wajib kosong akan diabaikan.
-
----
-
-## 🧾 Panduan Upload Excel Tarawih & Khotib
-
-### Jadwal Imam & Bilal Tarawih (30 malam)
-Template: `static/templates/jadwal-tarawih-template.xlsx` (web: `/templates/jadwal-tarawih-template.xlsx`).
-
-**Kolom Wajib**
-- `urut` → angka 1-30.
-- `hari` → contoh: `Senin`, `Selasa`, dst.
-- `tanggal` → teks bebas (contoh: `1 Ramadan 1446 H` atau `2025-03-01`).
-- `imam` → nama imam.
-
-**Kolom Opsional**
-- `bilal`
-
-### Jadwal Khotib Jumat
-Template: `static/templates/jadwal-khotib-jumat-template.xlsx` (web: `/templates/jadwal-khotib-jumat-template.xlsx`).
-
-**Kolom Wajib**
-- `tanggal` → format `YYYY-MM-DD` atau `DD/MM/YYYY`.
-- `khotib` → nama khotib.
-
-**Kolom Opsional**
-- `hari`, `imam`, `catatan`
-
-### Langkah Upload
-1. Buka `/dashboard/jadwal`.
-2. Pilih **Upload** sesuai jenis jadwal.
-3. Unggah file Excel (`.xlsx` / `.xls` / `.csv`).
-4. Data dengan **urut sama** (tarawih) atau **tanggal sama** (khotib) akan di-update otomatis.
-
----
-
-## 🧾 Panduan Upload Excel Aset
-
-Template: `static/templates/aset-template.xlsx` (web: `/templates/aset-template.xlsx`).
-
-**Kolom Wajib**
-- `name` → nama aset.
-- `quantity` → jumlah (angka).
-
-**Kolom Opsional**
-- `category`, `condition`, `location`, `acquired_at`, `notes`
-
-### Langkah Upload
-1. Buka `/dashboard`.
-2. Pada bagian **Kelola Aset**, klik **Upload Aset**.
-3. Unggah file Excel.
-
----
-
-## 🧾 Panduan Upload Excel Kas Masjid
-
-Template: `static/templates/kas-masjid-template.xlsx` (web: `/templates/kas-masjid-template.xlsx`).
-
-**Kolom Wajib**
-- `tanggal` → format `YYYY-MM-DD` atau `DD/MM/YYYY`.
-- `tipe` → `masuk` / `keluar`.
-- `kategori`
-- `nominal`
-
-**Kolom Opsional**
-- `keterangan`
-
-### Langkah Upload
-1. Buka `/keuangan`.
-2. Pada bagian **Import Excel**, klik **Upload Kas**.
-3. Unggah file Excel.
-
----
-
-## 📤 Export Excel
-
-- **Jamaah/Santri**: tombol **Download Excel (.xlsx)** di `/dashboard/kelola-santri`.
-- **Keuangan**: tombol **Download Kas/Zakat/Qurban** di `/org/[slug]/ummah`.
-
----
-
-## 🎨 Color Coding
-
-### Kualitas Hafalan
-- 🟢 **Hijau** = Lancar
-- 🟡 **Kuning** = Kurang Lancar  
-- 🔴 **Merah** = Belum Lancar
-
----
-
-## 💡 Tips & Tricks
-
-### Hafalan Mandiri
-- ✅ Catat muroja'ah **setiap hari** untuk tracking konsisten
-- ✅ Fokus pada ayat dengan kualitas "Belum Lancar"
-- ✅ Gunakan catatan untuk detail (misalnya: "Sering lupa ayat 15")
-- ✅ Lihat statistik untuk motivasi
-
-### Kalender
-- ✅ Gunakan kalender untuk **planning** muroja'ah
-- ✅ Cek kalender setiap pagi untuk jadwal hari ini
-- ✅ Admin: Monitor aktivitas user secara berkala
-- ✅ Tambah catatan manual untuk event khusus
-
----
-
-## ❓ FAQ
-
-### Q: Apakah hafalan mandiri berbeda dengan setoran resmi?
-**A**: Ya. Hafalan mandiri untuk tracking pribadi, setoran resmi tetap ke ustadz seperti biasa.
-
-### Q: Apakah user lain bisa melihat muroja'ah saya?
-**A**: Tidak. Hanya Anda dan Admin yang bisa melihat.
-
-### Q: Bagaimana cara menghapus muroja'ah yang salah input?
-**A**: Klik tombol "🗑️ Hapus" di card muroja'ah tersebut.
-
-### Q: Bagaimana admin melihat kalender semua user?
-**A**: Admin otomatis melihat semua kalender saat buka `/kalender`.
-
-### Q: Apakah bisa edit muroja'ah yang sudah dibuat?
-**A**: Saat ini belum, tapi bisa hapus dan buat baru.
-
----
-
-## 🐛 Troubleshooting
-
-### Muroja'ah tidak muncul di kalender
-1. Cek apakah tanggal sudah benar
-2. Refresh halaman kalender
-3. Pastikan sudah klik "Simpan"
-
-### Tidak bisa tambah muroja'ah
-1. Pastikan semua field terisi
-2. Cek ayat mulai ≤ ayat selesai
-3. Cek koneksi internet
-
----
-
-## 📞 Support
-
-Jika ada masalah atau pertanyaan:
-1. Hubungi Admin sistem
-2. Atau buat issue di GitHub (jika ada)
-
----
-
-## 🎯 Best Practices
-
-### Untuk User
-- ✅ Konsisten catat muroja'ah setiap hari
-- ✅ Jujur dalam menilai kualitas hafalan
-- ✅ Gunakan catatan untuk detail penting
-- ✅ Review statistik setiap minggu
-
-### Untuk Admin
-- ✅ Monitor aktivitas user secara berkala
-- ✅ Identifikasi user yang tidak aktif
-- ✅ Berikan feedback berdasarkan data
-- ✅ Gunakan kalender untuk koordinasi event
-
----
-
-**Happy Muroja'ah! 📖✨**

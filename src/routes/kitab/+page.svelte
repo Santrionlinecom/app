@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { featuredCuratedKitab } from '$lib/data/kitab-curated';
 
 	export let data: PageData;
 
@@ -33,6 +34,7 @@
 
 	$: items = Array.isArray(data.items) ? data.items : [];
 	$: featuredItems = items.filter((item: KitabItem) => item.featured);
+	$: curatedItems = featuredCuratedKitab;
 </script>
 
 <svelte:head>
@@ -54,8 +56,8 @@
 					Halaman kitab sekarang tampil dinamis dari CMS Hub
 				</h1>
 				<p class="mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
-					Setiap kitab yang dipublish dari panel super admin akan otomatis muncul di sini. Sumbernya
-					bisa file PDF yang diunggah ke sistem atau link Google Drive.
+					Halaman ini menampung dua jalur konten: kitab yang dipublish dari CMS Hub dan materi native
+					SantriOnline yang ditulis khusus agar lebih enak dipelajari langsung dari web.
 				</p>
 				<div class="mt-6 flex flex-wrap gap-3">
 					<a href="#koleksi-kitab" class="btn border-none bg-white text-slate-900 hover:bg-emerald-50">
@@ -126,8 +128,8 @@
 			<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Arah Baru</p>
 			<h2 class="mt-3 text-2xl font-semibold text-slate-900">Bukan halaman statis lagi</h2>
 			<p class="mt-3 text-sm leading-7 text-slate-600">
-				Konten kitab tidak perlu diubah manual di kode. Daftar di bawah akan selalu mengikuti data terbaru
-				yang sudah dipublish dari CMS Hub.
+				Koleksi kitab publik tetap mengikuti CMS Hub, tetapi kami juga bisa menambahkan materi native
+				khusus untuk pembelajaran yang lebih terstruktur, seperti modul bahasa Arab pemula.
 			</p>
 			<div class="mt-6 grid gap-3 sm:grid-cols-2">
 				<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
@@ -141,6 +143,64 @@
 			</div>
 		</article>
 	</section>
+
+	{#if curatedItems.length > 0}
+		<section class="space-y-4">
+			<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+				<div>
+					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-amber-600">Materi Pilihan SantriOnline</p>
+					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Modul native yang ditulis ulang untuk web</h2>
+				</div>
+				<p class="text-sm text-slate-500">Cocok untuk belajar bertahap tanpa harus langsung membuka PDF penuh.</p>
+			</div>
+
+			<div class="grid gap-5 lg:grid-cols-2">
+				{#each curatedItems as item}
+					<article class="overflow-hidden rounded-[1.75rem] border border-amber-100 bg-white shadow-sm">
+						<div class="grid h-full gap-0 md:grid-cols-[0.44fr_0.56fr]">
+							<div class="bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.18),_transparent_34%),linear-gradient(145deg,_#111827_0%,_#1f2937_52%,_#14532d_100%)] p-6 text-white">
+								<p class="text-xs font-semibold uppercase tracking-[0.32em] text-amber-200/80">Materi Native</p>
+								<h3 class="mt-4 text-3xl font-semibold">{item.title}</h3>
+								<p class="mt-3 text-sm leading-7 text-white/75">{item.summary}</p>
+								<div class="mt-5 flex flex-wrap gap-2">
+									{#each item.tags.slice(0, 3) as tag}
+										<span class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white">
+											{tag}
+										</span>
+									{/each}
+								</div>
+							</div>
+
+							<div class="p-6">
+								<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Update {formatDate(item.updatedAt)}</p>
+								<p class="mt-3 text-sm leading-7 text-slate-600">
+									{shortText(item.description, 230)}
+								</p>
+
+								<div class="mt-5 grid gap-3 sm:grid-cols-2">
+									<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+										<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Level</p>
+										<p class="mt-2 text-base font-semibold text-slate-900">{item.level}</p>
+									</div>
+									<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+										<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Jalur</p>
+										<p class="mt-2 text-base font-semibold text-slate-900">{item.duration}</p>
+									</div>
+								</div>
+
+								<div class="mt-5 flex flex-wrap gap-2">
+									<a href={`/kitab/${item.slug}`} class="btn btn-primary">Buka Materi</a>
+									<a href={item.sourceUrl} target="_blank" rel="noreferrer" class="btn btn-outline">
+										PDF Asli
+									</a>
+								</div>
+							</div>
+						</div>
+					</article>
+				{/each}
+			</div>
+		</section>
+	{/if}
 
 	{#if featuredItems.length > 0}
 		<section class="space-y-4">

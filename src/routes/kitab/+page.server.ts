@@ -1,11 +1,18 @@
-import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { ensureKitabCatalogSchema, listPublishedKitabItems } from '$lib/server/kitab-catalog';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
 	const db = locals.db ?? platform?.env?.DB;
 	if (!db) {
-		throw error(500, 'Database tidak tersedia');
+		return {
+			items: [],
+			stats: {
+				totalItems: 0,
+				featuredItems: 0,
+				pdfItems: 0,
+				driveItems: 0
+			}
+		};
 	}
 
 	await ensureKitabCatalogSchema(db);

@@ -1,78 +1,76 @@
-# sv
+# SantriOnline TPQ
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+SantriOnline adalah aplikasi manajemen TPQ berbasis SvelteKit untuk mengelola santri, hafalan, setoran, halaqoh, sertifikat, dan konten pendukung. Repo ini masih menyimpan beberapa route legacy non-TPQ, tetapi arah pengembangan aktif sekarang berfokus pada **TPQ-only mode**.
 
-## Creating a project
+## Stack
 
-If you're seeing this, you've probably already done this step. Congrats!
+- Svelte 5 + SvelteKit
+- TypeScript + Vite
+- Tailwind CSS + DaisyUI
+- Cloudflare Pages/Workers
+- Cloudflare D1
+- Cloudflare R2
+- Lucia Auth + Arctic
+- pdf-lib untuk sertifikat PDF
+- Wrangler untuk deploy dan resource Cloudflare
 
-```sh
-# create a new project in the current directory
-npx sv create
+Folder `src-tauri/` tersedia untuk companion desktop app, tetapi aplikasi web tetap source of truth utama.
 
-# create a new project in my-app
-npx sv create my-app
-```
+## Fitur Utama
 
-## Developing
+- Dashboard role-based untuk `admin`, `koordinator`, `ustadz`, `ustadzah`, `santri`, dan `alumni`
+- Hafalan mandiri di `/dashboard/hafalan-mandiri`
+- Workflow TPQ akademik di `/tpq/akademik/setoran`, `/tpq/akademik/review`, dan `/tpq/akademik/riwayat`
+- Pencapaian hafalan dan statistik progres
+- Penerbitan sertifikat PDF yang disimpan ke R2
+- Halaman publik TPQ dan alur pendaftaran lembaga
+- CMS/blog dan beberapa modul konten islami
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Menjalankan Project
 
-```sh
+```bash
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+Command penting lain:
 
-To create a production version of your app:
-
-```sh
+```bash
+npm run check
 npm run build
+npm run preview
+npm run deploy:pages
 ```
 
-You can preview the production build with `npm run preview`.
+## Cloudflare Bindings
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
-# app
+Project ini memakai binding berikut di `wrangler.toml`:
 
-## Sistem yang digunakan (Tech Stack)
+- `DB` untuk Cloudflare D1
+- `BUCKET` untuk Cloudflare R2
+- `R2_PUBLIC_BASE_URL` untuk base URL file publik
+- `VECTORIZE_INDEX` untuk Vectorize
+- `AI` untuk Cloudflare AI binding
 
-Berikut adalah sistem/teknologi yang ada di dalam proyek ini dan yang digunakan:
+Command utilitas:
 
-- Framework UI: Svelte 5 + SvelteKit
-- Bundler & Dev Server: Vite
-- Bahasa: TypeScript
-- Styling: Tailwind CSS + DaisyUI
-- PWA: @vite-pwa/sveltekit (untuk installable app/ikon, offline cache dasar)
-- Adapter & Hosting: @sveltejs/adapter-cloudflare (target Cloudflare Pages/Workers)
-- CLI Deploy: Wrangler (npx wrangler)
-- Autentikasi: Lucia + @lucia-auth/adapter-sqlite (SQLite)
-- OAuth Provider helper: Arctic (opsional untuk login sosial)
-- Utilitas tanggal/crypto: Oslo, scrypt-js
-- PDF: pdf-lib (generate/manipulasi PDF)
-- Lint & Format: ESLint + Prettier
-- Database lokal: SQLite (file: tahfidz.db) dan contoh skema di schema.sql
+```bash
+export CLOUDFLARE_API_TOKEN=xxxxx
 
-## Cara pakai (ringkas)
+npm run cf:whoami
+npm run cf:d1:list
+npm run cf:r2:list
+npm run cf:d1:migrate:remote
+```
 
-- Install dependency: `npm install`
-- Jalankan dev server: `npm run dev` (opsional otomatis buka tab: `npm run dev -- --open`)
-- Build produksi: `npm run build`
-- Preview hasil build: `npm run preview`
-- Deploy ke Cloudflare Pages: `npm run deploy:pages`
+Endpoint pengecekan binding:
 
-Catatan:
-- Konfigurasi Tailwind ada di `tailwind.config.ts`, PWA di `vite.config.ts` (plugin) dan `twa-manifest.json` untuk WebAPK/TWA.
-- File database/seed: `tahfidz.db`, `tahlil_data.sql`, `schema.sql`.
+- `GET /api/admin/cloudflare`
 
-## Santri Streamer License
+## Catatan Arsitektur
 
-- Route kompatibilitas desktop app: `POST /api/license/activate`, `POST /api/license/validate`, `POST /api/license/deactivate`.
-- Body request desktop app: `{ "key": "STRM-XXXXX-XXXXX-XXXXX-XXXXX", "machineId": "..." }`.
-- Response sukses desktop app: `{ "ok": true, "plan": "...", "email": "" }`.
-- Response gagal desktop app: `{ "ok": false, "reason": "..." }`.
-- Key baru yang digenerate untuk license memakai format final `STRM-XXXXX-XXXXX-XXXXX-XXXXX`.
-- Key lama prefix `SANTRI` tidak lagi digenerate untuk aktivasi baru; route legacy lain tetap dipertahankan untuk kompatibilitas web/internal yang masih memakainya.
+- Semua data tenant harus di-scope dengan `org_id` atau `institution_id`.
+- Route kanonis workflow TPQ adalah `/tpq/akademik/*`.
+- Route lama seperti `/dashboard/setoran-hari-ini` dan `/dashboard/review-setoran` hanya wrapper redirect.
+- Sertifikat disimpan di R2, metadata-nya ada di D1.
+- Jika menambah fitur baru, prioritaskan konteks TPQ dan hindari memperluas modul legacy non-TPQ.
