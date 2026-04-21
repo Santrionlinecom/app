@@ -363,12 +363,19 @@ const featureNavItem = {
 	isActive: (path: string) => path === '/fitur' || path.startsWith('/fitur/')
 };
 
+const quranNavItem = {
+	label: 'Mushaf',
+	href: '/kitab/quran',
+	icon: 'M12 6.253v13m0-13C10.832 5.477 9.247 5 7.5 5 5.205 5 3.126 5.82 1.5 7.165v11.089C3.126 16.91 5.205 16.09 7.5 16.09c1.747 0 3.332.477 4.5 1.253m0-11.09C13.168 5.477 14.753 5 16.5 5c2.295 0 4.374.82 6 2.165v11.089c-1.626-1.345-3.705-2.165-6-2.165-1.747 0-3.332.477-4.5 1.253',
+	isActive: (path: string) => path === '/kitab/quran' || path.startsWith('/kitab/quran/')
+};
+
 const mobileShortcutNav = [
-	baseNav[1],
 	featureNavItem,
-	baseNav[5],
-	kalenderNavItem,
-	baseNav[3]
+	baseNav[2],
+	baseNav[3],
+	baseNav[4],
+	quranNavItem
 ];
 
 const mobileExploreLinks = [
@@ -544,9 +551,14 @@ $: if (pathname !== previousPathname) {
 				<div class="rounded-[1.8rem] border border-white/70 bg-white/90 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
 					<div class="flex items-start justify-between gap-3">
 						<a href="/" class="flex min-w-0 items-center gap-3">
-							<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 p-2 shadow-lg shadow-emerald-500/20">
-								<img src="/logo-santri.png" alt="Santri Online" class="h-8 w-auto" loading="lazy" />
-							</div>
+								<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 p-2 shadow-lg shadow-emerald-500/20">
+									<img
+										src="https://files.santrionline.com/ICON%20SANTRI%20ONLINE%20COM%20kecil%20(1).png"
+										alt="Santri Online"
+										class="h-8 w-auto"
+										loading="lazy"
+									/>
+								</div>
 							<div class="min-w-0">
 								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Santri Online</p>
 								<p class="truncate text-sm font-semibold text-slate-950">{mobileContext.label}</p>
