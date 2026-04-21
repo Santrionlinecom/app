@@ -8,6 +8,7 @@ type KitabRow = {
 	summary: string | null;
 	description: string | null;
 	cover_url: string | null;
+	category: string | null;
 	source_type: KitabSourceType;
 	source_url: string;
 	storage_key: string | null;
@@ -27,6 +28,7 @@ export type KitabListItem = {
 	summary: string | null;
 	description: string | null;
 	coverUrl: string | null;
+	category: string | null;
 	sourceType: KitabSourceType;
 	sourceUrl: string;
 	storageKey: string | null;
@@ -56,6 +58,7 @@ const mapKitab = (row: KitabRow): KitabListItem => ({
 	summary: row.summary,
 	description: row.description,
 	coverUrl: row.cover_url,
+	category: row.category,
 	sourceType: row.source_type,
 	sourceUrl: row.source_url,
 	storageKey: row.storage_key,
@@ -78,6 +81,7 @@ export async function ensureKitabCatalogSchema(db: D1Database) {
 				summary TEXT,
 				description TEXT,
 				cover_url TEXT,
+				category TEXT,
 				source_type TEXT NOT NULL DEFAULT 'pdf',
 				source_url TEXT NOT NULL,
 				storage_key TEXT,
@@ -93,6 +97,12 @@ export async function ensureKitabCatalogSchema(db: D1Database) {
 			)`
 		)
 		.run();
+
+	const { results } = await db.prepare(`PRAGMA table_info('kitab_catalog')`).all<{ name: string }>();
+	const columns = new Set((results ?? []).map((column) => column.name));
+	if (!columns.has('category')) {
+		await db.prepare('ALTER TABLE kitab_catalog ADD COLUMN category TEXT').run();
+	}
 
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_kitab_catalog_slug ON kitab_catalog(slug)').run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_kitab_catalog_status ON kitab_catalog(status)').run();
@@ -188,13 +198,14 @@ export async function upsertKitabItem(
 		id?: string | null;
 		title: string;
 		slug: string;
-		summary?: string | null;
-		description?: string | null;
-		coverUrl?: string | null;
-		sourceType: KitabSourceType;
-		sourceUrl: string;
-		storageKey?: string | null;
-		mimeType?: string | null;
+	summary?: string | null;
+	description?: string | null;
+	coverUrl?: string | null;
+	category?: string | null;
+	sourceType: KitabSourceType;
+	sourceUrl: string;
+	storageKey?: string | null;
+	mimeType?: string | null;
 		fileSize?: number | null;
 		pageCount?: number | null;
 		status: KitabStatus;
@@ -207,8 +218,8 @@ export async function upsertKitabItem(
 	if (input.id?.trim()) {
 		await db
 			.prepare(
-				`UPDATE kitab_catalog
-				 SET title = ?, slug = ?, summary = ?, description = ?, cover_url = ?, source_type = ?, source_url = ?, storage_key = ?, mime_type = ?, file_size = ?, page_count = ?, status = ?, featured = ?, updated_at = ?
+			`UPDATE kitab_catalog
+				 SET title = ?, slug = ?, summary = ?, description = ?, cover_url = ?, category = ?, source_type = ?, source_url = ?, storage_key = ?, mime_type = ?, file_size = ?, page_count = ?, status = ?, featured = ?, updated_at = ?
 				 WHERE id = ?`
 			)
 			.bind(
@@ -217,6 +228,7 @@ export async function upsertKitabItem(
 				input.summary?.trim() || null,
 				input.description?.trim() || null,
 				input.coverUrl?.trim() || null,
+				input.category?.trim() || null,
 				input.sourceType,
 				input.sourceUrl.trim(),
 				input.storageKey?.trim() || null,
@@ -235,8 +247,8 @@ export async function upsertKitabItem(
 	await db
 		.prepare(
 			`INSERT INTO kitab_catalog
-				(id, title, slug, summary, description, cover_url, source_type, source_url, storage_key, mime_type, file_size, page_count, status, featured, created_at, updated_at)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				(id, title, slug, summary, description, cover_url, category, source_type, source_url, storage_key, mime_type, file_size, page_count, status, featured, created_at, updated_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 		)
 		.bind(
 			id,
@@ -245,6 +257,7 @@ export async function upsertKitabItem(
 			input.summary?.trim() || null,
 			input.description?.trim() || null,
 			input.coverUrl?.trim() || null,
+			input.category?.trim() || null,
 			input.sourceType,
 			input.sourceUrl.trim(),
 			input.storageKey?.trim() || null,

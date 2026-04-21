@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS kitab_catalog (
   summary TEXT,
   description TEXT,
   cover_url TEXT,
+  category TEXT,
   source_type TEXT NOT NULL DEFAULT 'pdf' CHECK (source_type IN ('pdf', 'drive')),
   source_url TEXT NOT NULL,
   storage_key TEXT,

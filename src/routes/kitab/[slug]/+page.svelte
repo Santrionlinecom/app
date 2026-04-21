@@ -1,5 +1,13 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import {
+		getCuratedKitabChaptersForModule,
+		getCuratedKitabModuleHref
+	} from '$lib/data/kitab-curated';
+	import {
+		getKitabCategoryLabel,
+		getKitabCategoryToneClass
+	} from '$lib/data/kitab-categories';
 	import { toKitabDownloadUrl, toKitabReaderUrl } from '$lib/kitab';
 
 	export let data: PageData;
@@ -23,6 +31,8 @@
 		pdf: 'PDF',
 		drive: 'Google Drive'
 	} as const;
+	const kitabCategoryLabel = (value?: string | null) => getKitabCategoryLabel(value);
+	const kitabCategoryTone = (value?: string | null) => getKitabCategoryToneClass(value);
 
 	$: item = data.item;
 	$: curatedItem = data.curatedItem;
@@ -40,12 +50,25 @@
 	$: sourceUrl = item?.sourceUrl ?? curatedItem?.sourceUrl ?? '';
 	$: readerUrl = sourceUrl ? toKitabReaderUrl(sourceType, sourceUrl) : null;
 	$: downloadUrl = sourceUrl ? toKitabDownloadUrl(sourceType, sourceUrl) : null;
+	$: chapterMap = curatedItem?.chapterMap ?? [];
+	$: firstModule = curatedItem?.modules?.[0] ?? null;
 	$: pageTitle = curatedItem
 		? `${curatedItem.title} - ${curatedItem.seriesTitle}`
 		: `${item?.title ?? 'Kitab'} - Perpustakaan Kitab`;
 	$: descriptionText = curatedItem
 		? plainText(curatedItem.description || curatedItem.summary)
 		: plainText(item?.description || item?.summary);
+
+	const moduleHref = (slug: string, moduleId: string) => getCuratedKitabModuleHref(slug, moduleId);
+	const chapterModuleHref = (moduleSpan: string) => {
+		const match = moduleSpan.match(/modul\s+(\d+)/i);
+		if (!match || !curatedItem) return null;
+		const moduleIndex = Number(match[1]) - 1;
+		const module = curatedItem.modules[moduleIndex];
+		return module ? moduleHref(curatedItem.slug, module.id) : null;
+	};
+	const chapterCountForModule = (moduleIndex: number) =>
+		curatedItem ? getCuratedKitabChaptersForModule(curatedItem, moduleIndex).length : 0;
 </script>
 
 <svelte:head>
@@ -65,6 +88,9 @@
 						← Kembali ke Perpustakaan Kitab
 					</a>
 					<div class="mt-4 flex flex-wrap gap-2">
+						<span class={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] ${kitabCategoryTone(curatedItem.category)}`}>
+							{kitabCategoryLabel(curatedItem.category)}
+						</span>
 						<span class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
 							{curatedItem.seriesTitle}
 						</span>
@@ -79,18 +105,26 @@
 					<p class="mt-4 text-sm leading-7 text-white/75 md:text-base">{curatedItem.summary}</p>
 
 					<div class="mt-6 flex flex-wrap gap-3">
+						{#if firstModule}
+							<a
+								href={moduleHref(curatedItem.slug, firstModule.id)}
+								class="btn border-none bg-white text-slate-900 hover:bg-amber-50"
+							>
+								Mulai Bab 1
+							</a>
+						{/if}
 						{#if downloadUrl}
 							<a
 								href={downloadUrl}
 								target="_blank"
 								rel="noreferrer"
-								class="btn border-none bg-white text-slate-900 hover:bg-amber-50"
+								class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10"
 							>
 								Buka PDF Asli
 							</a>
 						{/if}
 						<a href="#modul-seri" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
-							Lihat Modul
+							Lihat Daftar Bab
 						</a>
 					</div>
 
@@ -148,10 +182,10 @@
 
 			<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
 				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Navigasi Seri</p>
-				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Jalur belajar bahasa Arab</h2>
+				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Jalur belajar seri ini</h2>
 				<p class="mt-3 text-sm leading-7 text-slate-600">
-					Semua jilid di bawah memakai model seri yang sama. Jilid berikutnya tinggal menambah data,
-					tanpa membuat halaman statis baru.
+					Semua jilid di seri {curatedItem.seriesTitle} memakai model data yang sama. Jilid berikutnya
+					bisa ditambah tanpa membuat halaman statis baru.
 				</p>
 
 				<div class="mt-6 space-y-3">
@@ -201,67 +235,106 @@
 			</article>
 		</section>
 
+		{#if chapterMap.length}
+			<section class="space-y-4">
+				<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+					<div>
+						<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Peta Sumber</p>
+						<h2 class="mt-2 text-2xl font-semibold text-slate-900">Bab dan subbab dari PDF</h2>
+					</div>
+					<p class="text-sm text-slate-500">
+						Semi-ekstraksi ini memetakan struktur kitab asal lalu menyambungkannya ke modul web.
+					</p>
+				</div>
+
+				<div class="grid gap-5 lg:grid-cols-2">
+					{#each chapterMap as chapter, index}
+						{@const chapterHref = chapterModuleHref(chapter.moduleSpan)}
+						<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+							<div class="flex flex-wrap items-center gap-3">
+								<span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-600">
+									Bab {index + 1}
+								</span>
+								<span class="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">
+									{chapter.moduleSpan}
+								</span>
+							</div>
+							<h3 class="mt-4 text-xl font-semibold text-slate-900">{chapter.title}</h3>
+							<p class="mt-3 text-sm leading-7 text-slate-600">{chapter.summary}</p>
+							{#if chapterHref}
+								<a
+									href={chapterHref}
+									class="mt-4 inline-flex text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+								>
+									Buka bab terkait →
+								</a>
+							{/if}
+
+							<div class="mt-5 grid gap-3">
+								{#each chapter.subtopics as subtopic}
+									<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-7 text-slate-700">
+										{subtopic}
+									</div>
+								{/each}
+							</div>
+						</article>
+					{/each}
+				</div>
+			</section>
+		{/if}
+
 		<section id="modul-seri" class="space-y-4">
 			<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
 				<div>
 					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Modul Seri</p>
-					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Urutan belajar jilid ini</h2>
+					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Daftar bab jilid ini</h2>
 				</div>
-				<p class="text-sm text-slate-500">Setiap modul sengaja diringkas agar mudah dipelajari bertahap dari web.</p>
+				<p class="text-sm text-slate-500">
+					Setiap bab sekarang punya halaman sendiri agar belajar tidak menumpuk di satu halaman.
+				</p>
 			</div>
 
-			<div class="grid gap-5">
+			<div class="grid gap-5 lg:grid-cols-2">
 				{#each curatedItem.modules as module, index}
-					<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-						<div class="grid gap-6 xl:grid-cols-[1.04fr_0.96fr]">
-							<div>
-								<div class="flex flex-wrap items-center gap-3">
-									<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">
-										Modul {index + 1}
-									</span>
-									<span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-600">
-										{module.focus}
-									</span>
-								</div>
-								<h3 class="mt-4 text-2xl font-semibold text-slate-900">{module.title}</h3>
-								<p class="mt-3 text-sm leading-7 text-slate-600">{module.overview}</p>
-
-								<div class="mt-5 space-y-3">
-									{#each module.points as point}
-										<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-7 text-slate-700">
-											{point}
-										</div>
-									{/each}
-								</div>
-							</div>
-
-							<div class="space-y-5">
-								<div class="rounded-[1.5rem] border border-amber-100 bg-amber-50 p-5">
-									<p class="text-xs font-semibold uppercase tracking-[0.28em] text-amber-700">Contoh Utama</p>
-									<div class="mt-4 space-y-3">
-										{#each module.examples as example}
-											<div class="rounded-2xl border border-amber-100 bg-white px-4 py-4">
-												<p class="text-right text-xl font-semibold text-slate-900">{example.arabic}</p>
-												<p class="mt-2 text-sm font-semibold text-slate-700">{example.translit}</p>
-												<p class="mt-1 text-sm leading-6 text-slate-600">{example.meaning}</p>
-											</div>
-										{/each}
-									</div>
-								</div>
-
-								<div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-									<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Latihan Ringkas</p>
-									<div class="mt-4 space-y-3">
-										{#each module.practice as item}
-											<div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm leading-7 text-slate-700">
-												{item}
-											</div>
-										{/each}
-									</div>
-								</div>
-							</div>
+					<a
+						href={moduleHref(curatedItem.slug, module.id)}
+						class="group rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
+					>
+						<div class="flex flex-wrap items-center gap-3">
+							<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">
+								Bab {index + 1}
+							</span>
+							<span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-600">
+								{module.focus}
+							</span>
+							{#if chapterCountForModule(index)}
+								<span class="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">
+									{chapterCountForModule(index)} peta sumber
+								</span>
+							{/if}
 						</div>
-					</article>
+
+						<h3 class="mt-4 text-2xl font-semibold text-slate-900">{module.title}</h3>
+						<p class="mt-3 text-sm leading-7 text-slate-600">{module.overview}</p>
+
+						<div class="mt-5 grid gap-3">
+							{#each module.points.slice(0, 2) as point}
+								<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-7 text-slate-700">
+									{point}
+								</div>
+							{/each}
+						</div>
+
+						<div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
+							<div class="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+								<span>{module.examples.length} contoh</span>
+								<span>{module.practice.length} latihan</span>
+							</div>
+							<span class="text-sm font-semibold text-emerald-700 transition group-hover:text-emerald-800">
+								Buka Bab →
+							</span>
+						</div>
+					</a>
 				{/each}
 			</div>
 		</section>
@@ -334,6 +407,11 @@
 						<span class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
 							{sourceLabel[item.sourceType]}
 						</span>
+						{#if item.category}
+							<span class={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] ${kitabCategoryTone(item.category)}`}>
+								{kitabCategoryLabel(item.category)}
+							</span>
+						{/if}
 						{#if item.featured}
 							<span class="rounded-full border border-emerald-300/20 bg-emerald-300/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100">
 								Unggulan

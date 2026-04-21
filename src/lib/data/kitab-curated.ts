@@ -1,4 +1,6 @@
 import type { KitabSourceType } from '$lib/kitab';
+import { fondasiKitabMaterials } from './kitab-fondasi';
+import type { KitabCategoryKey } from './kitab-categories';
 
 export type CuratedKitabExample = {
 	arabic: string;
@@ -16,9 +18,18 @@ export type CuratedKitabModule = {
 	practice: string[];
 };
 
+export type CuratedKitabChapter = {
+	id: string;
+	title: string;
+	summary: string;
+	moduleSpan: string;
+	subtopics: string[];
+};
+
 export type CuratedKitabMaterial = {
 	slug: string;
 	title: string;
+	category: KitabCategoryKey;
 	seriesKey: string;
 	seriesTitle: string;
 	seriesOrder: number;
@@ -33,6 +44,7 @@ export type CuratedKitabMaterial = {
 	totalModules: number;
 	tags: string[];
 	sourceNote: string;
+	chapterMap?: CuratedKitabChapter[];
 	objectives: string[];
 	modules: CuratedKitabModule[];
 	glossary: Array<{
@@ -50,6 +62,7 @@ export const curatedKitabMaterials: CuratedKitabMaterial[] = [
 		seriesOrder: 1,
 		summary:
 			'Modul bahasa Arab pemula ala SantriOnline yang merapikan pokok-pokok Durusul Lughah jilid 1 menjadi jalur belajar web-native yang lebih bertahap.',
+		category: 'bahasa-arab',
 		description:
 			"Materi ini diadaptasi secara orisinal dari tema-tema awal Panduan Durusul Lughah al-Arabiyah 1: isim isyarah, ma'rifah-nakirah, huruf jar, dhamir, mudhaf-mudhaf ilaih, mudzakkar-muannats, na'at-man'ut, dhamir milik, dan bentuk jamak dasar. Fokusnya bukan sekadar membaca contoh, tetapi membangun kebiasaan memahami pola kalimat Arab sederhana yang sering muncul dalam lingkungan santri dan kitab dasar.",
 		sourceType: 'pdf',
@@ -371,6 +384,7 @@ export const curatedKitabMaterials: CuratedKitabMaterial[] = [
 		seriesOrder: 2,
 		summary:
 			'Kelanjutan jilid 1 yang mulai membawa santri dari kalimat sangat sederhana ke pola fi\'il, negasi, perbandingan, angka, dan mudhari ala pembelajaran web SantriOnline.',
+		category: 'bahasa-arab',
 		description:
 			'Materi ini diadaptasi secara orisinal dari tema-tema utama Panduan Durusul Lughah al-Arabiyah 2: jenis kalimat, negasi jumlah ismiyyah, isim tafdhil, bilangan 11-20, fi\'il madhi, fa\'il dan maf\'ul bih, fi\'il mudhari, amr, nahi, nasb-jazm dasar, bentuk mutsanna, hingga pengantar fi\'il shahih dan mu\'tall. Jalurnya disusun ulang agar santri tidak tenggelam dalam detail sekaligus, tetapi tetap menangkap pola besar bahasa Arab dasar-menengah.',
 		sourceType: 'pdf',
@@ -692,6 +706,7 @@ export const curatedKitabMaterials: CuratedKitabMaterial[] = [
 		seriesOrder: 3,
 		summary:
 			'Jilid yang mengubah pembacaan santri dari sekadar mengenali fi\'il menjadi memahami i\'rab isim, fi\'il, bentuk pasif, isim turunan, zharf, dan struktur kalimat yang lebih matang.',
+		category: 'bahasa-arab',
 		description:
 			'Materi ini diadaptasi secara orisinal dari jalur utama Panduan Durusul Lughah al-Arabiyah 3: i\'rab isim dan fi\'il, mu\'rab dan mabni, fungsi waw, kalimat pasif, ism fa\'il, ism maf\'ul, ism zaman, ism makan, ism alat, ma\'rifah-nakirah yang lebih dalam, zharf, amar untuk pihak ketiga, syarth, istifham, tashghir, enam bab fi\'il tsulatsi mujarrad, masdar, dan pengantar bab af\'ala. Semua dibingkai ulang agar cocok dipelajari bertahap oleh santri online.',
 		sourceType: 'pdf',
@@ -1013,6 +1028,7 @@ export const curatedKitabMaterials: CuratedKitabMaterial[] = [
 		seriesOrder: 4,
 		summary:
 			'Jilid penutup seri inti yang membawa santri ke bentuk fi\'il turunan, fungsi objek lanjut, jenis dhamir, dan struktur yang lebih dekat dengan bacaan kitab menengah.',
+		category: 'bahasa-arab',
 		description:
 			'Materi ini diadaptasi secara orisinal dari jalur utama Panduan Durusul Lughah al-Arabiyah 4: fi\'il transitif dan intransitif, cara menjadikan fi\'il lazim menjadi muta\'addi, berbagai bab fi\'il mazid seperti af\'ala, faa\'ala, tafa\'ala, tafa\'\'ala, infa\'ala, ifta\'ala, jenis-jenis dhamir, maf\'ul mutlaq, maf\'ul lahu, maf\'ul ma\'ahu, taukid, la nafiyah lil jins, pola warna dan cacat, badal, serta beberapa pola jamak dan ungkapan lanjutan. Semuanya diolah ke model web-native agar tetap bisa diikuti santri secara bertahap.',
 		sourceType: 'pdf',
@@ -1325,7 +1341,8 @@ export const curatedKitabMaterials: CuratedKitabMaterial[] = [
 			{ term: 'badal', meaning: 'kata pengganti atau penjelas yang mengikuti unsur sebelumnya' },
 			{ term: 'la nafiyah lil jins', meaning: 'penafian total terhadap seluruh jenis sesuatu' }
 		]
-	}
+	},
+	...fondasiKitabMaterials
 ];
 
 const sortCuratedKitab = (items: CuratedKitabMaterial[]) =>
@@ -1345,3 +1362,29 @@ export const getCuratedKitabBySlug = (slug: string) =>
 
 export const getCuratedKitabSeries = (seriesKey: string) =>
 	sortCuratedKitab(curatedKitabMaterials.filter((item) => item.seriesKey === seriesKey));
+
+export const getCuratedKitabModuleHref = (slug: string, moduleId: string) =>
+	`/kitab/${slug}/bab/${moduleId}`;
+
+export const getCuratedKitabModuleIndex = (
+	item: CuratedKitabMaterial,
+	moduleId: string
+) => item.modules.findIndex((module) => module.id === moduleId);
+
+export const getCuratedKitabModuleById = (
+	item: CuratedKitabMaterial,
+	moduleId: string
+) => {
+	const moduleIndex = getCuratedKitabModuleIndex(item, moduleId);
+	return moduleIndex >= 0 ? item.modules[moduleIndex] : null;
+};
+
+export const getCuratedKitabChaptersForModule = (
+	item: CuratedKitabMaterial,
+	moduleIndex: number
+) => {
+	const moduleLabel = `Modul ${moduleIndex + 1}`;
+	return (item.chapterMap ?? []).filter((chapter) =>
+		chapter.moduleSpan.toLowerCase().includes(moduleLabel.toLowerCase())
+	);
+};

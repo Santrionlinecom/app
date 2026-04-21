@@ -1,4 +1,5 @@
 import type { PageServerLoad } from './$types';
+import { getKitabCategoryMeta } from '$lib/data/kitab-categories';
 import { ensureKitabCatalogSchema, listPublishedKitabItems } from '$lib/server/kitab-catalog';
 import { featuredCuratedKitab } from '$lib/data/kitab-curated';
 
@@ -26,6 +27,7 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 		if (!mirrored) return item;
 		return {
 			...item,
+			category: getKitabCategoryMeta(mirrored.category)?.value ?? item.category,
 			sourceType: mirrored.sourceType,
 			sourceUrl: mirrored.sourceUrl || item.sourceUrl,
 			updatedAt: mirrored.updatedAt || item.updatedAt

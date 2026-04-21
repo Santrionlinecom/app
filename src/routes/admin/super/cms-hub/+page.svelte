@@ -1,5 +1,10 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import {
+		KITAB_CATEGORY_OPTIONS,
+		getKitabCategoryLabel,
+		getKitabCategoryToneClass
+	} from '$lib/data/kitab-categories';
 
 	export let data: PageData;
 	export let form: ActionData | undefined;
@@ -54,6 +59,8 @@
 		pdf: 'PDF',
 		drive: 'Google Drive'
 	};
+	const kitabCategoryLabel = (value?: string | null) => getKitabCategoryLabel(value);
+	const kitabCategoryTone = (value?: string | null) => getKitabCategoryToneClass(value);
 
 	const cmsStatusClass = (status?: string | null) => {
 		switch ((status ?? '').toLowerCase()) {
@@ -216,6 +223,7 @@
 	let kitabSummary = '';
 	let kitabDescription = '';
 	let kitabCoverUrl = '';
+	let kitabCategory = '';
 	let kitabSourceType: 'pdf' | 'drive' = 'pdf';
 	let kitabSourceUrl = '';
 	let kitabCurrentSourceUrl = '';
@@ -255,6 +263,7 @@
 		kitabSummary = item?.summary ?? '';
 		kitabDescription = item?.description ?? '';
 		kitabCoverUrl = item?.coverUrl ?? '';
+		kitabCategory = item?.category ?? '';
 		kitabSourceType = (item?.sourceType ?? 'pdf') as 'pdf' | 'drive';
 		kitabSourceUrl = item?.sourceType === 'drive' ? item.sourceUrl : '';
 		kitabCurrentSourceUrl = item?.sourceType === 'pdf' ? item.sourceUrl : '';
@@ -987,7 +996,7 @@
 					</label>
 				</div>
 
-				<div class="mt-4 grid gap-4 md:grid-cols-[1.1fr,0.9fr]">
+				<div class="mt-4 grid gap-4 md:grid-cols-[1.1fr,0.75fr,0.95fr]">
 					<label class="block">
 						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Ringkasan Singkat</span>
 						<input
@@ -996,6 +1005,15 @@
 							placeholder="Ringkasan yang tampil di kartu katalog"
 							bind:value={kitabSummary}
 						/>
+					</label>
+					<label class="block">
+						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Kategori Kitab</span>
+						<select name="category" class="select select-bordered mt-2 w-full" bind:value={kitabCategory}>
+							<option value="">Tanpa kategori</option>
+							{#each KITAB_CATEGORY_OPTIONS as option}
+								<option value={option.value}>{option.label}</option>
+							{/each}
+						</select>
 					</label>
 					<label class="block">
 						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Sumber Kitab</span>
@@ -1137,6 +1155,11 @@
 											<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${kitabSourceTone(item.sourceType)}`}>
 												{kitabSourceLabel[item.sourceType] ?? item.sourceType}
 											</span>
+											{#if item.category}
+												<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${kitabCategoryTone(item.category)}`}>
+													{kitabCategoryLabel(item.category)}
+												</span>
+											{/if}
 										</div>
 									</div>
 									<a href={`/admin/super/cms-hub?kitab=${item.id}#kitab-library`} class="rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-100">
@@ -1184,6 +1207,11 @@
 									<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${kitabSourceTone(item.sourceType)}`}>
 										{kitabSourceLabel[item.sourceType] ?? item.sourceType}
 									</span>
+									{#if item.category}
+										<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${kitabCategoryTone(item.category)}`}>
+											{kitabCategoryLabel(item.category)}
+										</span>
+									{/if}
 								</div>
 							</div>
 

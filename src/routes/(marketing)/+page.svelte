@@ -4,9 +4,14 @@
 
 	import { FEATURES } from '$lib/features';
 	import { ACTIVE_CTA, INSTITUTIONS } from '$lib/config/institutions';
+	import { isSuperAdminUser } from '$lib/auth/session-user';
 
-	const privilegedRoles = ['admin', 'ustadz', 'ustadzah', 'santri', 'alumni'];
-	$: showDashboard = data?.user?.role && privilegedRoles.includes(data.user.role);
+	const dashboardRoles = new Set(['admin', 'admin_lembaga', 'ustadz', 'ustadzah', 'santri', 'alumni']);
+	$: primaryAction = isSuperAdminUser(data?.user)
+		? { href: '/admin/super/overview', label: '🛡️ Buka Super Admin' }
+		: dashboardRoles.has(data?.user?.role ?? '')
+			? { href: '/dashboard', label: '📊 Buka Dashboard' }
+			: { href: '/register', label: '✨ Daftarkan TPQ' };
 	const orgTypes = INSTITUTIONS.filter((institution) => institution.enabled);
 
 	const solutionCards = [
@@ -56,15 +61,9 @@
 					</p>
 
 					<div class="flex flex-col sm:flex-row gap-4">
-						{#if showDashboard}
-							<a href="/dashboard" class="home-btn-primary">
-								📊 Buka Dashboard
-							</a>
-						{:else}
-							<a href="/register" class="home-btn-primary">
-								✨ Daftarkan TPQ
-							</a>
-						{/if}
+						<a href={primaryAction.href} class="home-btn-primary">
+							{primaryAction.label}
+						</a>
 						<a href="/fitur" class="home-btn-secondary">Lihat Fitur</a>
 					</div>
 

@@ -1,9 +1,23 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import {
+		KITAB_CATEGORY_ORDER,
+		getKitabCategoryDescription,
+		getKitabCategoryLabel,
+		getKitabCategoryToneClass
+	} from '$lib/data/kitab-categories';
 
 	export let data: PageData;
 
 	type KitabItem = PageData['items'][number];
+	type CuratedItem = PageData['curatedItems'][number];
+	type CuratedSection = {
+		key: string;
+		label: string;
+		description: string;
+		toneClass: string;
+		items: CuratedItem[];
+	};
 
 	const formatDate = (value: number | null | undefined) =>
 		value
@@ -30,10 +44,32 @@
 		pdf: 'PDF',
 		drive: 'Google Drive'
 	};
+	const kitabCategoryLabel = (value?: string | null) => getKitabCategoryLabel(value);
+	const kitabCategoryDescription = (value?: string | null) => getKitabCategoryDescription(value);
+	const kitabCategoryTone = (value?: string | null) => getKitabCategoryToneClass(value);
+	const sortCuratedItems = (left: CuratedItem, right: CuratedItem) => left.seriesOrder - right.seriesOrder;
+
+	let items: KitabItem[] = [];
+	let featuredItems: KitabItem[] = [];
+	let curatedItems: CuratedItem[] = [];
+	let curatedSections: CuratedSection[] = [];
 
 	$: items = Array.isArray(data.items) ? data.items : [];
-	$: featuredItems = items.filter((item: KitabItem) => item.featured);
+	$: featuredItems = items.filter((item) => item.featured);
 	$: curatedItems = Array.isArray(data.curatedItems) ? data.curatedItems : [];
+	$: curatedSections = KITAB_CATEGORY_ORDER.map((category) => {
+		const sectionItems = curatedItems
+			.filter((item) => item.category === category)
+			.sort(sortCuratedItems);
+
+		return {
+			key: category,
+			label: kitabCategoryLabel(category),
+			description: kitabCategoryDescription(category),
+			toneClass: kitabCategoryTone(category),
+			items: sectionItems
+		};
+	}).filter((section) => section.items.length > 0);
 </script>
 
 <svelte:head>
@@ -143,63 +179,92 @@
 		</article>
 	</section>
 
-	{#if curatedItems.length > 0}
+	{#if curatedSections.length > 0}
 		<section class="space-y-4">
 			<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
 				<div>
-					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-amber-600">Seri Bahasa Arab SantriOnline</p>
-					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Jalur belajar dinamis dari jilid 1 sampai 4</h2>
+					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-amber-600">Kurikulum Fondasi</p>
+					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Disusun per kategori pembelajaran</h2>
 				</div>
-				<p class="text-sm text-slate-500">Semua jilid memakai model seri yang sama, sehingga mudah ditambah dan diteruskan.</p>
+				<p class="text-sm text-slate-500">
+					Qur'an/Tahsin, Aqidah, Fiqih, Hadits, Adab/Tasawuf, dan Bahasa Arab tampil dalam urutan yang rapi.
+				</p>
 			</div>
 
-			<div class="grid gap-5 xl:grid-cols-2">
-				{#each curatedItems as item}
-					<article class="overflow-hidden rounded-[1.75rem] border border-amber-100 bg-white shadow-sm">
-						<div class="grid h-full gap-0 md:grid-cols-[0.44fr_0.56fr]">
-							<div class="bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.18),_transparent_34%),linear-gradient(145deg,_#111827_0%,_#1f2937_52%,_#14532d_100%)] p-6 text-white">
-								<p class="text-xs font-semibold uppercase tracking-[0.32em] text-amber-200/80">Jilid {item.seriesOrder}</p>
-								<h3 class="mt-4 text-3xl font-semibold">{item.title}</h3>
-								<p class="mt-3 text-sm leading-7 text-white/75">{item.summary}</p>
-								<div class="mt-5 flex flex-wrap gap-2">
-									{#each item.tags.slice(0, 3) as tag}
-										<span class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white">
-											{tag}
-										</span>
-									{/each}
+			<div class="space-y-6">
+				{#each curatedSections as section (section.key)}
+					<section class="space-y-4">
+						<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+							<div>
+								<div class="flex flex-wrap items-center gap-2">
+									<span class={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${section.toneClass}`}>
+										{section.label}
+									</span>
+									<span class="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+										{section.items.length} kitab
+									</span>
 								</div>
-							</div>
-
-							<div class="p-6">
-								<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Update {formatDate(item.updatedAt)}</p>
-								<p class="mt-3 text-sm leading-7 text-slate-600">
-									{shortText(item.description, 230)}
+								<p class="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+									{section.description}
 								</p>
-
-								<div class="mt-5 grid gap-3 sm:grid-cols-3">
-									<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-										<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Level</p>
-										<p class="mt-2 text-base font-semibold text-slate-900">{item.level}</p>
-									</div>
-									<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-										<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Jalur</p>
-										<p class="mt-2 text-base font-semibold text-slate-900">{item.duration}</p>
-									</div>
-									<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-										<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Posisi</p>
-										<p class="mt-2 text-base font-semibold text-slate-900">Jilid {item.seriesOrder}</p>
-									</div>
-								</div>
-
-								<div class="mt-5 flex flex-wrap gap-2">
-									<a href={`/kitab/${item.slug}`} class="btn btn-primary">Buka Materi</a>
-									<a href={item.sourceUrl} target="_blank" rel="noreferrer" class="btn btn-outline">
-										PDF Asli
-									</a>
-								</div>
 							</div>
 						</div>
-					</article>
+
+						<div class="grid gap-5 xl:grid-cols-2">
+							{#each section.items as item (item.slug)}
+								<article class="overflow-hidden rounded-[1.75rem] border border-amber-100 bg-white shadow-sm">
+									<div class="grid h-full gap-0 md:grid-cols-[0.44fr_0.56fr]">
+										<div class="bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.18),_transparent_34%),linear-gradient(145deg,_#111827_0%,_#1f2937_52%,_#14532d_100%)] p-6 text-white">
+											<div class="flex flex-wrap items-center gap-2">
+												<p class="text-xs font-semibold uppercase tracking-[0.32em] text-amber-200/80">Jilid {item.seriesOrder}</p>
+												<span class={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${kitabCategoryTone(item.category)}`}>
+													{kitabCategoryLabel(item.category)}
+												</span>
+											</div>
+											<h3 class="mt-4 text-3xl font-semibold">{item.title}</h3>
+											<p class="mt-3 text-sm leading-7 text-white/75">{item.summary}</p>
+											<div class="mt-5 flex flex-wrap gap-2">
+												{#each item.tags.slice(0, 3) as tag}
+													<span class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white">
+														{tag}
+													</span>
+												{/each}
+											</div>
+										</div>
+
+										<div class="p-6">
+											<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Update {formatDate(item.updatedAt)}</p>
+											<p class="mt-3 text-sm leading-7 text-slate-600">
+												{shortText(item.description, 230)}
+											</p>
+
+											<div class="mt-5 grid gap-3 sm:grid-cols-3">
+												<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+													<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Level</p>
+													<p class="mt-2 text-base font-semibold text-slate-900">{item.level}</p>
+												</div>
+												<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+													<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Jalur</p>
+													<p class="mt-2 text-base font-semibold text-slate-900">{item.duration}</p>
+												</div>
+												<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+													<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Posisi</p>
+													<p class="mt-2 text-base font-semibold text-slate-900">Jilid {item.seriesOrder}</p>
+												</div>
+											</div>
+
+											<div class="mt-5 flex flex-wrap gap-2">
+												<a href={`/kitab/${item.slug}`} class="btn btn-primary">Buka Materi</a>
+												<a href={item.sourceUrl} target="_blank" rel="noreferrer" class="btn btn-outline">
+													PDF Asli
+												</a>
+											</div>
+										</div>
+									</div>
+								</article>
+							{/each}
+						</div>
+					</section>
 				{/each}
 			</div>
 		</section>
@@ -216,7 +281,7 @@
 			</div>
 
 			<div class="grid gap-5 lg:grid-cols-2">
-				{#each featuredItems as item}
+				{#each featuredItems as item (item.slug)}
 					<article class="overflow-hidden rounded-[1.75rem] border border-emerald-100 bg-white shadow-sm">
 						<div class="grid h-full gap-0 md:grid-cols-[0.46fr_0.54fr]">
 							<div class="bg-gradient-to-br from-emerald-50 via-white to-slate-100">
@@ -241,6 +306,11 @@
 									<span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-600">
 										{sourceLabel[item.sourceType]}
 									</span>
+									{#if item.category}
+										<span class={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] ${kitabCategoryTone(item.category)}`}>
+											{kitabCategoryLabel(item.category)}
+										</span>
+									{/if}
 								</div>
 								<h3 class="mt-4 text-2xl font-semibold text-slate-900">{item.title}</h3>
 								<p class="mt-2 text-sm leading-7 text-slate-600">
@@ -278,7 +348,7 @@
 			</div>
 		{:else}
 			<div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-				{#each items as item}
+				{#each items as item (item.slug)}
 					<article class="group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
 						<div class="relative">
 							{#if item.coverUrl}
@@ -298,6 +368,11 @@
 								<span class="rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-700 shadow-sm">
 									{sourceLabel[item.sourceType]}
 								</span>
+								{#if item.category}
+									<span class={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] shadow-sm ${kitabCategoryTone(item.category)}`}>
+										{kitabCategoryLabel(item.category)}
+									</span>
+								{/if}
 								{#if item.featured}
 									<span class="rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white shadow-sm">
 										Unggulan

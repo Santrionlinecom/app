@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { isGoogleDriveUrl, normalizeKitabSlug, type KitabSourceType, type KitabStatus } from '$lib/kitab';
+import { KITAB_CATEGORY_OPTIONS } from '$lib/data/kitab-categories';
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 import { ensureCmsSchema, getAllPosts } from '$lib/server/cms';
 import { buildR2PublicUrl, requireR2Bucket } from '$lib/server/cloudflare';
@@ -32,6 +33,7 @@ const kitabStatuses = ['draft', 'published', 'archived'] as const;
 const allowedKitabStatuses = new Set<KitabStatus>(kitabStatuses);
 const kitabSourceTypes = ['pdf', 'drive'] as const;
 const allowedKitabSourceTypes = new Set<KitabSourceType>(kitabSourceTypes);
+const allowedKitabCategories = new Set(KITAB_CATEGORY_OPTIONS.map((option) => option.value));
 const MAX_KITAB_PDF_BYTES = 50 * 1024 * 1024;
 
 const paymentTypes = ['bank', 'ewallet', 'qris', 'manual'] as const;
@@ -152,6 +154,10 @@ export const actions: Actions = {
 		const summary = normalizeText(formData.get('summary'));
 		const description = normalizeText(formData.get('description'));
 		const coverUrl = readFirstValue(formData, 'coverUrl', 'cover-url');
+		const categoryValue = readFirstValue(formData, 'category');
+		const category = allowedKitabCategories.has(categoryValue as (typeof KITAB_CATEGORY_OPTIONS)[number]['value'])
+			? categoryValue
+			: null;
 		const sourceType = readFirstValue(formData, 'sourceType', 'source-type');
 		const status = readFirstValue(formData, 'status');
 		const featured = (formData.get('featured') ?? '').toString() === 'on';
@@ -247,6 +253,7 @@ export const actions: Actions = {
 				summary,
 				description,
 				coverUrl,
+				category,
 				sourceType: sourceType as KitabSourceType,
 				sourceUrl,
 				storageKey,
