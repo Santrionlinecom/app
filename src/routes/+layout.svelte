@@ -347,6 +347,7 @@ const adminNav = [
 ];
 
 let mobileMenuOpen = false;
+let mobileTopMenuOpen: string | null = null;
 let previousPathname = '';
 
 const kalenderNavItem = {
@@ -370,13 +371,101 @@ const quranNavItem = {
 	isActive: (path: string) => path === '/kitab/quran' || path.startsWith('/kitab/quran/')
 };
 
-const mobileShortcutNav = [
-	featureNavItem,
-	baseNav[2],
-	baseNav[3],
-	baseNav[4],
-	quranNavItem
-];
+const mobileTopMenus = [
+	{
+		id: 'fitur',
+		label: 'Fitur',
+		isActive: (path: string) => featureNavItem.isActive(path),
+		items: FEATURES.map((feature) => ({
+			label: feature.title,
+			href: `/fitur/${feature.slug}`,
+			note: feature.desc
+		})),
+		footerHref: '/fitur',
+		footerLabel: 'Lihat semua fitur'
+	},
+	{
+		id: 'konten',
+		label: 'Konten',
+		isActive: (path: string) => isBlogMenuActive(path),
+		items: [
+			{
+				label: 'Semua Artikel',
+				href: '/blog',
+				note: 'Blog dan penguatan tema santri'
+			},
+			{
+				label: 'Digital Store',
+				href: '/digital-store',
+				note: 'Produk digital dan materi pendamping'
+			}
+		],
+		footerHref: '/blog',
+		footerLabel: 'Buka blog'
+	},
+	{
+		id: 'tokoh',
+		label: 'Tokoh',
+		isActive: (path: string) => isTokohMenuActive(path),
+		items: [
+			{
+				label: 'Overview Tokoh',
+				href: '/tokoh',
+				note: 'Nabi, sahabat, tabiin, ulama'
+			},
+			...tokohMenuItems.map((item) => ({
+				label: item.label,
+				href: item.href,
+				note: item.note
+			}))
+		],
+		footerHref: '/tokoh',
+		footerLabel: 'Jelajahi tokoh'
+	},
+	{
+		id: 'dinasti',
+		label: 'Dinasti',
+		isActive: (path: string) => isDynastyMenuActive(path),
+		items: [
+			{
+				label: 'Overview Dinasti',
+				href: '/dinasti',
+				note: 'Peta sejarah dan peradaban Islam'
+			},
+			...dynastyMenuItems.slice(0, 4).map((item) => ({
+				label: item.label,
+				href: item.href,
+				note: item.note
+			}))
+		],
+		footerHref: '/dinasti',
+		footerLabel: 'Lihat semua dinasti'
+	},
+	{
+		id: 'kitab',
+		label: 'Kitab',
+		isActive: (path: string) => path.startsWith('/kitab'),
+		items: [
+			{
+				label: 'Perpustakaan Kitab',
+				href: '/kitab',
+				note: 'Semua kitab dan halaman belajar'
+			},
+			...kitabMenuItems.map((item) => ({
+				label: item.label,
+				href: item.href,
+				note: item.note
+			})),
+			{
+				label: quranNavItem.label,
+				href: quranNavItem.href,
+				note: 'Mushaf Al-Qur’an 30 juz'
+			}
+		],
+		footerHref: '/kitab',
+		footerLabel: 'Buka perpustakaan'
+	}
+] as const;
 
 const mobileExploreLinks = [
 	{
@@ -515,6 +604,7 @@ $: mobileHeroActions = [
 		tone: 'from-emerald-500 via-teal-500 to-cyan-500 text-white'
 	}
 ];
+$: activeMobileTopMenu = mobileTopMenus.find((menu) => menu.id === mobileTopMenuOpen) ?? null;
 $: mobilePublicTabs = [
 	baseNav[0],
 	baseNav[1],
@@ -537,6 +627,7 @@ $: mobilePublicTabs = [
 $: if (pathname !== previousPathname) {
 	previousPathname = pathname;
 	mobileMenuOpen = false;
+	mobileTopMenuOpen = null;
 }
 </script>
 
@@ -587,21 +678,56 @@ $: if (pathname !== previousPathname) {
 					</div>
 
 					<div class="mobile-scroll-row mt-3 flex gap-2 overflow-x-auto pb-1">
-						{#each mobileShortcutNav as item}
-							<a
-								href={item.href}
-								class="inline-flex shrink-0 items-center rounded-full border px-3 py-2 text-xs font-semibold tracking-[0.16em] uppercase transition"
-								class:border-emerald-200={item.isActive(pathname)}
-								class:bg-emerald-50={item.isActive(pathname)}
-								class:text-emerald-700={item.isActive(pathname)}
-								class:border-slate-200={!item.isActive(pathname)}
-								class:bg-white={!item.isActive(pathname)}
-								class:text-slate-600={!item.isActive(pathname)}
+						{#each mobileTopMenus as menu}
+							<button
+								type="button"
+								class="mobile-top-trigger shrink-0"
+								class:mobile-top-trigger-active={menu.isActive(pathname) || mobileTopMenuOpen === menu.id}
+								aria-expanded={mobileTopMenuOpen === menu.id}
+								on:click={() => (mobileTopMenuOpen = mobileTopMenuOpen === menu.id ? null : menu.id)}
 							>
-								{item.label}
-							</a>
+								<span>{menu.label}</span>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									class="h-4 w-4 transition"
+									class:rotate-180={mobileTopMenuOpen === menu.id}
+								>
+									<path
+										fill-rule="evenodd"
+										d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
+										clip-rule="evenodd"
+									/>
+								</svg>
+							</button>
 						{/each}
 					</div>
+
+					{#if activeMobileTopMenu}
+						<div class="mt-3 rounded-[1.45rem] border border-slate-200/80 bg-white/95 p-2 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+							<div class="grid gap-2 sm:grid-cols-2">
+								{#each activeMobileTopMenu.items as item}
+									<a
+										href={item.href}
+										class="rounded-[1.1rem] border border-slate-200/70 bg-slate-50/80 px-3 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/70"
+										on:click={() => (mobileTopMenuOpen = null)}
+									>
+										<p class="text-sm font-semibold text-slate-900">{item.label}</p>
+										<p class="mt-1 text-xs leading-5 text-slate-500">{item.note}</p>
+									</a>
+								{/each}
+							</div>
+							<a
+								href={activeMobileTopMenu.footerHref}
+								class="mt-2 inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700"
+								on:click={() => (mobileTopMenuOpen = null)}
+							>
+								{activeMobileTopMenu.footerLabel}
+								<span>→</span>
+							</a>
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -1147,6 +1273,28 @@ $: if (pathname !== previousPathname) {
 
 	.mobile-scroll-row::-webkit-scrollbar {
 		display: none;
+	}
+
+	.mobile-top-trigger {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		border-radius: 999px;
+		border: 1px solid rgba(226, 232, 240, 0.95);
+		background: rgba(255, 255, 255, 0.96);
+		padding: 0.6rem 0.9rem;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: #475569;
+		transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+	}
+
+	.mobile-top-trigger-active {
+		border-color: rgba(16, 185, 129, 0.24);
+		background: rgba(236, 253, 245, 0.96);
+		color: #047857;
 	}
 
 	.mobile-tab-link {
