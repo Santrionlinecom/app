@@ -35,7 +35,7 @@
 	$: listId = id ? `${id}-listbox` : undefined;
 
 	const displayLabel = (option?: SelectOption | null) =>
-		option ? `${option.emoji ? `${option.emoji} ` : ''}${option.label}`.trim() : '';
+		option ? `${option.flagIcon ? '' : option.emoji ? `${option.emoji} ` : ''}${option.label}`.trim() : '';
 
 	$: selectedOption = options.find((opt) => opt.value === value) ?? null;
 	$: if (!isOpen) {

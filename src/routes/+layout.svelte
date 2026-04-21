@@ -2,8 +2,9 @@
 import '../app.css';
 import { page } from '$app/stores';
 import { onMount } from 'svelte';
-import SearchableSelect from '$lib/components/SearchableSelect.svelte';
-import { LANGUAGE_OPTIONS } from '$lib/data/languages';
+	import SearchableSelect from '$lib/components/SearchableSelect.svelte';
+	import { LANGUAGE_OPTIONS } from '$lib/data/languages';
+	import languageFlagOverrides from '$lib/data/language-flag-overrides.json';
 import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
 import { islamicDynasties } from '$lib/data/dinasti';
 import { FEATURES } from '$lib/features';
@@ -131,7 +132,10 @@ const toCountryCodeFromEmoji = (emoji: string) => {
 };
 
 const languageOptionsWithFlags: LanguageHeaderOption[] = LANGUAGE_OPTIONS.map((option) => {
-	const flagCode = toCountryCodeFromEmoji(option.emoji ?? '');
+	const flagCode =
+		toCountryCodeFromEmoji(option.emoji ?? '') ??
+		languageFlagOverrides[option.value as keyof typeof languageFlagOverrides] ??
+		null;
 	return {
 		...option,
 		flagCode: flagCode ?? undefined,

@@ -3,6 +3,7 @@ import path from 'node:path';
 
 const rootDir = process.cwd();
 const languagesFile = path.join(rootDir, 'src/lib/data/languages.ts');
+const languageOverrideFile = path.join(rootDir, 'src/lib/data/language-flag-overrides.json');
 const sourceFlagDir = path.join(rootDir, 'node_modules/country-flag-icons/3x2');
 const outputFlagDir = path.join(rootDir, 'static/flags');
 
@@ -34,6 +35,19 @@ const parseFlagCountryCodes = (source) => {
 		const emoji = match[1] ?? '';
 		const code = toCountryCodeFromEmoji(emoji);
 		if (code) codes.add(code);
+	}
+
+	return [...codes].sort();
+};
+
+const parseOverrideCountryCodes = (source) => {
+	const payload = JSON.parse(source);
+	const codes = new Set();
+
+	for (const code of Object.values(payload)) {
+		if (typeof code === 'string' && code.trim()) {
+			codes.add(code.trim().toUpperCase());
+		}
 	}
 
 	return [...codes].sort();
@@ -95,7 +109,8 @@ const writeManifest = async (codes, missing) => {
 
 const run = async () => {
 	const languageSource = await fs.readFile(languagesFile, 'utf8');
-	const codes = parseFlagCountryCodes(languageSource);
+	const overrideSource = await fs.readFile(languageOverrideFile, 'utf8');
+	const codes = [...new Set([...parseFlagCountryCodes(languageSource), ...parseOverrideCountryCodes(overrideSource)])].sort();
 
 	await ensureDir(outputFlagDir);
 	await clearOutput(outputFlagDir);
