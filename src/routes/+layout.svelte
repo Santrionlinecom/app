@@ -6,6 +6,7 @@ import SearchableSelect from '$lib/components/SearchableSelect.svelte';
 import { LANGUAGE_OPTIONS } from '$lib/data/languages';
 import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
 import { islamicDynasties } from '$lib/data/dinasti';
+import { FEATURES } from '$lib/features';
 
 export let data;
 
@@ -345,8 +346,191 @@ const adminNav = [
 	}
 ];
 
+let mobileMenuOpen = false;
+let previousPathname = '';
+
+const kalenderNavItem = {
+	label: 'Kalender',
+	href: '/kalender',
+	icon: 'M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+	isActive: (path: string) => path === '/kalender' || path.startsWith('/kalender/')
+};
+
+const featureNavItem = {
+	label: 'Fitur',
+	href: '/fitur',
+	icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.11 3.418a1 1 0 00.95.69h3.595c.969 0 1.371 1.24.588 1.81l-2.91 2.114a1 1 0 00-.364 1.118l1.11 3.418c.3.921-.755 1.688-1.538 1.118l-2.91-2.114a1 1 0 00-1.176 0l-2.91 2.114c-.783.57-1.838-.197-1.539-1.118l1.11-3.418a1 1 0 00-.363-1.118L2.805 8.845c-.783-.57-.38-1.81.588-1.81h3.595a1 1 0 00.95-.69l1.11-3.418z',
+	isActive: (path: string) => path === '/fitur' || path.startsWith('/fitur/')
+};
+
+const mobileShortcutNav = [
+	baseNav[1],
+	featureNavItem,
+	baseNav[5],
+	kalenderNavItem,
+	baseNav[3]
+];
+
+const mobileExploreLinks = [
+	{
+		label: 'Semua Fitur',
+		href: '/fitur',
+		note: 'Program pembinaan aktif',
+		tone: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+	},
+	{
+		label: 'Blog',
+		href: '/blog',
+		note: 'Artikel dan digital store',
+		tone: 'border-slate-200 bg-slate-50 text-slate-700'
+	},
+	{
+		label: 'Tokoh',
+		href: '/tokoh',
+		note: 'Nabi sampai ulama',
+		tone: 'border-amber-200 bg-amber-50 text-amber-700'
+	},
+	{
+		label: 'Dinasti',
+		href: '/dinasti',
+		note: 'Peta peradaban Islam',
+		tone: 'border-sky-200 bg-sky-50 text-sky-700'
+	},
+	{
+		label: 'Mushaf',
+		href: '/kitab/quran',
+		note: 'Baca Al-Qur\'an 30 juz',
+		tone: 'border-cyan-200 bg-cyan-50 text-cyan-700'
+	},
+	{
+		label: 'Kalender',
+		href: '/kalender',
+		note: 'Hijriyah dan pasaran',
+		tone: 'border-violet-200 bg-violet-50 text-violet-700'
+	}
+];
+
+const getMobileContextMeta = (path: string) => {
+	if (isAdminRoute(path)) {
+		return {
+			label: 'Super Admin',
+			note: 'Panel produk dan operasional'
+		};
+	}
+
+	if (isAppRoute(path)) {
+		return {
+			label: 'Dashboard Lembaga',
+			note: 'Aktivitas santri, kelas, dan laporan'
+		};
+	}
+
+	if (path.startsWith('/kitab')) {
+		return {
+			label: 'Perpustakaan Kitab',
+			note: 'Kategori kitab dan belajar per bab'
+		};
+	}
+
+	if (path === '/tpq' || path.startsWith('/tpq/')) {
+		return {
+			label: 'Operasional TPQ',
+			note: 'Pendaftaran dan profil lembaga'
+		};
+	}
+
+	if (isTokohMenuActive(path)) {
+		return {
+			label: 'Tokoh dan Sanad',
+			note: 'Nabi, sahabat, tabiin, ulama'
+		};
+	}
+
+	if (isDynastyMenuActive(path)) {
+		return {
+			label: 'Dinasti Islam',
+			note: 'Peta sejarah dan peradaban'
+		};
+	}
+
+	if (isBlogMenuActive(path)) {
+		return {
+			label: 'Blog dan Konten',
+			note: 'Artikel, penguatan, dan store'
+		};
+	}
+
+	if (kalenderNavItem.isActive(path)) {
+		return {
+			label: 'Kalender Hijriyah',
+			note: 'Agenda harian dan pasaran'
+		};
+	}
+
+	return {
+		label: 'Beranda Santri',
+		note: 'Ringkasan platform dan fitur aktif'
+	};
+};
+
 $: isAppRouteActive = isAppRoute(pathname);
 $: isAdminRouteActive = isAdminRoute(pathname);
+$: mobileContext = getMobileContextMeta(pathname);
+$: mobilePrimaryAction = data?.user
+	? {
+			href: isSuperAdmin ? '/admin/super/overview' : '/dashboard',
+			label: isSuperAdmin ? 'Admin' : 'Dashboard',
+			note: isSuperAdmin ? 'Buka panel super admin' : 'Lanjutkan aktivitas'
+		}
+	: {
+			href: '/auth',
+			label: 'Masuk',
+			note: 'Login ke akun'
+		};
+$: mobileSecondaryAction = data?.user
+	? {
+			href: '/akun',
+			label: 'Profil',
+			note: 'Kelola akun dan preferensi'
+		}
+	: {
+			href: '/register',
+			label: 'Daftar TPQ',
+			note: 'Mulai onboarding lembaga'
+		};
+$: mobileHeroActions = [
+	{
+		...mobilePrimaryAction,
+		tone: 'from-slate-950 via-slate-900 to-emerald-950 text-white'
+	},
+	{
+		...mobileSecondaryAction,
+		tone: 'from-emerald-500 via-teal-500 to-cyan-500 text-white'
+	}
+];
+$: mobilePublicTabs = [
+	baseNav[0],
+	baseNav[1],
+	baseNav[5],
+	kalenderNavItem,
+	data?.user
+		? {
+				label: 'Profil',
+				href: '/akun',
+				icon: 'M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0',
+				isActive: (path: string) => path.startsWith('/akun')
+			}
+		: {
+				label: 'Daftar',
+				href: '/register',
+				icon: 'M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0M16 8h4m-2-2v4',
+				isActive: (path: string) => path === '/register'
+			}
+];
+$: if (pathname !== previousPathname) {
+	previousPathname = pathname;
+	mobileMenuOpen = false;
+}
 </script>
 
 <svelte:head>
@@ -354,233 +538,467 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 </svelte:head>
 
 <div class="min-h-screen bg-base-100">
-	<header class="sticky top-0 z-50 w-full border-b bg-base-100 py-2">
-		<div class="container mx-auto max-w-6xl px-4 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between">
-			<a href="/" class="flex items-center gap-2">
-				<img src="/logo-santri.png" alt="Santri Online" class="h-8 w-auto" loading="lazy" />
-			</a>
-			<nav class="hidden md:flex items-center gap-5">
-				<a href="/" class:active={pathname === '/'} class="text-base-content/60 hover:text-primary">Beranda</a>
-				<a href="/tpq" class:active={pathname.startsWith('/tpq')} class="text-base-content/60 hover:text-primary">TPQ</a>
-				<div class="group relative">
-					<a
-						href="/blog"
-						class:active={isBlogMenuActive(pathname)}
-						class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
-					>
-						<span>Blog</span>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-							class="h-4 w-4 transition group-hover:translate-y-px"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
-								clip-rule="evenodd"
-							/>
-						</svg>
+	<header class="sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
+		<div class="md:hidden border-b border-white/60 bg-gradient-to-br from-emerald-50/90 via-white to-cyan-50/80">
+			<div class="container mx-auto max-w-6xl px-4 py-3">
+				<div class="rounded-[1.8rem] border border-white/70 bg-white/90 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+					<div class="flex items-start justify-between gap-3">
+						<a href="/" class="flex min-w-0 items-center gap-3">
+							<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 p-2 shadow-lg shadow-emerald-500/20">
+								<img src="/logo-santri.png" alt="Santri Online" class="h-8 w-auto" loading="lazy" />
+							</div>
+							<div class="min-w-0">
+								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Santri Online</p>
+								<p class="truncate text-sm font-semibold text-slate-950">{mobileContext.label}</p>
+								<p class="truncate text-xs text-slate-500">{mobileContext.note}</p>
+							</div>
+						</a>
+
+						<div class="flex items-center gap-2">
+							<a
+								href={mobilePrimaryAction.href}
+								class="inline-flex h-11 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 shadow-sm"
+							>
+								{mobilePrimaryAction.label}
+							</a>
+							<button
+								type="button"
+								class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-emerald-200 hover:text-emerald-700"
+								aria-label="Buka menu mobile"
+								on:click={() => (mobileMenuOpen = true)}
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+								</svg>
+							</button>
+						</div>
+					</div>
+
+					<div class="mobile-scroll-row mt-3 flex gap-2 overflow-x-auto pb-1">
+						{#each mobileShortcutNav as item}
+							<a
+								href={item.href}
+								class="inline-flex shrink-0 items-center rounded-full border px-3 py-2 text-xs font-semibold tracking-[0.16em] uppercase transition"
+								class:border-emerald-200={item.isActive(pathname)}
+								class:bg-emerald-50={item.isActive(pathname)}
+								class:text-emerald-700={item.isActive(pathname)}
+								class:border-slate-200={!item.isActive(pathname)}
+								class:bg-white={!item.isActive(pathname)}
+								class:text-slate-600={!item.isActive(pathname)}
+							>
+								{item.label}
+							</a>
+						{/each}
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="hidden md:block">
+			<div class="container mx-auto max-w-6xl px-4 py-2">
+				<div class="flex items-center justify-between gap-3">
+					<a href="/" class="flex items-center gap-2">
+						<img src="/logo-santri.png" alt="Santri Online" class="h-8 w-auto" loading="lazy" />
 					</a>
-					<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-56 -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
-						<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+					<nav class="flex items-center gap-5">
+						<a href="/" class:active={pathname === '/'} class="text-base-content/60 hover:text-primary">Beranda</a>
+						<a href="/tpq" class:active={pathname.startsWith('/tpq')} class="text-base-content/60 hover:text-primary">TPQ</a>
+						<div class="group relative">
 							<a
 								href="/blog"
-								class="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+								class:active={isBlogMenuActive(pathname)}
+								class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
 							>
-								<span>Semua Artikel</span>
-								<span class="text-xs text-slate-400">/blog</span>
+								<span>Blog</span>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									class="h-4 w-4 transition group-hover:translate-y-px"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
+										clip-rule="evenodd"
+									/>
+								</svg>
 							</a>
-							<a
-								href="/digital-store"
-								class="mt-1 flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
-							>
-								<span>Digital Store</span>
-								<span class="text-xs text-slate-400">produk</span>
-							</a>
+							<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-56 -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
+								<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+									<a
+										href="/blog"
+										class="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+									>
+										<span>Semua Artikel</span>
+										<span class="text-xs text-slate-400">/blog</span>
+									</a>
+									<a
+										href="/digital-store"
+										class="mt-1 flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+									>
+										<span>Digital Store</span>
+										<span class="text-xs text-slate-400">produk</span>
+									</a>
+								</div>
+							</div>
 						</div>
-					</div>
-				</div>
-				<div class="group relative">
-					<a
-						href="/tokoh"
-						class:active={isTokohMenuActive(pathname)}
-						class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
-					>
-						<span>Tokoh</span>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-							class="h-4 w-4 transition group-hover:translate-y-px"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					</a>
-					<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-72 -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
-						<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+						<div class="group relative">
 							<a
 								href="/tokoh"
-								class="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700 transition hover:bg-slate-100"
+								class:active={isTokohMenuActive(pathname)}
+								class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
 							>
-								<div>
-									<p class="font-semibold text-slate-900">Overview Tokoh</p>
-									<p class="text-xs text-slate-500">Rantai generasi dari nabi sampai ulama</p>
-								</div>
-								<span class="text-xs text-slate-400">/tokoh</span>
+								<span>Tokoh</span>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									class="h-4 w-4 transition group-hover:translate-y-px"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
+										clip-rule="evenodd"
+									/>
+								</svg>
 							</a>
-							<div class="mt-2 space-y-1">
-								{#each tokohMenuItems as item}
+							<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-72 -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
+								<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
 									<a
-										href={item.href}
-										class="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+										href="/tokoh"
+										class="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700 transition hover:bg-slate-100"
 									>
 										<div>
-											<p class="font-medium text-slate-900">{item.label}</p>
-											<p class="text-xs text-slate-400">{item.note}</p>
+											<p class="font-semibold text-slate-900">Overview Tokoh</p>
+											<p class="text-xs text-slate-500">Rantai generasi dari nabi sampai ulama</p>
 										</div>
+										<span class="text-xs text-slate-400">/tokoh</span>
 									</a>
-								{/each}
+									<div class="mt-2 space-y-1">
+										{#each tokohMenuItems as item}
+											<a
+												href={item.href}
+												class="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+											>
+												<div>
+													<p class="font-medium text-slate-900">{item.label}</p>
+													<p class="text-xs text-slate-400">{item.note}</p>
+												</div>
+											</a>
+										{/each}
+									</div>
+								</div>
 							</div>
 						</div>
-					</div>
-				</div>
-				<div class="group relative">
-					<a
-						href="/dinasti"
-						class:active={isDynastyMenuActive(pathname)}
-						class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
-					>
-						<span>Dinasti</span>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-							class="h-4 w-4 transition group-hover:translate-y-px"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					</a>
-					<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-[34rem] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
-						<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+						<div class="group relative">
 							<a
 								href="/dinasti"
-								class="block rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
+								class:active={isDynastyMenuActive(pathname)}
+								class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
 							>
-								<p class="text-sm font-semibold text-slate-900">Overview Dinasti Islam</p>
-								<p class="mt-1 text-xs text-slate-500">Urutan pasca-Khulafaur Rasyidin dan peta dinasti yang saling overlap</p>
+								<span>Dinasti</span>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									class="h-4 w-4 transition group-hover:translate-y-px"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
+										clip-rule="evenodd"
+									/>
+								</svg>
 							</a>
-							<div class="mt-2 grid max-h-[24rem] grid-cols-2 gap-1 overflow-y-auto pr-1">
-								{#each dynastyMenuItems as item}
+							<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-[34rem] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
+								<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
 									<a
-										href={item.href}
-										class="rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-sky-50 hover:text-sky-700"
+										href="/dinasti"
+										class="block rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
 									>
-										<p class="font-medium text-slate-900">{item.order}. {item.label}</p>
-										<p class="text-xs text-slate-400">{item.note}</p>
+										<p class="text-sm font-semibold text-slate-900">Overview Dinasti Islam</p>
+										<p class="mt-1 text-xs text-slate-500">Urutan pasca-Khulafaur Rasyidin dan peta dinasti yang saling overlap</p>
 									</a>
-								{/each}
+									<div class="mt-2 grid max-h-[24rem] grid-cols-2 gap-1 overflow-y-auto pr-1">
+										{#each dynastyMenuItems as item}
+											<a
+												href={item.href}
+												class="rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-sky-50 hover:text-sky-700"
+											>
+												<p class="font-medium text-slate-900">{item.order}. {item.label}</p>
+												<p class="text-xs text-slate-400">{item.note}</p>
+											</a>
+										{/each}
+									</div>
+								</div>
 							</div>
 						</div>
-					</div>
-				</div>
-				<div class="group relative">
-					<a
-						href="/kitab"
-						class:active={pathname.startsWith('/kitab')}
-						class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
-					>
-						<span>Kitab</span>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-							class="h-4 w-4 transition group-hover:translate-y-px"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					</a>
-					<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-[22rem] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
-						<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+						<div class="group relative">
 							<a
 								href="/kitab"
-								class="block rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
+								class:active={pathname.startsWith('/kitab')}
+								class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
 							>
-								<p class="text-sm font-semibold text-slate-900">Overview Kitab</p>
-								<p class="mt-1 text-xs text-slate-500">Perpustakaan kitab, seri bahasa Arab, dan kitab fondasi Santri Online</p>
+								<span>Kitab</span>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									class="h-4 w-4 transition group-hover:translate-y-px"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
+										clip-rule="evenodd"
+									/>
+								</svg>
 							</a>
-							<div class="mt-2 grid grid-cols-2 gap-1">
-								{#each kitabMenuItems as item}
+							<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-[22rem] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
+								<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
 									<a
-										href={item.href}
-										class="rounded-xl px-3 py-3 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+										href="/kitab"
+										class="block rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
 									>
-										<p class="font-medium text-slate-900">{item.label}</p>
-										<p class="text-xs text-slate-400">{item.note}</p>
+										<p class="text-sm font-semibold text-slate-900">Overview Kitab</p>
+										<p class="mt-1 text-xs text-slate-500">Perpustakaan kitab, seri bahasa Arab, dan kitab fondasi Santri Online</p>
 									</a>
-								{/each}
+									<div class="mt-2 grid grid-cols-2 gap-1">
+										{#each kitabMenuItems as item}
+											<a
+												href={item.href}
+												class="rounded-xl px-3 py-3 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+											>
+												<p class="font-medium text-slate-900">{item.label}</p>
+												<p class="text-xs text-slate-400">{item.note}</p>
+											</a>
+										{/each}
+									</div>
+								</div>
 							</div>
 						</div>
+					</nav>
+					<div class="flex items-center gap-2">
+						<div class="hidden md:flex items-center gap-2">
+							{#if selectedLanguageOption?.flagIcon}
+								<img
+									src={selectedLanguageOption.flagIcon}
+									alt={`Bendera ${selectedLanguageOption.label}`}
+									class="h-4 w-6 rounded-[2px] border border-slate-200 object-cover shadow-sm"
+									loading="lazy"
+									decoding="async"
+								/>
+							{:else if selectedLanguageOption?.emoji}
+								<span class="text-base leading-none">{selectedLanguageOption.emoji}</span>
+							{/if}
+							<SearchableSelect
+								options={languageOptionsWithFlags}
+								bind:value={selectedLanguage}
+								placeholder="Pilih Bahasa"
+								searchPlaceholder="Cari bahasa..."
+								emptyText="Bahasa tidak ditemukan"
+								wrapperClass="w-52"
+								inputClass="text-xs h-9"
+								on:change={handleLanguageChange}
+							/>
+						</div>
+						<div id="google_translate_element" class="translate-slot hidden"></div>
+						{#if data.user}
+							<a href={isSuperAdmin ? '/admin/super/overview' : '/dashboard'} class="btn btn-sm btn-ghost">
+								{isSuperAdmin ? 'Super Admin' : 'Dashboard'}
+							</a>
+							{#if isImpersonating}
+								<a href="/admin/super/impersonate/stop" class="btn btn-sm btn-outline">Keluar Mode Admin</a>
+							{/if}
+							<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
+							<a href="/akun" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Profil</a>
+							<form method="POST" action="/logout">
+								<button type="submit" class="btn btn-sm btn-error">Logout</button>
+							</form>
+						{:else}
+							<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
+							<a href="/auth" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Login</a>
+							<a href="/register" class="btn btn-sm btn-primary">Daftar TPQ</a>
+						{/if}
 					</div>
 				</div>
-			</nav>
-			<div class="flex items-center gap-2">
-				<div class="hidden md:flex items-center gap-2">
-					{#if selectedLanguageOption?.flagIcon}
-						<img
-							src={selectedLanguageOption.flagIcon}
-							alt={`Bendera ${selectedLanguageOption.label}`}
-							class="h-4 w-6 rounded-[2px] border border-slate-200 object-cover shadow-sm"
-							loading="lazy"
-							decoding="async"
-						/>
-					{:else if selectedLanguageOption?.emoji}
-						<span class="text-base leading-none">{selectedLanguageOption.emoji}</span>
-					{/if}
-					<SearchableSelect
-						options={languageOptionsWithFlags}
-						bind:value={selectedLanguage}
-						placeholder="Pilih Bahasa"
-						searchPlaceholder="Cari bahasa..."
-						emptyText="Bahasa tidak ditemukan"
-						wrapperClass="w-52"
-						inputClass="text-xs h-9"
-						on:change={handleLanguageChange}
-					/>
-				</div>
-				<div id="google_translate_element" class="translate-slot hidden"></div>
-				{#if data.user}
-					<a href={isSuperAdmin ? '/admin/super/overview' : '/dashboard'} class="btn btn-sm btn-ghost">
-						{isSuperAdmin ? 'Super Admin' : 'Dashboard'}
-					</a>
-					{#if isImpersonating}
-						<a href="/admin/super/impersonate/stop" class="btn btn-sm btn-outline">Keluar Mode Admin</a>
-					{/if}
-					<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
-					<a href="/akun" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Profil</a>
-					<form method="POST" action="/logout">
-						<button type="submit" class="btn btn-sm btn-error">Logout</button>
-					</form>
-				{:else}
-					<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
-					<a href="/auth" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Login</a>
-					<a href="/register" class="btn btn-sm btn-primary">Daftar TPQ</a>
-				{/if}
 			</div>
 		</div>
 	</header>
+
+	{#if mobileMenuOpen}
+		<div class="fixed inset-0 z-[55] md:hidden">
+			<button
+				type="button"
+				class="absolute inset-0 bg-slate-950/45 backdrop-blur-sm"
+				aria-label="Tutup menu mobile"
+				on:click={() => (mobileMenuOpen = false)}
+			></button>
+
+			<div class="absolute inset-x-0 top-0 max-h-[calc(100vh-0.5rem)] overflow-y-auto rounded-b-[2rem] border-b border-slate-200/70 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.22)]">
+				<div class="bg-gradient-to-br from-slate-950 via-emerald-950 to-teal-900 px-4 pb-5 pt-4 text-white">
+					<div class="flex items-start justify-between gap-3">
+						<div class="max-w-[15rem]">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70">Navigasi Mobile</p>
+							<h2 class="mt-2 text-2xl font-semibold">Menu cepat ala app</h2>
+							<p class="mt-2 text-sm leading-6 text-white/80">
+								Akses modul utama, fitur pembinaan, dan kategori kitab tanpa keluar dari pola mobile.
+							</p>
+						</div>
+						<button
+							type="button"
+							class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white transition hover:bg-white/15"
+							aria-label="Tutup menu mobile"
+							on:click={() => (mobileMenuOpen = false)}
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
+							</svg>
+						</button>
+					</div>
+
+					<div class="mt-5 grid grid-cols-2 gap-3">
+						{#each mobileHeroActions as action}
+							<a
+								href={action.href}
+								class={`rounded-[1.5rem] bg-gradient-to-br px-4 py-4 shadow-lg ${action.tone}`}
+							>
+								<p class="text-sm font-semibold">{action.label}</p>
+								<p class="mt-2 text-xs leading-5 text-white/80">{action.note}</p>
+							</a>
+						{/each}
+					</div>
+				</div>
+
+				<div class="space-y-6 px-4 py-5">
+					<section>
+						<div class="mb-3 flex items-center justify-between gap-3">
+							<div>
+								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Jalur cepat</p>
+								<h3 class="mt-1 text-lg font-semibold text-slate-950">Area utama produk</h3>
+							</div>
+							<a href="/fitur" class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Semua fitur</a>
+						</div>
+
+						<div class="grid grid-cols-2 gap-3">
+							{#each mobileExploreLinks as item}
+								<a href={item.href} class="rounded-[1.35rem] border border-slate-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+									<span class={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${item.tone}`}>
+										{item.label}
+									</span>
+									<p class="mt-3 text-sm leading-6 text-slate-500">{item.note}</p>
+								</a>
+							{/each}
+						</div>
+					</section>
+
+					<section>
+						<div class="mb-3">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Program pembinaan</p>
+							<h3 class="mt-1 text-lg font-semibold text-slate-950">Fitur aktif</h3>
+						</div>
+
+						<div class="space-y-2">
+							{#each FEATURES as feature}
+								<a
+									href={`/fitur/${feature.slug}`}
+									class="flex items-start gap-3 rounded-[1.35rem] border border-slate-200/80 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+								>
+									<span class="mt-0.5 text-2xl">{feature.icon}</span>
+									<div class="min-w-0">
+										<p class="text-sm font-semibold text-slate-900">{feature.title}</p>
+										<p class="mt-1 text-sm leading-6 text-slate-500">{feature.desc}</p>
+									</div>
+								</a>
+							{/each}
+						</div>
+					</section>
+
+					<section>
+						<div class="mb-3">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Kategori kitab</p>
+							<h3 class="mt-1 text-lg font-semibold text-slate-950">Masuk langsung ke kitab</h3>
+						</div>
+
+						<div class="grid grid-cols-2 gap-3">
+							{#each kitabMenuItems as item}
+								<a href={item.href} class="rounded-[1.35rem] border border-slate-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+									<p class="text-sm font-semibold text-slate-900">{item.label}</p>
+									<p class="mt-2 text-xs leading-5 text-slate-500">{item.note}</p>
+								</a>
+							{/each}
+						</div>
+					</section>
+
+					<section class="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/80 p-4">
+						<div class="mb-3 flex items-center gap-2">
+							{#if selectedLanguageOption?.flagIcon}
+								<img
+									src={selectedLanguageOption.flagIcon}
+									alt={`Bendera ${selectedLanguageOption.label}`}
+									class="h-4 w-6 rounded-[2px] border border-slate-200 object-cover shadow-sm"
+									loading="lazy"
+									decoding="async"
+								/>
+							{:else if selectedLanguageOption?.emoji}
+								<span class="text-base leading-none">{selectedLanguageOption.emoji}</span>
+							{/if}
+							<div>
+								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Bahasa tampilan</p>
+								<p class="text-sm font-semibold text-slate-900">Terjemahkan halaman bila perlu</p>
+							</div>
+						</div>
+
+						<SearchableSelect
+							options={languageOptionsWithFlags}
+							bind:value={selectedLanguage}
+							placeholder="Pilih Bahasa"
+							searchPlaceholder="Cari bahasa..."
+							emptyText="Bahasa tidak ditemukan"
+							wrapperClass="w-full"
+							inputClass="h-11 text-sm"
+							on:change={handleLanguageChange}
+						/>
+					</section>
+
+					<section class="space-y-3">
+						<div>
+							<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Akun dan akses</p>
+							<h3 class="mt-1 text-lg font-semibold text-slate-950">Langkah berikutnya</h3>
+						</div>
+
+						<div class="grid gap-3">
+							<a href="/kalender" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+								Buka Kalender
+							</a>
+
+							{#if data.user}
+								<a href="/akun" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+									Kelola Profil
+								</a>
+								{#if isImpersonating}
+									<a href="/admin/super/impersonate/stop" class="rounded-[1.3rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700 shadow-sm">
+										Keluar Mode Admin
+									</a>
+								{/if}
+								<form method="POST" action="/logout">
+									<button type="submit" class="w-full rounded-[1.3rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 shadow-sm">
+										Logout
+									</button>
+								</form>
+							{:else}
+								<a href="/auth" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+									Login
+								</a>
+								<a href="/register" class="rounded-[1.3rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm">
+									Daftarkan TPQ
+								</a>
+							{/if}
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
+	{/if}
 
 	<main class="container mx-auto max-w-6xl px-4 py-8 pb-24 md:pb-10">
 		<slot />
@@ -588,66 +1006,45 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 
 	<!-- Bottom nav (mobile) -->
 	{#if !isAppRouteActive && !isAdminRouteActive}
-		<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-base-200 bg-base-100 shadow-[0_-6px_24px_rgba(0,0,0,0.08)] md:hidden safe-area-bottom">
-			<div class="mx-auto flex max-w-2xl items-center justify-between px-2 py-3 pb-safe">
-				{#each baseNav as item}
-					<a
-						href={item.href}
-						class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-slate-500 transition-colors"
-						class:text-emerald-600={item.isActive(pathname)}
-						class:font-semibold={item.isActive(pathname)}
-						class:bg-emerald-50={item.isActive(pathname)}
-					>
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
-							<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
-						</svg>
-						<span class="text-[10px]">{item.label}</span>
-					</a>
-				{/each}
-
-				{#if data.user}
-					<a
-						href="/akun"
-						class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs transition-colors"
-						class:text-emerald-600={pathname.startsWith('/akun')}
-						class:font-semibold={pathname.startsWith('/akun')}
-						class:bg-emerald-50={pathname.startsWith('/akun')}
-					>
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0" />
-						</svg>
-						<span class="text-[10px]">Profil</span>
-					</a>
-				{:else}
-					<a
-						href="/register"
-						class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-emerald-600 font-semibold bg-emerald-50 transition-colors"
-					>
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0M15 12h4m0 0l-2-2m2 2l-2 2" />
-						</svg>
-						<span class="text-[10px]">Daftar TPQ</span>
-					</a>
-				{/if}
+		<nav class="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom">
+			<div class="mx-auto max-w-xl px-3 py-3 pb-safe">
+				<div class="pointer-events-auto rounded-[1.7rem] border border-white/70 bg-white/92 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+					<div class="grid grid-cols-5 gap-1">
+						{#each mobilePublicTabs as item}
+							<a
+								href={item.href}
+								class="mobile-tab-link"
+								class:mobile-tab-link-active={item.isActive(pathname)}
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+									<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+								</svg>
+								<span class="text-[10px]">{item.label}</span>
+							</a>
+						{/each}
+					</div>
+				</div>
 			</div>
 		</nav>
 	{:else if isAdminRouteActive && isSuperAdmin}
-		<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-base-200 bg-base-100 shadow-[0_-6px_24px_rgba(0,0,0,0.08)] md:hidden safe-area-bottom">
-			<div class="mx-auto flex max-w-2xl items-center justify-between px-2 py-3 pb-safe">
-				{#each adminNav as item}
-					<a
-						href={item.href}
-						class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-slate-500 transition-colors"
-						class:text-emerald-600={item.isActive(pathname)}
-						class:font-semibold={item.isActive(pathname)}
-						class:bg-emerald-50={item.isActive(pathname)}
-					>
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
-							<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
-						</svg>
-						<span class="text-[10px]">{item.label}</span>
-					</a>
-				{/each}
+		<nav class="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom">
+			<div class="mx-auto max-w-xl px-3 py-3 pb-safe">
+				<div class="pointer-events-auto rounded-[1.7rem] border border-white/70 bg-white/92 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+					<div class="grid grid-cols-4 gap-1">
+					{#each adminNav as item}
+						<a
+							href={item.href}
+							class="mobile-tab-link"
+							class:mobile-tab-link-active={item.isActive(pathname)}
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+								<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+							</svg>
+							<span class="text-[10px]">{item.label}</span>
+						</a>
+					{/each}
+					</div>
+				</div>
 			</div>
 		</nav>
 	{/if}
@@ -729,6 +1126,41 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 	}
 	.pb-safe {
 		padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+	}
+
+	.mobile-scroll-row {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+
+	.mobile-scroll-row::-webkit-scrollbar {
+		display: none;
+	}
+
+	.mobile-tab-link {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.35rem;
+		border-radius: 1rem;
+		padding: 0.65rem 0.5rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: #64748b;
+		transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+	}
+
+	.mobile-tab-link-active {
+		background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(6, 182, 212, 0.12));
+		color: #047857;
+		box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.12);
+	}
+
+	.mobile-tab-link:not(.mobile-tab-link-active):hover {
+		transform: translateY(-1px);
+		background: rgba(248, 250, 252, 0.95);
+		color: #0f172a;
 	}
 
 	:global(.translate-slot .goog-te-gadget) {
