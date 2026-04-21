@@ -36,16 +36,6 @@
 
 	$: item = data.item;
 	$: curatedItem = data.curatedItem;
-	$: curatedSeries = Array.isArray(data.curatedSeries) ? data.curatedSeries : [];
-	$: currentSeriesIndex = curatedItem
-		? curatedSeries.findIndex((seriesItem) => seriesItem.slug === curatedItem.slug)
-		: -1;
-	$: previousSeriesItem =
-		currentSeriesIndex > 0 ? curatedSeries[currentSeriesIndex - 1] : null;
-	$: nextSeriesItem =
-		currentSeriesIndex >= 0 && currentSeriesIndex < curatedSeries.length - 1
-			? curatedSeries[currentSeriesIndex + 1]
-			: null;
 	$: sourceType = item?.sourceType ?? curatedItem?.sourceType ?? 'pdf';
 	$: sourceUrl = item?.sourceUrl ?? curatedItem?.sourceUrl ?? '';
 	$: readerUrl = sourceUrl ? toKitabReaderUrl(sourceType, sourceUrl) : null;
@@ -90,12 +80,6 @@
 					<div class="mt-4 flex flex-wrap gap-2">
 						<span class={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] ${kitabCategoryTone(curatedItem.category)}`}>
 							{kitabCategoryLabel(curatedItem.category)}
-						</span>
-						<span class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
-							{curatedItem.seriesTitle}
-						</span>
-						<span class="rounded-full border border-amber-300/20 bg-amber-300/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-100">
-							Jilid {curatedItem.seriesOrder} / {curatedSeries.length || curatedItem.seriesOrder}
 						</span>
 						<span class="rounded-full border border-emerald-300/20 bg-emerald-300/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100">
 							{curatedItem.level}
@@ -163,9 +147,9 @@
 			</div>
 		</section>
 
-		<section class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+		<section>
 			<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Tujuan Jilid</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Tujuan Kitab</p>
 				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Apa yang ingin dibangun</h2>
 				<div class="mt-6 grid gap-3">
 					{#each curatedItem.objectives as objective}
@@ -177,60 +161,6 @@
 				<div class="mt-6 rounded-[1.5rem] border border-amber-100 bg-amber-50 px-5 py-5">
 					<p class="text-xs font-semibold uppercase tracking-[0.28em] text-amber-700">Catatan Sumber</p>
 					<p class="mt-3 text-sm leading-7 text-amber-950/80">{curatedItem.sourceNote}</p>
-				</div>
-			</article>
-
-			<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Navigasi Seri</p>
-				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Jalur belajar seri ini</h2>
-				<p class="mt-3 text-sm leading-7 text-slate-600">
-					Semua jilid di seri {curatedItem.seriesTitle} memakai model data yang sama. Jilid berikutnya
-					bisa ditambah tanpa membuat halaman statis baru.
-				</p>
-
-				<div class="mt-6 space-y-3">
-					{#each curatedSeries as seriesItem}
-						<a
-							href={`/kitab/${seriesItem.slug}`}
-							class={`block rounded-2xl border px-4 py-4 transition ${
-								seriesItem.slug === curatedItem.slug
-									? 'border-emerald-200 bg-emerald-50'
-									: 'border-slate-200 bg-slate-50 hover:border-emerald-200 hover:bg-emerald-50/60'
-							}`}
-						>
-							<div class="flex items-center justify-between gap-3">
-								<div>
-									<p class="text-xs uppercase tracking-[0.24em] text-slate-400">
-										Jilid {seriesItem.seriesOrder}
-									</p>
-									<p class="mt-1 text-base font-semibold text-slate-900">{seriesItem.title}</p>
-								</div>
-								<span class="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-600">
-									{seriesItem.totalModules} modul
-								</span>
-							</div>
-							<p class="mt-2 text-sm leading-6 text-slate-600">{seriesItem.summary}</p>
-						</a>
-					{/each}
-				</div>
-
-				<div class="mt-6 grid gap-3 sm:grid-cols-2">
-					{#if previousSeriesItem}
-						<a
-							href={`/kitab/${previousSeriesItem.slug}`}
-							class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
-						>
-							← {previousSeriesItem.title}
-						</a>
-					{/if}
-					{#if nextSeriesItem}
-						<a
-							href={`/kitab/${nextSeriesItem.slug}`}
-							class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
-						>
-							Lanjut ke {nextSeriesItem.title} →
-						</a>
-					{/if}
 				</div>
 			</article>
 		</section>
@@ -286,8 +216,8 @@
 		<section id="modul-seri" class="space-y-4">
 			<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
 				<div>
-					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Modul Seri</p>
-					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Daftar bab jilid ini</h2>
+					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Bab Kitab</p>
+					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Daftar bab kitab ini</h2>
 				</div>
 				<p class="text-sm text-slate-500">
 					Setiap bab sekarang punya halaman sendiri agar belajar tidak menumpuk di satu halaman.
