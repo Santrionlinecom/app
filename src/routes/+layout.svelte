@@ -63,6 +63,39 @@ const dynastyMenuItems = islamicDynasties.map((dynasty) => ({
 	order: dynasty.order
 }));
 
+const kitabMenuItems = [
+	{
+		label: 'Aqidah',
+		href: '/kitab/terjemah-aqidatul-awam',
+		note: 'Akidatul Awam'
+	},
+	{
+		label: 'Lughoh',
+		href: '/kitab/bahasa-arab-dasar-1',
+		note: 'Durusul Lughah Dasar'
+	},
+	{
+		label: 'Tajwid',
+		href: '/kitab/ilmu-tajwid-lengkap',
+		note: 'Ilmu Tajwid Lengkap'
+	},
+	{
+		label: 'Hadits',
+		href: '/kitab/terjemah-syarah-arbain-nawawiyah-ibnu-daqiqil-ied',
+		note: "Syarah Arba'in Nawawiyah"
+	},
+	{
+		label: 'Fiqih',
+		href: '/kitab/safinatun-najah-makna-perkata',
+		note: 'Safinatun Najah'
+	},
+	{
+		label: 'Tasawuf',
+		href: '/kitab/terjemah-bidayatul-hidayah',
+		note: 'Bidayatul Hidayah'
+	}
+];
+
 const apkUrl = 'https://files.santrionline.com/Santrionline.apk';
 const installPromptKey = 'so_install_prompt_v1';
 let showInstallPopup = false;
@@ -459,7 +492,49 @@ $: isAdminRouteActive = isAdminRoute(pathname);
 						</div>
 					</div>
 				</div>
-				<a href="/kitab" class:active={pathname.startsWith('/kitab')} class="text-base-content/60 hover:text-primary">Kitab</a>
+				<div class="group relative">
+					<a
+						href="/kitab"
+						class:active={pathname.startsWith('/kitab')}
+						class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
+					>
+						<span>Kitab</span>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							class="h-4 w-4 transition group-hover:translate-y-px"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+					</a>
+					<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-[22rem] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
+						<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+							<a
+								href="/kitab"
+								class="block rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
+							>
+								<p class="text-sm font-semibold text-slate-900">Overview Kitab</p>
+								<p class="mt-1 text-xs text-slate-500">Perpustakaan kitab, seri bahasa Arab, dan kitab fondasi Santri Online</p>
+							</a>
+							<div class="mt-2 grid grid-cols-2 gap-1">
+								{#each kitabMenuItems as item}
+									<a
+										href={item.href}
+										class="rounded-xl px-3 py-3 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+									>
+										<p class="font-medium text-slate-900">{item.label}</p>
+										<p class="text-xs text-slate-400">{item.note}</p>
+									</a>
+								{/each}
+							</div>
+						</div>
+					</div>
+				</div>
 			</nav>
 			<div class="flex items-center gap-2">
 				<div class="hidden md:flex items-center gap-2">
