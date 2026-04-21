@@ -705,27 +705,31 @@ $: if (pathname !== previousPathname) {
 					</div>
 
 					{#if activeMobileTopMenu}
-						<div class="mt-3 rounded-[1.45rem] border border-slate-200/80 bg-white/95 p-2 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
-							<div class="grid gap-2 sm:grid-cols-2">
-								{#each activeMobileTopMenu.items as item}
-									<a
-										href={item.href}
-										class="rounded-[1.1rem] border border-slate-200/70 bg-slate-50/80 px-3 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/70"
-										on:click={() => (mobileTopMenuOpen = null)}
-									>
-										<p class="text-sm font-semibold text-slate-900">{item.label}</p>
-										<p class="mt-1 text-xs leading-5 text-slate-500">{item.note}</p>
-									</a>
-								{/each}
+						<div class="mt-3 overflow-hidden rounded-[1.45rem] border border-slate-200/80 bg-white/95 p-2 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+							<div class="mobile-top-dropdown-scroll">
+								<div class="grid gap-2 sm:grid-cols-2">
+									{#each activeMobileTopMenu.items as item}
+										<a
+											href={item.href}
+											class="rounded-[1.1rem] border border-slate-200/70 bg-slate-50/80 px-3 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/70"
+											on:click={() => (mobileTopMenuOpen = null)}
+										>
+											<p class="text-sm font-semibold text-slate-900">{item.label}</p>
+											<p class="mt-1 text-xs leading-5 text-slate-500">{item.note}</p>
+										</a>
+									{/each}
+								</div>
 							</div>
-							<a
-								href={activeMobileTopMenu.footerHref}
-								class="mt-2 inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700"
-								on:click={() => (mobileTopMenuOpen = null)}
-							>
-								{activeMobileTopMenu.footerLabel}
-								<span>→</span>
-							</a>
+							<div class="mt-2 border-t border-slate-200/80 pt-2">
+								<a
+									href={activeMobileTopMenu.footerHref}
+									class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700"
+									on:click={() => (mobileTopMenuOpen = null)}
+								>
+									{activeMobileTopMenu.footerLabel}
+									<span>→</span>
+								</a>
+							</div>
 						</div>
 					{/if}
 				</div>
@@ -1291,14 +1295,35 @@ $: if (pathname !== previousPathname) {
 		transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 	}
 
-	.mobile-top-trigger-active {
-		border-color: rgba(16, 185, 129, 0.24);
-		background: rgba(236, 253, 245, 0.96);
-		color: #047857;
-	}
+		.mobile-top-trigger-active {
+			border-color: rgba(16, 185, 129, 0.24);
+			background: rgba(236, 253, 245, 0.96);
+			color: #047857;
+		}
 
-	.mobile-tab-link {
-		display: flex;
+		.mobile-top-dropdown-scroll {
+			max-height: min(55svh, 26rem);
+			overflow-y: auto;
+			overscroll-behavior: contain;
+			padding-right: 0.15rem;
+			scrollbar-gutter: stable;
+		}
+
+		.mobile-top-dropdown-scroll::-webkit-scrollbar {
+			width: 0.35rem;
+		}
+
+		.mobile-top-dropdown-scroll::-webkit-scrollbar-thumb {
+			border-radius: 999px;
+			background: rgba(148, 163, 184, 0.7);
+		}
+
+		.mobile-top-dropdown-scroll::-webkit-scrollbar-track {
+			background: transparent;
+		}
+
+		.mobile-tab-link {
+			display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
