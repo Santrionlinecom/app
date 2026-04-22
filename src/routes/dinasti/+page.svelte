@@ -51,7 +51,7 @@
 		</div>
 
 		<div class="space-y-5">
-			{#each orderedDynasties as dynasty}
+			{#each orderedDynasties as dynasty, index}
 				<article
 					id={dynasty.slug}
 					class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm"
@@ -59,7 +59,7 @@
 					<div class="grid gap-5 lg:grid-cols-[0.22fr,0.78fr]">
 						<div class="rounded-3xl bg-slate-50 p-5 text-center">
 							<p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Urutan</p>
-							<p class="mt-3 text-4xl font-bold text-slate-900">{dynasty.order}</p>
+							<p class="mt-3 text-4xl font-bold text-slate-900">{index + 1}</p>
 						</div>
 
 						<div>

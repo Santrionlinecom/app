@@ -44,6 +44,20 @@
 			</div>
 		</div>
 
+		{#if nabi.slug === 'muhammad'}
+			<div class="rounded-2xl border-2 border-emerald-200 bg-white p-6 shadow-lg mb-8">
+				<h2 class="text-xl font-bold text-gray-900 mb-4">🔗 Rantai Sanad Rasulullah</h2>
+				<p class="text-gray-700 leading-relaxed">
+					Untuk melihat sambungan dari wahyu, para sahabat, tabi'in, tabi'ut tabi'in, sampai imam
+					mazhab, buka halaman sanad khusus Rasulullah.
+				</p>
+				<a href="/tokoh/muhammad" class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 transition hover:text-emerald-800">
+					Buka peta sanad Rasulullah
+					<span aria-hidden="true">></span>
+				</a>
+			</div>
+		{/if}
+
 		<!-- Info Cards -->
 		<div class="grid gap-6 md:grid-cols-2 mb-8">
 			<div class="rounded-2xl border-2 border-emerald-200 bg-white p-6 shadow-lg">

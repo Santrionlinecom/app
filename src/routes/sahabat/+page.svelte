@@ -1,3 +1,11 @@
+<script lang="ts">
+	import { getSanadFiguresByGeneration } from '$lib/data/sanad';
+
+	const sanadSahabat = getSanadFiguresByGeneration('sahabat').filter(
+		(figure) => !['abu-bakar', 'umar', 'utsman', 'ali'].includes(figure.slug)
+	);
+</script>
+
 <svelte:head>
 	<title>Sahabat Rasulullah ﷺ</title>
 </svelte:head>
@@ -27,7 +35,7 @@
 			</div>
 
 			<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-				<a href="/sahabat/abu-bakar" class="group relative overflow-hidden rounded-2xl border-2 border-blue-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
+				<a href="/tokoh/abu-bakar" class="group relative overflow-hidden rounded-2xl border-2 border-blue-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
 					<div class="absolute top-0 right-0 h-32 w-32 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 opacity-50 blur-2xl"></div>
 					<div class="relative">
 						<span class="text-4xl mb-3 block">1️⃣</span>
@@ -40,7 +48,7 @@
 					</div>
 				</a>
 
-				<a href="/sahabat/umar" class="group relative overflow-hidden rounded-2xl border-2 border-green-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
+				<a href="/tokoh/umar" class="group relative overflow-hidden rounded-2xl border-2 border-green-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
 					<div class="absolute top-0 right-0 h-32 w-32 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 opacity-50 blur-2xl"></div>
 					<div class="relative">
 						<span class="text-4xl mb-3 block">2️⃣</span>
@@ -53,7 +61,7 @@
 					</div>
 				</a>
 
-				<a href="/sahabat/utsman" class="group relative overflow-hidden rounded-2xl border-2 border-purple-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
+				<a href="/tokoh/utsman" class="group relative overflow-hidden rounded-2xl border-2 border-purple-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
 					<div class="absolute top-0 right-0 h-32 w-32 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 opacity-50 blur-2xl"></div>
 					<div class="relative">
 						<span class="text-4xl mb-3 block">3️⃣</span>
@@ -66,7 +74,7 @@
 					</div>
 				</a>
 
-				<a href="/sahabat/ali" class="group relative overflow-hidden rounded-2xl border-2 border-amber-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
+				<a href="/tokoh/ali" class="group relative overflow-hidden rounded-2xl border-2 border-amber-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
 					<div class="absolute top-0 right-0 h-32 w-32 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 opacity-50 blur-2xl"></div>
 					<div class="relative">
 						<span class="text-4xl mb-3 block">4️⃣</span>
@@ -135,6 +143,27 @@
 			<p class="text-gray-700 leading-relaxed">
 				Sahabat Nabi mengajarkan kejujuran, amanah, kesiapan berkorban, dan ilmu yang bersanad. Mereka juga menjadi rujukan adab: mendahulukan ridha Allah, menghormati Rasul, serta menjaga persatuan umat.
 			</p>
+		</div>
+
+		<div class="mt-12 rounded-3xl border-2 border-amber-200 bg-white p-8 shadow-xl">
+			<div class="flex items-center gap-3 mb-6">
+				<span class="text-4xl">🔗</span>
+				<div>
+					<h2 class="text-3xl font-bold text-gray-900">Sahabat Penghubung Sanad</h2>
+					<p class="text-gray-600">Node utama yang menghubungkan Rasulullah dengan generasi tabi'in</p>
+				</div>
+			</div>
+
+			<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+				{#each sanadSahabat as figure}
+					<a href={`/tokoh/${figure.slug}`} class="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+						<p class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">{figure.periodLabel}</p>
+						<h3 class="mt-3 text-lg font-bold text-slate-900">{figure.name}</h3>
+						<p class="mt-2 text-sm font-medium text-slate-700">{figure.title}</p>
+						<p class="mt-3 text-sm leading-7 text-slate-600">{figure.summary}</p>
+					</a>
+				{/each}
+			</div>
 		</div>
 	</div>
 </div>

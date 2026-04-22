@@ -312,5 +312,50 @@ export const islamicDynasties: IslamicDynasty[] = [
 		legacy:
 			'Warisan arsitektur, administrasi, dan urbanisme Mughal bertahan kuat dalam sejarah Asia Selatan hingga kini.',
 		startYearCE: 1526
+	},
+	{
+		order: 21,
+		slug: 'kesultanan-demak',
+		name: 'Kesultanan Demak',
+		periodCE: '1478-1554 M',
+		periodAH: '883-961 H',
+		capital: 'Bintoro, Demak',
+		regions: 'Pesisir utara Jawa, Jepara, Kudus, dan jaringan maritim Nusantara awal',
+		type: 'Kesultanan',
+		summary:
+			'Kesultanan Islam besar pertama di Jawa yang menjadi poros pertemuan ulama, perdagangan, dan dakwah Walisongo.',
+		legacy:
+			'Masjid Agung Demak, jaringan wali, dan peran sultan-sultannya menjadikan Demak simpul utama islamisasi Jawa abad ke-15 hingga 16.',
+		startYearCE: 1478
+	},
+	{
+		order: 22,
+		slug: 'kesultanan-cirebon',
+		name: 'Kesultanan Cirebon',
+		periodCE: 'c. 1479-1677 M',
+		periodAH: 'c. 884-1088 H',
+		capital: 'Cirebon / Caruban',
+		regions: 'Pesisir utara Jawa Barat dan jalur niaga Laut Jawa',
+		type: 'Kesultanan',
+		summary:
+			'Kesultanan pesisir yang menjembatani Jawa dan Sunda serta menguatkan dakwah Islam di koridor barat Jawa.',
+		legacy:
+			'Sunan Gunung Jati, jaringan pelabuhan Cirebon, dan warisan keraton menjadikannya pusat dakwah, niaga, dan budaya Islam pesisir.',
+		startYearCE: 1479
+	},
+	{
+		order: 23,
+		slug: 'kesultanan-banten',
+		name: 'Kesultanan Banten',
+		periodCE: '1526-1816 M',
+		periodAH: '933-1231 H',
+		capital: 'Banten Lama / Surosowan',
+		regions: 'Banten, Selat Sunda, Lampung, dan jalur perdagangan lada',
+		type: 'Kesultanan',
+		summary:
+			'Kesultanan maritim besar di barat Jawa yang memadukan dakwah, perdagangan internasional, dan perlawanan terhadap kolonialisme.',
+		legacy:
+			'Banten mewariskan pelabuhan penting, jaringan ulama pesisir, dan figur-figur besar seperti Maulana Hasanuddin serta Sultan Ageng Tirtayasa.',
+		startYearCE: 1526
 	}
 ];

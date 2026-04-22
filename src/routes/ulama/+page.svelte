@@ -1,281 +1,154 @@
 <script lang="ts">
-	import { ulama } from '$lib/data/ulama';
+	import { getSanadFiguresByCluster, type SanadFigure } from '$lib/data/sanad';
 
-	const walisongo = [
-		{
-			slug: 'sunan-gresik',
-			num: '1️⃣',
-			name: 'Sunan Gresik',
-			desc: 'Maulana Malik Ibrahim — Gresik',
-			classes: {
-				border: 'border-emerald-300',
-				text: 'text-emerald-700',
-				hover: 'group-hover:text-emerald-800'
-			}
-		},
-		{
-			slug: 'sunan-ampel',
-			num: '2️⃣',
-			name: 'Sunan Ampel',
-			desc: 'Raden Rahmat — Surabaya',
-			classes: {
-				border: 'border-blue-300',
-				text: 'text-blue-700',
-				hover: 'group-hover:text-blue-800'
-			}
-		},
-		{
-			slug: 'sunan-bonang',
-			num: '3️⃣',
-			name: 'Sunan Bonang',
-			desc: 'Makhdum Ibrahim — Tuban',
-			classes: {
-				border: 'border-purple-300',
-				text: 'text-purple-700',
-				hover: 'group-hover:text-purple-800'
-			}
-		},
-		{
-			slug: 'sunan-drajat',
-			num: '4️⃣',
-			name: 'Sunan Drajat',
-			desc: 'Raden Qasim — Lamongan',
-			classes: {
-				border: 'border-amber-300',
-				text: 'text-amber-700',
-				hover: 'group-hover:text-amber-800'
-			}
-		},
-		{
-			slug: 'sunan-kudus',
-			num: '5️⃣',
-			name: 'Sunan Kudus',
-			desc: "Ja'far Shadiq — Kudus",
-			classes: {
-				border: 'border-rose-300',
-				text: 'text-rose-700',
-				hover: 'group-hover:text-rose-800'
-			}
-		},
-		{
-			slug: 'sunan-kalijaga',
-			num: '6️⃣',
-			name: 'Sunan Kalijaga',
-			desc: 'Raden Said — Demak',
-			classes: {
-				border: 'border-indigo-300',
-				text: 'text-indigo-700',
-				hover: 'group-hover:text-indigo-800'
-			}
-		},
-		{
-			slug: 'sunan-muria',
-			num: '7️⃣',
-			name: 'Sunan Muria',
-			desc: 'Raden Umar Said — Muria',
-			classes: {
-				border: 'border-teal-300',
-				text: 'text-teal-700',
-				hover: 'group-hover:text-teal-800'
-			}
-		},
-		{
-			slug: 'sunan-giri',
-			num: '8️⃣',
-			name: 'Sunan Giri',
-			desc: 'Raden Paku — Giri',
-			classes: {
-				border: 'border-green-300',
-				text: 'text-green-700',
-				hover: 'group-hover:text-green-800'
-			}
-		},
-		{
-			slug: 'sunan-gunung-jati',
-			num: '9️⃣',
-			name: 'Sunan Gunung Jati',
-			desc: 'Syarif Hidayatullah — Cirebon',
-			classes: {
-				border: 'border-cyan-300',
-				text: 'text-cyan-700',
-				hover: 'group-hover:text-cyan-800'
-			}
-		}
+	type ClusterStyle = {
+		panel: string;
+		badge: string;
+		button: string;
+	};
+
+	type ClusterSection = {
+		label: string;
+		note: string;
+		figures: SanadFigure[];
+		style: ClusterStyle;
+	};
+
+	const clusterOrder = [
+		'Imam Mazhab dan Turats Klasik',
+		'Walisongo dan Dakwah Jawa',
+		'Hadramaut dan Jejaring Alawiyyin',
+		'Ulama Nusantara dan Pesantren'
 	];
+
+	const clusterNotes: Record<string, string> = {
+		'Imam Mazhab dan Turats Klasik':
+			'Poros fiqih, hadis, dan tasawuf Sunni yang menjadi fondasi kitab-kitab pesantren dan madrasah.',
+		'Walisongo dan Dakwah Jawa':
+			'Jalur dakwah Jawa yang menggabungkan pesantren, budaya, pelayanan sosial, dan pembentukan masyarakat Muslim pesisir.',
+		'Hadramaut dan Jejaring Alawiyyin':
+			'Jejaring habaib yang menguatkan zikir, maulid, adab, dan hubungan ilmu antara Tarim, Batavia, Bogor, Pekalongan, dan Nusantara.',
+		'Ulama Nusantara dan Pesantren':
+			'Simpul kiai dan ulama lokal yang mengubah sanad kitab menjadi lembaga pesantren, organisasi, dan gerakan kebangsaan.'
+	};
+
+	const clusterStyles: Record<string, ClusterStyle> = {
+		'Imam Mazhab dan Turats Klasik': {
+			panel: 'border-teal-200 bg-gradient-to-br from-teal-50 to-white',
+			badge: 'bg-teal-100 text-teal-700',
+			button: 'bg-teal-700 text-white hover:bg-teal-800'
+		},
+		'Walisongo dan Dakwah Jawa': {
+			panel: 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-white',
+			badge: 'bg-emerald-100 text-emerald-700',
+			button: 'bg-emerald-700 text-white hover:bg-emerald-800'
+		},
+		'Hadramaut dan Jejaring Alawiyyin': {
+			panel: 'border-amber-200 bg-gradient-to-br from-amber-50 to-white',
+			badge: 'bg-amber-100 text-amber-700',
+			button: 'bg-amber-700 text-white hover:bg-amber-800'
+		},
+		'Ulama Nusantara dan Pesantren': {
+			panel: 'border-indigo-200 bg-gradient-to-br from-indigo-50 to-white',
+			badge: 'bg-indigo-100 text-indigo-700',
+			button: 'bg-indigo-700 text-white hover:bg-indigo-800'
+		}
+	};
+
+	const sections: ClusterSection[] = clusterOrder
+		.map((label) => ({
+			label,
+			note: clusterNotes[label],
+			figures: getSanadFiguresByCluster(label),
+			style: clusterStyles[label]
+		}))
+		.filter((section) => section.figures.length > 0);
 </script>
 
 <svelte:head>
-	<title>Jaringan Ulama & Wali</title>
+	<title>Jaringan Ulama, Wali, dan Pesantren - Santri Online</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 py-12">
-	<div class="max-w-6xl mx-auto px-4">
-		<!-- Hero -->
-		<div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 p-8 md:p-12 text-white shadow-2xl mb-12">
-			<div class="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-white/10 blur-3xl"></div>
-			<div class="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-white/10 blur-3xl"></div>
-			<div class="relative z-10">
-				<span class="text-6xl mb-4 block">🎓</span>
-				<h1 class="text-4xl md:text-5xl font-bold mb-4">Jaringan Ulama & Wali</h1>
-				<p class="text-xl md:text-2xl opacity-90 mb-6">Rantai Sanad Ahlussunnah wal Jama'ah</p>
-				<p class="text-lg opacity-80 max-w-3xl">
-					Dari Madinah ke Baghdad, Damaskus, Mesir, Hadramaut, hingga Jawa melalui Walisongo, sanad dakwah Aswaja bersambung kepada para sahabat, tabi'in, tabi'ut tabi'in, dan ulama masa kini.
-				</p>
-			</div>
-		</div>
-
-		<!-- Ulama Grid -->
-		<div class="mb-12">
-			<h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">Ulama Besar Ahlussunnah</h2>
-			<div class="grid grid-cols-1 gap-6">
-				{#each ulama as guru}
-					<a href={`/ulama/${guru.slug}`} class="group relative overflow-hidden rounded-2xl border-2 border-teal-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
-						<div class="absolute top-0 right-0 h-32 w-32 rounded-full bg-gradient-to-br from-teal-100 to-cyan-100 opacity-50 blur-2xl"></div>
-						<div class="relative">
-							<span class="inline-block bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">
-								{guru.era}
-							</span>
-							<h2 class="text-xl font-bold text-teal-700 mb-2 group-hover:text-teal-800">{guru.nama}</h2>
-							<p class="text-sm text-gray-600 mb-3">📍 {guru.region}</p>
-							<p class="text-gray-700 mb-4 line-clamp-3">{guru.legacy}</p>
-							<span class="inline-flex items-center gap-2 text-teal-600 font-semibold group-hover:gap-3 transition-all">
-								Baca Kisah →
-							</span>
-						</div>
-					</a>
-				{/each}
-			</div>
-		</div>
-
-		<!-- Info Box -->
-		<div class="rounded-3xl border-2 border-teal-200 bg-white p-8 shadow-xl mb-12">
-			<h3 class="text-2xl font-bold text-gray-900 mb-4">🌟 Mengapa Mereka Panutan Aswaja?</h3>
-			<div class="space-y-4 text-gray-700">
-				<p>Para imam mazhab dan ulama besar ini menjaga sanad aqidah Asy'ari-Maturidi, fiqih empat mazhab, dan tasawuf Al-Ghazali. Kajian mereka menjadi fondasi kurikulum pesantren di Nusantara dan diakui di seluruh dunia Islam.</p>
-				<p>Klik salah satu nama di atas untuk membaca kisah singkat dan kontribusi mereka bagi Ahlussunnah wal Jama'ah.</p>
-			</div>
-		</div>
-
-		<!-- Walisongo Section -->
-		<div class="rounded-3xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-8 shadow-xl mb-12">
-			<div class="flex items-center gap-3 mb-6">
-				<span class="text-4xl">🕌</span>
-				<div>
-					<h2 class="text-3xl font-bold text-emerald-800">Jejak Walisongo di Tanah Jawa</h2>
-					<p class="text-gray-700">9 Wali penyebar Islam dengan pendekatan budaya, seni, dan kearifan lokal</p>
-				</div>
-			</div>
-			
-			<div class="grid grid-cols-1 gap-4 mb-6">
-				{#each walisongo as wali}
-					<a href={`/walisongo/${wali.slug}`} class={`group rounded-2xl border-2 ${wali.classes.border} bg-white p-5 shadow-sm transition hover:scale-105 hover:shadow-xl`}>
-						<span class="text-3xl mb-2 block">{wali.num}</span>
-						<h3 class={`text-lg font-bold ${wali.classes.text} ${wali.classes.hover}`}>{wali.name}</h3>
-						<p class="text-sm text-gray-600 mt-1">{wali.desc}</p>
-					</a>
-				{/each}
-			</div>
-
-			<div class="flex justify-center">
-				<a href="/walisongo" class="btn bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg">
-					📖 Lihat Pembahasan Lengkap Walisongo
+<div class="space-y-8">
+	<section class="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-teal-950 via-cyan-950 to-slate-950 px-6 py-10 text-white shadow-xl md:px-8">
+		<div class="absolute -left-20 top-10 h-48 w-48 rounded-full bg-teal-300/10 blur-3xl"></div>
+		<div class="absolute -right-20 bottom-0 h-56 w-56 rounded-full bg-cyan-300/10 blur-3xl"></div>
+		<div class="relative max-w-4xl">
+			<p class="text-xs uppercase tracking-[0.35em] text-cyan-200/70">Jaringan Ulama</p>
+			<h1 class="mt-3 text-3xl font-bold md:text-5xl">Dari imam mazhab sampai pesantren Nusantara</h1>
+			<p class="mt-4 max-w-3xl text-sm leading-7 text-white/75 md:text-base">
+				Halaman ini sekarang mengikuti graph sanad yang sama dengan halaman tokoh. Jalurnya
+				tidak berhenti di Baghdad, Damaskus, atau Makkah, tetapi diteruskan ke Walisongo,
+				habaib Hadramaut, dan ulama pesantren Nusantara.
+			</p>
+			<div class="mt-6 flex flex-wrap gap-3">
+				<a href="/tokoh" class="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15">
+					Buka peta sanad
+				</a>
+				<a href="/dinasti" class="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15">
+					Lihat konteks dinasti
 				</a>
 			</div>
 		</div>
+	</section>
 
-		<!-- Hadramaut Section -->
-		<div class="rounded-3xl border-2 border-amber-200 bg-white p-8 shadow-xl mb-12">
-			<div class="flex items-center gap-3 mb-6">
-				<span class="text-4xl">🌙</span>
-				<div>
-					<h2 class="text-3xl font-bold text-amber-800">Habaib Hadramaut di Jawa</h2>
-					<p class="text-gray-700">Ulama dari Yaman yang memperkuat dakwah di pesisir dan pesantren Nusantara</p>
-				</div>
+	<section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+		<div class="grid gap-4 lg:grid-cols-2">
+			<div class="rounded-3xl bg-slate-50 p-5">
+				<p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Cara Membaca</p>
+				<p class="mt-3 text-sm leading-7 text-slate-700">
+					Setiap kartu di bawah terhubung ke node sanad yang menampilkan guru sebelumnya,
+					penerus sesudahnya, konteks politik, serta backlink antarjalur.
+				</p>
 			</div>
-			<div class="grid grid-cols-1 gap-4">
-				{#each [
-					{ name: 'Habib Husain bin Abu Bakar Alaydrus', desc: 'Luar Batang, Batavia (1797–1871). Ulama Hadramaut yang berdakwah di pelabuhan.' },
-					{ name: 'Habib Ali bin Abdurrahman Al-Habsyi', desc: 'Jakarta (1870–1968). Mendirikan majelis ilmu rujukan ulama Jawa.' },
-					{ name: 'Habib Abdullah bin Muhsin Al-Attas', desc: 'Bogor (1840–1914). Dzikir dan pengajaran tasawuf Alawiyyin.' },
-					{ name: 'Habib Umar bin Hud Al-Attas', desc: 'Somalangu (abad 19). Menghidupkan pesantren Al-Kahfi.' },
-					{ name: 'Habib Umar bin Hafidz', desc: 'Tarim (l. 1963). Dakwah manhaj Hadramaut ke Nusantara.' },
-					{ name: 'Habib Luthfi bin Yahya', desc: 'Pekalongan (l. 1949). Trah Ba\'Alawi, rujukan dzikir dan kebangsaan.' }
-				] as habib}
-					<div class="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 p-5 border-2 border-amber-200">
-						<h3 class="text-lg font-bold text-amber-800 mb-2">{habib.name}</h3>
-						<p class="text-sm text-gray-700">{habib.desc}</p>
-					</div>
-				{/each}
+			<div class="rounded-3xl bg-slate-50 p-5">
+				<p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">Ruang Perluasan</p>
+				<p class="mt-3 text-sm leading-7 text-slate-700">
+					Graph ini sekarang sudah memuat empat klaster besar: imam mazhab klasik, Walisongo,
+					habaib Hadramaut, dan ulama pesantren Nusantara. Struktur yang sama bisa diteruskan
+					lagi ke jalur-jalur regional lain.
+				</p>
 			</div>
 		</div>
+	</section>
 
-		<!-- Baghdad Section -->
-		<div class="rounded-3xl border-2 border-purple-200 bg-white p-8 shadow-xl mb-12">
-			<div class="flex items-center gap-3 mb-6">
-				<span class="text-4xl">🏛️</span>
+	{#each sections as section}
+		<section class={`rounded-[1.75rem] border p-6 shadow-sm ${section.style.panel}`}>
+			<div class="flex flex-wrap items-end justify-between gap-4">
 				<div>
-					<h2 class="text-3xl font-bold text-purple-800">Ulama Baghdad</h2>
-					<p class="text-gray-700">Poros ilmu fiqih, hadis, dan tasawuf di era Abbasiyah</p>
+					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Klaster Sanad</p>
+					<h2 class="mt-2 text-2xl font-semibold text-slate-900">{section.label}</h2>
+					<p class="mt-3 max-w-3xl text-sm leading-7 text-slate-700">{section.note}</p>
 				</div>
+				<p class="text-sm text-slate-500">{section.figures.length} tokoh</p>
 			</div>
-			<div class="grid grid-cols-1 gap-4">
-				{#each [
-					{ name: 'Imam Abu Hanifah', desc: '699–767 M. Pendiri mazhab Hanafi, Baghdad.' },
-					{ name: 'Imam Ahmad bin Hanbal', desc: '780–855 M. Ulama hadis dan fiqih, Baghdad.' },
-					{ name: 'Imam Al-Ghazali', desc: '1058–1111 M. Mengajar di Nizamiyyah Baghdad, hujjat al-Islam.' }
-				] as imam}
-					<div class="rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 p-5 border-2 border-purple-200">
-						<h3 class="text-lg font-bold text-purple-800 mb-2">{imam.name}</h3>
-						<p class="text-sm text-gray-700">{imam.desc}</p>
-					</div>
+
+			<div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+				{#each section.figures as figure}
+					<article class="rounded-3xl border border-white/70 bg-white p-5 shadow-sm">
+						<div class="flex flex-wrap items-center justify-between gap-2">
+							<span class={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] ${section.style.badge}`}>
+								{figure.periodLabel}
+							</span>
+							{#if figure.legacyPath}
+								<a href={figure.legacyPath} class="text-xs font-semibold text-slate-500 transition hover:text-slate-700">
+									Halaman tematik
+								</a>
+							{/if}
+						</div>
+						<h3 class="mt-4 text-xl font-semibold text-slate-900">{figure.name}</h3>
+						<p class="mt-2 text-sm font-medium text-slate-700">{figure.title}</p>
+						<p class="mt-3 text-sm leading-7 text-slate-600">{figure.summary}</p>
+						<p class="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Wilayah</p>
+						<p class="mt-2 text-sm leading-7 text-slate-600">{figure.region}</p>
+						<div class="mt-5 flex flex-wrap gap-3">
+							<a href={`/tokoh/${figure.slug}`} class={`rounded-full px-4 py-2 text-sm font-semibold transition ${section.style.button}`}>
+								Buka sanad
+							</a>
+						</div>
+					</article>
 				{/each}
 			</div>
-		</div>
-
-		<!-- Damaskus Section -->
-		<div class="rounded-3xl border-2 border-blue-200 bg-white p-8 shadow-xl mb-12">
-			<div class="flex items-center gap-3 mb-6">
-				<span class="text-4xl">🕌</span>
-				<div>
-					<h2 class="text-3xl font-bold text-blue-800">Ulama Damaskus</h2>
-					<p class="text-gray-700">Kota madrasah Syafiiyah dan pusat periwayatan hadis</p>
-				</div>
-			</div>
-			<div class="grid grid-cols-1 gap-4">
-				{#each [
-					{ name: 'Imam An-Nawawi', desc: '1230–1277 M. Damaskus, penulis Riyadhus Shalihin & Al-Majmu\'.' },
-					{ name: 'Imam Ibnu Asakir', desc: '1105–1176 M. Damaskus, penulis Tarikh Dimasyq.' },
-					{ name: 'Imam Al-Buthi', desc: '1929–2013 M. Damaskus, pengajar fiqih Syafi\'i & akidah Asy\'ariyah.' }
-				] as imam}
-					<div class="rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 p-5 border-2 border-blue-200">
-						<h3 class="text-lg font-bold text-blue-800 mb-2">{imam.name}</h3>
-						<p class="text-sm text-gray-700">{imam.desc}</p>
-					</div>
-				{/each}
-			</div>
-		</div>
-
-		<!-- Mesir Section -->
-		<div class="rounded-3xl border-2 border-green-200 bg-white p-8 shadow-xl">
-			<div class="flex items-center gap-3 mb-6">
-				<span class="text-4xl">🏺</span>
-				<div>
-					<h2 class="text-3xl font-bold text-green-800">Ulama Mesir</h2>
-					<p class="text-gray-700">Tradisi Al-Azhar menguatkan Aswaja di Afrika–Asia</p>
-				</div>
-			</div>
-			<div class="grid grid-cols-1 gap-4">
-				{#each [
-					{ name: 'Imam Jalaluddin As-Suyuthi', desc: '1445–1505 M. Kairo, pakar tafsir, hadis, dan fiqih Syafi\'i.' },
-					{ name: 'Imam Ibnu Hajar Al-Haitami', desc: '1503–1566 M. Mesir/Makkah; rujukan fiqih Syafi\'i, Tuhfatul Muhtaj.' },
-					{ name: 'Syekh Muhammad Abduh', desc: '1849–1905 M. Kairo, ulama Azhar yang membangkitkan reformasi pendidikan.' }
-				] as imam}
-					<div class="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 p-5 border-2 border-green-200">
-						<h3 class="text-lg font-bold text-green-800 mb-2">{imam.name}</h3>
-						<p class="text-sm text-gray-700">{imam.desc}</p>
-					</div>
-				{/each}
-			</div>
-		</div>
-	</div>
+		</section>
+	{/each}
 </div>

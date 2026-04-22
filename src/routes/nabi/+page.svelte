@@ -24,7 +24,7 @@
 		<!-- Grid Nabi -->
 		<div class="grid grid-cols-1 gap-6">
 			{#each ordered as item}
-				<a href={`/nabi/${item.slug}`} class="group relative overflow-hidden rounded-2xl border-2 border-emerald-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
+				<a href={item.slug === 'muhammad' ? '/tokoh/muhammad' : `/nabi/${item.slug}`} class="group relative overflow-hidden rounded-2xl border-2 border-emerald-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
 					<div class="absolute top-0 right-0 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 opacity-50 blur-2xl"></div>
 					<div class="relative">
 						<div class="flex items-center gap-3 mb-3">
@@ -35,7 +35,7 @@
 						</div>
 						<p class="text-gray-700 mb-4 line-clamp-3">{item.summary}</p>
 						<span class="inline-flex items-center gap-2 text-emerald-600 font-semibold group-hover:gap-3 transition-all">
-							Baca Kisah →
+							{item.slug === 'muhammad' ? 'Buka Rantai Sanad ->' : 'Baca Kisah ->'}
 						</span>
 					</div>
 				</a>

@@ -31,6 +31,11 @@
 		<a href="/ulama" class="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 mb-6">
 			← Kembali ke Jaringan Ulama
 		</a>
+		<div class="mb-6">
+			<a href={`/tokoh/${scholar.slug}`} class="inline-flex items-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-sm font-semibold text-teal-700 transition hover:bg-teal-200">
+				Lihat rantai sanad, tokoh terkait, dan dinasti
+			</a>
+		</div>
 
 		<!-- Hero -->
 		<div class="relative overflow-hidden rounded-3xl bg-gradient-to-r {gradient} p-8 md:p-12 text-white shadow-2xl mb-8">

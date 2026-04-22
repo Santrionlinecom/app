@@ -1,50 +1,66 @@
 <script lang="ts">
-	import { nabiList } from '$lib/data/nabi';
-	import { ulama } from '$lib/data/ulama';
-	import { tabiinFigures } from '$lib/data/tabiin';
-	import { tabiutTabiinFigures } from '$lib/data/tabiut-tabiin';
+	import {
+		getSanadFiguresByGeneration,
+		sanadGenerations,
+		sanadMilestones,
+		type SanadFigure,
+		wahyuPrelude
+	} from '$lib/data/sanad';
 
-	const tokohCards = [
-		{
-			label: 'Nabi',
-			href: '/nabi',
-			count: `${nabiList.length} tokoh`,
-			era: 'Wahyu dan risalah',
-			desc: 'Para utusan Allah yang menjadi fondasi akidah, akhlak, dan sejarah kenabian.'
-		},
-		{
-			label: 'Sahabat',
-			href: '/sahabat',
-			count: 'Khulafaur Rasyidin dan Ahlul Badr',
-			era: 'Generasi penerima wahyu',
-			desc: 'Generasi yang menyaksikan Nabi Muhammad SAW, menjaga sunnah, dan membawa Islam keluar Jazirah Arab.'
-		},
-		{
-			label: "Tabi'in",
-			href: '/tabiin',
-			count: `${tabiinFigures.length} tokoh utama`,
-			era: 'Generasi setelah sahabat',
-			desc: 'Murid para sahabat yang menyusun fiqih awal, periwayatan hadis, dan adab dakwah di pusat-pusat ilmu.'
-		},
-		{
-			label: "Tabi'ut Tabi'in",
-			href: '/tabiut-tabiin',
-			count: `${tabiutTabiinFigures.length} tokoh utama`,
-			era: 'Generasi kodifikasi',
-			desc: 'Jembatan antara tradisi sahabat-tabiin dengan lahirnya mazhab, kritik hadis, dan kitab-kitab awal.'
-		},
-		{
-			label: 'Ulama',
-			href: '/ulama',
-			count: `${ulama.length}+ tokoh ulama utama`,
-			era: 'Jaringan sanad berlanjut',
-			desc: 'Para imam mazhab dan ulama besar yang merawat tradisi Aswaja dari Baghdad, Damaskus, Mesir, hingga Nusantara.'
-		}
+	type ClusterGroup = {
+		label: string;
+		figures: SanadFigure[];
+	};
+
+	const clusterOrder = [
+		'Imam Mazhab dan Turats Klasik',
+		'Walisongo dan Dakwah Jawa',
+		'Hadramaut dan Jejaring Alawiyyin',
+		'Ulama Nusantara dan Pesantren'
 	];
+
+	function getClusterRank(label: string) {
+		const index = clusterOrder.indexOf(label);
+		return index === -1 ? clusterOrder.length : index;
+	}
+
+	function buildClusterGroups(figures: SanadFigure[], fallbackLabel: string): ClusterGroup[] {
+		const grouped = new Map<string, SanadFigure[]>();
+
+		for (const figure of figures) {
+			const key = figure.cluster ?? fallbackLabel;
+			const bucket = grouped.get(key) ?? [];
+
+			bucket.push(figure);
+			grouped.set(key, bucket);
+		}
+
+		return [...grouped.entries()]
+			.sort((a, b) => {
+				const rankDiff = getClusterRank(a[0]) - getClusterRank(b[0]);
+
+				if (rankDiff !== 0) {
+					return rankDiff;
+				}
+
+				return (a[1][0]?.order ?? 0) - (b[1][0]?.order ?? 0);
+			})
+			.map(([label, figures]) => ({ label, figures }));
+	}
+
+	const groupedFigures = sanadGenerations.map((section) => {
+		const figures = getSanadFiguresByGeneration(section.key);
+
+		return {
+			...section,
+			figures,
+			clusters: buildClusterGroups(figures, section.label)
+		};
+	});
 </script>
 
 <svelte:head>
-	<title>Tokoh Islam - Santri Online</title>
+	<title>Rantai Sanad Tokoh Islam - Santri Online</title>
 </svelte:head>
 
 <div class="space-y-8">
@@ -53,57 +69,104 @@
 		<div class="absolute -right-20 bottom-0 h-56 w-56 rounded-full bg-emerald-300/10 blur-3xl"></div>
 		<div class="relative max-w-4xl">
 			<p class="text-xs uppercase tracking-[0.35em] text-sky-200/70">Tokoh Islam</p>
-			<h1 class="mt-3 text-3xl font-bold md:text-5xl">Rantai generasi dari nabi sampai ulama</h1>
+			<h1 class="mt-3 text-3xl font-bold md:text-5xl">Rantai sanad dari wahyu sampai ulama Nusantara</h1>
 			<p class="mt-4 max-w-3xl text-sm leading-7 text-white/75 md:text-base">
-				Halaman ini memetakan urutan generasi ilmu dalam sejarah Islam: nabi, sahabat, tabi'in,
-				tabi'ut tabi'in, lalu ulama. Susunan ini membantu melihat bagaimana sanad ilmu berpindah
-				dari wahyu, ke para saksi wahyu, lalu ke generasi periwayat dan pengkodifikasi.
+				Halaman ini sekarang difokuskan sebagai graph sanad: dari Allah melalui Jibril kepada
+				Rasulullah SAW, lalu ke sahabat, tabi`in, tabi`ut tabi`in, imam mazhab, Walisongo,
+				habaib Hadramaut, dan ulama pesantren Nusantara. Setiap tokoh utama bisa dibuka
+				sebagai node yang punya tautan balik ke jalur sebelumnya dan sesudahnya.
 			</p>
+		</div>
+	</section>
+
+	<section class="rounded-[1.75rem] border border-emerald-200 bg-white p-6 shadow-sm">
+		<p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-700">Pembuka Wahyu</p>
+		<h2 class="mt-3 text-2xl font-semibold text-slate-900">{wahyuPrelude.title}</h2>
+		<p class="mt-4 text-sm leading-7 text-slate-700">{wahyuPrelude.summary}</p>
+
+		<div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+			{#each wahyuPrelude.stages as stage}
+				{#if stage.href}
+					<a href={stage.href} class="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 transition hover:-translate-y-1 hover:shadow-md">
+						<h3 class="text-lg font-semibold text-slate-900">{stage.label}</h3>
+						<p class="mt-3 text-sm leading-7 text-slate-700">{stage.desc}</p>
+					</a>
+				{:else}
+					<div class="rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
+						<h3 class="text-lg font-semibold text-slate-900">{stage.label}</h3>
+						<p class="mt-3 text-sm leading-7 text-slate-700">{stage.desc}</p>
+					</div>
+				{/if}
+			{/each}
+		</div>
+
+		<div class="mt-5 rounded-3xl bg-slate-50 p-5">
+			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Rujukan Ringkas</p>
+			<p class="mt-3 text-sm leading-7 text-slate-700">{wahyuPrelude.references.join(' · ')}</p>
 		</div>
 	</section>
 
 	<section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-		<div class="grid gap-4 md:grid-cols-5">
-			{#each ['Nabi', 'Sahabat', "Tabi'in", "Tabi'ut Tabi'in", 'Ulama'] as step, index}
-				<div class="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-5 text-center">
-					<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Tahap {index + 1}</p>
-					<p class="mt-3 text-lg font-semibold text-slate-900">{step}</p>
-				</div>
+		<p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Sejarah Singkat</p>
+		<h2 class="mt-3 text-2xl font-semibold text-slate-900">Bagaimana Islam tersebar dalam rantai ini</h2>
+		<div class="mt-5 grid gap-4 lg:grid-cols-3">
+			{#each sanadMilestones as step}
+				<article class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+					<p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{step.year}</p>
+					<h3 class="mt-3 text-lg font-semibold text-slate-900">{step.title}</h3>
+					<p class="mt-3 text-sm leading-7 text-slate-700">{step.desc}</p>
+				</article>
 			{/each}
 		</div>
 	</section>
 
-	<section class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-		{#each tokohCards as card}
-			<a
-				href={card.href}
-				class="group rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-			>
-				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">{card.label}</p>
-				<h2 class="mt-3 text-2xl font-semibold text-slate-900 group-hover:text-emerald-700">{card.era}</h2>
-				<p class="mt-3 text-sm font-medium text-emerald-700">{card.count}</p>
-				<p class="mt-3 text-sm leading-7 text-slate-600">{card.desc}</p>
-				<span class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
-					Buka halaman
-					<span aria-hidden="true">></span>
-				</span>
-			</a>
-		{/each}
-	</section>
+	{#each groupedFigures as section}
+		<section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+			<div class="flex items-end justify-between gap-4">
+				<div>
+					<p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Lapisan Sanad</p>
+					<h2 class="mt-2 text-2xl font-semibold text-slate-900">{section.label}</h2>
+				</div>
+				<p class="text-sm text-slate-500">{section.figures.length} tokoh inti</p>
+			</div>
+
+			{#each section.clusters as cluster, clusterIndex}
+				<div class={clusterIndex === 0 ? 'mt-5' : 'mt-8'}>
+					{#if section.clusters.length > 1}
+						<div class="mb-4 flex items-center justify-between gap-3">
+							<h3 class="text-lg font-semibold text-slate-900">{cluster.label}</h3>
+							<p class="text-sm text-slate-500">{cluster.figures.length} tokoh</p>
+						</div>
+					{/if}
+
+					<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+						{#each cluster.figures as figure}
+							<a href={`/tokoh/${figure.slug}`} class="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md">
+								<p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{figure.periodLabel}</p>
+								<h3 class="mt-3 text-xl font-semibold text-slate-900">{figure.name}</h3>
+								<p class="mt-2 text-sm font-medium text-slate-700">{figure.title}</p>
+								<p class="mt-3 text-sm leading-7 text-slate-600">{figure.summary}</p>
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</section>
+	{/each}
 
 	<section class="rounded-[1.75rem] border border-sky-200 bg-gradient-to-br from-sky-50 to-white p-6 shadow-sm">
-		<h2 class="text-2xl font-semibold text-slate-900">Cara membaca peta tokoh</h2>
+		<h2 class="text-2xl font-semibold text-slate-900">Catatan struktur</h2>
 		<div class="mt-4 space-y-3 text-sm leading-7 text-slate-700">
 			<p>
-				Nabi adalah sumber wahyu. Sahabat menerima langsung bimbingan Rasulullah SAW. Tabi'in
-				adalah murid para sahabat. Tabi'ut Tabi'in ialah murid generasi tabi'in yang mulai
-				menguatkan fase kodifikasi. Ulama melanjutkan sanad itu dalam bentuk mazhab, kitab,
-				pesantren, dan dakwah lintas wilayah.
+				Graph ini disusun sebagai rantai sanad inti, bukan daftar semua tokoh Islam yang pernah hidup.
+				Fokusnya adalah simpul-simpul besar peralihan ilmu dari Rasulullah ke generasi sesudahnya,
+				hingga masuk ke jaringan Walisongo, habaib Hadramaut, dan pesantren Nusantara.
 			</p>
 			<p>
-				Di lapangan sejarah, generasi-generasi ini tidak selalu berhenti total lalu berganti. Sebagian
-				masa hidup mereka saling bertumpang tindih, tetapi pembagian ini tetap penting sebagai kerangka
-				standar dalam ilmu hadis, fiqih, dan sejarah Islam.
+				Untuk konteks kenabian yang lebih luas di luar jalur sanad Rasulullah SAW, halaman
+				<a href="/nabi" class="font-semibold text-sky-700 hover:text-sky-800"> Nabi & Rasul</a>
+				tetap tersedia. Untuk konteks kekuasaan, buka juga halaman
+				<a href="/dinasti" class="font-semibold text-sky-700 hover:text-sky-800"> Dinasti Islam</a>.
 			</p>
 		</div>
 	</section>

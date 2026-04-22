@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { tabiinFigures } from '$lib/data/tabiin';
+	import { getLinkedSanadNames } from '$lib/data/sanad';
 
 	const centers = Array.from(new Set(tabiinFigures.map((figure) => figure.center)));
 </script>
@@ -70,13 +71,42 @@
 						<div class="mt-5 grid gap-4 md:grid-cols-2">
 							<div class="rounded-2xl bg-slate-50 p-4">
 								<p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Guru Sahabat</p>
-								<p class="mt-3 text-sm leading-7 text-slate-700">{figure.teachers.join(', ')}</p>
+								<div class="mt-3 flex flex-wrap gap-2">
+									{#each getLinkedSanadNames(figure.teachers) as teacher}
+										{#if teacher.href}
+											<a href={teacher.href} class="rounded-full bg-white px-3 py-1 text-sm text-slate-700 shadow-sm transition hover:bg-amber-100 hover:text-amber-800">
+												{teacher.name}
+											</a>
+										{:else}
+											<span class="rounded-full bg-white px-3 py-1 text-sm text-slate-700 shadow-sm">
+												{teacher.name}
+											</span>
+										{/if}
+									{/each}
+								</div>
 							</div>
 							<div class="rounded-2xl bg-slate-50 p-4">
 								<p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Murid Utama</p>
-								<p class="mt-3 text-sm leading-7 text-slate-700">{figure.students.join(', ')}</p>
+								<div class="mt-3 flex flex-wrap gap-2">
+									{#each getLinkedSanadNames(figure.students) as student}
+										{#if student.href}
+											<a href={student.href} class="rounded-full bg-white px-3 py-1 text-sm text-slate-700 shadow-sm transition hover:bg-amber-100 hover:text-amber-800">
+												{student.name}
+											</a>
+										{:else}
+											<span class="rounded-full bg-white px-3 py-1 text-sm text-slate-700 shadow-sm">
+												{student.name}
+											</span>
+										{/if}
+									{/each}
+								</div>
 							</div>
 						</div>
+
+						<a href={`/tokoh/${figure.slug}`} class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-amber-700 transition hover:text-amber-800">
+							Buka rantai sanad
+							<span aria-hidden="true">></span>
+						</a>
 					</article>
 				{/each}
 			</div>
