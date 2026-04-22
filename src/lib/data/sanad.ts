@@ -250,6 +250,28 @@ function buildUlamaFigure(slug: string, override: FigureOverride): SanadFigure {
 	};
 }
 
+const generationLabelMap: Record<SanadGeneration, string> = {
+	rasul: 'Rasulullah',
+	sahabat: 'Sahabat',
+	tabiin: "Tabi'in",
+	'tabiut-tabiin': "Tabi'ut Tabi'in",
+	ulama: 'Ulama dan Imam Mazhab'
+};
+
+type SupplementalFigureDefinition = Omit<SanadFigure, 'generationLabel' | 'aliases' | 'dynastySlugs'> & {
+	aliases?: string[];
+	dynastySlugs?: string[];
+};
+
+function createSupplementalFigure(definition: SupplementalFigureDefinition): SanadFigure {
+	return {
+		...definition,
+		generationLabel: generationLabelMap[definition.generation],
+		aliases: [definition.name, definition.slug, ...(definition.aliases ?? [])],
+		dynastySlugs: definition.dynastySlugs ?? []
+	};
+}
+
 const rasulFigure: SanadFigure = {
 	slug: 'muhammad',
 	order: 1,
@@ -826,6 +848,7 @@ const tabiinNetwork: SanadFigure[] = [
 	buildTabiinFigure('al-hasan-al-basri', {
 		order: 37,
 		title: 'Tokoh nasihat, tazkiyah, dan hikmah Basrah',
+		aliases: ['Hasan al-Basri'],
 		ancestors: [
 			{ slug: 'anas-ibn-malik', relation: 'mengambil riwayat dan adab dari Anas ibn Malik' },
 			{ slug: 'ibn-abbas', relation: 'mengambil ilmu dari Ibn Abbas' },
@@ -1051,6 +1074,7 @@ const ulamaNetwork: SanadFigure[] = [
 		title: 'Pendiri Mazhab Hanafi',
 		cluster: 'Imam Mazhab dan Turats Klasik',
 		periodLabel: '80-150 H / 699-767 M',
+		aliases: ['Abu Hanifah', 'Imam Abu Hanifah al-Numan'],
 		detail:
 			'Abu Hanifah menguatkan metode fiqih Irak, qiyas, dan pembacaan masalah masyarakat. Jalur ilmunya terhubung ke tradisi Kufah yang membawa warisan Ali melalui al-Sha`bi dan madrasah Irak.',
 		ancestors: [
@@ -1077,6 +1101,7 @@ const ulamaNetwork: SanadFigure[] = [
 		title: "Pendiri Mazhab Syafi'i",
 		cluster: 'Imam Mazhab dan Turats Klasik',
 		periodLabel: '150-204 H / 767-820 M',
+		aliases: ['al-Shafii', "al-Shafi'i", 'Imam al-Shafii', 'Muhammad ibn Idris al-Shafii'],
 		detail:
 			'Imam Syafi`i menyatukan kekuatan tradisi Madinah, Makkah, Irak, dan Mesir. Melalui dirinya, jalur hadis dan fiqih generasi tabi`ut tabi`in masuk ke bentuk ushul fiqih yang lebih matang.',
 		ancestors: [
@@ -1099,6 +1124,7 @@ const ulamaNetwork: SanadFigure[] = [
 		title: 'Pendiri Mazhab Hanbali dan imam hadis',
 		cluster: 'Imam Mazhab dan Turats Klasik',
 		periodLabel: '164-241 H / 780-855 M',
+		aliases: ['Ahmad ibn Hanbal', 'Imam Ahmad ibn Hanbal'],
 		detail:
 			'Imam Ahmad menggabungkan penghimpunan hadis dengan keteguhan akidah. Ia adalah simpul besar bagi turats Sunni Baghdad dan salah satu puncak rihlah ilmu abad ketiga hijriyah.',
 		ancestors: [
@@ -1167,6 +1193,811 @@ const ulamaNetwork: SanadFigure[] = [
 		],
 		dynastySlugs: ['ayyubiyah', 'mamluk'],
 		legacyPath: '/ulama/imam-nawawi'
+	})
+];
+
+const supplementalTabiinNetwork: SanadFigure[] = [
+	createSupplementalFigure({
+		slug: 'ibn-shihab-al-zuhri',
+		order: 39.01,
+		name: 'Ibn Shihab al-Zuhri',
+		title: 'Muhaddith, faqih, dan perintis tadwin awal',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 124 H / 741-742 M',
+		region: 'Madinah dan Syam',
+		focus: 'Hadis, sirah, maghazi, fiqih',
+		summary:
+			'Al-Zuhri adalah tabiin besar yang menjembatani tradisi Madinah dengan penulisan hadis dan sirah pada era Umayyah.',
+		detail:
+			'Nama Ibn Shihab al-Zuhri sangat penting dalam sejarah ilmu Islam awal. Ia belajar dari para faqih Madinah seperti Sa`id ibn al-Musayyib dan Urwah ibn al-Zubayr, lalu mengajarkan riwayatnya kepada Malik, Ibn Jurayj, dan banyak murid lintas wilayah.',
+		aliases: ['al-Zuhri', 'Ibn Shihab al-Zuhri', 'Muhammad ibn Shihab al-Zuhri', 'Ibn Shihab az-Zuhri'],
+		ancestors: [
+			{ slug: 'said-ibn-al-musayyib', relation: 'mengambil fiqih dan atsar Madinah dari Sa`id ibn al-Musayyib' },
+			{ slug: 'urwah-ibn-al-zubayr', relation: 'mengambil hadis keluarga Nabi dan sirah dari Urwah ibn al-Zubayr' },
+			{ slug: 'salim-ibn-abdullah', relation: 'mewarisi jalur ibadah dan atsar rumah Ibn Umar melalui Salim' }
+		],
+		politicalContexts: [
+			{
+				label: 'Bani Umayyah (Damaskus)',
+				note: 'Al-Zuhri hidup di masa Umayyah dan sering dikaitkan dengan fase awal pengumpulan hadis serta maghazi di lingkungan resmi maupun halaqah ilmu.',
+				href: '/dinasti#umayyah-damaskus'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus']
+	}),
+	createSupplementalFigure({
+		slug: 'qatadah-ibn-diamah',
+		order: 39.02,
+		name: "Qatadah ibn Di'amah al-Sadusi",
+		title: 'Hafizh Basrah dan mufassir tabiin',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 117 H / 735 M',
+		region: 'Basrah',
+		focus: 'Tafsir, hadis, fiqih',
+		summary:
+			'Qatadah adalah tokoh besar Basrah dalam tafsir dan hadis yang menjadi penghubung penting antara generasi tabiin senior dan fase kodifikasi setelahnya.',
+		detail:
+			'Riwayat Qatadah tersebar luas dalam tafsir dan hadis. Posisi beliau penting karena menghimpun pengaruh al-Hasan al-Basri, Sa`id ibn al-Musayyib, dan Ata` ibn Abi Rabah lalu mewariskannya ke generasi setelahnya.',
+		aliases: ['Qatadah', "Qatadah ibn Di'amah", 'Qatada ibn Diama'],
+		ancestors: [
+			{ slug: 'al-hasan-al-basri', relation: 'meneruskan tradisi nasihat, tafsir, dan muhasabah Basrah dari al-Hasan al-Basri' },
+			{ slug: 'said-ibn-al-musayyib', relation: 'mengambil riwayat dan fatwa dari Sa`id ibn al-Musayyib' },
+			{ slug: 'ata-ibn-abi-rabah', relation: 'mewarisi jalur Makkah melalui Ata` ibn Abi Rabah' }
+		],
+		politicalContexts: [
+			{
+				label: 'Bani Umayyah (Damaskus)',
+				note: 'Basrah menjadi pusat ilmu dan debat intelektual yang sangat aktif pada masa Qatadah.',
+				href: '/dinasti#umayyah-damaskus'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus']
+	}),
+	createSupplementalFigure({
+		slug: 'yahya-ibn-said-al-ansari',
+		order: 39.03,
+		name: "Yahya ibn Sa'id al-Ansari",
+		title: 'Faqih Madinah dan penghubung ke Imam Malik',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 143 H / 760 M',
+		region: 'Madinah',
+		focus: 'Fiqih, hadis, qadha',
+		summary:
+			'Yahya ibn Sa`id al-Ansari adalah salah satu penghubung terpenting dari fuqaha Madinah menuju Imam Malik dan generasi kodifikasi.',
+		detail:
+			'Melalui Yahya ibn Sa`id, banyak warisan fiqih Madinah dari Sa`id ibn al-Musayyib dan para fuqaha lain masuk ke fase yang lebih sistematis. Karena itu, namanya sering muncul dalam jalur sanad Maliki dan hadis.',
+		aliases: ["Yahya ibn Sa'id al-Ansari", 'Yahya ibn Said al-Ansari'],
+		ancestors: [
+			{ slug: 'said-ibn-al-musayyib', relation: 'mengambil fiqih dan fatwa Madinah dari Sa`id ibn al-Musayyib' },
+			{ slug: 'al-qasim-ibn-muhammad', relation: 'mewarisi ketenangan fatwa dan jalur keluarga Abu Bakr melalui al-Qasim' }
+		],
+		politicalContexts: [
+			{
+				label: 'Akhir Umayyah dan awal Abbasiyah',
+				note: 'Ia hidup pada masa transisi ketika Madinah tetap menjadi pusat ilmu walau pusat politik bergeser.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus', 'abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'hisham-ibn-urwah',
+		order: 39.04,
+		name: 'Hisham ibn Urwah',
+		title: 'Perawi hadis keluarga Nabi dari Madinah',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: '61-146 H / 680-763 M',
+		region: 'Madinah lalu Baghdad',
+		focus: 'Hadis, fiqih, riwayat keluarga Nabi',
+		summary:
+			'Hisham ibn Urwah meneruskan jalur hadis rumah tangga Nabi dari ayahnya, Urwah ibn al-Zubayr, dan sangat berpengaruh pada transmisi riwayat ke generasi Malik.',
+		detail:
+			'Ia dikenal sebagai murid utama Urwah dan salah satu perawi penting untuk riwayat-riwayat Aisyah. Melalui dirinya, jalur keluarga Abu Bakr, Asma, dan Urwah terus hidup dalam hadis dan fiqih.',
+		aliases: ['Hisham ibn Urwah'],
+		ancestors: [
+			{ slug: 'urwah-ibn-al-zubayr', relation: 'meneruskan jalur hadis dan sirah keluarga Nabi dari ayahnya, Urwah' },
+			{ slug: 'asma-bint-abi-bakr', relation: 'mewarisi riwayat keluarga Abu Bakr melalui rumah Asma bint Abi Bakr' }
+		],
+		politicalContexts: [
+			{
+				label: 'Akhir Umayyah dan awal Abbasiyah',
+				note: 'Perjalanan hidupnya menjangkau Madinah dan Irak pada masa transisi politik besar.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus', 'abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'ayyub-al-sakhtiyani',
+		order: 39.05,
+		name: 'Ayyub al-Sakhtiyani',
+		title: 'Muhaddith Basrah yang kuat dalam wara',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 131 H / 749 M',
+		region: 'Basrah',
+		focus: 'Hadis, fiqih, wara',
+		summary:
+			'Ayyub al-Sakhtiyani adalah penghubung penting tradisi Basrah dan Madinah, terkenal dengan ketelitian sanad dan sikap wara.',
+		detail:
+			'Namanya sering muncul sebagai murid Ibn Sirin, Nafi`, dan al-Qasim ibn Muhammad. Di tangannya, jalur hadis dan fiqih yang kuat berpindah ke generasi Hammad ibn Zayd dan tokoh sesudahnya.',
+		aliases: ['Ayyub al-Sakhtiyani', 'Ayyub as-Sakhtiyani'],
+		ancestors: [
+			{ slug: 'muhammad-ibn-sirin', relation: 'meneruskan ketelitian sanad dan wara dari Muhammad ibn Sirin' },
+			{ slug: 'nafi-mawla-ibn-umar', relation: 'mengambil jalur amal dan hadis Ibn Umar melalui Nafi`' },
+			{ slug: 'al-qasim-ibn-muhammad', relation: 'mengambil fiqih Madinah melalui al-Qasim ibn Muhammad' }
+		],
+		politicalContexts: [
+			{
+				label: 'Akhir Umayyah dan awal Abbasiyah',
+				note: 'Basrah pada zamannya menjadi simpul pertemuan hadis, zuhud, dan fiqih.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus', 'abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'amr-ibn-dinar',
+		order: 39.06,
+		name: 'Amr ibn Dinar',
+		title: 'Mufti Makkah sesudah Ata`',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'c. 46-126 H / c. 666-744 M',
+		region: 'Makkah',
+		focus: 'Fiqih Haramayn, hadis, manasik',
+		summary:
+			'Amr ibn Dinar menguatkan tradisi ilmu Makkah sesudah Ata` ibn Abi Rabah dan menjadi guru penting bagi Ibn Jurayj dan Sufyan ibn Uyaynah.',
+		detail:
+			'Perannya menandai kesinambungan pusat fatwa Makkah. Banyak jalur fiqih dan manasik sesudah Ata` tersambung melalui dirinya.',
+		aliases: ['Amr ibn Dinar'],
+		ancestors: [
+			{ slug: 'ata-ibn-abi-rabah', relation: 'meneruskan tradisi fiqih dan manasik Makkah dari Ata` ibn Abi Rabah' },
+			{ slug: 'tawus-ibn-kaysan', relation: 'mengambil pengaruh jalur Yaman-Makkah dari Tawus ibn Kaysan' }
+		],
+		politicalContexts: [
+			{
+				label: 'Bani Umayyah (Damaskus)',
+				note: 'Makkah tetap menjadi pusat fatwa dan manasik pada masa hidupnya.',
+				href: '/dinasti#umayyah-damaskus'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus']
+	}),
+	createSupplementalFigure({
+		slug: 'abdullah-ibn-tawus',
+		order: 39.07,
+		name: 'Abdullah ibn Tawus',
+		title: 'Penerus jalur ilmu Tawus di Yaman',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 132 H / 749-750 M',
+		region: 'Yaman dan Makkah',
+		focus: 'Hadis, fiqih, adab',
+		summary:
+			'Abdullah ibn Tawus meneruskan jalur ilmu ayahnya, Tawus ibn Kaysan, dan menghubungkan warisan Yaman-Makkah ke generasi berikutnya.',
+		detail:
+			'Dalam sanad hadis dan fiqih, ia menjadi penghubung penting bagi jalur Tawus. Posisi ini membuat namanya muncul dalam mata rantai yang bersambung ke ulama Hijaz dan Yaman.',
+		aliases: ['Abdullah ibn Tawus'],
+		ancestors: [{ slug: 'tawus-ibn-kaysan', relation: 'meneruskan langsung jalur ilmu ayahnya, Tawus ibn Kaysan' }],
+		politicalContexts: [
+			{
+				label: 'Akhir Umayyah dan awal Abbasiyah',
+				note: 'Yaman dan Makkah tetap tersambung kuat dalam sirkulasi ilmu pada fase ini.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus', 'abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'yunus-ibn-ubayd',
+		order: 39.08,
+		name: 'Yunus ibn Ubayd',
+		title: 'Tokoh zuhud dan hadis Basrah',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 139 H / 756-757 M',
+		region: 'Basrah',
+		focus: 'Hadis, zuhud, muhasabah',
+		summary:
+			'Yunus ibn Ubayd dikenal sebagai tokoh Basrah yang kuat dalam zuhud dan wara, sekaligus bagian dari kesinambungan ilmu al-Hasan al-Basri.',
+		detail:
+			'Namanya sering muncul dalam literatur adab dan nasihat. Ia menjaga warisan tazkiyah Basrah sambil tetap berakar dalam riwayat dan disiplin ilmu.',
+		aliases: ['Yunus ibn Ubayd'],
+		ancestors: [{ slug: 'al-hasan-al-basri', relation: 'meneruskan corak tazkiyah dan nasihat Basrah dari al-Hasan al-Basri' }],
+		politicalContexts: [
+			{
+				label: 'Awal Abbasiyah',
+				note: 'Pada masanya, tradisi tazkiyah Basrah tetap hidup kuat di tengah perubahan politik.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'malik-ibn-dinar',
+		order: 39.09,
+		name: 'Malik ibn Dinar',
+		title: 'Tokoh zuhud Basrah yang masyhur',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. c. 130 H / 748 M',
+		region: 'Basrah',
+		focus: 'Zuhud, nasihat, ibadah',
+		summary:
+			'Malik ibn Dinar adalah salah satu simbol kezuhudan Basrah yang sangat memengaruhi tradisi nasihat dan penyucian jiwa dalam Islam Sunni awal.',
+		detail:
+			'Walau terkenal sebagai zahid, Malik ibn Dinar tetap berada dalam ruang sanad yang nyata. Ia mewarisi pengaruh al-Hasan al-Basri dan memberi warna kuat pada tradisi muhasabah serta kesederhanaan hidup.',
+		aliases: ['Malik ibn Dinar'],
+		ancestors: [{ slug: 'al-hasan-al-basri', relation: 'meneruskan tradisi zuhud dan nasihat dari al-Hasan al-Basri' }],
+		politicalContexts: [
+			{
+				label: 'Akhir Umayyah',
+				note: 'Basrah menjadi lahan subur bagi gerakan tazkiyah dan kritik moral terhadap kemewahan politik.',
+				href: '/dinasti#umayyah-damaskus'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus']
+	}),
+	createSupplementalFigure({
+		slug: 'khalid-al-hadhdha',
+		order: 39.1,
+		name: 'Khalid al-Hadhdha',
+		title: 'Perawi Basrah dalam jalur Ibn Sirin',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 141 H / 758 M',
+		region: 'Basrah',
+		focus: 'Hadis, fiqih, riwayat Basrah',
+		summary:
+			'Khalid al-Hadhdha adalah salah satu perawi utama jalur Basrah yang banyak mengambil dari Ibn Sirin dan menguatkan transmisi hadis setempat.',
+		detail:
+			'Posisinya penting dalam memperpanjang jalur riwayat Basrah ke generasi kritik sanad dan penghimpunan hadis yang lebih matang.',
+		aliases: ['Khalid al-Hadhdha', 'Khalid al-Hazza'],
+		ancestors: [
+			{ slug: 'muhammad-ibn-sirin', relation: 'meneruskan jalur wara dan hadis Basrah dari Muhammad ibn Sirin' },
+			{ slug: 'al-hasan-al-basri', relation: 'mewarisi pengaruh lingkungan ilmu Basrah yang kuat dalam nasihat dan hadis' }
+		],
+		politicalContexts: [
+			{
+				label: 'Awal Abbasiyah',
+				note: 'Basrah tetap menjadi salah satu simpul utama hadis pada awal Abbasiyah.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'ubayd-allah-ibn-umar-al-umari',
+		order: 39.11,
+		name: 'Ubayd Allah ibn Umar al-Umari',
+		title: 'Perawi Madinah dalam jalur Nafi` dan Salim',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 147 H / 764 M',
+		region: 'Madinah',
+		focus: 'Hadis, fiqih, amal ahli Madinah',
+		summary:
+			'Ubayd Allah ibn Umar al-Umari adalah perawi Madinah yang penting dalam jalur Nafi` dan keluarga Ibn Umar.',
+		detail:
+			'Nama ini bukan putra Umar sahabat, tetapi ulama Madinah generasi tabiin yang menguatkan transmisi hadis dan fiqih dari Nafi` serta Salim menuju generasi sesudahnya.',
+		aliases: ['Ubayd Allah ibn Umar', 'Ubaydullah ibn Umar', 'Ubayd Allah ibn Umar al-Umari'],
+		ancestors: [
+			{ slug: 'nafi-mawla-ibn-umar', relation: 'meneruskan jalur amal dan hadis Ibn Umar melalui Nafi`' },
+			{ slug: 'salim-ibn-abdullah', relation: 'mengambil pengaruh rumah Ibn Umar melalui Salim' }
+		],
+		politicalContexts: [
+			{
+				label: 'Akhir Umayyah dan awal Abbasiyah',
+				note: 'Madinah tetap menjadi simpul utama hadis dan fiqih walau kekuasaan berubah.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus', 'abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'ismail-ibn-abi-khalid',
+		order: 39.12,
+		name: 'Ismail ibn Abi Khalid',
+		title: 'Perawi Kufah dan murid al-Sha`bi',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 146 H / 763 M',
+		region: 'Kufah',
+		focus: 'Hadis, fiqih, riwayat Irak',
+		summary:
+			'Ismail ibn Abi Khalid adalah salah satu penghubung jalur Kufah yang mengambil dari al-Sha`bi dan meneruskan tradisi riwayat Irak.',
+		detail:
+			'Keberadaannya memperlihatkan bagaimana madrasah Kufah tidak berhenti pada satu tokoh, tetapi terus bergerak melalui para perawi yang menjaga atsar dan hukum masyarakat.',
+		aliases: ['Ismail ibn Abi Khalid'],
+		ancestors: [{ slug: 'al-shabi', relation: 'meneruskan tradisi riwayat Kufah dari al-Sha`bi' }],
+		politicalContexts: [
+			{
+				label: 'Akhir Umayyah dan awal Abbasiyah',
+				note: 'Kufah terus menjadi pusat ijtihad dan riwayat masyarakat Irak.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus', 'abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'mughirah-ibn-miqsam',
+		order: 39.13,
+		name: 'Mughirah ibn Miqsam',
+		title: 'Perawi Kufah dalam jalur al-Sha`bi',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 136 H / 753-754 M',
+		region: 'Kufah',
+		focus: 'Hadis, fiqih Irak',
+		summary:
+			'Mughirah ibn Miqsam termasuk perawi penting Kufah yang menjaga kesinambungan jalur al-Sha`bi dan tradisi ilmu Irak awal.',
+		detail:
+			'Tokoh-tokoh seperti dirinya menunjukkan bahwa warisan sahabat dan tabiin Kufah bergerak lewat banyak perawi, bukan hanya imam besar yang paling terkenal.',
+		aliases: ['Mughirah ibn Miqsam', 'Mughira ibn Miqsam'],
+		ancestors: [{ slug: 'al-shabi', relation: 'meneruskan jalur riwayat dan fiqih masyarakat dari al-Sha`bi' }],
+		politicalContexts: [
+			{
+				label: 'Akhir Umayyah dan awal Abbasiyah',
+				note: 'Kufah menjadi ruang penting bagi transmisi fiqih dan atsar pada masa peralihan dinasti.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus', 'abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'mansur-ibn-al-mutamir',
+		order: 39.14,
+		name: 'Mansur ibn al-Mutamir',
+		title: 'Tokoh wara Kufah dan guru Sufyan al-Thawri',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 132 H / 749-750 M',
+		region: 'Kufah',
+		focus: 'Hadis, fiqih, ibadah',
+		summary:
+			'Mansur ibn al-Mutamir dikenal dalam tradisi Kufah sebagai ulama yang kuat dalam ibadah, wara, dan riwayat.',
+		detail:
+			'Namanya penting karena menjadi salah satu jalur ilmu yang diterima Sufyan al-Thawri. Pada dirinya, ketelitian sanad berpadu dengan corak ibadah yang mendalam.',
+		aliases: ['Mansur ibn al-Mutamir'],
+		ancestors: [{ slug: 'al-shabi', relation: 'meneruskan arus riwayat Kufah yang juga dikuatkan al-Sha`bi' }],
+		politicalContexts: [
+			{
+				label: 'Akhir Umayyah',
+				note: 'Lingkungan Kufah pada zamannya melahirkan banyak tokoh wara dan fiqih masyarakat.',
+				href: '/dinasti#umayyah-damaskus'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus']
+	}),
+	createSupplementalFigure({
+		slug: 'jafar-al-sadiq',
+		order: 39.15,
+		name: "Ja'far al-Sadiq",
+		title: 'Imam Ahlul Bait dan ulama Madinah',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: '80-148 H / 702-765 M',
+		region: 'Madinah',
+		focus: 'Hadis, fiqih, hikmah, jalur Ahlul Bait',
+		summary:
+			'Ja`far al-Sadiq menempati posisi penting dalam jalur Ahlul Bait sekaligus dunia ilmu Madinah, dan namanya muncul dalam mata rantai banyak ulama sesudahnya.',
+		detail:
+			'Figur ini penting karena menghubungkan jalur keluarga Ali dengan percakapan keilmuan Madinah yang lebih luas. Dalam graph ini, ia ditempatkan sebagai simpul Ahlul Bait yang turut memengaruhi tokoh-tokoh Irak dan Hijaz.',
+		aliases: ["Ja'far al-Sadiq", 'Jafar al-Sadiq', 'Imam Jafar al-Sadiq'],
+		ancestors: [
+			{ slug: 'ali', relation: 'mewarisi jalur Ahlul Bait yang kembali kepada Ali ibn Abi Talib' },
+			{ slug: 'al-qasim-ibn-muhammad', relation: 'berada dalam lingkungan ilmu Madinah yang juga diperkaya fuqaha seperti al-Qasim ibn Muhammad' }
+		],
+		politicalContexts: [
+			{
+				label: 'Akhir Umayyah dan awal Abbasiyah',
+				note: 'Madinah dan Irak pada zamannya sama-sama menjadi ruang perjumpaan ilmu, politik, dan penghormatan pada Ahlul Bait.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus', 'abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'al-hakam-ibn-utaybah',
+		order: 39.16,
+		name: 'al-Hakam ibn Utaybah',
+		title: 'Faqih Kufah dan guru kritik sanad awal',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 115 H / 733-734 M',
+		region: 'Kufah',
+		focus: 'Fiqih, hadis, qadha',
+		summary:
+			'Al-Hakam ibn Utaybah adalah salah satu faqih Kufah yang berpengaruh pada tradisi riwayat dan fiqih Irak awal.',
+		detail:
+			'Meski tidak selalu disebut dalam daftar imam mazhab, tokoh seperti al-Hakam sangat menentukan kesinambungan sanad ilmu di Kufah dan menjadi guru bagi generasi kritikus sanad berikutnya.',
+		aliases: ['al-Hakam ibn Utaybah', 'Al-Hakam ibn Utaybah'],
+		ancestors: [{ slug: 'al-shabi', relation: 'meneruskan lingkungan fiqih dan riwayat Kufah yang juga hidup pada al-Sha`bi' }],
+		politicalContexts: [
+			{
+				label: 'Bani Umayyah (Damaskus)',
+				note: 'Kufah menjadi salah satu laboratorium fiqih masyarakat paling hidup pada masa ini.',
+				href: '/dinasti#umayyah-damaskus'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus']
+	}),
+	createSupplementalFigure({
+		slug: 'amr-ibn-murrah',
+		order: 39.17,
+		name: 'Amr ibn Murrah',
+		title: 'Perawi Kufah dalam jalur riwayat Irak',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 116 H / 734 M',
+		region: 'Kufah',
+		focus: 'Hadis, riwayat Kufah',
+		summary:
+			'Amr ibn Murrah termasuk perawi Kufah yang penting dalam kesinambungan hadis dan atsar menuju generasi Shu`bah dan sesudahnya.',
+		detail:
+			'Keberadaan tokoh seperti Amr ibn Murrah menunjukkan bahwa madrasah Kufah berdiri di atas jejaring luas para perawi yang tekun menjaga transmisi sanad.',
+		aliases: ['Amr ibn Murrah'],
+		ancestors: [{ slug: 'al-shabi', relation: 'meneruskan jalur riwayat Irak yang kuat di sekitar al-Sha`bi' }],
+		politicalContexts: [
+			{
+				label: 'Bani Umayyah (Damaskus)',
+				note: 'Kufah tetap menjadi pusat riwayat dan diskusi hukum pada masa hidupnya.',
+				href: '/dinasti#umayyah-damaskus'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus']
+	}),
+	createSupplementalFigure({
+		slug: 'al-amash',
+		order: 39.18,
+		name: "al-A'mash",
+		title: 'Muhaddith Kufah yang sangat masyhur',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: '61-148 H / 680-765 M',
+		region: 'Kufah',
+		focus: 'Hadis, qira`at, riwayat Irak',
+		summary:
+			'Al-A`mash adalah perawi besar Kufah yang sangat berpengaruh dalam transmisi hadis dan qira`at ke generasi sesudahnya.',
+		detail:
+			'Namanya sering muncul dalam sanad kitab-kitab hadis. Ia menjadi salah satu jalur penting yang menunjukkan keluasan tradisi riwayat Irak di luar nama-nama imam mazhab yang lebih populer.',
+		aliases: ["al-A'mash", 'Al-Amash', "Sulayman al-A'mash"],
+		ancestors: [{ slug: 'al-shabi', relation: 'bergerak dalam lingkungan riwayat Kufah yang kuat sejak masa al-Sha`bi' }],
+		politicalContexts: [
+			{
+				label: 'Akhir Umayyah dan awal Abbasiyah',
+				note: 'Riwayat Kufah tetap tumbuh subur di tengah perubahan kekuasaan politik.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['umayyah-damaskus', 'abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'misar-ibn-kidam',
+		order: 39.19,
+		name: 'Misar ibn Kidam',
+		title: 'Perawi Kufah dan salah satu guru Waki`',
+		cluster: "Tokoh Penghubung Tabi'in",
+		generation: 'tabiin',
+		periodLabel: 'w. 153 H / 770 M',
+		region: 'Kufah',
+		focus: 'Hadis, atsar, riwayat Kufah',
+		summary:
+			'Misar ibn Kidam adalah salah satu perawi Kufah yang ikut menjaga kesinambungan hadis dan atsar menuju generasi Waki` dan ulama abad ketiga.',
+		detail:
+			'Walau tidak sepopuler Sufyan atau Shu`bah, tokoh seperti Misar penting untuk melihat bagaimana jaringan perawi Kufah membentuk jalur keilmuan yang panjang.',
+		aliases: ['Misar ibn Kidam', 'Misar bin Kidam'],
+		ancestors: [{ slug: 'al-shabi', relation: 'bergerak dalam ruang riwayat Kufah yang telah lebih dulu dikuatkan al-Sha`bi' }],
+		politicalContexts: [
+			{
+				label: 'Awal Abbasiyah',
+				note: 'Pada masa ini, pusat-pusat hadis Irak makin hidup dan melahirkan banyak guru bagi generasi musnid berikutnya.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	})
+];
+
+const supplementalUlamaBridgeNetwork: SanadFigure[] = [
+	createSupplementalFigure({
+		slug: 'abd-al-rahman-ibn-al-qasim',
+		order: 58.01,
+		name: 'Abd al-Rahman ibn al-Qasim',
+		title: 'Murid utama Imam Malik dan perawi Muwatta',
+		cluster: 'Perawi dan Musnid Penghubung',
+		generation: 'ulama',
+		periodLabel: '132-191 H / 750-806 M',
+		region: 'Madinah dan Mesir',
+		focus: 'Fiqih Maliki, riwayat Muwatta',
+		summary:
+			'Abd al-Rahman ibn al-Qasim adalah murid utama Imam Malik yang berperan besar dalam transmisi dan pematangan mazhab Maliki.',
+		detail:
+			'Melalui Ibn al-Qasim, banyak warisan Imam Malik masuk ke bentuk fiqih yang lebih matang dan tersebar luas, terutama melalui Mesir dan tradisi Maliki sesudahnya.',
+		aliases: ['Abd al-Rahman ibn al-Qasim', 'Ibn al-Qasim'],
+		ancestors: [{ slug: 'imam-malik', relation: 'belajar langsung kepada Imam Malik dan menjadi salah satu murid utamanya' }],
+		politicalContexts: [
+			{
+				label: 'Bani Abbasiyah',
+				note: 'Mesir dan Madinah sama-sama aktif dalam penyebaran mazhab dan kitab pada masa Abbasiyah awal.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'abdullah-ibn-wahb',
+		order: 58.02,
+		name: 'Abdullah ibn Wahb',
+		title: 'Murid Malik dan Layth, penghubung Mesir',
+		cluster: 'Perawi dan Musnid Penghubung',
+		generation: 'ulama',
+		periodLabel: '125-197 H / 743-813 M',
+		region: 'Mesir',
+		focus: 'Fiqih, hadis, riwayat Mesir',
+		summary:
+			'Abdullah ibn Wahb adalah ulama Mesir yang belajar kepada Imam Malik dan Layth ibn Sa`d, lalu menjadi penghubung penting tradisi Hijaz-Mesir.',
+		detail:
+			'Posisinya penting untuk membaca bagaimana fiqih dan hadis dari Madinah dan Mesir saling bertemu. Karena itu, namanya muncul dalam banyak jalur keilmuan klasik.',
+		aliases: ['Abdullah ibn Wahb', 'Ibn Wahb', 'Abd Allah ibn Wahb'],
+		ancestors: [
+			{ slug: 'imam-malik', relation: 'mengambil langsung fiqih dan hadis dari Imam Malik' },
+			{ slug: 'layth-ibn-sad', relation: 'meneruskan juga pengaruh ilmiah Mesir dari Layth ibn Sa`d' }
+		],
+		politicalContexts: [
+			{
+				label: 'Bani Abbasiyah',
+				note: 'Mesir menjadi jalur penting penyebaran turats fiqih dan hadis pada era Abbasiyah.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'al-walid-ibn-muslim',
+		order: 58.03,
+		name: 'al-Walid ibn Muslim',
+		title: 'Perawi Syam dan murid al-Awza`i',
+		cluster: 'Perawi dan Musnid Penghubung',
+		generation: 'ulama',
+		periodLabel: 'w. 195 H / 810 M',
+		region: 'Syam',
+		focus: 'Hadis, fiqih Syam',
+		summary:
+			'Al-Walid ibn Muslim berperan penting dalam meneruskan jalur ilmu Syam, khususnya warisan al-Awza`i, ke generasi berikutnya.',
+		detail:
+			'Meski dikenal terutama sebagai perawi, fungsinya dalam menjaga kesinambungan madrasah Syam sangat penting bagi peta sanad klasik.',
+		aliases: ['al-Walid ibn Muslim', 'Al-Walid ibn Muslim'],
+		ancestors: [{ slug: 'al-awzai', relation: 'meneruskan jalur fiqih dan hadis Syam dari al-Awza`i' }],
+		politicalContexts: [
+			{
+				label: 'Bani Abbasiyah',
+				note: 'Syam tetap mempertahankan identitas keilmuan khasnya di bawah orbit Abbasiyah.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'abu-ishaq-al-fazari',
+		order: 58.04,
+		name: 'Abu Ishaq al-Fazari',
+		title: 'Ulama Syam dan murid al-Awza`i',
+		cluster: 'Perawi dan Musnid Penghubung',
+		generation: 'ulama',
+		periodLabel: 'w. 186 H / 802 M',
+		region: 'Syam dan al-Jazirah',
+		focus: 'Fiqih, hadis, jihad, siyasah syar`iyyah',
+		summary:
+			'Abu Ishaq al-Fazari termasuk penerus penting mazhab dan tradisi ilmiah Syam dari jalur al-Awza`i.',
+		detail:
+			'Namanya sering disebut dalam peta awal fiqih Syam dan perbincangan tentang siyasah serta ribath. Ia membantu memperpanjang usia pengaruh al-Awza`i sesudah generasi tabii`ut tabi`in.',
+		aliases: ['Abu Ishaq al-Fazari'],
+		ancestors: [{ slug: 'al-awzai', relation: 'meneruskan langsung jalur ilmiah al-Awza`i di Syam' }],
+		politicalContexts: [
+			{
+				label: 'Bani Abbasiyah',
+				note: 'Syam dan perbatasan utara tetap menjadi medan penting fiqih dan hadis pada masa ini.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'abd-al-rahman-ibn-mahdi',
+		order: 58.05,
+		name: 'Abd al-Rahman ibn Mahdi',
+		title: 'Naqid hadis dan guru para imam besar',
+		cluster: 'Perawi dan Musnid Penghubung',
+		generation: 'ulama',
+		periodLabel: '135-198 H / 752-814 M',
+		region: 'Basrah',
+		focus: 'Hadis, naqd al-rijal, fiqih',
+		summary:
+			'Abd al-Rahman ibn Mahdi adalah salah satu figur sentral kritik sanad dan hadis pada abad kedua hijriyah akhir.',
+		detail:
+			'Posisinya penting karena menerima warisan Shu`bah dan Sufyan al-Thawri, lalu meneruskannya ke generasi ulama hadis abad ketiga. Ia termasuk simpul besar dalam sejarah jarh wa ta`dil.',
+		aliases: ['Abd al-Rahman ibn Mahdi'],
+		ancestors: [
+			{ slug: 'sufyan-al-thawri', relation: 'meneruskan jalur hadis dan fiqih Irak dari Sufyan al-Thawri' },
+			{ slug: 'shubah-ibn-al-hajjaj', relation: 'mengambil ketelitian sanad dari Shu`bah ibn al-Hajjaj' }
+		],
+		politicalContexts: [
+			{
+				label: 'Bani Abbasiyah',
+				note: 'Basrah dan Baghdad menjadi ruang pematangan ilmu hadis dan kritik perawi pada zamannya.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'hammad-ibn-zayd',
+		order: 58.06,
+		name: 'Hammad ibn Zayd',
+		title: 'Muhaddith Basrah dan murid Ayyub',
+		cluster: 'Perawi dan Musnid Penghubung',
+		generation: 'ulama',
+		periodLabel: '98-179 H / 717-795 M',
+		region: 'Basrah',
+		focus: 'Hadis, fiqih, riwayat Basrah',
+		summary:
+			'Hammad ibn Zayd menjadi penghubung penting tradisi Basrah dari Ayyub al-Sakhtiyani ke Ibn al-Mubarak dan generasi hadis sesudahnya.',
+		detail:
+			'Namanya menunjukkan bahwa sanad Basrah tidak berhenti pada Hasan atau Ibn Sirin, tetapi terus hidup kuat hingga fase musnid dan penulis kitab hadis.',
+		aliases: ['Hammad ibn Zayd'],
+		ancestors: [
+			{ slug: 'ayyub-al-sakhtiyani', relation: 'meneruskan jalur Basrah dari Ayyub al-Sakhtiyani' },
+			{ slug: 'yunus-ibn-ubayd', relation: 'mengambil pengaruh wara dan hadis dari lingkungan Yunus ibn Ubayd' }
+		],
+		politicalContexts: [
+			{
+				label: 'Bani Abbasiyah',
+				note: 'Basrah tetap menjadi pusat riwayat utama pada masa Abbasiyah awal.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'yahya-al-qattan',
+		order: 58.07,
+		name: 'Yahya al-Qattan',
+		title: 'Imam naqd al-hadith Basrah',
+		cluster: 'Perawi dan Musnid Penghubung',
+		generation: 'ulama',
+		periodLabel: '120-198 H / 738-813 M',
+		region: 'Basrah',
+		focus: 'Hadis, jarh wa ta`dil, kritik sanad',
+		summary:
+			'Yahya al-Qattan adalah salah satu figur paling penting dalam pematangan kritik sanad dan penilaian perawi pada masa klasik awal.',
+		detail:
+			'Melalui jalur Shu`bah dan Hammad, ia mengangkat disiplin hadis ke tahap yang jauh lebih kritis. Karena itu, namanya sangat sentral dalam sejarah jarh wa ta`dil.',
+		aliases: ['Yahya al-Qattan'],
+		ancestors: [
+			{ slug: 'shubah-ibn-al-hajjaj', relation: 'meneruskan metode ketelitian sanad dari Shu`bah ibn al-Hajjaj' },
+			{ slug: 'hammad-ibn-zayd', relation: 'mengambil kekuatan riwayat Basrah dari Hammad ibn Zayd' }
+		],
+		politicalContexts: [
+			{
+				label: 'Bani Abbasiyah',
+				note: 'Fase hidupnya bertepatan dengan pematangan besar disiplin hadis di Irak.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'abd-al-razzaq-al-sanani',
+		order: 58.08,
+		name: "Abd al-Razzaq al-San'ani",
+		title: 'Musnid Yaman dan penyusun Musannaf',
+		cluster: 'Perawi dan Musnid Penghubung',
+		generation: 'ulama',
+		periodLabel: '126-211 H / 744-827 M',
+		region: 'San`a, Yaman',
+		focus: 'Hadis, musannaf, fiqih',
+		summary:
+			'Abd al-Razzaq al-San`ani adalah penyusun Musannaf yang sangat penting untuk melihat bentuk awal penghimpunan hadis dan atsar.',
+		detail:
+			'Melalui dirinya, banyak riwayat Makkah, Yaman, dan Syam terlestarikan dalam bentuk yang lebih sistematis. Karena itu, ia menjadi simpul penting antara guru-guru Hijaz dan ulama hadis abad ketiga.',
+		aliases: ["Abd al-Razzaq al-Sanani", "Abd al-Razzaq al-San'ani", 'Abd al-Razzaq as-Sanani'],
+		ancestors: [{ slug: 'ibn-jurayj', relation: 'meneruskan jalur fiqih dan riwayat Makkah dari Ibn Jurayj' }],
+		politicalContexts: [
+			{
+				label: 'Bani Abbasiyah',
+				note: 'Yaman dan Hijaz ikut terhubung dalam arus besar penghimpunan hadis pada masa Abbasiyah.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'ali-ibn-al-madini',
+		order: 58.09,
+		name: 'Ali ibn al-Madini',
+		title: 'Imam `ilal al-hadith dan guru al-Bukhari',
+		cluster: 'Perawi dan Musnid Penghubung',
+		generation: 'ulama',
+		periodLabel: '161-234 H / 778-849 M',
+		region: 'Basrah dan Baghdad',
+		focus: 'Hadis, `ilal, naqd al-rijal',
+		summary:
+			'Ali ibn al-Madini adalah salah satu otoritas terbesar dalam `ilal al-hadith dan menjadi guru penting bagi al-Bukhari.',
+		detail:
+			'Keahliannya dalam membedah cacat-cacat halus sanad menjadikannya titik puncak dari jalur kritik sanad yang dibangun generasi sebelumnya seperti Shu`bah dan Yahya al-Qattan.',
+		aliases: ['Ali ibn al-Madini'],
+		ancestors: [
+			{ slug: 'shubah-ibn-al-hajjaj', relation: 'meneruskan warisan ketelitian sanad yang dibangun Shu`bah' },
+			{ slug: 'yahya-al-qattan', relation: 'mengambil metodologi naqd al-hadith dari Yahya al-Qattan' },
+			{ slug: 'sufyan-ibn-uyaynah', relation: 'mengambil riwayat dan pengaruh ilmu Makkah dari Sufyan ibn Uyaynah' }
+		],
+		politicalContexts: [
+			{
+				label: 'Bani Abbasiyah',
+				note: 'Irak menjadi jantung pematangan ilmu hadis dan kritik sanad pada abad ketiga awal.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'nuaym-ibn-hammad',
+		order: 58.1,
+		name: 'Nuaym ibn Hammad',
+		title: 'Perawi hadis dan murid Ibn al-Mubarak',
+		cluster: 'Perawi dan Musnid Penghubung',
+		generation: 'ulama',
+		periodLabel: 'w. 228 H / 843 M',
+		region: 'Khurasan dan Mesir',
+		focus: 'Hadis, atsar, riwayat Khurasan',
+		summary:
+			'Nuaym ibn Hammad termasuk tokoh perawi yang menghubungkan tradisi rihlah hadis Ibn al-Mubarak ke generasi sesudahnya.',
+		detail:
+			'Walau namanya tidak selalu ditempatkan di puncak daftar ulama besar, ia penting sebagai bagian dari mata rantai periwayatan yang menyebarkan warisan Khurasan dan Irak.',
+		aliases: ['Nuaym ibn Hammad', 'Nuaym bin Hammad'],
+		ancestors: [{ slug: 'abdullah-ibn-al-mubarak', relation: 'meneruskan jalur rihlah ilmu, adab, dan hadis dari Ibn al-Mubarak' }],
+		politicalContexts: [
+			{
+				label: 'Bani Abbasiyah',
+				note: 'Rihlah hadis lintas wilayah menjadi sangat kuat pada fase ini.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
+	}),
+	createSupplementalFigure({
+		slug: 'ishaq-ibn-rahawayh',
+		order: 58.11,
+		name: 'Ishaq ibn Rahawayh',
+		title: 'Imam hadis Khurasan dan guru para musnid',
+		cluster: 'Perawi dan Musnid Penghubung',
+		generation: 'ulama',
+		periodLabel: '161-238 H / 778-853 M',
+		region: 'Khurasan, Nishapur, Makkah',
+		focus: 'Hadis, fiqih, musnad',
+		summary:
+			'Ishaq ibn Rahawayh adalah ulama besar Khurasan yang menempati posisi penting dalam jalur hadis menuju al-Bukhari, Muslim, dan generasi musnid besar.',
+		detail:
+			'Ia menerima ilmu dari Waki` dan Sufyan ibn Uyaynah, lalu menjadi salah satu pilar utama jaringan hadis timur Islam. Namanya penting untuk melihat kesinambungan sanad dari Irak dan Hijaz ke Khurasan.',
+		aliases: ['Ishaq ibn Rahawayh', 'Ishaq bin Rahawayh'],
+		ancestors: [
+			{ slug: 'waki-ibn-al-jarrah', relation: 'meneruskan riwayat Kufah dari Waki` ibn al-Jarrah' },
+			{ slug: 'sufyan-ibn-uyaynah', relation: 'mengambil pengaruh riwayat dan tafsir Makkah dari Sufyan ibn Uyaynah' }
+		],
+		politicalContexts: [
+			{
+				label: 'Bani Abbasiyah',
+				note: 'Khurasan menjadi salah satu pusat besar rihlah hadis dan pembentukan jaringan musnid pada abad ketiga.',
+				href: '/dinasti#abbasiyah'
+			}
+		],
+		dynastySlugs: ['abbasiyah']
 	})
 ];
 
@@ -1835,8 +2666,10 @@ export const sanadFigures: SanadFigure[] = [
 	rasulFigure,
 	...sahabatFigures,
 	...tabiinNetwork,
+	...supplementalTabiinNetwork,
 	...tabiutNetwork,
 	...ulamaNetwork,
+	...supplementalUlamaBridgeNetwork,
 	...walisongoNetwork,
 	...hadramautAndNusantaraBridgeNetwork
 ].sort((a, b) => a.order - b.order);
@@ -1846,7 +2679,7 @@ function normalizeLookupKey(value: string) {
 		.toLowerCase()
 		.normalize('NFD')
 		.replace(/[\u0300-\u036f]/g, '')
-		.replace(/[^a-z0-9]+/g, ' ')
+		.replace(/[^a-z0-9]+/g, '')
 		.trim();
 }
 

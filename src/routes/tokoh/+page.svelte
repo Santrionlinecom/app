@@ -14,6 +14,7 @@
 
 	const clusterOrder = [
 		'Imam Mazhab dan Turats Klasik',
+		'Perawi dan Musnid Penghubung',
 		'Walisongo dan Dakwah Jawa',
 		'Hadramaut dan Jejaring Alawiyyin',
 		'Ulama Nusantara dan Pesantren'

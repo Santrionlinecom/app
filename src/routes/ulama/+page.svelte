@@ -16,6 +16,7 @@
 
 	const clusterOrder = [
 		'Imam Mazhab dan Turats Klasik',
+		'Perawi dan Musnid Penghubung',
 		'Walisongo dan Dakwah Jawa',
 		'Hadramaut dan Jejaring Alawiyyin',
 		'Ulama Nusantara dan Pesantren'
@@ -24,6 +25,8 @@
 	const clusterNotes: Record<string, string> = {
 		'Imam Mazhab dan Turats Klasik':
 			'Poros fiqih, hadis, dan tasawuf Sunni yang menjadi fondasi kitab-kitab pesantren dan madrasah.',
+		'Perawi dan Musnid Penghubung':
+			'Tokoh-tokoh penghubung antara tabi`ut tabi`in, imam mazhab, dan generasi musnid-kritikus sanad yang membuat jaringan riwayat tetap hidup.',
 		'Walisongo dan Dakwah Jawa':
 			'Jalur dakwah Jawa yang menggabungkan pesantren, budaya, pelayanan sosial, dan pembentukan masyarakat Muslim pesisir.',
 		'Hadramaut dan Jejaring Alawiyyin':
@@ -37,6 +40,11 @@
 			panel: 'border-teal-200 bg-gradient-to-br from-teal-50 to-white',
 			badge: 'bg-teal-100 text-teal-700',
 			button: 'bg-teal-700 text-white hover:bg-teal-800'
+		},
+		'Perawi dan Musnid Penghubung': {
+			panel: 'border-sky-200 bg-gradient-to-br from-sky-50 to-white',
+			badge: 'bg-sky-100 text-sky-700',
+			button: 'bg-sky-700 text-white hover:bg-sky-800'
 		},
 		'Walisongo dan Dakwah Jawa': {
 			panel: 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-white',
