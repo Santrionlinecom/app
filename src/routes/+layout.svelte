@@ -1,13 +1,14 @@
 <script lang="ts">
-import '../app.css';
-import { page } from '$app/stores';
-import { onMount } from 'svelte';
+	import '../app.css';
+	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
+	import FeatureIcon from '$lib/components/FeatureIcon.svelte';
 	import SearchableSelect from '$lib/components/SearchableSelect.svelte';
+	import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
+	import { islamicDynasties } from '$lib/data/dinasti';
 	import { LANGUAGE_OPTIONS } from '$lib/data/languages';
 	import languageFlagOverrides from '$lib/data/language-flag-overrides.json';
-import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
-import { islamicDynasties } from '$lib/data/dinasti';
-import { FEATURES } from '$lib/features';
+	import { FEATURES } from '$lib/features';
 
 export let data;
 
@@ -644,14 +645,15 @@ $: if (pathname !== previousPathname) {
 		<div class="md:hidden border-b border-white/60 bg-gradient-to-br from-emerald-50/90 via-white to-cyan-50/80">
 			<div class="container mx-auto max-w-6xl px-4 py-3">
 				<div class="rounded-[1.8rem] border border-white/70 bg-white/90 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-					<div class="flex items-start justify-between gap-3">
-						<a href="/" class="flex min-w-0 items-center gap-3">
+						<div class="flex items-start justify-between gap-3">
+							<a href="/" class="flex min-w-0 items-center gap-3">
 								<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 p-2 shadow-lg shadow-emerald-500/20">
 									<img
-										src="https://files.santrionline.com/ICON%20SANTRI%20ONLINE%20COM%20kecil%20(1).png"
+										src="/logo.png"
 										alt="Santri Online"
-										class="h-8 w-auto"
-										loading="lazy"
+										class="h-10 w-10 rounded-xl object-contain"
+										loading="eager"
+										decoding="async"
 									/>
 								</div>
 							<div class="min-w-0">
@@ -1045,11 +1047,13 @@ $: if (pathname !== previousPathname) {
 
 						<div class="space-y-2">
 							{#each FEATURES as feature}
-								<a
-									href={`/fitur/${feature.slug}`}
-									class="flex items-start gap-3 rounded-[1.35rem] border border-slate-200/80 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-								>
-									<span class="mt-0.5 text-2xl">{feature.icon}</span>
+									<a
+										href={`/fitur/${feature.slug}`}
+										class="flex items-start gap-3 rounded-[1.35rem] border border-slate-200/80 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+									>
+										<span class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+											<FeatureIcon slug={feature.slug} className="h-5 w-5" />
+										</span>
 									<div class="min-w-0">
 										<p class="text-sm font-semibold text-slate-900">{feature.title}</p>
 										<p class="mt-1 text-sm leading-6 text-slate-500">{feature.desc}</p>
@@ -1146,7 +1150,7 @@ $: if (pathname !== previousPathname) {
 		</div>
 	{/if}
 
-	<main class="container mx-auto max-w-6xl px-4 py-8 pb-24 md:pb-10">
+	<main class="container mx-auto max-w-6xl px-4 py-8 pb-28 md:pb-10">
 		<slot />
 	</main>
 
@@ -1162,10 +1166,10 @@ $: if (pathname !== previousPathname) {
 								class="mobile-tab-link"
 								class:mobile-tab-link-active={item.isActive(pathname)}
 							>
-								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.9">
 									<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
 								</svg>
-								<span class="text-[10px]">{item.label}</span>
+								<span class="text-[11px]">{item.label}</span>
 							</a>
 						{/each}
 					</div>
@@ -1175,22 +1179,22 @@ $: if (pathname !== previousPathname) {
 	{:else if isAdminRouteActive && isSuperAdmin}
 		<nav class="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom">
 			<div class="mx-auto max-w-xl px-3 py-3 pb-safe">
-				<div class="pointer-events-auto rounded-[1.7rem] border border-white/70 bg-white/92 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
-					<div class="grid grid-cols-4 gap-1">
-					{#each adminNav as item}
-						<a
-							href={item.href}
-							class="mobile-tab-link"
-							class:mobile-tab-link-active={item.isActive(pathname)}
-						>
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-								<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
-							</svg>
-							<span class="text-[10px]">{item.label}</span>
-						</a>
-					{/each}
+					<div class="pointer-events-auto rounded-[1.7rem] border border-white/70 bg-white/92 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+						<div class="grid grid-cols-4 gap-1">
+							{#each adminNav as item}
+								<a
+									href={item.href}
+									class="mobile-tab-link"
+									class:mobile-tab-link-active={item.isActive(pathname)}
+								>
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.9">
+										<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+									</svg>
+									<span class="text-[11px]">{item.label}</span>
+								</a>
+							{/each}
+						</div>
 					</div>
-				</div>
 			</div>
 		</nav>
 	{/if}
@@ -1276,6 +1280,7 @@ $: if (pathname !== previousPathname) {
 
 	.mobile-scroll-row {
 		-ms-overflow-style: none;
+		mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 2.25rem), transparent);
 		scrollbar-width: none;
 	}
 
@@ -1290,7 +1295,8 @@ $: if (pathname !== previousPathname) {
 		border-radius: 999px;
 		border: 1px solid rgba(226, 232, 240, 0.95);
 		background: rgba(255, 255, 255, 0.96);
-		padding: 0.6rem 0.9rem;
+		min-height: 2.75rem;
+		padding: 0.68rem 0.95rem;
 		font-size: 0.72rem;
 		font-weight: 700;
 		letter-spacing: 0.14em;
@@ -1299,41 +1305,42 @@ $: if (pathname !== previousPathname) {
 		transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 	}
 
-		.mobile-top-trigger-active {
-			border-color: rgba(16, 185, 129, 0.24);
-			background: rgba(236, 253, 245, 0.96);
-			color: #047857;
-		}
+	.mobile-top-trigger-active {
+		border-color: rgba(16, 185, 129, 0.24);
+		background: rgba(236, 253, 245, 0.96);
+		color: #047857;
+	}
 
-		.mobile-top-dropdown-scroll {
-			max-height: min(55svh, 26rem);
-			overflow-y: auto;
-			overscroll-behavior: contain;
-			padding-right: 0.15rem;
-			scrollbar-gutter: stable;
-		}
+	.mobile-top-dropdown-scroll {
+		max-height: min(55svh, 26rem);
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding-right: 0.15rem;
+		scrollbar-gutter: stable;
+	}
 
-		.mobile-top-dropdown-scroll::-webkit-scrollbar {
-			width: 0.35rem;
-		}
+	.mobile-top-dropdown-scroll::-webkit-scrollbar {
+		width: 0.35rem;
+	}
 
-		.mobile-top-dropdown-scroll::-webkit-scrollbar-thumb {
-			border-radius: 999px;
-			background: rgba(148, 163, 184, 0.7);
-		}
+	.mobile-top-dropdown-scroll::-webkit-scrollbar-thumb {
+		border-radius: 999px;
+		background: rgba(148, 163, 184, 0.7);
+	}
 
-		.mobile-top-dropdown-scroll::-webkit-scrollbar-track {
-			background: transparent;
-		}
+	.mobile-top-dropdown-scroll::-webkit-scrollbar-track {
+		background: transparent;
+	}
 
-		.mobile-tab-link {
-			display: flex;
+	.mobile-tab-link {
+		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 0.35rem;
-		border-radius: 1rem;
-		padding: 0.65rem 0.5rem;
+		gap: 0.3rem;
+		min-height: 4.25rem;
+		border-radius: 1.15rem;
+		padding: 0.7rem 0.35rem;
 		font-size: 0.75rem;
 		font-weight: 600;
 		color: #64748b;

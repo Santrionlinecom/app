@@ -245,6 +245,7 @@
 
 	let roleItems: MenuItem[] = [];
 	let menuItems: MenuItem[] = [];
+	let mobileBottomItems: MenuItem[] = [];
 	$: {
 		role = data?.user?.role ?? '';
 		orgType = data?.org?.type ?? null;
@@ -290,6 +291,7 @@
 		menuItems = isImpersonating
 			? [...primaryItems, ...utilityItems, ...roleItems, ...footerItems]
 			: [...primaryItems, ...(isSuperAdmin ? utilityItems : roleItems), ...footerItems];
+		mobileBottomItems = menuItems.length > 5 ? menuItems.slice(0, 4) : menuItems;
 	}
 
 	let sidebarOpen = false;
@@ -395,7 +397,7 @@
 				</div>
 			</header>
 
-			<main class="flex-1 px-3 py-6 md:px-6 xl:px-8 2xl:px-10">
+			<main class="flex-1 px-3 pb-28 pt-6 md:px-6 md:py-6 xl:px-8 2xl:px-10">
 				{#if isImpersonating}
 					<div class="mb-5 flex flex-col gap-3 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900 shadow-sm md:flex-row md:items-center md:justify-between">
 						<div>
@@ -419,20 +421,33 @@
 
 	<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-white/70 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] md:hidden safe-area-bottom">
 		<div class="flex w-full items-center justify-between px-2 py-3 pb-safe">
-			{#each menuItems as item}
+			{#each mobileBottomItems as item}
 				<a
 					href={item.href}
-					class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-slate-500 transition-colors"
+					class="flex min-h-[4.25rem] flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-xs text-slate-500 transition-colors"
 					class:text-emerald-700={isActive(item.href)}
 					class:font-semibold={isActive(item.href)}
 					class:bg-emerald-50={isActive(item.href)}
 				>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.9">
 						<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
 					</svg>
-					<span class="text-[10px]">{item.label}</span>
+					<span class="max-w-full truncate text-[11px]">{item.label}</span>
 				</a>
 			{/each}
+			{#if menuItems.length > mobileBottomItems.length}
+				<button
+					type="button"
+					class="flex min-h-[4.25rem] flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-xs font-semibold text-slate-500 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+					on:click={() => (sidebarOpen = true)}
+					aria-label="Buka menu lainnya"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M4 7h16M4 12h16M4 17h10" />
+					</svg>
+					<span class="text-[11px]">Menu</span>
+				</button>
+			{/if}
 		</div>
 	</nav>
 

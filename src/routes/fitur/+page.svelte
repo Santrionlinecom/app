@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FeatureIcon from '$lib/components/FeatureIcon.svelte';
 	import { FEATURES } from '$lib/features';
 </script>
 
@@ -28,7 +29,9 @@
 			{#each FEATURES as feature}
 				<a href={`/fitur/${feature.slug}`} class="group rounded-2xl border-2 border-emerald-200 bg-white p-6 shadow-lg transition hover:-translate-y-1 hover:shadow-2xl">
 					<div class="flex items-center justify-between">
-						<span class="text-4xl">{feature.icon}</span>
+						<span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
+							<FeatureIcon slug={feature.slug} className="h-7 w-7" />
+						</span>
 						<span class="text-xs uppercase tracking-[0.25em] text-emerald-600">Program</span>
 					</div>
 					<h2 class="text-xl font-bold text-gray-900 mt-4">{feature.title}</h2>

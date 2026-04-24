@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import FeatureIcon from '$lib/components/FeatureIcon.svelte';
 
 	export let data: PageData;
 	const { feature, detail, others } = data;
@@ -23,7 +24,9 @@
 					{detail.heroTagline}
 				</span>
 				<div class="mt-6 flex items-start gap-4">
-					<span class="text-5xl">{feature.icon}</span>
+					<span class="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-white/15 text-white ring-1 ring-white/20">
+						<FeatureIcon slug={feature.slug} className="h-8 w-8" strokeWidth={1.7} />
+					</span>
 					<div>
 						<h1 class="text-3xl md:text-5xl font-bold">{feature.title}</h1>
 						<p class="text-base md:text-lg text-white/90 mt-3">{detail.heroSubtitle}</p>
@@ -108,7 +111,9 @@
 				{#each others as item}
 					<a href={`/fitur/${item.slug}`} class="rounded-2xl border border-slate-200 p-4 hover:border-emerald-200 hover:shadow-md">
 						<div class="flex items-center gap-3">
-							<span class="text-3xl">{item.icon}</span>
+							<span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+								<FeatureIcon slug={item.slug} className="h-5 w-5" />
+							</span>
 							<div>
 								<p class="text-sm font-semibold text-slate-900">{item.title}</p>
 								<p class="text-xs text-slate-600">{item.desc}</p>

@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 
 	import { isSuperAdminUser } from '$lib/auth/session-user';
+	import FeatureIcon from '$lib/components/FeatureIcon.svelte';
 	import { ACTIVE_CTA, INSTITUTIONS } from '$lib/config/institutions';
 	import { FEATURES } from '$lib/features';
 
@@ -257,10 +258,10 @@
 					</div>
 
 					<div class="space-y-4">
-						<h1 class="home-title text-4xl leading-tight text-slate-950 md:text-6xl">
-							Halaman depan yang langsung menampilkan lembaga, pembelajaran, kitab, dan referensi santri.
+						<h1 class="home-title text-[2rem] leading-[1.14] text-slate-950 sm:text-4xl md:text-6xl">
+							Platform digital TPQ, kitab, dan pembinaan santri.
 						</h1>
-						<p class="max-w-3xl text-lg leading-8 text-slate-600 md:text-xl">
+						<p class="max-w-3xl text-base leading-7 text-slate-600 md:text-xl md:leading-8">
 							Santri Online tidak lagi berhenti di hero promosi. Homepage ini sekarang memetakan jalur
 							operasional TPQ, fitur pembinaan, kategori kitab, mushaf, tokoh, sejarah, kalender, dan
 							konten publik yang memang sudah tersedia.
@@ -320,7 +321,9 @@
 							{#each featurePrograms.slice(0, 4) as feature}
 								<a href={feature.href} class="home-mini-card">
 									<div class="flex items-center justify-between gap-3">
-										<span class="text-2xl">{feature.icon}</span>
+										<span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+											<FeatureIcon slug={feature.slug} className="h-5 w-5" />
+										</span>
 										<span class="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
 											Program
 										</span>
@@ -438,7 +441,9 @@
 				>
 					<div class="flex items-start justify-between gap-4">
 						<div class="flex items-start gap-4">
-							<span class="mt-1 text-4xl">{feature.icon}</span>
+							<span class="mt-1 inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 transition group-hover:bg-emerald-100">
+								<FeatureIcon slug={feature.slug} className="h-7 w-7" strokeWidth={1.7} />
+							</span>
 							<div>
 								<p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">Fitur aktif</p>
 								<h3 class="mt-2 text-2xl font-semibold text-slate-950">{feature.title}</h3>
