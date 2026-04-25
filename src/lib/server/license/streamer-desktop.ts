@@ -4,8 +4,7 @@ import {
 	countStreamerDevices,
 	ensureStreamerLicenseTables,
 	getStreamerDevice,
-	getStreamerLicenseByHash,
-	hashLicenseKey,
+	getStreamerLicenseByKey,
 	isStreamerLicenseUsable,
 	logStreamerLicenseEvent,
 	normalizeDeviceIdHash,
@@ -88,8 +87,7 @@ const resolveLicense = async (params: {
 	}
 
 	const now = Date.now();
-	const licenseKeyHash = await hashLicenseKey(payload.key);
-	const license = await getStreamerLicenseByHash(params.db, licenseKeyHash);
+	const license = await getStreamerLicenseByKey(params.db, payload.key);
 	if (!license) {
 		await logStreamerLicenseEvent(params.db, {
 			eventType: getFailureEventType(params.action),

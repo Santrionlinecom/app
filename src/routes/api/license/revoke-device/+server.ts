@@ -3,8 +3,7 @@ import { getRequestIp } from '$lib/server/logger';
 import {
 	ensureStreamerLicenseTables,
 	getStreamerDevice,
-	getStreamerLicenseByHash,
-	hashLicenseKey,
+	getStreamerLicenseByKey,
 	logStreamerLicenseEvent,
 	normalizeDeviceIdHash,
 	removeStreamerDevice
@@ -52,8 +51,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return bad(400, 'invalid_payload', 'license_key dan device_id_hash wajib diisi');
 	}
 
-	const licenseKeyHash = await hashLicenseKey(licenseKey);
-	const license = await getStreamerLicenseByHash(db, licenseKeyHash);
+	const license = await getStreamerLicenseByKey(db, licenseKey);
 	if (!license) {
 		await logStreamerLicenseEvent(db, {
 			eventType: 'revoke_device_failed',

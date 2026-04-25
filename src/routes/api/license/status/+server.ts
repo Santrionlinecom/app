@@ -4,8 +4,7 @@ import { getRequestIp } from '$lib/server/logger';
 import {
 	computeStreamerValidUntil,
 	ensureStreamerLicenseTables,
-	getStreamerLicenseByHash,
-	hashLicenseKey,
+	getStreamerLicenseByKey,
 	isStreamerLicenseUsable,
 	listStreamerDevices,
 	logStreamerLicenseEvent
@@ -42,8 +41,7 @@ const handleStatusLookup = async (params: {
 	}
 
 	const now = Date.now();
-	const licenseKeyHash = await hashLicenseKey(licenseKey);
-	const license = await getStreamerLicenseByHash(db, licenseKeyHash);
+	const license = await getStreamerLicenseByKey(db, licenseKey);
 	if (!license) {
 		await logStreamerLicenseEvent(db, {
 			eventType: 'status_failed',

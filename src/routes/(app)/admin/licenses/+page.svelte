@@ -143,7 +143,7 @@
 					class="input input-bordered w-full"
 					type="text"
 					bind:value={licenseKey}
-					placeholder="Masukkan license key"
+					placeholder="SANTRI-XXXXX-XXXXX-XXXXX-XXXXX"
 					autocomplete="off"
 				/>
 			</label>

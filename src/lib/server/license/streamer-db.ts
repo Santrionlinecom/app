@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { getStrmLicenseKeyLookupCandidates } from './key-format';
 
 export type StreamerPlanType = 'monthly' | 'yearly' | 'lifetime';
 export type StreamerLicenseStatus = 'active' | 'revoked';
@@ -152,6 +153,14 @@ export const getStreamerLicenseByHash = async (db: D1Database, licenseKeyHash: s
 		)
 		.bind(licenseKeyHash)
 		.first<StreamerLicenseRow>()) ?? null;
+
+export const getStreamerLicenseByKey = async (db: D1Database, licenseKey: string) => {
+	for (const candidate of getStrmLicenseKeyLookupCandidates(licenseKey)) {
+		const license = await getStreamerLicenseByHash(db, await hashLicenseKey(candidate));
+		if (license) return license;
+	}
+	return null;
+};
 
 export const getStreamerLicenseById = async (db: D1Database, licenseId: string) =>
 	(await db
