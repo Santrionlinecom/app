@@ -3,7 +3,7 @@ import type { D1Database } from '@cloudflare/workers-types';
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 import {
 	ensureStreamerLicenseTables,
-	getStreamerLicenseByHash,
+	getStreamerLicenseByKey,
 	hashLicenseKey,
 	logStreamerLicenseEvent,
 	type StreamerPlanType
@@ -24,7 +24,7 @@ const generateUniqueStreamerLicenseKey = async (db: D1Database) => {
 	for (let i = 0; i < 25; i += 1) {
 		const licenseKey = buildStrmLicenseKey();
 		const licenseKeyHash = await hashLicenseKey(licenseKey);
-		const existing = await getStreamerLicenseByHash(db, licenseKeyHash);
+		const existing = await getStreamerLicenseByKey(db, licenseKey);
 		if (!existing) {
 			return { licenseKey, licenseKeyHash };
 		}

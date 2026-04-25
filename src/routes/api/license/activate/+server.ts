@@ -10,8 +10,7 @@ import {
 	countStreamerDevices,
 	ensureStreamerLicenseTables,
 	getStreamerDevice,
-	getStreamerLicenseByHash,
-	hashLicenseKey,
+	getStreamerLicenseByKey,
 	isStreamerLicenseUsable,
 	logStreamerLicenseEvent,
 	normalizeDeviceIdHash,
@@ -80,8 +79,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 		const now = Date.now();
 		const ip = getRequestIp(request);
-		const licenseKeyHash = await hashLicenseKey(licenseKey);
-		const license = await getStreamerLicenseByHash(db, licenseKeyHash);
+		const license = await getStreamerLicenseByKey(db, licenseKey);
 
 		if (!license) {
 			await logStreamerLicenseEvent(db, {
