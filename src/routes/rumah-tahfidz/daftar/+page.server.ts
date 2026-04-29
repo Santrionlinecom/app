@@ -7,6 +7,7 @@ import { generateId } from 'lucia';
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import { getInstitutionActionBlock, getInstitutionComingSoonLoad } from '$lib/server/institution-guards';
+import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 
 export const load: PageServerLoad = async () => {
 	getInstitutionComingSoonLoad('rumah-tahfidz');
@@ -25,6 +26,12 @@ export const actions: Actions = {
 		const db = locals.db!;
 
 		const formData = await request.formData();
+		const ip = getRequestIp(request) ?? undefined;
+		const turnstile = await verifyTurnstileFormData(formData, ip);
+		if (!turnstile.success) {
+			return fail(400, { error: TURNSTILE_FAILURE_MESSAGE });
+		}
+
 		const orgName = formData.get('orgName');
 		const orgSlug = formData.get('orgSlug');
 		const orgAddress = formData.get('orgAddress');
@@ -95,7 +102,7 @@ export const actions: Actions = {
 			logSystemActivity(db, 'REGISTER', {
 				userId,
 				userEmail: (adminEmail as string).trim(),
-				ipAddress: getRequestIp(request),
+				ipAddress: ip ?? null,
 				metadata: { orgId, orgName: orgName.trim(), orgType: 'rumah-tahfidz', role: 'admin', source: 'rumah-tahfidz/daftar' },
 				waitUntil: platform?.context?.waitUntil
 			});

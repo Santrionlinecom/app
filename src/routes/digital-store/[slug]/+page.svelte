@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Turnstile from '$lib/components/Turnstile.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	export let data: PageData;
@@ -176,6 +177,8 @@
 						/>
 						<p class="mt-2 text-xs text-slate-500">Opsional saat checkout. Anda bisa upload sekarang atau nanti dari halaman order. Maksimal 8MB.</p>
 					</div>
+
+					<Turnstile siteKey={data.turnstileSiteKey} />
 
 					<div class="flex gap-3">
 						<button type="submit" class="btn btn-primary">Buat Order Manual</button>

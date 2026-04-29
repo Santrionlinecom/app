@@ -6,6 +6,8 @@ import {
 	ensureDigitalCommerceSchema,
 	getDigitalOrderByReference
 } from '$lib/server/digital-commerce';
+import { getRequestIp } from '$lib/server/logger';
+import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 
 const normalizeText = (value: FormDataEntryValue | null) =>
 	typeof value === 'string' ? value.trim() : '';
@@ -50,6 +52,11 @@ export const actions: Actions = {
 
 		await ensureDigitalCommerceSchema(locals.db);
 		const formData = await request.formData();
+		const turnstile = await verifyTurnstileFormData(formData, getRequestIp(request) ?? undefined);
+		if (!turnstile.success) {
+			return fail(400, { error: TURNSTILE_FAILURE_MESSAGE });
+		}
+
 		const token = normalizeText(formData.get('token'));
 		const proofFile = formData.get('proofFile');
 

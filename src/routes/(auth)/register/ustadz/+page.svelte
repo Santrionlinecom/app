@@ -1,10 +1,11 @@
 <script lang="ts">
+	import Turnstile from '$lib/components/Turnstile.svelte';
 	import { superForm } from 'sveltekit-superforms/client';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
 
-	const { form, errors, enhance } = superForm(data.form);
+	const { form, errors, enhance, message } = superForm(data.form);
 	const fieldError = (value: unknown) => {
 		if (!value) return undefined;
 		if (Array.isArray(value)) return value[0];
@@ -56,6 +57,10 @@
 		</header>
 
 		<form method="POST" class="rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm space-y-6" use:enhance>
+			{#if typeof $message === 'string' && $message}
+				<div class="alert alert-error text-sm">{$message}</div>
+			{/if}
+
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
 					<label class="text-sm font-semibold text-slate-700" for="fullName">Nama Lengkap</label>
@@ -185,6 +190,8 @@
 					<p class="text-xs text-red-600">{fieldError($errors.expertise)}</p>
 				{/if}
 			</div>
+
+			<Turnstile siteKey={data.turnstileSiteKey} />
 
 			<button class="btn btn-primary w-full">Daftar Sebagai Ustadz</button>
 		</form>

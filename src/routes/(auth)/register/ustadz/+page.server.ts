@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { superValidate, setError } from 'sveltekit-superforms/server';
+import { superValidate, setError, message } from 'sveltekit-superforms/server';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { z } from 'zod';
 import { Scrypt } from '$lib/server/password';
@@ -8,6 +8,7 @@ import { initializeLucia } from '$lib/server/lucia';
 import { generateId } from 'lucia';
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
+import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 
 const optionalText = z.preprocess(
 	(value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
@@ -50,7 +51,14 @@ export const actions: Actions = {
 			throw redirect(302, '/dashboard');
 		}
 
-		const form = await superValidate(request, zod4(ustadzRegisterSchema));
+		const formData = await request.formData();
+		const form = await superValidate(formData, zod4(ustadzRegisterSchema));
+		const ip = getRequestIp(request) ?? undefined;
+		const turnstile = await verifyTurnstileFormData(formData, ip);
+		if (!turnstile.success) {
+			return message(form, TURNSTILE_FAILURE_MESSAGE, { status: 400 });
+		}
+
 		if (!locals.db) {
 			return fail(500, { form });
 		}
@@ -101,7 +109,7 @@ export const actions: Actions = {
 		logSystemActivity(locals.db, 'REGISTER', {
 			userId,
 			userEmail: email,
-			ipAddress: getRequestIp(request),
+			ipAddress: ip ?? null,
 			metadata: { role: 'ustadz', workStatus, source: 'register/ustadz' },
 			waitUntil: platform?.context?.waitUntil
 		});

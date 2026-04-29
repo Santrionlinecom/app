@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Turnstile from '$lib/components/Turnstile.svelte';
 	import OrgLocationFields from '$lib/components/org/OrgLocationFields.svelte';
 	import { page } from '$app/stores';
 
@@ -116,6 +117,8 @@
 		{#if form?.success}
 			<div class="alert alert-success text-sm">{form.success}</div>
 		{/if}
+
+		<Turnstile siteKey={$page.data.turnstileSiteKey ?? ''} />
 
 		<button class="btn btn-primary w-full">Daftarkan {title}</button>
 	</form>

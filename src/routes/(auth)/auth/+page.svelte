@@ -1,4 +1,8 @@
 <script lang="ts">
+    import Turnstile from '$lib/components/Turnstile.svelte';
+    import type { PageData } from './$types';
+
+    export let data: PageData;
     export let form;
 
     let showPassword = false;
@@ -82,6 +86,8 @@
                         <a href="/reset-password" class="label-text-alt link link-hover text-blue-600">Lupa password?</a>
                     </div>
                 </div>
+
+                <Turnstile siteKey={data.turnstileSiteKey} />
 
                 <div>
                     <button type="submit" class="btn btn-primary w-full bg-green-700 border-none hover:bg-green-800 normal-case text-lg font-bold h-12 rounded-xl shadow-md hover:shadow-lg transition-all">

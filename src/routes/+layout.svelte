@@ -3,6 +3,9 @@ import '../app.css';
 import { page } from '$app/stores';
 import { onMount } from 'svelte';
 	import SearchableSelect from '$lib/components/SearchableSelect.svelte';
+	import ClarityAnalytics from '$lib/components/ClarityAnalytics.svelte';
+	import CookieConsent from '$lib/components/CookieConsent.svelte';
+	import UmamiAnalytics from '$lib/components/UmamiAnalytics.svelte';
 	import { LANGUAGE_OPTIONS } from '$lib/data/languages';
 	import languageFlagOverrides from '$lib/data/language-flag-overrides.json';
 import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
@@ -638,6 +641,10 @@ $: if (pathname !== previousPathname) {
 <svelte:head>
 	<meta name="google-site-verification" content="vyZh4AQIE37XnqZCsPo_qfSKT7F1NRQdPYh8sPIDRFw" />
 </svelte:head>
+
+<UmamiAnalytics />
+<ClarityAnalytics />
+<CookieConsent />
 
 <div class="min-h-screen bg-base-100">
 	<header class="sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">

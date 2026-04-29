@@ -5,6 +5,7 @@ import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import { isSuperAdminUser } from '$lib/auth/session-user';
+import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 import type { Actions, PageServerLoad } from './$types';
 
 // Jika user sudah login, lempar ke dashboard
@@ -19,6 +20,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 		default: async ({ request, platform, locals, cookies }) => {
 			const formData = await request.formData();
+			const ip = getRequestIp(request) ?? undefined;
+			const turnstile = await verifyTurnstileFormData(formData, ip);
+			if (!turnstile.success) {
+				return fail(400, { message: TURNSTILE_FAILURE_MESSAGE });
+			}
+
 			const email = formData.get('email');
 			const password = formData.get('password');
 
@@ -79,7 +86,7 @@ export const actions: Actions = {
 				logSystemActivity(db, 'LOGIN', {
 					userId: user.id,
 					userEmail: email,
-					ipAddress: getRequestIp(request),
+					ipAddress: ip ?? null,
 					metadata: { method: 'password' },
 					waitUntil: platform?.context?.waitUntil
 				});

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Turnstile from '$lib/components/Turnstile.svelte';
+	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 
 	export let org;
@@ -89,11 +91,13 @@
 			<div class="alert alert-error text-sm">{form.error}</div>
 		{/if}
 
-	<button class="btn btn-primary w-full">Daftar Anggota</button>
+		<Turnstile siteKey={$page.data.turnstileSiteKey ?? ''} />
 
-	{#if lockedRole && googleHref}
-		<div class="pt-4 text-center text-xs text-slate-500">atau</div>
-		<a href={googleHref} class="btn btn-outline w-full">Daftar dengan Google</a>
-	{/if}
-</form>
+		<button class="btn btn-primary w-full">Daftar Anggota</button>
+
+		{#if lockedRole && googleHref}
+			<div class="pt-4 text-center text-xs text-slate-500">atau</div>
+			<a href={googleHref} class="btn btn-outline w-full">Daftar dengan Google</a>
+		{/if}
+	</form>
 </section>

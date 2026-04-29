@@ -35,6 +35,8 @@ declare global {
                 SEED_SECRET?: string;
                 LICENSE_SIGNING_SECRET?: string;
                 STREAMER_LICENSE_SIGNING_SECRET?: string;
+                TURNSTILE_SITE_KEY?: string;
+                TURNSTILE_SECRET_KEY?: string;
                 R2_PUBLIC_BASE_URL?: string;
                 // Pastikan binding di wrangler.toml namanya "BUCKET"
                 // (Jika belum pakai R2, baris ini boleh dihapus atau biarkan saja)

@@ -8,6 +8,8 @@ import {
 	ensureDigitalCommerceSchema,
 	getPublishedDigitalProductBySlug
 } from '$lib/server/digital-commerce';
+import { getRequestIp } from '$lib/server/logger';
+import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 
 const normalizeText = (value: FormDataEntryValue | null) =>
 	typeof value === 'string' ? value.trim() : '';
@@ -36,6 +38,12 @@ export const actions: Actions = {
 			return fail(500, { error: 'Database tidak tersedia.' });
 		}
 
+		const formData = await request.formData();
+		const turnstile = await verifyTurnstileFormData(formData, getRequestIp(request) ?? undefined);
+		if (!turnstile.success) {
+			return fail(400, { error: TURNSTILE_FAILURE_MESSAGE });
+		}
+
 		await ensureDigitalCommerceSchema(locals.db);
 		await ensureDefaultManualPaymentMethods(locals.db);
 
@@ -44,7 +52,6 @@ export const actions: Actions = {
 			return fail(404, { error: 'Produk digital tidak ditemukan.' });
 		}
 
-		const formData = await request.formData();
 		const buyerName = normalizeText(formData.get('buyerName'));
 		const buyerContact = normalizeText(formData.get('buyerContact'));
 		const paymentMethodId = normalizeText(formData.get('paymentMethodId'));

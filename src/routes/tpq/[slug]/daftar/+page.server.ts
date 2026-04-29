@@ -6,6 +6,7 @@ import { Scrypt } from '$lib/server/password';
 import { generateId } from 'lucia';
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
+import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 
 const roleLabel = (value: string) => {
 	if (value === 'ustadzah') return 'Ustadzah';
@@ -46,6 +47,12 @@ export const actions: Actions = {
 		}
 
 		const formData = await request.formData();
+		const ip = getRequestIp(request) ?? undefined;
+		const turnstile = await verifyTurnstileFormData(formData, ip);
+		if (!turnstile.success) {
+			return fail(400, { error: TURNSTILE_FAILURE_MESSAGE });
+		}
+
 		const name = formData.get('name');
 		const email = formData.get('email');
 		const password = formData.get('password');
@@ -113,7 +120,7 @@ export const actions: Actions = {
 		logSystemActivity(db, 'REGISTER', {
 			userId,
 			userEmail: email.trim(),
-			ipAddress: getRequestIp(request),
+			ipAddress: ip ?? null,
 			metadata: { orgId: org.id, orgName: org.name, orgType: 'tpq', role: normalizedRole, source: 'tpq/member' },
 			waitUntil: platform?.context?.waitUntil
 		});

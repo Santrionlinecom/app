@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Turnstile from '$lib/components/Turnstile.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	export let data: PageData;
@@ -211,6 +212,7 @@
 							class="file-input file-input-bordered mt-4 w-full"
 						/>
 						<p class="mt-2 text-xs text-slate-500">Gunakan JPG, PNG, WEBP, atau PDF. Maksimal 8MB.</p>
+						<Turnstile siteKey={data.turnstileSiteKey} class="mt-4" />
 						<button type="submit" class="btn btn-primary mt-4">Upload Bukti Bayar</button>
 					</form>
 				{/if}
