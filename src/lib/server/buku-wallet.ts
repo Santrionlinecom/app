@@ -40,6 +40,45 @@ export type CoinTopupRequest = {
 	updatedAt: string;
 };
 
+const toCoinWallet = (row: any): CoinWallet => ({
+	userId: row.userId,
+	balance: Number(row.balance ?? 0),
+	createdAt: row.createdAt,
+	updatedAt: row.updatedAt
+});
+
+export async function getCoinWallet(db: D1Database, userId: string) {
+	const row = await db
+		.prepare(
+			`SELECT
+				user_id as userId,
+				balance,
+				created_at as createdAt,
+				updated_at as updatedAt
+			FROM coin_wallets
+			WHERE user_id = ?
+			LIMIT 1`
+		)
+		.bind(userId)
+		.first<any>();
+
+	return row ? toCoinWallet(row) : null;
+}
+
+export async function ensureCoinWallet(db: D1Database, userId: string) {
+	await db.prepare('INSERT OR IGNORE INTO coin_wallets (user_id) VALUES (?)').bind(userId).run();
+	const wallet = await getCoinWallet(db, userId);
+	if (!wallet) {
+		throw new Error('Gagal membuat wallet coin.');
+	}
+	return wallet;
+}
+
+export async function getCoinBalance(db: D1Database, userId: string) {
+	const wallet = await ensureCoinWallet(db, userId);
+	return wallet.balance;
+}
+
 export async function ensureBukuWalletSchema(db: D1Database) {
 	await db
 		.prepare(
