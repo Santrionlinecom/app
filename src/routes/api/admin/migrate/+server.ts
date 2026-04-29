@@ -20,6 +20,9 @@ import { ensureKhotibScheduleTable } from '$lib/server/jadwal-khotib';
 import { ensureSystemLogsTable } from '$lib/server/system-logs';
 import { ensureApiRateLimitTable } from '$lib/server/rate-limit';
 import { ensureStreamerLicenseTables } from '$lib/server/license/streamer-db';
+import { ensureBukuAccessSchema } from '$lib/server/buku-access';
+import { ensureBukuLibrarySchema } from '$lib/server/buku-library';
+import { ensureBukuWalletSchema } from '$lib/server/buku-wallet';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 
 const assertAuthorized = (locals: App.Locals, secret: string | undefined, token: string | null) => {
@@ -62,6 +65,9 @@ export const POST: RequestHandler = async ({ locals, platform, request, url }) =
 	await ensureMediaSchema(db);
 	await ensureApiRateLimitTable(db);
 	await ensureStreamerLicenseTables(db);
+	await ensureBukuLibrarySchema(db);
+	await ensureBukuAccessSchema(db);
+	await ensureBukuWalletSchema(db);
 
 	return json({
 		ok: true,
