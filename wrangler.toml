@@ -5,10 +5,18 @@ compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".svelte-kit/cloudflare"
 
 [vars]
+PUBLIC_BASE_URL = "https://app.santrionline.com"
 R2_PUBLIC_BASE_URL = "https://files.santrionline.com"
-# SEED_SECRET = "ganti-dengan-secret-acak"
-# LICENSE_SIGNING_SECRET set via:
-# wrangler secret put LICENSE_SIGNING_SECRET
+TURNSTILE_SITE_KEY = "0x4AAAAAADFy-tk3UwwNRRLK"
+PUBLIC_CLARITY_PROJECT_ID = "wjd6jb7tnb"
+PUBLIC_UMAMI_SCRIPT_URL = "https://cloud.umami.is/script.js"
+PUBLIC_UMAMI_WEBSITE_ID = "4367f37b-32a2-4732-bbce-71192ac5fa17"
+GOOGLE_CLIENT_ID = "511759368556-iu4bj02gusic1e0tqindpi5lriis9lkv.apps.googleusercontent.com"
+
+# Secrets are not stored in wrangler.toml.
+# GOOGLE_CLIENT_SECRET -> wrangler secret put GOOGLE_CLIENT_SECRET
+# LICENSE_SIGNING_SECRET -> wrangler secret put LICENSE_SIGNING_SECRET
+# TURNSTILE_SECRET_KEY -> wrangler secret put TURNSTILE_SECRET_KEY
 
 # --- Konfigurasi Database D1 ---
 [[d1_databases]]
