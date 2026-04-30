@@ -44,6 +44,9 @@
 					<a href="/buku/studio/new" class="btn border-none bg-white text-slate-900 hover:bg-emerald-50">
 						Buat Buku Baru
 					</a>
+					<a href="/buku/studio/earnings" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
+						Lihat Pendapatan
+					</a>
 					<a href="/buku" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
 						Lihat Katalog
 					</a>

@@ -1,20 +1,10 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { generateId } from 'lucia';
-import { isSuperAdminUser } from '$lib/auth/session-user';
+import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 
-export const load: PageServerLoad = async ({ locals, platform, params }) => {
-	if (!locals.user) {
-		throw redirect(302, '/auth');
-	}
-	if (!isSuperAdminUser(locals.user)) {
-		throw redirect(302, '/');
-	}
-
-	const db = platform?.env?.DB;
-	if (!db) {
-		throw redirect(302, '/');
-	}
+export const load: PageServerLoad = async ({ locals, params }) => {
+	const { db } = requireSuperAdmin(locals);
 
 	const { id } = params;
 
@@ -25,7 +15,7 @@ export const load: PageServerLoad = async ({ locals, platform, params }) => {
 				t.id,
 				t.user_id as userId,
 				u.email as userEmail,
-				u.name as userName,
+				u.username as userName,
 				t.amount_rupiah as amountRupiah,
 				t.coin_amount as coinAmount,
 				t.proof_url as proofUrl,
@@ -63,18 +53,8 @@ export const load: PageServerLoad = async ({ locals, platform, params }) => {
 };
 
 export const actions: Actions = {
-	approve: async ({ locals, platform, params }) => {
-		if (!locals.user) {
-			throw redirect(302, '/auth');
-		}
-		if (!isSuperAdminUser(locals.user)) {
-			throw redirect(302, '/');
-		}
-
-		const db = platform?.env?.DB;
-		if (!db) {
-			return fail(500, { message: 'Database tidak tersedia' });
-		}
+	approve: async ({ locals, params }) => {
+		const { db, user } = requireSuperAdmin(locals);
 
 		const { id } = params;
 		const adminNote = 'Approved';
@@ -129,24 +109,14 @@ export const actions: Actions = {
 				SET status = 'approved', admin_note = ?, reviewed_by = ?, reviewed_at = ?, updated_at = ?
 				WHERE id = ?`
 			)
-			.bind(adminNote, locals.user.id, now, now, id)
+			.bind(adminNote, user.id, now, now, id)
 			.run();
 
 		throw redirect(303, '/admin/super/coin-topups?success=approved');
 	},
 
-	reject: async ({ request, locals, platform, params }) => {
-		if (!locals.user) {
-			throw redirect(302, '/auth');
-		}
-		if (!isSuperAdminUser(locals.user)) {
-			throw redirect(302, '/');
-		}
-
-		const db = platform?.env?.DB;
-		if (!db) {
-			return fail(500, { message: 'Database tidak tersedia' });
-		}
+	reject: async ({ request, locals, params }) => {
+		const { db, user } = requireSuperAdmin(locals);
 
 		const { id } = params;
 		const formData = await request.formData();
@@ -175,7 +145,7 @@ export const actions: Actions = {
 				SET status = 'rejected', admin_note = ?, reviewed_by = ?, reviewed_at = ?, updated_at = ?
 				WHERE id = ?`
 			)
-			.bind(adminNote, locals.user.id, now, now, id)
+			.bind(adminNote, user.id, now, now, id)
 			.run();
 
 		throw redirect(303, '/admin/super/coin-topups?success=rejected');

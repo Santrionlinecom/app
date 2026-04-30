@@ -1,19 +1,8 @@
-import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { isSuperAdminUser } from '$lib/auth/session-user';
+import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 
-export const load: PageServerLoad = async ({ locals, platform, url }) => {
-	if (!locals.user) {
-		throw redirect(302, '/auth');
-	}
-	if (!isSuperAdminUser(locals.user)) {
-		throw redirect(302, '/');
-	}
-
-	const db = platform?.env?.DB;
-	if (!db) {
-		throw redirect(302, '/');
-	}
+export const load: PageServerLoad = async ({ locals, url }) => {
+	const { db } = requireSuperAdmin(locals);
 
 	// Filter by status
 	const status = url.searchParams.get('status') ?? 'pending';
@@ -27,7 +16,7 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 				t.id,
 				t.user_id as userId,
 				u.email as userEmail,
-				u.name as userName,
+				u.username as userName,
 				t.amount_rupiah as amountRupiah,
 				t.coin_amount as coinAmount,
 				t.proof_url as proofUrl,

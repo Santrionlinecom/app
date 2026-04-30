@@ -1,5 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { ensureBukuWalletSchema, ensureCoinWallet } from '$lib/server/buku-wallet';
+import { recordChapterUnlockRoyalty } from '$lib/server/buku-royalty';
 
 export type BukuChapterAccess = 'free' | 'unlocked' | 'locked';
 
@@ -13,7 +14,7 @@ export type BukuUnlock = {
 };
 
 export type UnlockBukuChapterResult =
-	| { status: 'unlocked'; balanceAfter: number }
+	| { status: 'unlocked'; balanceAfter: number; unlockId: string }
 	| { status: 'already_unlocked'; balanceAfter: number }
 	| { status: 'insufficient_coin'; balance: number; required: number };
 
@@ -135,8 +136,16 @@ export async function unlockBukuChapter(
 			return { status: 'insufficient_coin', balance: latestWallet.balance, required: coinPrice };
 		}
 
+		await recordChapterUnlockRoyalty(db, {
+			unlockId,
+			readerId: params.userId,
+			bookId: params.bookId,
+			chapterId: params.chapterId,
+			grossCoin: coinPrice
+		});
+
 		const latestWallet = await ensureCoinWallet(db, params.userId);
-		return { status: 'unlocked', balanceAfter: latestWallet.balance };
+		return { status: 'unlocked', balanceAfter: latestWallet.balance, unlockId };
 	} catch (err) {
 		if (isUniqueConstraintError(err) && (await hasBukuChapterUnlock(db, params.userId, params.chapterId))) {
 			const latestWallet = await ensureCoinWallet(db, params.userId);

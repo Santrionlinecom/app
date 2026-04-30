@@ -43,7 +43,10 @@
 					Review buku yang diajukan penulis sebelum tampil di katalog publik.
 				</p>
 			</div>
-			<a href="/admin/super/overview" class="btn btn-outline">Kembali ke Overview</a>
+			<div class="flex flex-col gap-2 sm:flex-row">
+				<a href="/admin/super/buku/royalties" class="btn btn-primary">Laporan Royalti</a>
+				<a href="/admin/super/overview" class="btn btn-outline">Kembali ke Overview</a>
+			</div>
 		</div>
 	</section>
 
