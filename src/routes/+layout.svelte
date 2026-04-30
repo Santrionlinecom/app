@@ -32,6 +32,37 @@ const isTokohMenuActive = (path: string) =>
 		(prefix) => path === prefix || path.startsWith(`${prefix}/`)
 	);
 const isDynastyMenuActive = (path: string) => path === '/dinasti' || path.startsWith('/dinasti/');
+const isBookMenuActive = (path: string) =>
+	path === '/buku' ||
+	path.startsWith('/buku/') ||
+	path === '/coins' ||
+	path.startsWith('/coins/');
+const isLearningMenuActive = (path: string) =>
+	path === '/tpq' ||
+	path.startsWith('/tpq/') ||
+	path.startsWith('/kitab') ||
+	path.startsWith('/fitur') ||
+	isTokohMenuActive(path) ||
+	isDynastyMenuActive(path) ||
+	isBlogMenuActive(path) ||
+	path === '/kalender' ||
+	path.startsWith('/kalender/');
+
+type HeaderMenuItem = {
+	label: string;
+	href: string;
+	note: string;
+};
+
+type MobileTopMenu = {
+	id: string;
+	label: string;
+	compact: boolean;
+	isActive: (path: string) => boolean;
+	items: HeaderMenuItem[];
+	footerHref: string;
+	footerLabel: string;
+};
 
 const tokohMenuItems = [
 	{
@@ -67,6 +98,7 @@ const dynastyMenuItems = islamicDynasties.map((dynasty) => ({
 	note: dynasty.periodCE,
 	order: dynasty.order
 }));
+const primaryDynastyMenuItems = dynastyMenuItems.filter((item) => item.order <= 10);
 
 const kitabMenuItems = [
 	{
@@ -98,6 +130,98 @@ const kitabMenuItems = [
 		label: 'Tasawuf',
 		href: '/kitab/terjemah-bidayatul-hidayah',
 		note: 'Bidayatul Hidayah'
+	}
+];
+
+const learningMenuItems: HeaderMenuItem[] = [
+	{
+		label: 'TPQ',
+		href: '/tpq',
+		note: 'Pendaftaran dan profil lembaga'
+	},
+	{
+		label: 'Kitab',
+		href: '/kitab',
+		note: 'Perpustakaan kitab dan belajar per bab'
+	},
+	{
+		label: 'Mushaf',
+		href: '/kitab/quran',
+		note: 'Al-Qur’an 30 juz'
+	},
+	{
+		label: 'Blog/Konten',
+		href: '/blog',
+		note: 'Artikel dan konten pembinaan'
+	},
+	{
+		label: 'Tokoh',
+		href: '/tokoh',
+		note: 'Nabi, sahabat, tabiin, dan ulama'
+	},
+	{
+		label: 'Dinasti',
+		href: '/dinasti',
+		note: 'Peta sejarah peradaban Islam'
+	}
+];
+
+const bookPublicMenuItems: HeaderMenuItem[] = [
+	{
+		label: 'Buku Digital',
+		href: '/buku',
+		note: 'Katalog karya santri dan penulis muslim'
+	}
+];
+
+const bookUserMenuItems: HeaderMenuItem[] = [
+	{
+		label: 'Studio Penulis',
+		href: '/buku/studio',
+		note: 'Tulis dan kelola buku'
+	},
+	{
+		label: 'Saldo Coin',
+		href: '/coins',
+		note: 'Cek saldo dan transaksi'
+	},
+	{
+		label: 'Topup Coin',
+		href: '/coins/topup',
+		note: 'Tambah coin untuk unlock bab'
+	},
+	{
+		label: 'Royalti Saya',
+		href: '/buku/studio/earnings',
+		note: 'Pantau pendapatan penulis'
+	}
+];
+
+const adminBookMenuItems: HeaderMenuItem[] = [
+	{
+		label: 'Moderasi Buku',
+		href: '/admin/super/buku',
+		note: 'Review buku dan bab penulis'
+	},
+	{
+		label: 'Laporan Royalti',
+		href: '/admin/super/buku/royalties',
+		note: 'Pantau ledger royalti penulis'
+	},
+	{
+		label: 'Kelola Topup',
+		href: '/admin/super/coin-topups',
+		note: 'Verifikasi topup coin manual'
+	},
+	{
+		label: 'CMS/Admin',
+		href: '/admin/posts',
+		note: 'Menu admin yang sudah ada'
+	},
+	{
+		label: 'Licenses',
+		href: '/admin/licenses',
+		note: 'Akses license tetap tersedia'
 	}
 ];
 
@@ -378,101 +502,28 @@ const quranNavItem = {
 	isActive: (path: string) => path === '/kitab/quran' || path.startsWith('/kitab/quran/')
 };
 
-const mobileTopMenus = [
-	{
-		id: 'fitur',
-		label: 'Fitur',
-		isActive: (path: string) => featureNavItem.isActive(path),
-		items: FEATURES.map((feature) => ({
-			label: feature.title,
-			href: `/fitur/${feature.slug}`,
-			note: feature.desc
-		})),
-		footerHref: '/fitur',
-		footerLabel: 'Lihat semua fitur'
-	},
-	{
-		id: 'konten',
-		label: 'Konten',
-		isActive: (path: string) => isBlogMenuActive(path),
-		items: [
-			{
-				label: 'Semua Artikel',
-				href: '/blog',
-				note: 'Blog dan penguatan tema santri'
-			},
-			{
-				label: 'Digital Store',
-				href: '/digital-store',
-				note: 'Produk digital dan materi pendamping'
-			}
-		],
-		footerHref: '/blog',
-		footerLabel: 'Buka blog'
-	},
-	{
-		id: 'tokoh',
-		label: 'Tokoh',
-		isActive: (path: string) => isTokohMenuActive(path),
-		items: [
-			{
-				label: 'Overview Tokoh',
-				href: '/tokoh',
-				note: 'Nabi, sahabat, tabiin, ulama'
-			},
-			...tokohMenuItems.map((item) => ({
-				label: item.label,
-				href: item.href,
-				note: item.note
-			}))
-		],
-		footerHref: '/tokoh',
-		footerLabel: 'Jelajahi tokoh'
-	},
-	{
-		id: 'dinasti',
-		label: 'Dinasti',
-		isActive: (path: string) => isDynastyMenuActive(path),
-		items: [
-			{
-				label: 'Overview Dinasti',
-				href: '/dinasti',
-				note: 'Peta sejarah dan peradaban Islam'
-			},
-			...dynastyMenuItems.slice(0, 4).map((item) => ({
-				label: item.label,
-				href: item.href,
-				note: item.note
-			}))
-		],
-		footerHref: '/dinasti',
-		footerLabel: 'Lihat semua dinasti'
-	},
-	{
-		id: 'kitab',
-		label: 'Kitab',
-		isActive: (path: string) => path.startsWith('/kitab'),
-		items: [
-			{
-				label: 'Perpustakaan Kitab',
-				href: '/kitab',
-				note: 'Semua kitab dan halaman belajar'
-			},
-			...kitabMenuItems.map((item) => ({
-				label: item.label,
-				href: item.href,
-				note: item.note
-			})),
-			{
-				label: quranNavItem.label,
-				href: quranNavItem.href,
-				note: 'Mushaf Al-Qur’an 30 juz'
-			}
-		],
-		footerHref: '/kitab',
-		footerLabel: 'Buka perpustakaan'
-	}
-] as const;
+const bookNavItem = {
+	label: 'Buku',
+	href: '/buku',
+	icon: 'M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM8 7h8M8 11h7M6.5 19A2.5 2.5 0 014 16.5',
+	isActive: (path: string) => path === '/buku' || (path.startsWith('/buku/') && !path.startsWith('/buku/studio'))
+};
+
+const studioNavItem = {
+	label: 'Studio',
+	href: '/buku/studio',
+	icon: 'M4 19.5V5a2 2 0 012-2h9l5 5v11.5M14 3v6h6M8 13h8M8 17h5',
+	isActive: (path: string) => path === '/buku/studio' || path.startsWith('/buku/studio/')
+};
+
+const coinNavItem = {
+	label: 'Coin',
+	href: '/coins',
+	icon: 'M12 3a9 9 0 100 18 9 9 0 000-18zm0 5v8m-3-4h6',
+	isActive: (path: string) => path === '/coins' || path.startsWith('/coins/')
+};
+
+let mobileTopMenus: MobileTopMenu[] = [];
 
 const mobileExploreLinks = [
 	{
@@ -480,6 +531,12 @@ const mobileExploreLinks = [
 		href: '/fitur',
 		note: 'Program pembinaan aktif',
 		tone: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+	},
+	{
+		label: 'Buku',
+		href: '/buku',
+		note: 'Buku digital dan bab premium',
+		tone: 'border-emerald-200 bg-white text-emerald-700'
 	},
 	{
 		label: 'Blog',
@@ -576,6 +633,126 @@ const getMobileContextMeta = (path: string) => {
 	};
 };
 
+let bookMenuItems: HeaderMenuItem[] = [];
+let accountMenuItems: HeaderMenuItem[] = [];
+
+$: bookMenuItems = data?.user ? [...bookPublicMenuItems, ...bookUserMenuItems] : bookPublicMenuItems;
+$: accountMenuItems = data?.user
+	? [
+			{
+				label: isSuperAdmin ? 'Admin' : 'Dashboard',
+				href: isSuperAdmin ? '/admin/super/overview' : '/dashboard',
+				note: isSuperAdmin ? 'Panel super admin' : 'Aktivitas lembaga'
+			},
+			{
+				label: 'Profil',
+				href: '/akun',
+				note: 'Kelola akun dan preferensi'
+			},
+			{
+				label: 'Saldo Coin',
+				href: '/coins',
+				note: 'Cek saldo untuk unlock bab'
+			},
+			{
+				label: 'Topup Coin',
+				href: '/coins/topup',
+				note: 'Tambah coin secara manual'
+			}
+		]
+	: [
+			{
+				label: 'Login',
+				href: '/auth',
+				note: 'Masuk ke akun SantriOnline'
+			},
+			{
+				label: 'Daftar TPQ',
+				href: '/register',
+				note: 'Mulai onboarding lembaga'
+			}
+		];
+
+$: mobileTopMenus = [
+	{
+		id: 'buku',
+		label: 'Buku',
+		compact: Boolean(data?.user),
+		isActive: (path: string) => isBookMenuActive(path),
+		items: bookMenuItems,
+		footerHref: '/buku',
+		footerLabel: 'Buka Buku Digital'
+	},
+	{
+		id: 'belajar',
+		label: 'Belajar',
+		compact: false,
+		isActive: (path: string) => isLearningMenuActive(path),
+		items: learningMenuItems,
+		footerHref: '/kitab',
+		footerLabel: 'Buka perpustakaan'
+	},
+	{
+		id: 'fitur',
+		label: 'Fitur',
+		compact: false,
+		isActive: (path: string) => featureNavItem.isActive(path),
+		items: FEATURES.map((feature) => ({
+			label: feature.title,
+			href: `/fitur/${feature.slug}`,
+			note: feature.desc
+		})),
+		footerHref: '/fitur',
+		footerLabel: 'Lihat semua fitur'
+	},
+	{
+		id: 'tokoh',
+		label: 'Tokoh',
+		compact: false,
+		isActive: (path: string) => isTokohMenuActive(path),
+		items: [
+			{
+				label: 'Overview Tokoh',
+				href: '/tokoh',
+				note: 'Nabi, sahabat, tabiin, ulama'
+			},
+			...tokohMenuItems.map((item) => ({
+				label: item.label,
+				href: item.href,
+				note: item.note
+			}))
+		],
+		footerHref: '/tokoh',
+		footerLabel: 'Jelajahi tokoh'
+	},
+	{
+		id: 'dinasti',
+		label: 'Dinasti',
+		compact: true,
+		isActive: (path: string) => isDynastyMenuActive(path),
+		items: primaryDynastyMenuItems.map((item) => ({
+			label: `Tahap ${item.order}`,
+			href: item.href,
+			note: item.label
+		})),
+		footerHref: '/dinasti',
+		footerLabel: 'Lihat semua dinasti'
+	},
+	...(isSuperAdmin
+		? [
+				{
+					id: 'admin',
+					label: 'Admin',
+					compact: false,
+					isActive: (path: string) => isAdminRoute(path),
+					items: adminBookMenuItems,
+					footerHref: '/admin/super/overview',
+					footerLabel: 'Buka panel admin'
+				}
+			]
+		: [])
+];
+
 $: isAppRouteActive = isAppRoute(pathname);
 $: isAdminRouteActive = isAdminRoute(pathname);
 $: mobileContext = getMobileContextMeta(pathname);
@@ -612,25 +789,31 @@ $: mobileHeroActions = [
 	}
 ];
 $: activeMobileTopMenu = mobileTopMenus.find((menu) => menu.id === mobileTopMenuOpen) ?? null;
-$: mobilePublicTabs = [
-	baseNav[0],
-	baseNav[1],
-	baseNav[5],
-	kalenderNavItem,
-	data?.user
-		? {
-				label: 'Profil',
-				href: '/akun',
-				icon: 'M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0',
-				isActive: (path: string) => path.startsWith('/akun')
+$: mobilePublicTabs = data?.user
+	? [
+			bookNavItem,
+			studioNavItem,
+			coinNavItem,
+			{
+				label: isSuperAdmin ? 'Admin' : 'Dashboard',
+				href: isSuperAdmin ? '/admin/super/overview' : '/dashboard',
+				icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z',
+				isActive: (path: string) =>
+					isSuperAdmin ? isAdminRoute(path) : path === '/dashboard' || path.startsWith('/dashboard/')
 			}
-		: {
+		]
+	: [
+			baseNav[0],
+			baseNav[1],
+			bookNavItem,
+			baseNav[5],
+			{
 				label: 'Daftar',
 				href: '/register',
 				icon: 'M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0M16 8h4m-2-2v4',
 				isActive: (path: string) => path === '/register'
 			}
-];
+		];
 $: if (pathname !== previousPathname) {
 	previousPathname = pathname;
 	mobileMenuOpen = false;
@@ -718,15 +901,16 @@ $: if (pathname !== previousPathname) {
 					{#if activeMobileTopMenu}
 						<div class="mt-3 overflow-hidden rounded-[1.45rem] border border-slate-200/80 bg-white/95 p-2 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
 							<div class="mobile-top-dropdown-scroll">
-								<div class="grid gap-2 sm:grid-cols-2">
+								<div class="mobile-top-dropdown-grid" class:mobile-top-dropdown-grid-compact={activeMobileTopMenu.compact}>
 									{#each activeMobileTopMenu.items as item}
 										<a
 											href={item.href}
-											class="rounded-[1.1rem] border border-slate-200/70 bg-slate-50/80 px-3 py-3 transition hover:border-emerald-200 hover:bg-emerald-50/70"
+											class="mobile-top-dropdown-link"
+											class:mobile-top-dropdown-link-compact={activeMobileTopMenu.compact}
 											on:click={() => (mobileTopMenuOpen = null)}
 										>
 											<p class="text-sm font-semibold text-slate-900">{item.label}</p>
-											<p class="mt-1 text-xs leading-5 text-slate-500">{item.note}</p>
+											<p class="mt-1 text-xs leading-5 text-slate-500" class:mobile-top-dropdown-note-compact={activeMobileTopMenu.compact}>{item.note}</p>
 										</a>
 									{/each}
 								</div>
@@ -753,182 +937,73 @@ $: if (pathname !== previousPathname) {
 					<a href="/" class="flex items-center gap-2">
 						<img src="/logo-santri.png" alt="Santri Online" class="h-8 w-auto" loading="lazy" />
 					</a>
-					<nav class="flex items-center gap-5">
-						<a href="/" class:active={pathname === '/'} class="text-base-content/60 hover:text-primary">Beranda</a>
-						<a href="/tpq" class:active={pathname.startsWith('/tpq')} class="text-base-content/60 hover:text-primary">TPQ</a>
+					<nav class="flex items-center gap-2">
+						<a href="/" class="desktop-nav-link" class:desktop-nav-link-active={pathname === '/'}>Beranda</a>
+
 						<div class="group relative">
-							<a
-								href="/blog"
-								class:active={isBlogMenuActive(pathname)}
-								class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
-							>
-								<span>Blog</span>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 20 20"
-									fill="currentColor"
-									class="h-4 w-4 transition group-hover:translate-y-px"
-								>
-									<path
-										fill-rule="evenodd"
-										d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
-										clip-rule="evenodd"
-									/>
-								</svg>
+							<a href="/kitab" class="desktop-nav-link" class:desktop-nav-link-active={isLearningMenuActive(pathname)}>
+								<span>Belajar</span>
+								<span class="desktop-nav-caret">⌄</span>
 							</a>
-							<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-56 -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
-								<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-									<a
-										href="/blog"
-										class="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
-									>
-										<span>Semua Artikel</span>
-										<span class="text-xs text-slate-400">/blog</span>
-									</a>
-									<a
-										href="/digital-store"
-										class="mt-1 flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
-									>
-										<span>Digital Store</span>
-										<span class="text-xs text-slate-400">produk</span>
-									</a>
+							<div class="desktop-dropdown w-80">
+								<div class="desktop-dropdown-panel">
+									{#each learningMenuItems as item}
+										<a href={item.href} class="desktop-dropdown-item">
+											<span class="font-semibold text-slate-900">{item.label}</span>
+											<span class="mt-1 text-xs leading-5 text-slate-500">{item.note}</span>
+										</a>
+									{/each}
 								</div>
 							</div>
 						</div>
+
 						<div class="group relative">
-							<a
-								href="/tokoh"
-								class:active={isTokohMenuActive(pathname)}
-								class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
-							>
-								<span>Tokoh</span>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 20 20"
-									fill="currentColor"
-									class="h-4 w-4 transition group-hover:translate-y-px"
-								>
-									<path
-										fill-rule="evenodd"
-										d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
-										clip-rule="evenodd"
-									/>
-								</svg>
+							<a href="/buku" class="desktop-nav-link" class:desktop-nav-link-active={isBookMenuActive(pathname)}>
+								<span>Buku</span>
+								<span class="desktop-nav-caret">⌄</span>
 							</a>
-							<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-72 -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
-								<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-									<a
-										href="/tokoh"
-										class="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700 transition hover:bg-slate-100"
-									>
-										<div>
-											<p class="font-semibold text-slate-900">Overview Tokoh</p>
-											<p class="text-xs text-slate-500">Rantai generasi dari nabi sampai ulama</p>
+							<div class="desktop-dropdown w-80">
+								<div class="desktop-dropdown-panel">
+									<a href="/buku" class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm transition hover:bg-emerald-100">
+										<p class="font-semibold text-emerald-900">Baca Buku</p>
+										<p class="mt-1 text-xs leading-5 text-emerald-700">Bab gratis dan premium pakai coin.</p>
+									</a>
+									<div class="mt-2 grid gap-1">
+										{#each bookMenuItems as item}
+											<a href={item.href} class="desktop-dropdown-item">
+												<span class="font-semibold text-slate-900">{item.label}</span>
+												<span class="mt-1 text-xs leading-5 text-slate-500">{item.note}</span>
+											</a>
+										{/each}
+									</div>
+								</div>
+							</div>
+						</div>
+
+						{#if isSuperAdmin}
+							<div class="group relative">
+								<a href="/admin/super/overview" class="desktop-nav-link" class:desktop-nav-link-active={isAdminRoute(pathname)}>
+									<span>Admin</span>
+									<span class="desktop-nav-caret">⌄</span>
+								</a>
+								<div class="desktop-dropdown right-0 w-80">
+									<div class="desktop-dropdown-panel">
+										<a href="/admin/super/overview" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition hover:bg-slate-100">
+											<p class="font-semibold text-slate-900">Panel Super Admin</p>
+											<p class="mt-1 text-xs leading-5 text-slate-500">Overview operasional platform.</p>
+										</a>
+										<div class="mt-2 grid gap-1">
+											{#each adminBookMenuItems as item}
+												<a href={item.href} class="desktop-dropdown-item">
+													<span class="font-semibold text-slate-900">{item.label}</span>
+													<span class="mt-1 text-xs leading-5 text-slate-500">{item.note}</span>
+												</a>
+											{/each}
 										</div>
-										<span class="text-xs text-slate-400">/tokoh</span>
-									</a>
-									<div class="mt-2 space-y-1">
-										{#each tokohMenuItems as item}
-											<a
-												href={item.href}
-												class="flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
-											>
-												<div>
-													<p class="font-medium text-slate-900">{item.label}</p>
-													<p class="text-xs text-slate-400">{item.note}</p>
-												</div>
-											</a>
-										{/each}
 									</div>
 								</div>
 							</div>
-						</div>
-						<div class="group relative">
-							<a
-								href="/dinasti"
-								class:active={isDynastyMenuActive(pathname)}
-								class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
-							>
-								<span>Dinasti</span>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 20 20"
-									fill="currentColor"
-									class="h-4 w-4 transition group-hover:translate-y-px"
-								>
-									<path
-										fill-rule="evenodd"
-										d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
-										clip-rule="evenodd"
-									/>
-								</svg>
-							</a>
-							<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-[34rem] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
-								<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-									<a
-										href="/dinasti"
-										class="block rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
-									>
-										<p class="text-sm font-semibold text-slate-900">Overview Dinasti Islam</p>
-										<p class="mt-1 text-xs text-slate-500">Urutan pasca-Khulafaur Rasyidin dan peta dinasti yang saling overlap</p>
-									</a>
-									<div class="mt-2 grid max-h-[24rem] grid-cols-2 gap-1 overflow-y-auto pr-1">
-										{#each dynastyMenuItems as item}
-											<a
-												href={item.href}
-												class="rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-sky-50 hover:text-sky-700"
-											>
-												<p class="font-medium text-slate-900">{item.order}. {item.label}</p>
-												<p class="text-xs text-slate-400">{item.note}</p>
-											</a>
-										{/each}
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="group relative">
-							<a
-								href="/kitab"
-								class:active={pathname.startsWith('/kitab')}
-								class="inline-flex items-center gap-1 text-base-content/60 hover:text-primary"
-							>
-								<span>Kitab</span>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 20 20"
-									fill="currentColor"
-									class="h-4 w-4 transition group-hover:translate-y-px"
-								>
-									<path
-										fill-rule="evenodd"
-										d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
-										clip-rule="evenodd"
-									/>
-								</svg>
-							</a>
-							<div class="pointer-events-none invisible absolute left-1/2 top-full z-30 w-[22rem] -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
-								<div class="rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-									<a
-										href="/kitab"
-										class="block rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
-									>
-										<p class="text-sm font-semibold text-slate-900">Overview Kitab</p>
-										<p class="mt-1 text-xs text-slate-500">Perpustakaan kitab, seri bahasa Arab, dan kitab fondasi Santri Online</p>
-									</a>
-									<div class="mt-2 grid grid-cols-2 gap-1">
-										{#each kitabMenuItems as item}
-											<a
-												href={item.href}
-												class="rounded-xl px-3 py-3 text-sm text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-700"
-											>
-												<p class="font-medium text-slate-900">{item.label}</p>
-												<p class="text-xs text-slate-400">{item.note}</p>
-											</a>
-										{/each}
-									</div>
-								</div>
-							</div>
-						</div>
+						{/if}
 					</nav>
 					<div class="flex items-center gap-2">
 						<div class="hidden md:flex items-center gap-2">
@@ -956,19 +1031,32 @@ $: if (pathname !== previousPathname) {
 						</div>
 						<div id="google_translate_element" class="translate-slot hidden"></div>
 						{#if data.user}
-							<a href={isSuperAdmin ? '/admin/super/overview' : '/dashboard'} class="btn btn-sm btn-ghost">
-								{isSuperAdmin ? 'Super Admin' : 'Dashboard'}
-							</a>
-							{#if isImpersonating}
-								<a href="/admin/super/impersonate/stop" class="btn btn-sm btn-outline">Keluar Mode Admin</a>
-							{/if}
-							<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
-							<a href="/akun" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Profil</a>
-							<form method="POST" action="/logout">
-								<button type="submit" class="btn btn-sm btn-error">Logout</button>
-							</form>
+							<a href="/coins/topup" class="btn btn-sm btn-primary">Topup Coin</a>
+							<div class="group relative">
+								<a href="/akun" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Akun</a>
+								<div class="desktop-dropdown right-0 w-72">
+									<div class="desktop-dropdown-panel">
+										{#each accountMenuItems as item}
+											<a href={item.href} class="desktop-dropdown-item">
+												<span class="font-semibold text-slate-900">{item.label}</span>
+												<span class="mt-1 text-xs leading-5 text-slate-500">{item.note}</span>
+											</a>
+										{/each}
+										{#if isImpersonating}
+											<a href="/admin/super/impersonate/stop" class="desktop-dropdown-item border-amber-100 bg-amber-50 text-amber-800">
+												<span class="font-semibold">Keluar Mode Admin</span>
+												<span class="mt-1 text-xs leading-5">Kembali ke konteks super admin.</span>
+											</a>
+										{/if}
+										<form method="POST" action="/logout" class="mt-2 border-t border-slate-100 pt-2">
+											<button type="submit" class="w-full rounded-xl bg-rose-50 px-3 py-2 text-left text-sm font-semibold text-rose-700 transition hover:bg-rose-100">
+												Logout
+											</button>
+										</form>
+									</div>
+								</div>
+							</div>
 						{:else}
-							<a href="/kalender" class="btn btn-sm btn-ghost">Kalender</a>
 							<a href="/auth" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Login</a>
 							<a href="/register" class="btn btn-sm btn-primary">Daftar TPQ</a>
 						{/if}
@@ -1043,6 +1131,46 @@ $: if (pathname !== previousPathname) {
 							{/each}
 						</div>
 					</section>
+
+					<section>
+						<div class="mb-3 flex items-center justify-between gap-3">
+							<div>
+								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Buku dan coin</p>
+								<h3 class="mt-1 text-lg font-semibold text-slate-950">Buku Digital SantriOnline</h3>
+							</div>
+							<a href="/buku" class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Buka buku</a>
+						</div>
+
+						<div class="grid grid-cols-2 gap-3">
+							{#each bookMenuItems as item}
+								<a href={item.href} class="rounded-[1.35rem] border border-emerald-100 bg-emerald-50/70 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+									<p class="text-sm font-semibold text-emerald-950">{item.label}</p>
+									<p class="mt-2 text-xs leading-5 text-emerald-700">{item.note}</p>
+								</a>
+							{/each}
+						</div>
+					</section>
+
+					{#if isSuperAdmin}
+						<section>
+							<div class="mb-3">
+								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Admin</p>
+								<h3 class="mt-1 text-lg font-semibold text-slate-950">Buku, royalti, dan topup</h3>
+							</div>
+
+							<div class="space-y-2">
+								{#each adminBookMenuItems.slice(0, 3) as item}
+									<a href={item.href} class="flex items-start gap-3 rounded-[1.35rem] border border-slate-200/80 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+										<span class="mt-0.5 text-xl">▣</span>
+										<div class="min-w-0">
+											<p class="text-sm font-semibold text-slate-900">{item.label}</p>
+											<p class="mt-1 text-sm leading-6 text-slate-500">{item.note}</p>
+										</div>
+									</a>
+								{/each}
+							</div>
+						</section>
+					{/if}
 
 					<section>
 						<div class="mb-3">
@@ -1162,7 +1290,7 @@ $: if (pathname !== previousPathname) {
 		<nav class="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom">
 			<div class="mx-auto max-w-xl px-3 py-3 pb-safe">
 				<div class="pointer-events-auto rounded-[1.7rem] border border-white/70 bg-white/92 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
-					<div class="grid grid-cols-5 gap-1">
+					<div class={`grid gap-1 ${mobilePublicTabs.length === 4 ? 'grid-cols-4' : 'grid-cols-5'}`}>
 						{#each mobilePublicTabs as item}
 							<a
 								href={item.href}
@@ -1281,6 +1409,76 @@ $: if (pathname !== previousPathname) {
 		padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 	}
 
+	.desktop-nav-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		border-radius: 999px;
+		padding: 0.55rem 0.85rem;
+		font-size: 0.9rem;
+		font-weight: 700;
+		color: #475569;
+		transition: background-color 0.18s ease, color 0.18s ease;
+	}
+
+	.desktop-nav-link:hover,
+	.desktop-nav-link-active {
+		background: rgba(236, 253, 245, 0.95);
+		color: #047857;
+	}
+
+	.desktop-nav-caret {
+		font-size: 0.82rem;
+		line-height: 1;
+		color: currentColor;
+	}
+
+	.desktop-dropdown {
+		pointer-events: none;
+		visibility: hidden;
+		position: absolute;
+		top: 100%;
+		z-index: 30;
+		padding-top: 0.75rem;
+		opacity: 0;
+		transition: opacity 0.15s ease, visibility 0.15s ease;
+	}
+
+	.group:hover .desktop-dropdown,
+	.group:focus-within .desktop-dropdown {
+		pointer-events: auto;
+		visibility: visible;
+		opacity: 1;
+	}
+
+	.desktop-dropdown:not(.right-0) {
+		left: 50%;
+		transform: translateX(-50%);
+	}
+
+	.desktop-dropdown-panel {
+		border-radius: 1.25rem;
+		border: 1px solid #e2e8f0;
+		background: #ffffff;
+		padding: 0.5rem;
+		box-shadow: 0 22px 50px rgba(15, 23, 42, 0.14);
+	}
+
+	.desktop-dropdown-item {
+		display: flex;
+		flex-direction: column;
+		border-radius: 0.9rem;
+		padding: 0.7rem 0.85rem;
+		font-size: 0.875rem;
+		color: #475569;
+		transition: background-color 0.18s ease, color 0.18s ease;
+	}
+
+	.desktop-dropdown-item:hover {
+		background: rgba(236, 253, 245, 0.88);
+		color: #047857;
+	}
+
 	.mobile-scroll-row {
 		-ms-overflow-style: none;
 		scrollbar-width: none;
@@ -1331,6 +1529,51 @@ $: if (pathname !== previousPathname) {
 
 		.mobile-top-dropdown-scroll::-webkit-scrollbar-track {
 			background: transparent;
+		}
+
+		.mobile-top-dropdown-grid {
+			display: grid;
+			gap: 0.5rem;
+		}
+
+		.mobile-top-dropdown-grid-compact {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 0.4rem;
+		}
+
+		.mobile-top-dropdown-link {
+			display: block;
+			border-radius: 1.1rem;
+			border: 1px solid rgba(226, 232, 240, 0.7);
+			background: rgba(248, 250, 252, 0.8);
+			padding: 0.75rem;
+			transition: background-color 0.18s ease, border-color 0.18s ease;
+		}
+
+		.mobile-top-dropdown-link:hover {
+			border-color: rgba(16, 185, 129, 0.24);
+			background: rgba(236, 253, 245, 0.7);
+		}
+
+		.mobile-top-dropdown-link-compact {
+			min-height: 3.7rem;
+			border-radius: 0.95rem;
+			padding: 0.6rem 0.65rem;
+		}
+
+		.mobile-top-dropdown-note-compact {
+			display: -webkit-box;
+			overflow: hidden;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
+			line-height: 1.05rem;
+		}
+
+		@media (min-width: 640px) {
+			.mobile-top-dropdown-grid {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
 		}
 
 		.mobile-tab-link {

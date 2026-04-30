@@ -198,7 +198,49 @@
 			feature: 'kalender'
 		}
 	];
+	const bookAccessItems: MenuItem[] = [
+		{
+			label: 'Baca Buku',
+			href: '/buku',
+			icon: 'M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM8 7h8M8 11h7M6.5 19A2.5 2.5 0 014 16.5'
+		},
+		{
+			label: 'Studio Penulis',
+			href: '/buku/studio',
+			icon: 'M4 19.5V5a2 2 0 012-2h9l5 5v11.5M14 3v6h6M8 13h8M8 17h5'
+		},
+		{
+			label: 'Saldo Coin',
+			href: '/coins',
+			icon: 'M12 3a9 9 0 100 18 9 9 0 000-18zm0 5v8m-3-4h6'
+		},
+		{
+			label: 'Topup Coin',
+			href: '/coins/topup',
+			icon: 'M12 5v14M5 12h14M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z'
+		},
+		{
+			label: 'Royalti Saya',
+			href: '/buku/studio/earnings',
+			icon: 'M4 19h16M7 16V8m5 8V5m5 11v-6M5 19h14'
+		}
+	];
 	const superAdminItems: MenuItem[] = [
+		{
+			label: 'Moderasi Buku',
+			href: '/admin/super/buku',
+			icon: 'M5 4.5h11a2 2 0 012 2V19a1 1 0 01-1.6.8L12 16.5l-4.4 3.3A1 1 0 016 19V6.5a2 2 0 012-2z'
+		},
+		{
+			label: 'Laporan Royalti',
+			href: '/admin/super/buku/royalties',
+			icon: 'M4 19h16M7 16V8m5 8V5m5 11v-6M5 19h14'
+		},
+		{
+			label: 'Kelola Topup',
+			href: '/admin/super/coin-topups',
+			icon: 'M4 7h16M4 12h10M4 17h7M15 12h5a2 2 0 012 2v5a2 2 0 01-2 2h-5a2 2 0 01-2-2v-5a2 2 0 012-2z'
+		},
 		{
 			label: 'CMS',
 			href: '/admin/posts',
@@ -245,6 +287,7 @@
 
 	let roleItems: MenuItem[] = [];
 	let menuItems: MenuItem[] = [];
+	let mobileQuickItems: MenuItem[] = [];
 	$: {
 		role = data?.user?.role ?? '';
 		orgType = data?.org?.type ?? null;
@@ -285,18 +328,28 @@
 						href: isSuperAdmin ? '/admin/super/overview' : '/dashboard',
 						icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z'
 					}
-				];
+		];
 		const utilityItems = isSuperAdmin ? superAdminItems : [];
 		menuItems = isImpersonating
-			? [...primaryItems, ...utilityItems, ...roleItems, ...footerItems]
-			: [...primaryItems, ...(isSuperAdmin ? utilityItems : roleItems), ...footerItems];
+			? [...primaryItems, ...bookAccessItems, ...utilityItems, ...roleItems, ...footerItems]
+			: [...primaryItems, ...bookAccessItems, ...(isSuperAdmin ? utilityItems : roleItems), ...footerItems];
+		mobileQuickItems = [
+			{ ...primaryItems[0], label: isSuperAdmin ? 'Admin' : 'Dashboard' },
+			{ ...bookAccessItems[0], label: 'Buku' },
+			{ ...bookAccessItems[1], label: 'Studio' },
+			{ ...bookAccessItems[2], label: 'Coin' },
+			{ ...footerItems[0], label: 'Akun' }
+		];
 	}
 
 	let sidebarOpen = false;
 
-	const isActive = (href: string) => {
+	const isActive = (item: MenuItem) => {
 		const path = $page.url.pathname;
-		return path === href || path.startsWith(`${href}/`);
+		if (item.href === '/buku') {
+			return path === '/buku' || (path.startsWith('/buku/') && !path.startsWith('/buku/studio'));
+		}
+		return path === item.href || path.startsWith(`${item.href}/`);
 	};
 
 	const displayName = data?.user?.username || data?.user?.email || 'Guest';
@@ -335,8 +388,8 @@
 					<a
 						href={item.href}
 						class="fade-in flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-800"
-						class:bg-emerald-100={isActive(item.href)}
-						class:text-emerald-900={isActive(item.href)}
+						class:bg-emerald-100={isActive(item)}
+						class:text-emerald-900={isActive(item)}
 						style={`animation-delay: ${idx * 60}ms;`}
 					>
 						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -419,13 +472,13 @@
 
 	<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-white/70 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] md:hidden safe-area-bottom">
 		<div class="flex w-full items-center justify-between px-2 py-3 pb-safe">
-			{#each menuItems as item}
+			{#each mobileQuickItems as item}
 				<a
 					href={item.href}
 					class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-slate-500 transition-colors"
-					class:text-emerald-700={isActive(item.href)}
-					class:font-semibold={isActive(item.href)}
-					class:bg-emerald-50={isActive(item.href)}
+					class:text-emerald-700={isActive(item)}
+					class:font-semibold={isActive(item)}
+					class:bg-emerald-50={isActive(item)}
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
 						<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
@@ -467,8 +520,8 @@
 						<a
 							href={item.href}
 							class="fade-in flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-800"
-							class:bg-emerald-100={isActive(item.href)}
-							class:text-emerald-900={isActive(item.href)}
+							class:bg-emerald-100={isActive(item)}
+							class:text-emerald-900={isActive(item)}
 							style={`animation-delay: ${idx * 60}ms;`}
 						>
 							<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">

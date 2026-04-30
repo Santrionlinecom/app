@@ -45,6 +45,19 @@
 			}
 		},
 		{
+			label: 'Buku',
+			title: 'Buku Digital SantriOnline',
+			desc: 'Katalog buku, novel, dan karya panjang penulis muslim dengan bab gratis serta premium memakai coin.',
+			href: '/buku',
+			cta: 'Buka buku digital',
+			bullets: ['Karya santri dan penulis muslim', 'Bab gratis dan premium', 'Studio penulis untuk user login'],
+			classes: {
+				card: 'border-emerald-200/80 bg-white',
+				badge: 'bg-emerald-100 text-emerald-700',
+				link: 'text-emerald-700'
+			}
+		},
+		{
 			label: 'Qur’an',
 			title: 'Mushaf 30 Juz',
 			desc: 'Akses mushaf digital per juz untuk membaca, murajaah, dan menghubungkan pembelajaran dengan bacaan langsung.',
@@ -275,6 +288,7 @@
 
 					<div class="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
 						<a href="#ekosistem" class="home-anchor">Ekosistem Publik</a>
+						<a href="#buku-digital" class="home-anchor">Buku Digital</a>
 						<a href="#fitur-inti" class="home-anchor">Pembinaan</a>
 						<a href="#kitab-kategori" class="home-anchor">Kategori Kitab</a>
 						<a href="#alur-produk" class="home-anchor">Alur Produk</a>
@@ -343,6 +357,24 @@
 						</div>
 					</div>
 				</div>
+			</div>
+		</div>
+	</section>
+
+	<section id="buku-digital" class="container mx-auto px-4 py-6 md:py-8">
+		<div class="home-surface grid gap-5 border-emerald-200/80 bg-white/88 p-5 md:grid-cols-[1fr_auto] md:items-center md:p-6">
+			<div>
+				<p class="home-eyebrow text-emerald-600">Buku Digital SantriOnline</p>
+				<h2 class="home-heading mt-2 text-2xl text-slate-950 md:text-3xl">
+					Baca karya santri dan penulis muslim.
+				</h2>
+				<p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+					Katalog buku menampilkan bab gratis dan bab premium yang bisa dibuka dengan coin. Penulis yang sudah login bisa masuk ke Studio Penulis untuk mengelola karya dan melihat royalti.
+				</p>
+			</div>
+			<div class="flex flex-col gap-3 sm:flex-row md:flex-col lg:flex-row">
+				<a href="/buku" class="home-btn-primary">Buka Buku Digital</a>
+				<a href="/buku/studio" class="home-btn-secondary">Studio Penulis</a>
 			</div>
 		</div>
 	</section>
