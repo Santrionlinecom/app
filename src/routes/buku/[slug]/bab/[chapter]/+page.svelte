@@ -41,6 +41,12 @@
 
 	let readerFontSize: ReaderFontSize = 'normal';
 	let readerTheme: ReaderTheme = 'light';
+	let progressPercent = Number(data.readingProgress?.progressPercent ?? 0);
+	let latestSavedProgress = progressPercent;
+	let progressTimer: ReturnType<typeof setTimeout> | null = null;
+	let chapterBookmarked = Boolean(data.chapterBookmark);
+	let bookmarkBusy = false;
+	let bookmarkError = '';
 
 	onMount(() => {
 		const storedFontSize = localStorage.getItem(FONT_STORAGE_KEY);
@@ -101,6 +107,94 @@
 	$: softCardClass = isDarkReader
 		? 'border-stone-700 bg-stone-950/55 text-stone-200'
 		: 'border-slate-200 bg-white/82 text-slate-700';
+
+	const getScrollProgressPercent = () => {
+		if (!browser) return progressPercent;
+		const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+		if (scrollableHeight <= 0) return 100;
+		return Math.min(100, Math.max(0, Math.round((window.scrollY / scrollableHeight) * 100)));
+	};
+
+	const saveProgressPercent = async (percent: number) => {
+		if (!data.isLoggedIn || isLocked) return;
+		try {
+			const response = await fetch('/api/buku/progress', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					bookId: book.id,
+					chapterId: chapter.id,
+					progressPercent: percent
+				})
+			});
+
+			if (!response.ok) return;
+
+			const payload = await response.json().catch(() => ({}));
+			const savedPercent = Number(payload.progress?.progressPercent ?? percent);
+			latestSavedProgress = Math.max(latestSavedProgress, savedPercent);
+			progressPercent = Math.max(progressPercent, latestSavedProgress);
+		} catch (_) {
+			// Progress baca tidak boleh mengganggu reader.
+		}
+	};
+
+	const queueProgressSave = () => {
+		if (!browser || !data.isLoggedIn || isLocked) return;
+		progressPercent = Math.max(progressPercent, getScrollProgressPercent());
+
+		if (progressPercent < 100 && progressPercent < latestSavedProgress + 5) return;
+		if (progressTimer) clearTimeout(progressTimer);
+
+		progressTimer = setTimeout(() => {
+			void saveProgressPercent(progressPercent);
+		}, 700);
+	};
+
+	const toggleChapterBookmark = async () => {
+		if (bookmarkBusy) return;
+		bookmarkBusy = true;
+		bookmarkError = '';
+
+		try {
+			const response = await fetch('/api/buku/bookmark', {
+				method: chapterBookmarked ? 'DELETE' : 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					bookId: book.id,
+					chapterId: chapter.id
+				})
+			});
+			const payload = await response.json().catch(() => ({}));
+
+			if (!response.ok) {
+				bookmarkError = payload.error ?? 'Bookmark gagal diproses.';
+				return;
+			}
+
+			chapterBookmarked = !chapterBookmarked;
+		} catch (_) {
+			bookmarkError = 'Bookmark gagal diproses.';
+		} finally {
+			bookmarkBusy = false;
+		}
+	};
+
+	onMount(() => {
+		if (!data.isLoggedIn || isLocked) return;
+
+		const handleScroll = () => queueProgressSave();
+		window.addEventListener('scroll', handleScroll, { passive: true });
+		window.addEventListener('resize', handleScroll);
+		queueProgressSave();
+
+		return () => {
+			window.removeEventListener('scroll', handleScroll);
+			window.removeEventListener('resize', handleScroll);
+			if (progressTimer) clearTimeout(progressTimer);
+			void saveProgressPercent(progressPercent);
+		};
+	});
 </script>
 
 <svelte:head>
@@ -181,6 +275,14 @@
 							<p class="font-bold">{accessLabel}</p>
 						</div>
 					</div>
+					{#if data.isLoggedIn && !isLocked}
+						<div class="mt-4">
+							<div class={`h-2 overflow-hidden rounded-full ${isDarkReader ? 'bg-stone-800' : 'bg-slate-200'}`}>
+								<div class="h-full rounded-full bg-emerald-500" style={`width: ${progressPercent}%`}></div>
+							</div>
+							<p class="mt-2 text-xs opacity-65">{progressPercent}% tersimpan</p>
+						</div>
+					{/if}
 				</div>
 			</div>
 		</header>
@@ -241,7 +343,7 @@
 					</div>
 				</div>
 
-				<div class="grid grid-cols-2 gap-2 sm:min-w-[17rem]">
+				<div class="grid gap-2 sm:grid-cols-3 lg:min-w-[28rem]">
 					{#if previousChapter}
 						<a href={`/buku/${book.slug}/bab/${previousChapter.chapterNumber}`} class="btn btn-outline btn-sm">
 							Bab Sebelumnya
@@ -257,8 +359,24 @@
 					{:else}
 						<span class="btn btn-disabled btn-sm">Bab Berikutnya</span>
 					{/if}
+
+					{#if data.isLoggedIn}
+						<button
+							type="button"
+							class={`btn btn-sm ${chapterBookmarked ? 'btn-warning' : 'btn-outline'}`}
+							disabled={bookmarkBusy}
+							on:click={toggleChapterBookmark}
+						>
+							{chapterBookmarked ? 'Hapus Bookmark' : 'Simpan Bab'}
+						</button>
+					{:else}
+						<a href="/auth" class="btn btn-outline btn-sm">Simpan Bab</a>
+					{/if}
 				</div>
 			</div>
+			{#if bookmarkError}
+				<p class="mt-3 text-sm text-amber-600">{bookmarkError}</p>
+			{/if}
 		</section>
 
 		<article class={`relative overflow-hidden rounded-[2.25rem] border p-3 md:p-6 ${panelClass}`}>

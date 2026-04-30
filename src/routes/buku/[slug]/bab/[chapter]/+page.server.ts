@@ -13,6 +13,11 @@ import {
 	isValidBukuSlug,
 	parseBukuChapterParam
 } from '$lib/server/buku-library';
+import {
+	getBookReadingProgress,
+	listUserBookmarks,
+	saveReadingProgress
+} from '$lib/server/buku-progress';
 import { ensureBukuWalletSchema, getCoinBalance } from '$lib/server/buku-wallet';
 
 export const load: PageServerLoad = async ({ params, locals, platform }) => {
@@ -52,6 +57,22 @@ export const load: PageServerLoad = async ({ params, locals, platform }) => {
 	});
 	const walletBalance = locals.user && access === 'locked' ? await getCoinBalance(db, locals.user.id) : null;
 	const navigation = await getAdjacentPublishedBukuChapters(db, book.id, chapter.chapterNumber);
+	let readingProgress = null;
+	let bookBookmark = null;
+	let chapterBookmark = null;
+
+	if (locals.user) {
+		const bookmarks = await listUserBookmarks(db, locals.user.id);
+		bookBookmark = bookmarks.find((bookmark) => bookmark.bookId === book.id && !bookmark.chapterId) ?? null;
+		chapterBookmark =
+			bookmarks.find((bookmark) => bookmark.bookId === book.id && bookmark.chapterId === chapter.id) ?? null;
+
+		if (access === 'free' || access === 'unlocked') {
+			readingProgress =
+				(await saveReadingProgress(db, locals.user.id, book.id, chapter.id, chapter.chapterNumber, 0)) ??
+				(await getBookReadingProgress(db, locals.user.id, book.id));
+		}
+	}
 
 	return {
 		book,
@@ -62,6 +83,9 @@ export const load: PageServerLoad = async ({ params, locals, platform }) => {
 		access,
 		isLoggedIn: Boolean(locals.user),
 		walletBalance,
+		readingProgress,
+		bookBookmark,
+		chapterBookmark,
 		...navigation
 	};
 };

@@ -2,6 +2,9 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+	let isBookmarked = Boolean(data.bookBookmark);
+	let bookmarkBusy = false;
+	let bookmarkError = '';
 
 	const plainText = (value: string | null | undefined) =>
 		(value ?? '')
@@ -18,6 +21,33 @@
 	$: book = data.book;
 	$: chapters = Array.isArray(data.chapters) ? data.chapters : [];
 	$: firstChapter = chapters[0] ?? null;
+	$: readingProgress = data.readingProgress;
+
+	const toggleBookBookmark = async () => {
+		if (bookmarkBusy) return;
+		bookmarkBusy = true;
+		bookmarkError = '';
+
+		try {
+			const response = await fetch('/api/buku/bookmark', {
+				method: isBookmarked ? 'DELETE' : 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ bookId: book.id })
+			});
+			const payload = await response.json().catch(() => ({}));
+
+			if (!response.ok) {
+				bookmarkError = payload.error ?? 'Bookmark gagal diproses.';
+				return;
+			}
+
+			isBookmarked = !isBookmarked;
+		} catch (_) {
+			bookmarkError = 'Bookmark gagal diproses.';
+		} finally {
+			bookmarkBusy = false;
+		}
+	};
 </script>
 
 <svelte:head>
@@ -77,18 +107,43 @@
 				</div>
 
 				<div class="mt-6 flex flex-wrap gap-3">
+					{#if readingProgress}
+						<a
+							href={`/buku/${book.slug}/bab/${readingProgress.chapterNumber}`}
+							class="btn border-none bg-white text-slate-900 hover:bg-emerald-50"
+						>
+							Lanjut Baca
+						</a>
+					{/if}
 					{#if firstChapter}
 						<a
 							href={`/buku/${book.slug}/bab/${firstChapter.chapterNumber}`}
-							class="btn border-none bg-white text-slate-900 hover:bg-emerald-50"
+							class={readingProgress ? 'btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10' : 'btn border-none bg-white text-slate-900 hover:bg-emerald-50'}
 						>
-							Mulai Membaca
+							{readingProgress ? 'Mulai dari Awal' : 'Mulai Membaca'}
 						</a>
 					{/if}
 					<a href="#daftar-bab" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
 						Lihat Daftar Bab
 					</a>
+					{#if data.isLoggedIn}
+						<button
+							type="button"
+							class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10"
+							disabled={bookmarkBusy}
+							on:click={toggleBookBookmark}
+						>
+							{isBookmarked ? 'Hapus Bookmark' : 'Simpan Buku'}
+						</button>
+					{:else}
+						<a href="/auth" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
+							Simpan Buku
+						</a>
+					{/if}
 				</div>
+				{#if bookmarkError}
+					<p class="mt-3 text-sm text-amber-100">{bookmarkError}</p>
+				{/if}
 			</div>
 		</div>
 	</section>

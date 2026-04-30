@@ -45,10 +45,10 @@
 						Buat Buku Baru
 					</a>
 					<a href="/buku/studio/earnings" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
-						Lihat Pendapatan
+						Royalti Saya
 					</a>
 					<a href="/buku" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
-						Lihat Katalog
+						Lihat Buku Publik
 					</a>
 				</div>
 			</div>

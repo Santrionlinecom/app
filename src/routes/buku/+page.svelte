@@ -18,6 +18,7 @@
 	};
 
 	$: books = Array.isArray(data.books) ? data.books : [];
+	$: readingProgress = Array.isArray(data.readingProgress) ? data.readingProgress : [];
 	$: featuredBook = books[0] as Book | undefined;
 </script>
 
@@ -42,14 +43,17 @@
 				</h1>
 				<p class="mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
 					Temukan cerita, catatan, dan karya panjang yang sudah dipublikasikan. Beberapa bab awal bisa
-					dibaca gratis; fitur unlock dengan coin akan menyusul pada tahap berikutnya.
+					dibaca gratis, sementara bab premium bisa dibuka memakai coin.
 				</p>
 				<div class="mt-6 flex flex-wrap gap-3">
 					<a href="#katalog-buku" class="btn border-none bg-white text-slate-900 hover:bg-emerald-50">
-						Jelajahi Buku
+						Baca Buku
 					</a>
-					<a href="/digital-store" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
-						Digital Store
+					<a href="/buku/studio" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
+						Tulis Buku
+					</a>
+					<a href="/coins" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
+						Saldo Coin
 					</a>
 				</div>
 			</div>
@@ -68,6 +72,54 @@
 			</div>
 		</div>
 	</section>
+
+	{#if data.isLoggedIn && readingProgress.length > 0}
+		<section class="rounded-[1.5rem] border border-emerald-100 bg-white p-4 shadow-sm md:p-5">
+			<div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+				<div>
+					<p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-700">Lanjut Baca</p>
+					<h2 class="mt-1 text-xl font-semibold text-slate-900">Bacaan terakhir Anda</h2>
+				</div>
+				<p class="text-sm text-slate-500">Progress hanya tampil untuk akun Anda.</p>
+			</div>
+
+			<div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+				{#each readingProgress as progress}
+					<a
+						href={`/buku/${progress.bookSlug}/bab/${progress.chapterNumber}`}
+						class="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-emerald-200 hover:bg-white hover:shadow-sm"
+					>
+						<div class="flex gap-3">
+							{#if progress.bookCoverUrl}
+								<img
+									src={progress.bookCoverUrl}
+									alt={`Cover ${progress.bookTitle}`}
+									class="h-16 w-12 rounded-lg object-cover"
+									loading="lazy"
+								/>
+							{:else}
+								<div class="flex h-16 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-xs font-semibold text-emerald-700">
+									Buku
+								</div>
+							{/if}
+							<div class="min-w-0 flex-1">
+								<p class="truncate text-sm font-semibold text-slate-900 group-hover:text-emerald-700">
+									{progress.bookTitle}
+								</p>
+								<p class="mt-1 truncate text-xs text-slate-500">
+									Bab {progress.chapterNumber}: {progress.chapterTitle}
+								</p>
+								<div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+									<div class="h-full rounded-full bg-emerald-500" style={`width: ${progress.progressPercent}%`}></div>
+								</div>
+								<p class="mt-1 text-xs text-slate-500">{progress.progressPercent}% terbaca</p>
+							</div>
+						</div>
+					</a>
+				{/each}
+			</div>
+		</section>
+	{/if}
 
 	{#if featuredBook}
 		<section class="overflow-hidden rounded-[1.75rem] border border-amber-100 bg-white shadow-sm">

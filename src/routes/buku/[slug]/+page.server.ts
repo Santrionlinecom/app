@@ -6,6 +6,7 @@ import {
 	isValidBukuSlug,
 	listPublishedBukuChapters
 } from '$lib/server/buku-library';
+import { getBookReadingProgress, listUserBookmarks } from '$lib/server/buku-progress';
 
 export const load: PageServerLoad = async ({ params, locals, platform }) => {
 	if (!isValidBukuSlug(params.slug)) {
@@ -25,9 +26,15 @@ export const load: PageServerLoad = async ({ params, locals, platform }) => {
 	}
 
 	const chapters = await listPublishedBukuChapters(db, book.id);
+	const readingProgress = locals.user ? await getBookReadingProgress(db, locals.user.id, book.id) : null;
+	const bookmarks = locals.user ? await listUserBookmarks(db, locals.user.id) : [];
+	const bookBookmark = bookmarks.find((bookmark) => bookmark.bookId === book.id && !bookmark.chapterId) ?? null;
 
 	return {
 		book,
-		chapters
+		chapters,
+		isLoggedIn: Boolean(locals.user),
+		readingProgress,
+		bookBookmark
 	};
 };
