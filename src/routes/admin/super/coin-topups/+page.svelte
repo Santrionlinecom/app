@@ -43,6 +43,22 @@
 		}
 	};
 
+	const parsePackageNote = (value: string | null | undefined) => {
+		const note = value ?? '';
+		const match = /^\[PAKET:\s*([^\]]+)\]\s*(.*)$/i.exec(note);
+		if (!match) {
+			return { packageName: null, userNote: note };
+		}
+
+		return {
+			packageName: match[1].trim(),
+			userNote: match[2].trim()
+		};
+	};
+
+	const getPackageName = (value: string | null | undefined) => parsePackageNote(value).packageName;
+	const getCleanUserNote = (value: string | null | undefined) => parsePackageNote(value).userNote;
+
 	$: requests = data.requests ?? [];
 	$: currentStatus = data.currentStatus;
 	$: counts = data.counts;
@@ -115,9 +131,14 @@
 							<td class="px-4 py-4">
 								<p class="font-semibold text-slate-900">{req.coinAmount.toLocaleString('id-ID')} koin</p>
 								<p class="text-sm text-slate-500">{formatRupiah(req.amountRupiah)}</p>
-								{#if req.userNote}
-									<p class="mt-1 text-xs text-slate-400 truncate max-w-[200px]" title={req.userNote}>
-										{req.userNote}
+								{#if getPackageName(req.userNote)}
+									<p class="mt-2 inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+										{getPackageName(req.userNote)}
+									</p>
+								{/if}
+								{#if getCleanUserNote(req.userNote)}
+									<p class="mt-1 max-w-[220px] truncate text-xs text-slate-400" title={getCleanUserNote(req.userNote)}>
+										{getCleanUserNote(req.userNote)}
 									</p>
 								{/if}
 							</td>

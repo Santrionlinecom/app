@@ -49,8 +49,22 @@
 		}
 	};
 
+	const parsePackageNote = (value: string | null | undefined) => {
+		const note = value ?? '';
+		const match = /^\[PAKET:\s*([^\]]+)\]\s*(.*)$/i.exec(note);
+		if (!match) {
+			return { packageName: null, userNote: note };
+		}
+
+		return {
+			packageName: match[1].trim(),
+			userNote: match[2].trim()
+		};
+	};
+
 	$: req = data.request;
 	$: isPending = req.status === 'pending';
+	$: packageNote = parsePackageNote(req.userNote);
 </script>
 
 <svelte:head>
@@ -114,8 +128,19 @@
 				</div>
 
 				<div>
+					<p class="text-xs uppercase tracking-[0.22em] text-slate-400">Paket Topup</p>
+					{#if packageNote.packageName}
+						<p class="mt-1 inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">
+							{packageNote.packageName}
+						</p>
+					{:else}
+						<p class="mt-1 text-sm text-slate-700">Paket lama / tidak tercatat</p>
+					{/if}
+				</div>
+
+				<div>
 					<p class="text-xs uppercase tracking-[0.22em] text-slate-400">Catatan User</p>
-					<p class="mt-1 text-sm text-slate-700">{req.userNote ?? '-'}</p>
+					<p class="mt-1 text-sm text-slate-700">{packageNote.userNote || '-'}</p>
 				</div>
 
 				<div>
