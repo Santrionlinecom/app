@@ -5,10 +5,10 @@
 
 	const statusLabel: Record<string, string> = {
 		draft: 'Draft',
-		pending: 'Menunggu',
-		published: 'Published',
+		pending: 'Menunggu Review',
+		published: 'Terbit',
 		rejected: 'Ditolak',
-		archived: 'Arsip'
+		archived: 'Diarsipkan'
 	};
 
 	const statusTone = (status: string) =>
@@ -19,6 +19,7 @@
 			rejected: 'bg-rose-100 text-rose-700',
 			archived: 'bg-zinc-100 text-zinc-700'
 		})[status] ?? 'bg-slate-100 text-slate-700';
+	const canEditBook = (status: string) => status === 'draft' || status === 'rejected';
 
 	$: books = Array.isArray(data.books) ? data.books : [];
 </script>
@@ -36,8 +37,8 @@
 				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-100/75">Studio Penulis</p>
 				<h1 class="mt-3 text-3xl font-bold leading-tight md:text-5xl">Kelola buku dan bab SantriOnline</h1>
 				<p class="mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
-					Buat draft buku, susun bab, lalu publish ketika siap. Tahap ini belum memproses coin atau
-					moderasi admin.
+					Buat draft buku, susun bab, lalu ajukan review. Buku baru tampil publik setelah admin
+					menyetujui penerbitan.
 				</p>
 				<div class="mt-6 flex flex-wrap gap-3">
 					<a href="/buku/studio/new" class="btn border-none bg-white text-slate-900 hover:bg-emerald-50">
@@ -112,6 +113,12 @@
 								</div>
 								<h3 class="mt-4 text-2xl font-semibold text-slate-900">{book.title}</h3>
 								<p class="mt-2 text-xs text-slate-400">/buku/{book.slug}</p>
+								{#if book.status === 'rejected' && book.adminNote}
+									<div class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+										<p class="font-semibold">Catatan admin</p>
+										<p class="mt-1 leading-6">{book.adminNote}</p>
+									</div>
+								{/if}
 
 								<div class="mt-5 grid grid-cols-3 gap-3">
 									<div class="rounded-2xl bg-slate-50 px-4 py-3">
@@ -130,7 +137,9 @@
 
 								<div class="mt-5 flex flex-col gap-2 sm:flex-row">
 									<a href={`/buku/studio/${book.id}/edit`} class="btn btn-primary flex-1">Edit Buku</a>
-									<a href={`/buku/studio/${book.id}/chapters/new`} class="btn btn-outline flex-1">Tambah Bab</a>
+									{#if canEditBook(book.status)}
+										<a href={`/buku/studio/${book.id}/chapters/new`} class="btn btn-outline flex-1">Tambah Bab</a>
+									{/if}
 									{#if book.status === 'published'}
 										<a href={`/buku/${book.slug}`} class="btn btn-ghost flex-1">Lihat Publik</a>
 									{/if}

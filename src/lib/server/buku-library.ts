@@ -46,7 +46,12 @@ export type BukuChapterPreview = Omit<BukuChapter, 'content'>;
 
 export type BukuChapterNavigation = BukuChapterPreview | null;
 
-export type BukuBookAuthorStatus = 'draft' | 'published';
+export type BukuBookAuthorStatus = BukuBookStatus;
+
+export type BukuAdminBookListItem = BukuAuthorBookListItem & {
+	authorEmail: string | null;
+	authorName: string | null;
+};
 
 export type BukuBookFormValues = {
 	title: string;
@@ -113,6 +118,12 @@ const toBukuAuthorBookListItem = (row: any): BukuAuthorBookListItem => ({
 	...toBukuBookListItem(row),
 	totalChapterCount: Number(row.totalChapterCount ?? 0),
 	draftChapterCount: Number(row.draftChapterCount ?? 0)
+});
+
+const toBukuAdminBookListItem = (row: any): BukuAdminBookListItem => ({
+	...toBukuAuthorBookListItem(row),
+	authorEmail: row.authorEmail ?? null,
+	authorName: row.authorName ?? null
 });
 
 const toBukuChapter = (row: any): BukuChapter => ({
@@ -195,10 +206,6 @@ export function parseBukuBookForm(formData: FormData, defaultStatus: BukuBookAut
 		pricePerChapter: parseIntegerField(formData.get('pricePerChapter'), 300),
 		status: defaultStatus
 	};
-	const requestedStatus = formText(formData.get('status'));
-	if (requestedStatus === 'draft' || requestedStatus === 'published') {
-		values.status = requestedStatus;
-	}
 
 	if (values.title.length < 3 || values.title.length > 140) {
 		return { ok: false, error: 'Judul buku harus 3-140 karakter.', values };
@@ -225,6 +232,9 @@ export function parseBukuBookForm(formData: FormData, defaultStatus: BukuBookAut
 
 	return { ok: true, values };
 }
+
+export const isBukuBookStatus = (status: string): status is BukuBookStatus =>
+	(BUKU_BOOK_STATUSES as readonly string[]).includes(status);
 
 export function parseBukuChapterForm(formData: FormData): BukuFormResult<BukuChapterFormValues> {
 	const values: BukuChapterFormValues = {
@@ -482,6 +492,110 @@ export async function updateAuthorBukuBook(
 			id,
 			authorId
 		)
+		.run();
+
+	return Number(result.meta?.changes ?? 0) > 0;
+}
+
+export async function submitAuthorBukuBookForReview(db: D1Database, authorId: string, id: string) {
+	const result = await db
+		.prepare(
+			`UPDATE buku_books
+			SET status = 'pending',
+				admin_note = NULL,
+				updated_at = CURRENT_TIMESTAMP
+			WHERE id = ?
+				AND author_id = ?
+				AND status IN ('draft', 'rejected')`
+		)
+		.bind(id, authorId)
+		.run();
+
+	return Number(result.meta?.changes ?? 0) > 0;
+}
+
+export async function listAdminBukuBooks(db: D1Database, status: BukuBookStatus) {
+	const { results } = await db
+		.prepare(
+			`SELECT
+				${BOOK_SELECT},
+				u.email as authorEmail,
+				u.username as authorName,
+				COUNT(c.id) as totalChapterCount,
+				SUM(CASE WHEN c.status = 'published' THEN 1 ELSE 0 END) as publishedChapterCount,
+				SUM(CASE WHEN c.status = 'draft' THEN 1 ELSE 0 END) as draftChapterCount
+			FROM buku_books b
+			LEFT JOIN users u ON u.id = b.author_id
+			LEFT JOIN buku_chapters c ON c.book_id = b.id
+			WHERE b.status = ?
+			GROUP BY b.id
+			ORDER BY b.updated_at DESC, b.created_at DESC`
+		)
+		.bind(status)
+		.all<any>();
+
+	return (results ?? []).map(toBukuAdminBookListItem);
+}
+
+export async function getAdminBukuStatusCounts(db: D1Database) {
+	const { results } = await db
+		.prepare('SELECT status, COUNT(1) as total FROM buku_books GROUP BY status')
+		.all<{ status: string; total: number }>();
+	const counts = Object.fromEntries(BUKU_BOOK_STATUSES.map((status) => [status, 0])) as Record<
+		BukuBookStatus,
+		number
+	>;
+	for (const row of results ?? []) {
+		if (isBukuBookStatus(row.status)) {
+			counts[row.status] = Number(row.total ?? 0);
+		}
+	}
+	return counts;
+}
+
+export async function getAdminBukuBookById(db: D1Database, id: string) {
+	const row = await db
+		.prepare(
+			`SELECT
+				${BOOK_SELECT},
+				u.email as authorEmail,
+				u.username as authorName,
+				COUNT(c.id) as totalChapterCount,
+				SUM(CASE WHEN c.status = 'published' THEN 1 ELSE 0 END) as publishedChapterCount,
+				SUM(CASE WHEN c.status = 'draft' THEN 1 ELSE 0 END) as draftChapterCount
+			FROM buku_books b
+			LEFT JOIN users u ON u.id = b.author_id
+			LEFT JOIN buku_chapters c ON c.book_id = b.id
+			WHERE b.id = ?
+			GROUP BY b.id
+			LIMIT 1`
+		)
+		.bind(id)
+		.first<any>();
+
+	return row ? toBukuAdminBookListItem(row) : null;
+}
+
+export async function updateAdminBukuBookStatus(
+	db: D1Database,
+	params: {
+		id: string;
+		fromStatuses: BukuBookStatus[];
+		toStatus: BukuBookStatus;
+		adminNote?: string | null;
+	}
+) {
+	if (params.fromStatuses.length === 0) return false;
+	const placeholders = params.fromStatuses.map(() => '?').join(', ');
+	const result = await db
+		.prepare(
+			`UPDATE buku_books
+			SET status = ?,
+				admin_note = ?,
+				updated_at = CURRENT_TIMESTAMP
+			WHERE id = ? AND status IN (${placeholders})`
+		)
+		.bind(params.toStatus, params.adminNote ?? null, params.id, ...params.fromStatuses)
 		.run();
 
 	return Number(result.meta?.changes ?? 0) > 0;

@@ -12,6 +12,8 @@
 	};
 
 	const values = (form && 'values' in form ? form.values : {}) as ChapterFormValues;
+
+	$: canEdit = data.canEdit;
 </script>
 
 <svelte:head>
@@ -45,6 +47,12 @@
 			</div>
 		{/if}
 
+		{#if !canEdit}
+			<div class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+				Bab bersifat read-only karena buku sedang menunggu review, sudah terbit, atau sudah diarsipkan.
+			</div>
+		{/if}
+
 		<div class="grid gap-5">
 			<div class="grid gap-5 md:grid-cols-[180px_1fr_220px]">
 				<label class="block">
@@ -57,6 +65,7 @@
 						max="10000"
 						value={values.chapterNumber ?? data.chapter.chapterNumber}
 						required
+						disabled={!canEdit}
 					/>
 				</label>
 				<label class="block">
@@ -68,11 +77,12 @@
 						required
 						minlength="2"
 						maxlength="160"
+						disabled={!canEdit}
 					/>
 				</label>
 				<label class="block">
 					<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Status Bab</span>
-					<select name="status" class="select select-bordered mt-2 w-full">
+					<select name="status" class="select select-bordered mt-2 w-full" disabled={!canEdit}>
 						<option value="draft" selected={(values.status ?? data.chapter.status) === 'draft'}>Draft</option>
 						<option value="published" selected={(values.status ?? data.chapter.status) === 'published'}>Published</option>
 					</select>
@@ -85,12 +95,15 @@
 					name="content"
 					class="textarea textarea-bordered mt-2 min-h-[520px] w-full font-serif text-base leading-8"
 					required
+					disabled={!canEdit}
 				>{values.content ?? data.chapter.content}</textarea>
 			</label>
 		</div>
 
 		<div class="mt-8 flex flex-col gap-3 sm:flex-row">
-			<button type="submit" class="btn btn-primary">Simpan Bab</button>
+			{#if canEdit}
+				<button type="submit" class="btn btn-primary">Simpan Bab</button>
+			{/if}
 			<a href={`/buku/studio/${data.book.id}/edit#chapters`} class="btn btn-outline">Kembali</a>
 		</div>
 	</form>

@@ -23,6 +23,9 @@ export const load: PageServerLoad = async ({ locals, platform, params }) => {
 	if (!book) {
 		throw error(404, 'Buku tidak ditemukan');
 	}
+	if (book.status !== 'draft' && book.status !== 'rejected') {
+		throw error(403, 'Bab hanya bisa ditambahkan saat buku draft atau ditolak');
+	}
 
 	const nextChapterNumber = await getNextBukuChapterNumber(db, book.id);
 
@@ -47,6 +50,9 @@ export const actions: Actions = {
 		const book = await getAuthorBukuBookById(db, locals.user.id, params.id);
 		if (!book) {
 			return fail(404, { error: 'Buku tidak ditemukan.' });
+		}
+		if (book.status !== 'draft' && book.status !== 'rejected') {
+			return fail(400, { error: 'Bab hanya bisa ditambahkan saat buku draft atau ditolak.' });
 		}
 
 		const formData = await request.formData();

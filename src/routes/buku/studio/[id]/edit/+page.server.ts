@@ -5,6 +5,7 @@ import {
 	getAuthorBukuBookById,
 	listAuthorBukuChapters,
 	parseBukuBookForm,
+	submitAuthorBukuBookForReview,
 	updateAuthorBukuBook
 } from '$lib/server/buku-library';
 
@@ -29,7 +30,8 @@ export const load: PageServerLoad = async ({ locals, platform, params, url }) =>
 	return {
 		book,
 		chapters,
-		saved: url.searchParams.get('saved') === '1'
+		saved: url.searchParams.get('saved') === '1',
+		reviewSubmitted: url.searchParams.get('saved') === 'review'
 	};
 };
 
@@ -49,9 +51,14 @@ export const actions: Actions = {
 		if (!book) {
 			return fail(404, { error: 'Buku tidak ditemukan.' });
 		}
+		if (book.status !== 'draft' && book.status !== 'rejected') {
+			return fail(400, {
+				error: 'Buku hanya bisa diedit saat draft atau ditolak.'
+			});
+		}
 
 		const formData = await request.formData();
-		const parsed = parseBukuBookForm(formData, book.status === 'published' ? 'published' : 'draft');
+		const parsed = parseBukuBookForm(formData, book.status);
 		if (!parsed.ok) {
 			return fail(400, { error: parsed.error, values: parsed.values });
 		}
@@ -70,5 +77,32 @@ export const actions: Actions = {
 		}
 
 		throw redirect(303, `/buku/studio/${params.id}/edit?saved=1`);
+	},
+
+	submitReview: async ({ locals, platform, params }) => {
+		if (!locals.user) {
+			throw redirect(302, '/auth');
+		}
+
+		const db = locals.db ?? platform?.env?.DB;
+		if (!db) {
+			return fail(500, { reviewError: 'Database tidak tersedia.' });
+		}
+
+		await ensureBukuLibrarySchema(db);
+		const book = await getAuthorBukuBookById(db, locals.user.id, params.id);
+		if (!book) {
+			return fail(404, { reviewError: 'Buku tidak ditemukan.' });
+		}
+		if (book.status !== 'draft' && book.status !== 'rejected') {
+			return fail(400, { reviewError: 'Hanya buku draft atau ditolak yang bisa diajukan review.' });
+		}
+
+		const submitted = await submitAuthorBukuBookForReview(db, locals.user.id, params.id);
+		if (!submitted) {
+			return fail(400, { reviewError: 'Buku gagal diajukan review.' });
+		}
+
+		throw redirect(303, `/buku/studio/${params.id}/edit?saved=review`);
 	}
 };

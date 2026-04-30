@@ -32,7 +32,8 @@ export const load: PageServerLoad = async ({ locals, platform, params, url }) =>
 	return {
 		book,
 		chapter,
-		saved: url.searchParams.get('saved') === '1'
+		saved: url.searchParams.get('saved') === '1',
+		canEdit: book.status === 'draft' || book.status === 'rejected'
 	};
 };
 
@@ -51,6 +52,9 @@ export const actions: Actions = {
 		const book = await getAuthorBukuBookById(db, locals.user.id, params.id);
 		if (!book) {
 			return fail(404, { error: 'Buku tidak ditemukan.' });
+		}
+		if (book.status !== 'draft' && book.status !== 'rejected') {
+			return fail(400, { error: 'Bab hanya bisa diedit saat buku draft atau ditolak.' });
 		}
 
 		const chapter = await getAuthorBukuChapterById(db, book.id, params.chapterId);
