@@ -119,6 +119,27 @@
 				</div>
 
 				<div>
+					<p class="text-xs uppercase tracking-[0.22em] text-slate-400">Bukti Transfer</p>
+					{#if req.proofUrl}
+						<a
+							href={req.proofUrl}
+							target="_blank"
+							rel="noreferrer"
+							class="mt-2 inline-flex break-all text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+						>
+							Buka bukti transfer
+						</a>
+						<img
+							src={req.proofUrl}
+							alt={`Bukti transfer topup ${req.id}`}
+							class="mt-3 max-h-96 w-full rounded-2xl border border-slate-200 bg-slate-50 object-contain"
+						/>
+					{:else}
+						<p class="mt-1 text-sm text-slate-700">-</p>
+					{/if}
+				</div>
+
+				<div>
 					<p class="text-xs uppercase tracking-[0.22em] text-slate-400">Tanggal Request</p>
 					<p class="mt-1 text-sm text-slate-700">{formatDate(req.createdAt)}</p>
 				</div>

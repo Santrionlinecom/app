@@ -7,6 +7,9 @@
 	let amountRupiah = '';
 	let coinAmount = '';
 	let userNote = '';
+	let proofUrl = '';
+	let isProofUploading = false;
+	let proofUploadError = '';
 
 	// Get success from URL
 	$: successMessage = $page.url.searchParams.get('success') ?? '';
@@ -25,6 +28,47 @@
 	function selectPackage(pkg: { rupiah: number; coin: number }) {
 		amountRupiah = pkg.rupiah.toString();
 		coinAmount = pkg.coin.toString();
+	}
+
+	async function uploadProof(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		proofUploadError = '';
+
+		if (!file) return;
+		if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+			proofUploadError = 'Format bukti transfer harus JPG, PNG, atau WebP.';
+			input.value = '';
+			return;
+		}
+		if (file.size > 2 * 1024 * 1024) {
+			proofUploadError = 'Ukuran bukti transfer maksimal 2MB.';
+			input.value = '';
+			return;
+		}
+
+		isProofUploading = true;
+		try {
+			const uploadForm = new FormData();
+			uploadForm.append('file', file);
+
+			const response = await fetch('/api/upload/topup-proof', {
+				method: 'POST',
+				body: uploadForm
+			});
+			const result = await response.json().catch(() => ({}));
+
+			if (!response.ok || typeof result.url !== 'string') {
+				throw new Error(result.error || 'Gagal upload bukti transfer.');
+			}
+
+			proofUrl = result.url;
+		} catch (err) {
+			proofUploadError = err instanceof Error ? err.message : 'Gagal upload bukti transfer.';
+		} finally {
+			isProofUploading = false;
+			input.value = '';
+		}
 	}
 </script>
 
@@ -62,10 +106,10 @@
 	<form method="POST" use:enhance class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
 		<div class="space-y-6">
 			<!-- Suggested Packages (TODO) -->
-			<div>
-				<label class="block text-sm font-medium text-slate-700">
+			<fieldset>
+				<legend class="block text-sm font-medium text-slate-700">
 					Paket Topup (coming soon)
-				</label>
+				</legend>
 				<div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
 					{#each suggestedPackages as pkg}
 						<button
@@ -80,7 +124,7 @@
 						</button>
 					{/each}
 				</div>
-			</div>
+			</fieldset>
 
 			<hr class="border-slate-100" />
 
@@ -123,8 +167,52 @@
 				</div>
 
 				<div>
+					<label for="proof_upload" class="block text-sm font-medium text-slate-700">
+						Upload Bukti Transfer
+					</label>
+					<input
+						id="proof_upload"
+						type="file"
+						accept="image/jpeg,image/png,image/webp"
+						disabled={isProofUploading}
+						class="file-input file-input-bordered mt-2 w-full"
+						on:change={uploadProof}
+					/>
+					<input type="hidden" name="proof_url" value={proofUrl} />
+					<p class="mt-1 text-xs text-slate-500">
+						Upload bukti transfer dalam format JPG, PNG, atau WebP maksimal 2MB.
+					</p>
+					{#if isProofUploading}
+						<p class="mt-2 text-xs font-semibold text-amber-700">Mengupload bukti transfer...</p>
+					{/if}
+					{#if proofUploadError}
+						<p class="mt-2 text-xs font-semibold text-red-600">{proofUploadError}</p>
+					{/if}
+					{#if proofUrl}
+						<div class="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
+							<p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+								Bukti terupload
+							</p>
+							<a
+								href={proofUrl}
+								target="_blank"
+								rel="noreferrer"
+								class="mt-2 inline-flex break-all text-sm font-medium text-emerald-700 hover:text-emerald-800"
+							>
+								Lihat file bukti
+							</a>
+							<img
+								src={proofUrl}
+								alt="Preview bukti transfer"
+								class="mt-3 max-h-72 w-full rounded-xl border border-emerald-100 bg-white object-contain"
+							/>
+						</div>
+					{/if}
+				</div>
+
+				<div>
 					<label for="user_note" class="block text-sm font-medium text-slate-700">
-						Catatan / Bukti Transfer
+						Catatan Tambahan
 					</label>
 					<textarea
 						id="user_note"
@@ -135,7 +223,7 @@
 						placeholder="Contoh: Transfer ke BCA 1234567890 a.n. SantriOnline, bukti terlampir di chat admin"
 					></textarea>
 					<p class="mt-1 text-xs text-slate-500">
-						Isi dengan nomor referensi transfer, catatan, atau informasi lain untuk verifikasi.
+						Isi dengan nomor referensi transfer, nama rekening pengirim, atau informasi lain untuk verifikasi.
 					</p>
 				</div>
 			</div>
@@ -153,8 +241,8 @@
 
 			<div class="flex flex-col gap-3 sm:flex-row">
 				<a href="/coins" class="btn btn-outline btn-lg">Batal</a>
-				<button type="submit" class="btn btn-primary btn-lg flex-1">
-					Buat Request
+				<button type="submit" class="btn btn-primary btn-lg flex-1" disabled={isProofUploading}>
+					{isProofUploading ? 'Menunggu Upload...' : 'Buat Request'}
 				</button>
 			</div>
 		</div>

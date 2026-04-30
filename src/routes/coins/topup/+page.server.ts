@@ -2,6 +2,16 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { generateId } from 'lucia';
 
+const normalizeOptionalUrl = (value: string) => {
+	if (!value) return null;
+	try {
+		const url = new URL(value);
+		return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null;
+	} catch (_) {
+		return null;
+	}
+};
+
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth');
@@ -18,7 +28,7 @@ export const actions: Actions = {
 			throw redirect(302, '/auth');
 		}
 
-		const db = platform?.env?.DB;
+		const db = locals.db ?? platform?.env?.DB;
 		if (!db) {
 			return fail(500, { message: 'Database tidak tersedia' });
 		}
@@ -27,6 +37,7 @@ export const actions: Actions = {
 		const amountRupiah = formData.get('amount_rupiah');
 		const coinAmount = formData.get('coin_amount');
 		const userNote = formData.get('user_note');
+		const proofUrlValue = formData.get('proof_url');
 
 		// Validasi amount_rupiah
 		if (!amountRupiah || typeof amountRupiah !== 'string') {
@@ -51,6 +62,12 @@ export const actions: Actions = {
 			return fail(400, { message: 'Minimal topup adalah 100 koin' });
 		}
 
+		const rawProofUrl = typeof proofUrlValue === 'string' ? proofUrlValue.trim() : '';
+		const proofUrl = normalizeOptionalUrl(rawProofUrl);
+		if (rawProofUrl && !proofUrl) {
+			return fail(400, { message: 'URL bukti topup tidak valid' });
+		}
+
 		// Buat request topup
 		const id = generateId(15);
 		const now = new Date().toISOString();
@@ -61,9 +78,9 @@ export const actions: Actions = {
 				.prepare(
 					`INSERT INTO coin_topup_requests 
 					(id, user_id, amount_rupiah, coin_amount, proof_url, user_note, status, created_at, updated_at)
-					VALUES (?, ?, ?, ?, NULL, ?, 'pending', ?, ?)`
+					VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`
 				)
-				.bind(id, locals.user.id, parsedRupiah, parsedCoin, note, now, now)
+				.bind(id, locals.user.id, parsedRupiah, parsedCoin, proofUrl, note, now, now)
 				.run();
 		} catch (err) {
 			console.error('Gagal membuat topup request:', err);
