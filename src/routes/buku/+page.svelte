@@ -49,6 +49,11 @@
 					<a href="#katalog-buku" class="btn border-none bg-white text-slate-900 hover:bg-emerald-50">
 						Baca Buku
 					</a>
+					{#if data.isLoggedIn}
+						<a href="/buku/saya" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
+							Rak Buku Saya
+						</a>
+					{/if}
 					<a href="/buku/studio" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
 						Tulis Buku
 					</a>

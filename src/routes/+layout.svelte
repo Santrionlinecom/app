@@ -176,6 +176,11 @@ const bookPublicMenuItems: HeaderMenuItem[] = [
 
 const bookUserMenuItems: HeaderMenuItem[] = [
 	{
+		label: 'Rak Buku Saya',
+		href: '/buku/saya',
+		note: 'Progress, bookmark, dan bab terbuka'
+	},
+	{
 		label: 'Studio Penulis',
 		href: '/buku/studio',
 		note: 'Tulis dan kelola buku'
@@ -653,6 +658,11 @@ $: accountMenuItems = data?.user
 				label: 'Saldo Coin',
 				href: '/coins',
 				note: 'Cek saldo untuk unlock bab'
+			},
+			{
+				label: 'Rak Buku Saya',
+				href: '/buku/saya',
+				note: 'Bacaan dan bookmark buku'
 			},
 			{
 				label: 'Topup Coin',
