@@ -950,14 +950,13 @@ $: if (pathname !== previousPathname) {
 						<nav class="flex min-w-0 flex-1 flex-wrap items-center justify-center gap-2">
 							<a href="/" class="desktop-nav-link" class:desktop-nav-link-active={pathname === '/'}>Beranda</a>
 
-						<div class="group relative">
-							<a href="/kitab" class="desktop-nav-link" class:desktop-nav-link-active={isLearningMenuActive(pathname)}>
-								<span>Belajar</span>
-								<span class="desktop-nav-caret">⌄</span>
-							</a>
-							<div class="desktop-dropdown w-80">
-								<div class="desktop-dropdown-panel">
-									{#each learningMenuItems as item}
+							<div class="group relative">
+								<a href="/kitab" class="desktop-nav-link" class:desktop-nav-link-active={isLearningMenuActive(pathname)}>
+									Belajar
+								</a>
+								<div class="desktop-dropdown w-80">
+									<div class="desktop-dropdown-panel">
+										{#each learningMenuItems as item}
 										<a href={item.href} class="desktop-dropdown-item">
 											<span class="font-semibold text-slate-900">{item.label}</span>
 											<span class="mt-1 text-xs leading-5 text-slate-500">{item.note}</span>
@@ -967,13 +966,12 @@ $: if (pathname !== previousPathname) {
 							</div>
 						</div>
 
-						<div class="group relative">
-							<a href="/buku" class="desktop-nav-link" class:desktop-nav-link-active={isBookMenuActive(pathname)}>
-								<span>Buku</span>
-								<span class="desktop-nav-caret">⌄</span>
-							</a>
-							<div class="desktop-dropdown w-80">
-								<div class="desktop-dropdown-panel">
+							<div class="group relative">
+								<a href="/buku" class="desktop-nav-link" class:desktop-nav-link-active={isBookMenuActive(pathname)}>
+									Buku
+								</a>
+								<div class="desktop-dropdown w-80">
+									<div class="desktop-dropdown-panel">
 									<a href="/buku" class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm transition hover:bg-emerald-100">
 										<p class="font-semibold text-emerald-900">Baca Buku</p>
 										<p class="mt-1 text-xs leading-5 text-emerald-700">Bab gratis dan premium pakai coin.</p>
@@ -990,13 +988,12 @@ $: if (pathname !== previousPathname) {
 							</div>
 						</div>
 
-						{#if isSuperAdmin}
-							<div class="group relative">
-								<a href="/admin/super/overview" class="desktop-nav-link" class:desktop-nav-link-active={isAdminRoute(pathname)}>
-									<span>Admin</span>
-									<span class="desktop-nav-caret">⌄</span>
-								</a>
-								<div class="desktop-dropdown right-0 w-80">
+							{#if isSuperAdmin}
+								<div class="group relative">
+									<a href="/admin/super/overview" class="desktop-nav-link" class:desktop-nav-link-active={isAdminRoute(pathname)}>
+										Admin
+									</a>
+									<div class="desktop-dropdown right-0 w-80">
 									<div class="desktop-dropdown-panel">
 										<a href="/admin/super/overview" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition hover:bg-slate-100">
 											<p class="font-semibold text-slate-900">Panel Super Admin</p>
@@ -1448,12 +1445,6 @@ $: if (pathname !== previousPathname) {
 
 	.desktop-nav-link:not(.desktop-nav-link-active):hover {
 		transform: translateY(-1px);
-	}
-
-	.desktop-nav-caret {
-		font-size: 0.82rem;
-		line-height: 1;
-		color: currentColor;
 	}
 
 	.desktop-dropdown {
