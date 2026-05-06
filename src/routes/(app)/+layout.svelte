@@ -37,8 +37,8 @@
 		SUPER_ADMIN: 'Super Admin',
 		admin: 'Admin',
 		koordinator: 'Koordinator',
-		ustadz: 'Ustadz',
-		ustadzah: 'Ustadzah',
+		ustadz: 'Guru',
+		ustadzah: 'Guru',
 		santri: 'Santri',
 		alumni: 'Alumni',
 		jamaah: 'Jamaah',
@@ -78,6 +78,18 @@
 			feature: 'raport'
 		},
 		{
+			label: 'Rapor Hafalan',
+			href: '/tpq/hafalan-rapor',
+			icon: 'M5 4h10l4 4v12H5V4zm10 0v5h5M8 12h8M8 16h5',
+			feature: 'raport'
+		},
+		{
+			label: 'Rekap Rapor',
+			href: '/tpq/rapor-rekap',
+			icon: 'M4 19h16M7 16V9m5 7V5m5 11v-4',
+			feature: 'raport'
+		},
+		{
 			label: 'Sertifikat',
 			href: '/dashboard/sertifikat',
 			icon: 'M8 5h8l3 3v11a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1z',
@@ -110,6 +122,12 @@
 			feature: 'raport'
 		},
 		{
+			label: 'Rapor Hafalan',
+			href: '/tpq/hafalan-rapor',
+			icon: 'M5 4h10l4 4v12H5V4zm10 0v5h5M8 12h8M8 16h5',
+			feature: 'raport'
+		},
+		{
 			label: 'Sertifikat',
 			href: '/dashboard/sertifikat',
 			icon: 'M8 5h8l3 3v11a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1z',
@@ -135,6 +153,12 @@
 			href: '/dashboard/pencapaian-hafalan',
 			icon: 'M4 17l5-5 4 4 7-7',
 			feature: 'raport'
+		},
+		{
+			label: 'Rekap Rapor',
+			href: '/tpq/rapor-rekap',
+			icon: 'M4 19h16M7 16V9m5 7V5m5 11v-4',
+			feature: 'raport'
 		}
 	];
 
@@ -155,6 +179,12 @@
 			label: 'Pencapaian',
 			href: '/dashboard/pencapaian-hafalan',
 			icon: 'M4 17l5-5 4 4 7-7',
+			feature: 'raport'
+		},
+		{
+			label: 'Rapor Hafalan',
+			href: '/dashboard/rapor-hafalan',
+			icon: 'M5 4h10l4 4v12H5V4zm10 0v5h5M8 12h8M8 16h5',
 			feature: 'raport'
 		},
 		{

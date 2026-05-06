@@ -7,6 +7,8 @@ import { generateId } from 'lucia';
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
+import { seedHafalanDefault } from '$lib/server/db-hafalan';
+import { SEED_HAFALAN_DEFAULT } from '$lib/server/seed-hafalan-default';
 
 export const load: PageServerLoad = async () => {
 	return {};
@@ -69,6 +71,7 @@ export const actions: Actions = {
 			city: typeof orgCity === 'string' ? orgCity.trim() : '',
 			contactPhone: typeof orgPhone === 'string' ? orgPhone.trim() : ''
 		});
+		await seedHafalanDefault(db, orgId, SEED_HAFALAN_DEFAULT);
 
 		if (isLoggedIn && locals.user) {
 			await db

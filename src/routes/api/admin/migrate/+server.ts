@@ -23,6 +23,7 @@ import { ensureStreamerLicenseTables } from '$lib/server/license/streamer-db';
 import { ensureBukuAccessSchema } from '$lib/server/buku-access';
 import { ensureBukuLibrarySchema } from '$lib/server/buku-library';
 import { ensureBukuWalletSchema } from '$lib/server/buku-wallet';
+import { ensureHafalanRaporSchema } from '$lib/server/db-hafalan';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 
 const assertAuthorized = (locals: App.Locals, secret: string | undefined, token: string | null) => {
@@ -68,6 +69,7 @@ export const POST: RequestHandler = async ({ locals, platform, request, url }) =
 	await ensureBukuLibrarySchema(db);
 	await ensureBukuAccessSchema(db);
 	await ensureBukuWalletSchema(db);
+	await ensureHafalanRaporSchema(db);
 
 	return json({
 		ok: true,

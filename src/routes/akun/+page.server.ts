@@ -7,6 +7,8 @@ import {
 	slugify
 } from '$lib/server/organizations';
 import { listOrgMedia } from '$lib/server/org-media';
+import { seedHafalanDefault } from '$lib/server/db-hafalan';
+import { SEED_HAFALAN_DEFAULT } from '$lib/server/seed-hafalan-default';
 import type { Actions, PageServerLoad } from './$types';
 
 const allowedOrgTypes = ['tpq'] as const;
@@ -204,6 +206,7 @@ export const actions: Actions = {
 			city: typeof orgCity === 'string' ? orgCity.trim() : '',
 			contactPhone: typeof orgPhone === 'string' ? orgPhone.trim() : ''
 		});
+		await seedHafalanDefault(db, orgId, SEED_HAFALAN_DEFAULT);
 
 		await db
 			.prepare('UPDATE users SET username = ?, role = ?, org_id = ?, org_status = ? WHERE id = ?')

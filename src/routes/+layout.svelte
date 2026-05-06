@@ -20,7 +20,15 @@ let isSuperAdmin = false;
 let isImpersonating = false;
 $: isSuperAdmin = isSuperAdminUser(data?.user);
 $: isImpersonating = isImpersonatingUser(data?.user);
-const appRoutePrefixes = ['/dashboard', '/keuangan', '/akademik', '/tpq/akademik', '/org'];
+const appRoutePrefixes = [
+	'/dashboard',
+	'/keuangan',
+	'/akademik',
+	'/tpq/akademik',
+	'/tpq/hafalan-rapor',
+	'/tpq/rapor-rekap',
+	'/org'
+];
 const isAppRoute = (path: string) =>
 	appRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 const isAdminRoute = (path: string) => path === '/admin' || path.startsWith('/admin/');
