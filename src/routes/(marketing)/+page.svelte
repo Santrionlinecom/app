@@ -21,10 +21,10 @@
 		{
 			label: 'TPQ',
 			title: 'Operasional TPQ',
-			desc: 'Pendaftaran lembaga, kelas, santri, dan alur belajar Al-Qur’an ditampilkan sebagai jalur utama produk.',
+			desc: 'Pendaftaran lembaga, kelas, santri, dan alur belajar Al-Qur’an ditampilkan dalam satu halaman.',
 			href: '/tpq',
 			cta: 'Buka halaman TPQ',
-			bullets: ['Landing lembaga TPQ', 'Alur pendaftaran dan onboarding', 'Fokus operasional lembaga harian'],
+			bullets: ['Pendaftaran lembaga', 'Data kelas dan santri', 'Alur belajar harian'],
 			classes: {
 				card: 'border-lime-200/80 bg-lime-50/70',
 				badge: 'bg-lime-100 text-lime-700',
@@ -34,10 +34,10 @@
 		{
 			label: 'Kitab',
 			title: 'Perpustakaan Kitab',
-			desc: 'Kitab fondasi dan seri Durusul Lughah sudah tampil sebagai halaman belajar, bukan hanya viewer PDF.',
+			desc: 'Kitab fondasi dan seri Durusul Lughah bisa dibuka langsung sebagai halaman belajar.',
 			href: '/kitab',
 			cta: 'Masuk ke perpustakaan',
-			bullets: ['Kategori Aqidah sampai Tasawuf', 'Mode santri per bab', 'Viewer PDF dan halaman edukasi'],
+			bullets: ['Aqidah sampai tasawuf', 'Belajar per bab', 'Pembaca PDF'],
 			classes: {
 				card: 'border-emerald-200/80 bg-emerald-50/70',
 				badge: 'bg-emerald-100 text-emerald-700',
@@ -47,10 +47,10 @@
 		{
 			label: 'Buku',
 			title: 'Buku Digital SantriOnline',
-			desc: 'Katalog buku, novel, dan karya panjang penulis muslim dengan bab gratis serta premium memakai coin.',
+			desc: 'Kumpulan buku, novel, dan karya panjang dengan bab gratis serta bab berbayar.',
 			href: '/buku',
 			cta: 'Buka buku digital',
-			bullets: ['Karya santri dan penulis muslim', 'Bab gratis dan premium', 'Studio penulis untuk user login'],
+			bullets: ['Karya santri dan penulis muslim', 'Bab gratis dan berbayar', 'Ruang penulis'],
 			classes: {
 				card: 'border-emerald-200/80 bg-white',
 				badge: 'bg-emerald-100 text-emerald-700',
@@ -73,7 +73,7 @@
 		{
 			label: 'Tokoh',
 			title: 'Nabi, Sahabat, Ulama',
-			desc: 'Halaman referensi tokoh menampilkan jalur kenabian, generasi salaf, ulama, dan sanad keilmuan secara tematik.',
+			desc: 'Halaman tokoh memuat nabi, sahabat, ulama, dan jalur keilmuan dengan ringkas.',
 			href: '/tokoh',
 			cta: 'Jelajahi tokoh',
 			bullets: ['25 nabi dan rasul', 'Sahabat, tabiin, ulama', 'Jaringan ilmu Aswaja'],
@@ -86,7 +86,7 @@
 		{
 			label: 'Dinasti',
 			title: 'Peta Peradaban Islam',
-			desc: 'Dinasti-dinasti Islam ditampilkan untuk memberi konteks sejarah keilmuan, politik, dan perkembangan peradaban.',
+			desc: 'Dinasti-dinasti Islam ditampilkan untuk membantu memahami sejarah dan perkembangan peradaban.',
 			href: '/dinasti',
 			cta: 'Lihat dinasti',
 			bullets: ['Urutan dinasti utama', 'Lompatan sejarah Islam', 'Konteks lahirnya ulama dan kitab'],
@@ -99,7 +99,7 @@
 		{
 			label: 'Kalender',
 			title: 'Kalender Hijriyah',
-			desc: 'Kalender pasaran dan penanggalan Islam memudahkan agenda rutin, khataman, dan kegiatan pembinaan harian.',
+			desc: 'Kalender pasaran dan penanggalan Islam membantu mengatur agenda rutin dan kegiatan harian.',
 			href: '/kalender',
 			cta: 'Buka kalender',
 			bullets: ['Hijriyah dan pasaran Jawa', 'Agenda rutin lembaga', 'Ritme kegiatan santri'],
@@ -112,10 +112,10 @@
 		{
 			label: 'Konten',
 			title: 'Blog dan Pembinaan',
-			desc: 'Artikel, penguatan tema harian, dan jalur konten publik ikut dimunculkan agar homepage terasa lengkap.',
+			desc: 'Artikel, tema harian, dan konten ditampilkan agar mudah dibaca dari depan.',
 			href: '/blog',
 			cta: 'Baca artikel',
-			bullets: ['Materi penguatan santri', 'Halaman publik yang mudah dibagikan', 'Konten pendamping pembelajaran'],
+			bullets: ['Materi penguatan santri', 'Halaman yang mudah dibagikan', 'Konten pendamping pembelajaran'],
 			classes: {
 				card: 'border-slate-200/80 bg-slate-50/80',
 				badge: 'bg-slate-100 text-slate-700',
@@ -172,50 +172,50 @@
 	const workflowSteps = [
 		{
 			step: '01',
-			title: 'Daftarkan lembaga',
-			desc: 'Homepage langsung mengarahkan calon pengguna ke jalur pendaftaran TPQ atau dashboard jika sudah login.'
+			title: 'Pilih bagian yang dibutuhkan',
+			desc: 'Halaman depan membantu orang menemukan TPQ, kitab, buku, atau materi lain dengan cepat.'
 		},
 		{
 			step: '02',
-			title: 'Susun kelas dan materi',
-			desc: 'Pembelajaran Al-Qur’an, kitab, dan materi pendamping bisa diposisikan dari depan tanpa mencari terlalu jauh.'
+			title: 'Buka materi atau layanan',
+			desc: 'Setiap bagian bisa dibuka langsung tanpa harus berpindah menu terlalu jauh.'
 		},
 		{
 			step: '03',
-			title: 'Jalankan pembinaan rutin',
-			desc: 'Dzikir, istighotsah, khataman, dan hafalan tampil sebagai program aktif yang mudah diakses.'
+			title: 'Ikuti kegiatan belajar',
+			desc: 'Materi, jadwal, dan bagian yang berkaitan dengan pembinaan bisa diakses dari halaman yang sama.'
 		},
 		{
 			step: '04',
-			title: 'Pantau dan kembangkan',
-			desc: 'Lembaga bisa melanjutkan ke dashboard, sementara publik tetap bisa mengakses referensi kitab dan konten ilmiah.'
+			title: 'Lanjut ke halaman lain',
+			desc: 'Jika perlu, pengguna bisa melanjutkan ke halaman yang lebih spesifik sesuai kebutuhan.'
 		}
 	];
 
 	const roleLanes = [
 		{
-			label: 'Admin lembaga',
-			desc: 'Masuk dari halaman depan ke dashboard untuk mengelola lembaga, kelas, dan operasional.'
+			label: 'Pengelola lembaga',
+			desc: 'Masuk ke halaman yang dibutuhkan untuk mengatur data lembaga dan kelas.'
 		},
 		{
-			label: 'Ustadz/Ustadzah',
-			desc: 'Gunakan fitur kitab, mushaf, dan program pembinaan untuk memandu pembelajaran harian.'
+			label: 'Guru',
+			desc: 'Gunakan kitab, mushaf, dan bagian pembinaan untuk mendampingi belajar harian.'
 		},
 		{
 			label: 'Santri',
-			desc: 'Belajar per bab, membaca mushaf, dan membuka referensi materi dengan tampilan yang lebih ringan.'
+			desc: 'Belajar per bab, membaca mushaf, dan membuka materi yang diperlukan.'
 		},
 		{
-			label: 'Publik',
-			desc: 'Tetap bisa menjelajahi tokoh, dinasti, kalender, blog, dan halaman-halaman edukasi terbuka.'
+			label: 'Pengunjung',
+			desc: 'Tetap bisa melihat tokoh, dinasti, kalender, blog, dan halaman yang terbuka untuk umum.'
 		}
 	];
 
 	const platformStats = [
 		{
 			value: String(featurePrograms.length).padStart(2, '0'),
-			label: 'Program pembinaan',
-			note: 'fitur publik aktif di halaman depan'
+			label: 'Bagian belajar',
+			note: 'halaman yang bisa dibuka dari beranda'
 		},
 		{
 			value: String(kitabCategories.length).padStart(2, '0'),
@@ -224,28 +224,163 @@
 		},
 		{
 			value: String(platformModules.length).padStart(2, '0'),
-			label: 'Area produk publik',
-			note: 'operasional, referensi, dan konten'
+			label: 'Bagian utama',
+			note: 'TPQ, kitab, buku, dan referensi'
 		},
 		{
 			value: String(activeInstitutions.length).padStart(2, '0'),
-			label: 'Lembaga aktif',
-			note: 'jalur pendaftaran yang terbuka sekarang'
+			label: 'Pendaftaran dibuka',
+			note: 'lembaga yang bisa didaftarkan sekarang'
 		}
 	];
 
+	type MarketplaceLane = 'Semua' | 'Materi' | 'Belajar' | 'Lembaga';
+	type MarketplaceItem = {
+		lane: Exclude<MarketplaceLane, 'Semua'>;
+		icon: string;
+		title: string;
+		desc: string;
+		href: string;
+		badge: string;
+		tags: string[];
+	};
+
+	const marketplaceItems: MarketplaceItem[] = [
+		{
+			lane: 'Lembaga',
+			icon: '📘',
+			title: 'TPQ',
+			desc: 'Pendaftaran lembaga, kelas, santri, dan alur belajar dalam satu tempat.',
+			href: '/tpq',
+			badge: 'Aktif',
+			tags: ['Pendaftaran', 'Kelas', 'Setoran']
+		},
+		{
+			lane: 'Materi',
+			icon: '📚',
+			title: 'Buku Digital',
+			desc: 'Kumpulan buku, novel, dan karya panjang dengan bab gratis serta berbayar.',
+			href: '/buku',
+			badge: 'Buku',
+			tags: ['Bacaan', 'Koin', 'Ruang penulis']
+		},
+		{
+			lane: 'Materi',
+			icon: '📖',
+			title: 'Kitab',
+			desc: 'Kumpulan kitab aqidah, lughoh, tajwid, hadits, fiqih, dan tasawuf.',
+			href: '/kitab',
+			badge: 'Referensi',
+			tags: ['Per bab', 'PDF', 'Belajar']
+		},
+		{
+			lane: 'Materi',
+			icon: '🕌',
+			title: 'Mushaf 30 Juz',
+			desc: 'Mushaf digital untuk membaca, murajaah, dan setoran harian.',
+			href: '/kitab/quran',
+			badge: 'Mushaf',
+			tags: ['30 Juz', 'Murajaah', 'Santri']
+		},
+		{
+			lane: 'Materi',
+			icon: '👥',
+			title: 'Tokoh',
+			desc: 'Ringkasan nabi, sahabat, tabiin, dan ulama untuk dibaca umum.',
+			href: '/tokoh',
+			badge: 'Referensi',
+			tags: ['Nabi', 'Sahabat', 'Ulama']
+		},
+		{
+			lane: 'Materi',
+			icon: '🏰',
+			title: 'Dinasti',
+			desc: 'Ringkasan dinasti Islam dan alur sejarah peradaban.',
+			href: '/dinasti',
+			badge: 'Sejarah',
+			tags: ['Timeline', 'Konteks', 'Visual']
+		},
+		{
+			lane: 'Materi',
+			icon: '🗓️',
+			title: 'Kalender Hijriyah',
+			desc: 'Kalender dan agenda untuk membantu mengatur kegiatan harian.',
+			href: '/kalender',
+			badge: 'Agenda',
+			tags: ['Hijriyah', 'Pasaran', 'Rutin']
+		},
+		{
+			lane: 'Materi',
+			icon: '📰',
+			title: 'Blog & Konten',
+			desc: 'Artikel dan konten yang bisa dibaca dari halaman depan.',
+			href: '/blog',
+			badge: 'Konten',
+			tags: ['Artikel', 'Publik', 'Pembinaan']
+		},
+		{
+			lane: 'Belajar',
+			icon: '🎓',
+			title: 'Belajar Al-Quran',
+			desc: 'Tahfidz dan tadabbur dengan setoran terjadwal dan evaluasi rutin.',
+			href: '/fitur/belajar-alquran',
+			badge: 'Belajar',
+			tags: ['Tahfidz', 'Tajwid', 'Setoran']
+		},
+		{
+			lane: 'Belajar',
+			icon: '🤲',
+			title: 'Dzikir & Doa',
+			desc: 'Kumpulan dzikir harian dan doa untuk dipelajari.',
+			href: '/fitur/dzikir-doa',
+			badge: 'Belajar',
+			tags: ['Wirid', 'Doa', 'Harian']
+		},
+		{
+			lane: 'Belajar',
+			icon: '🎯',
+			title: 'Khataman Rutin',
+			desc: 'Jadwal khataman berkala dengan target yang jelas.',
+			href: '/fitur/khataman-rutin',
+			badge: 'Belajar',
+			tags: ['Khatam', 'Target', 'Jadwal']
+		},
+		{
+			lane: 'Belajar',
+			icon: '✨',
+			title: 'Istighotsah',
+			desc: 'Panduan istighotsah berjamaah dengan doa-doa pilihan.',
+			href: '/fitur/istighotsah',
+			badge: 'Belajar',
+			tags: ['Jamaah', 'Doa', 'Luring']
+		}
+	];
+
+	let marketplaceSearch = '';
+	let marketplaceLane: MarketplaceLane = 'Semua';
+
+	$: filteredMarketplaceItems = marketplaceItems.filter((item) => {
+		const haystack = [item.title, item.desc, item.badge, item.lane, ...item.tags]
+			.join(' ')
+			.toLowerCase();
+		const query = marketplaceSearch.trim().toLowerCase();
+		const matchesSearch = !query || haystack.includes(query);
+		const matchesLane = marketplaceLane === 'Semua' || item.lane === marketplaceLane;
+		return matchesSearch && matchesLane;
+	});
+
 	$: primaryAction = isSuperAdminUser(data?.user)
-		? { href: '/admin/super/overview', label: 'Buka Super Admin' }
+		? { href: '/admin/super/overview', label: 'Masuk ke akun' }
 		: dashboardRoles.has(data?.user?.role ?? '')
-			? { href: '/dashboard', label: 'Buka Dashboard' }
+			? { href: '/dashboard', label: 'Masuk ke akun' }
 			: { href: '/register', label: 'Daftarkan TPQ' };
 </script>
 
 <svelte:head>
-	<title>Santri Online - Platform Digital TPQ, Kitab, dan Pembelajaran Santri</title>
+	<title>Santri Online</title>
 	<meta
 		name="description"
-		content="Platform Santri Online untuk operasional TPQ, pembelajaran Al-Qur'an, kitab, mushaf, tokoh, dinasti, kalender, dan konten pembinaan dalam satu halaman depan."
+		content="Santri Online memuat TPQ, kitab, mushaf, buku digital, tokoh, dinasti, kalender, dan halaman belajar lain dalam satu tempat."
 	/>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
@@ -264,34 +399,57 @@
 			<div class="grid items-start gap-8 xl:grid-cols-[1.08fr_0.92fr]">
 				<div class="space-y-7 home-rise">
 					<div class="flex flex-wrap items-center gap-3">
-						<span class="home-chip home-chip-solid">Platform Digital Santri</span>
-						<span class="home-chip">Fokus operasional TPQ</span>
-						<span class="home-chip">Semua area publik ditampilkan</span>
+						<span class="home-chip home-chip-solid">Beranda</span>
+						<span class="home-chip">Pilihan belajar</span>
+						<span class="home-chip">app.santrionline.com</span>
 					</div>
 
 					<div class="space-y-4">
 						<h1 class="home-title text-4xl leading-tight text-slate-950 md:text-6xl">
-							Halaman depan yang langsung menampilkan lembaga, pembelajaran, kitab, dan referensi santri.
+							Tempat untuk melihat TPQ, kitab, mushaf, buku, dan kegiatan belajar.
 						</h1>
 						<p class="max-w-3xl text-lg leading-8 text-slate-600 md:text-xl">
-							Santri Online tidak lagi berhenti di hero promosi. Homepage ini sekarang memetakan jalur
-							operasional TPQ, fitur pembinaan, kategori kitab, mushaf, tokoh, sejarah, kalender, dan
-							konten publik yang memang sudah tersedia.
+							Halaman depan ini disusun agar mudah dipahami. Santri Online bisa mencari bagian yang dibutuhkan
+							dan langsung membuka halaman yang sesuai.
 						</p>
 					</div>
 
-					<div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-						<a href={primaryAction.href} class="home-btn-primary">{primaryAction.label}</a>
-						<a href="#fitur-inti" class="home-btn-secondary">Lihat fitur inti</a>
-						<a href="/kitab" class="home-btn-ghost">Buka perpustakaan kitab</a>
+					<div class="rounded-[1.6rem] border border-white/70 bg-white/88 p-4 shadow-xl backdrop-blur">
+						<div class="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
+							<label class="input input-bordered flex items-center gap-2 rounded-full bg-white">
+								<svg class="h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+									<path d="m21 21-4.35-4.35" />
+									<circle cx="11" cy="11" r="7" />
+								</svg>
+								<input
+									bind:value={marketplaceSearch}
+									placeholder="Cari TPQ, buku, kitab, mushaf, atau kegiatan..."
+									class="grow bg-transparent text-sm outline-none"
+								/>
+							</label>
+							<a href={primaryAction.href} class="home-btn-primary whitespace-nowrap">{primaryAction.label}</a>
+						</div>
+
+						<div class="mt-4 flex flex-wrap gap-2">
+							{#each ['Semua', 'Materi', 'Belajar', 'Lembaga'] as lane}
+								<button
+									type="button"
+									class="home-chip"
+									class:home-chip-solid={marketplaceLane === lane}
+									on:click={() => (marketplaceLane = lane as MarketplaceLane)}
+								>
+									{lane}
+								</button>
+							{/each}
+						</div>
 					</div>
 
 					<div class="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-						<a href="#ekosistem" class="home-anchor">Ekosistem Publik</a>
+						<a href="#etalase-utama" class="home-anchor">Pilihan Utama</a>
 						<a href="#buku-digital" class="home-anchor">Buku Digital</a>
-						<a href="#fitur-inti" class="home-anchor">Pembinaan</a>
+						<a href="#fitur-inti" class="home-anchor">Belajar</a>
 						<a href="#kitab-kategori" class="home-anchor">Kategori Kitab</a>
-						<a href="#alur-produk" class="home-anchor">Alur Produk</a>
+						<a href="#roadmap" class="home-anchor">Sedang Disiapkan</a>
 					</div>
 
 					<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -305,58 +463,99 @@
 					</div>
 				</div>
 
-				<div class="home-panel home-rise" style="animation-delay: 120ms">
+				<div class="home-panel home-rise space-y-4" style="animation-delay: 120ms">
 					<div class="flex items-center justify-between gap-3">
 						<div>
-							<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Status halaman utama</p>
-							<h2 class="mt-2 text-2xl font-bold text-slate-950">Tampilan depan sekarang lebih lengkap</h2>
+							<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Pilihan cepat</p>
+							<h2 class="mt-2 text-2xl font-bold text-slate-950">Bagian yang sering dibuka</h2>
 						</div>
-						<span class="home-chip home-chip-tinted">Live</span>
+						<span class="home-chip home-chip-tinted">Aktif</span>
 					</div>
 
-					<div class="mt-6 space-y-4">
-						<div class="home-summary-card border-emerald-200 bg-emerald-50/80">
-							<div class="flex items-start justify-between gap-4">
-								<div>
-									<p class="text-sm font-semibold text-emerald-800">Aktif sekarang</p>
-									<p class="mt-2 text-sm leading-6 text-slate-600">
-										Fokus produk tetap di TPQ, tetapi homepage juga menampilkan fitur pembinaan dan
-										area referensi publik secara utuh.
-									</p>
+					<div class="grid gap-3 sm:grid-cols-2">
+						{#each filteredMarketplaceItems.slice(0, 4) as item}
+							<a href={item.href} class="home-mini-card">
+								<div class="flex items-start justify-between gap-3">
+									<span class="text-2xl">{item.icon}</span>
+									<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
+										{item.badge}
+									</span>
 								</div>
-								<span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm">
-									TPQ
-								</span>
-							</div>
-						</div>
+								<h3 class="mt-3 text-base font-semibold text-slate-900">{item.title}</h3>
+								<p class="mt-2 text-sm leading-6 text-slate-500">{item.desc}</p>
+							</a>
+						{/each}
+					</div>
 
-						<div class="grid gap-3 sm:grid-cols-2">
-							{#each featurePrograms.slice(0, 4) as feature}
-								<a href={feature.href} class="home-mini-card">
-									<div class="flex items-center justify-between gap-3">
-										<span class="text-2xl">{feature.icon}</span>
-										<span class="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
-											Program
-										</span>
-									</div>
-									<h3 class="mt-3 text-base font-semibold text-slate-900">{feature.title}</h3>
-									<p class="mt-2 text-sm leading-6 text-slate-500">{feature.highlight}</p>
-								</a>
+					<div class="rounded-[1.6rem] border border-slate-200/80 bg-white/90 p-5">
+						<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
+							Pintasan
+						</p>
+						<div class="mt-4 flex flex-wrap gap-2">
+							{#each platformModules as module}
+								<a href={module.href} class="home-quick-link">{module.label}</a>
 							{/each}
-						</div>
-
-						<div class="rounded-[1.6rem] border border-slate-200/80 bg-white/90 p-5">
-							<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
-								Jalur cepat
-							</p>
-							<div class="mt-4 flex flex-wrap gap-2">
-								{#each platformModules as module}
-									<a href={module.href} class="home-quick-link">{module.label}</a>
-								{/each}
-							</div>
 						</div>
 					</div>
 				</div>
+			</div>
+		</div>
+	</section>
+
+	<section id="etalase-utama" class="container mx-auto px-4 py-6 md:py-8">
+		<div class="home-surface border-emerald-200/80 bg-white/90 p-5 md:p-6">
+			<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+				<div class="max-w-3xl">
+					<p class="home-eyebrow text-emerald-600">Pilihan Utama</p>
+					<h2 class="home-heading mt-2 text-3xl text-slate-950 md:text-4xl">
+						Bagian yang bisa dibuka langsung dari beranda.
+					</h2>
+					<p class="mt-3 text-base leading-7 text-slate-600">
+						Cari, pilih, dan buka bagian yang diperlukan. TPQ, kitab, mushaf, buku digital, dan
+						kegiatan belajar disusun sebagai kartu yang mudah dibaca di layar kecil.
+					</p>
+				</div>
+				<div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-600">
+					<span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+					{filteredMarketplaceItems.length} bagian ditemukan
+				</div>
+			</div>
+
+			<div class="mt-5 flex flex-wrap gap-2">
+				{#each featurePrograms.slice(0, 4) as feature}
+					<span class="home-chip">{feature.title}</span>
+				{/each}
+			</div>
+
+			<div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+				{#if filteredMarketplaceItems.length === 0}
+					<div class="col-span-full rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
+						Tidak ada item yang cocok dengan pencarian atau filter saat ini.
+					</div>
+				{:else}
+					{#each filteredMarketplaceItems as item}
+						<a
+							href={item.href}
+							class="home-card rounded-[1.6rem] border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+						>
+							<div class="flex items-start justify-between gap-3">
+								<span class="text-3xl">{item.icon}</span>
+								<span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-600">
+									{item.lane}
+								</span>
+							</div>
+							<h3 class="mt-4 text-xl font-semibold text-slate-950">{item.title}</h3>
+							<p class="mt-3 text-sm leading-7 text-slate-600">{item.desc}</p>
+							<div class="mt-4 flex flex-wrap gap-2">
+								{#each item.tags as tag}
+									<span class="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+										{tag}
+									</span>
+								{/each}
+							</div>
+						</a>
+					{/each}
+				{/if}
 			</div>
 		</div>
 	</section>
@@ -369,7 +568,8 @@
 					Baca karya santri dan penulis muslim.
 				</h2>
 				<p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
-					Katalog buku menampilkan bab gratis dan bab premium yang bisa dibuka dengan coin. Penulis yang sudah login bisa masuk ke Studio Penulis untuk mengelola karya dan melihat royalti.
+					Bab gratis dan bab berbayar ditampilkan di sini. Penulis yang sudah login bisa membuka ruang
+					penulis untuk mengelola karya.
 				</p>
 			</div>
 			<div class="flex flex-col gap-3 sm:flex-row md:flex-col lg:flex-row">
@@ -382,14 +582,13 @@
 	<section class="container mx-auto px-4 py-6 md:py-8">
 		<div class="home-surface grid gap-4 border-slate-200/80 bg-white/80 p-5 md:grid-cols-[1.1fr_0.9fr] md:p-6">
 			<div>
-				<p class="home-eyebrow text-emerald-600">Posisi Produk</p>
+				<p class="home-eyebrow text-emerald-600">Ringkasan</p>
 				<h2 class="home-heading mt-2 text-2xl text-slate-950 md:text-3xl">
-					Profesional di tampilan, tetap jelas soal fokus produk.
+					Ringkas, jelas, dan mudah dibaca.
 				</h2>
 				<p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
-					Santri Online saat ini dibuka untuk operasional TPQ. Lembaga lain tetap dimunculkan sebagai arah
-					pengembangan, tetapi homepage menegaskan apa yang benar-benar live hari ini agar pengguna tidak
-					bingung.
+					Santri Online saat ini terutama dipakai untuk TPQ. Bagian lain tetap ditampilkan agar pengunjung
+					tahu apa yang bisa dibuka sekarang dan apa yang masih disiapkan.
 				</p>
 			</div>
 			<div class="grid gap-3 sm:grid-cols-2">
@@ -406,16 +605,15 @@
 	<section id="ekosistem" class="container mx-auto px-4 py-10 md:py-14 home-section">
 		<div class="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
 			<div class="max-w-3xl">
-				<p class="home-eyebrow text-emerald-600">Ekosistem Publik</p>
+				<p class="home-eyebrow text-emerald-600">Bagian Lain</p>
 				<h2 class="home-heading mt-2 text-3xl text-slate-950 md:text-4xl">
-					Semua area yang sudah tersedia sekarang ikut tampil di depan.
+					Bagian lain yang bisa dibuka dari halaman depan.
 				</h2>
 				<p class="mt-3 text-base leading-7 text-slate-600">
-					Bagian ini menutup kekurangan homepage lama. Pengguna sekarang bisa langsung melihat semua pintu
-					produk publik yang sudah hidup tanpa harus menebak-nebak dari menu header.
+					Bagian ini membantu orang melihat semua halaman yang tersedia tanpa harus mencari terlalu jauh.
 				</p>
 			</div>
-			<a href="/tentang" class="home-btn-secondary w-full text-center md:w-auto">Lihat profil platform</a>
+			<a href="/tentang" class="home-btn-secondary w-full text-center md:w-auto">Lihat profil</a>
 		</div>
 
 		<div class="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
@@ -449,16 +647,15 @@
 	<section id="fitur-inti" class="container mx-auto px-4 py-10 md:py-14 home-section">
 		<div class="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
 			<div class="max-w-3xl">
-				<p class="home-eyebrow text-emerald-600">Program Pembinaan</p>
+				<p class="home-eyebrow text-emerald-600">Kegiatan Belajar</p>
 				<h2 class="home-heading mt-2 text-3xl text-slate-950 md:text-4xl">
-					Semua fitur inti sekarang tampil lebih utuh, bukan hanya nama fiturnya.
+					Kegiatan yang sering dipakai sekarang tampil lebih jelas.
 				</h2>
 				<p class="mt-3 text-base leading-7 text-slate-600">
-					Setiap program sekarang menampilkan fokus, manfaat, dan butir capability agar landing page terasa
-					seperti peta produk yang nyata.
+					Setiap bagian menampilkan ringkasan singkat supaya pengunjung cepat paham isinya.
 				</p>
 			</div>
-			<a href="/fitur" class="home-btn-secondary w-full text-center md:w-auto">Lihat direktori fitur</a>
+			<a href="/fitur" class="home-btn-secondary w-full text-center md:w-auto">Lihat semua kegiatan</a>
 		</div>
 
 		<div class="grid gap-6 xl:grid-cols-2">
@@ -502,11 +699,11 @@
 				<div class="max-w-3xl">
 					<p class="home-eyebrow text-emerald-600">Kategori Kitab</p>
 					<h2 class="home-heading mt-2 text-3xl text-slate-950 md:text-4xl">
-						Kitab utama sekarang bisa dibuka langsung dari kategori pelajarannya.
+						Kitab utama bisa dibuka langsung dari kelompok pelajarannya.
 					</h2>
 					<p class="mt-3 text-base leading-7 text-slate-600">
-						Jalur kitab dibuat jelas supaya guru, santri, dan wali santri cepat masuk ke materi yang
-						sesuai: aqidah, lughoh, tajwid, hadits, fiqih, atau tasawuf.
+						Kelompok kitab dibuat jelas supaya guru, santri, dan orang tua cepat menemukan materi yang
+						sesuai.
 					</p>
 				</div>
 				<a href="/kitab" class="home-btn-secondary w-full text-center md:w-auto">Lihat semua kitab</a>
@@ -532,13 +729,12 @@
 
 	<section id="alur-produk" class="container mx-auto px-4 py-10 md:py-14 home-section">
 		<div class="mb-10 max-w-3xl">
-			<p class="home-eyebrow text-emerald-600">Alur Produk</p>
+			<p class="home-eyebrow text-emerald-600">Cara Memakai</p>
 			<h2 class="home-heading mt-2 text-3xl text-slate-950 md:text-4xl">
-				Alur pemakaian dibuat lebih mudah dibaca dari halaman depan.
+				Cara memakai halaman ini dibuat singkat dan mudah dibaca.
 			</h2>
 			<p class="mt-3 text-base leading-7 text-slate-600">
-				Tujuannya bukan membuat homepage ramai, tetapi membuat pengguna langsung paham urutan memakai produk
-				dari awal sampai masuk ke pembinaan harian.
+				Tujuannya supaya pengunjung langsung tahu harus mulai dari mana.
 			</p>
 		</div>
 
@@ -556,10 +752,10 @@
 	<section id="roadmap" class="container mx-auto px-4 py-10 md:py-14 home-section">
 		<div class="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
 			<div class="home-surface border-emerald-200/80 bg-emerald-50/70 p-6 md:p-8">
-				<p class="home-eyebrow text-emerald-700">Lembaga Aktif</p>
+				<p class="home-eyebrow text-emerald-700">Yang Dibuka Sekarang</p>
 				<h2 class="home-heading mt-2 text-3xl text-slate-950">Pendaftaran yang dibuka sekarang</h2>
 				<p class="mt-3 text-base leading-7 text-slate-600">
-					Homepage menampilkan status ini secara tegas agar ekspektasi pengguna sesuai dengan kondisi produk.
+					Halaman ini menampilkan bagian yang memang bisa didaftarkan sekarang.
 				</p>
 
 				<div class="mt-6 space-y-4">
@@ -596,11 +792,11 @@
 			</div>
 
 			<div class="home-surface border-slate-200/80 bg-white/88 p-6 md:p-8">
-				<p class="home-eyebrow text-slate-500">Roadmap Lembaga</p>
+				<p class="home-eyebrow text-slate-500">Sedang Disiapkan</p>
 				<h2 class="home-heading mt-2 text-3xl text-slate-950">Arah pengembangan berikutnya</h2>
 				<p class="mt-3 text-base leading-7 text-slate-600">
-					Pondok, masjid, musholla, dan rumah tahfidz tetap ditampilkan sebagai arah ekspansi. Bedanya,
-					sekarang statusnya jelas sebagai roadmap, bukan seolah-olah sudah aktif.
+					Pondok, masjid, musholla, dan rumah tahfidz tetap ditampilkan sebagai bagian yang sedang
+					disiapkan.
 				</p>
 
 				<div class="mt-6 grid gap-4 sm:grid-cols-2">
@@ -636,18 +832,18 @@
 			<div class="relative z-10 max-w-3xl">
 				<p class="text-xs font-semibold uppercase tracking-[0.34em] text-white/75">Ringkasan Akhir</p>
 				<h2 class="home-heading mt-3 text-3xl text-white md:text-4xl">
-					Halaman utama sekarang tidak hanya promosi, tetapi benar-benar menjadi pintu masuk produk.
+					Halaman utama ini dibuat sebagai pintu masuk yang mudah dipahami.
 				</h2>
 				<p class="mt-4 text-base leading-8 text-white/88 md:text-lg">
-					Pengguna bisa langsung melihat apa yang aktif hari ini, fitur pembinaan apa yang tersedia, kategori
-					kitab yang bisa dipelajari, dan area referensi publik yang sudah bisa diakses.
+					Pengguna bisa langsung melihat bagian yang tersedia sekarang, kegiatan belajar yang sering
+					dipakai, kategori kitab, dan halaman referensi lain yang terbuka.
 				</p>
 				<div class="mt-8 flex flex-col gap-4 sm:flex-row">
 					<a href={primaryAction.href} class="btn border-none bg-white text-emerald-700 hover:bg-emerald-50">
 						{primaryAction.label}
 					</a>
 					<a href="/fitur" class="btn border-white/20 bg-white/10 text-white hover:bg-white/15">
-						Lihat semua fitur
+						Lihat semua kegiatan
 					</a>
 				</div>
 			</div>
