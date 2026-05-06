@@ -1,4 +1,5 @@
 <script lang="ts">
+	import DynastyTerritoryMap from '$lib/components/DynastyTerritoryMap.svelte';
 	import { islamicDynasties } from '$lib/data/dinasti';
 
 	const orderedDynasties = [...islamicDynasties].sort((a, b) => a.startYearCE - b.startYearCE);
@@ -92,6 +93,8 @@
 									<p class="mt-3 text-sm leading-7 text-slate-700">{dynasty.legacy}</p>
 								</div>
 							</div>
+
+							<DynastyTerritoryMap {dynasty} />
 						</div>
 					</div>
 				</article>

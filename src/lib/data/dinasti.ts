@@ -1,3 +1,27 @@
+export const dynastyRegionKeys = [
+	'andalus',
+	'maghribAqsa',
+	'maghribTengah',
+	'ifriqiyah',
+	'sicilia',
+	'mesir',
+	'syam',
+	'hijaz',
+	'yaman',
+	'jazirah',
+	'irak',
+	'anatolia',
+	'balkan',
+	'persia',
+	'khurasan',
+	'transoxiana',
+	'afghanistan',
+	'indiaUtara',
+	'indiaTengah'
+] as const;
+
+export type DynastyRegionKey = (typeof dynastyRegionKeys)[number];
+
 export type IslamicDynasty = {
 	order: number;
 	slug: string;
@@ -6,6 +30,7 @@ export type IslamicDynasty = {
 	periodAH: string;
 	capital: string;
 	regions: string;
+	mapRegions: DynastyRegionKey[];
 	type: string;
 	summary: string;
 	legacy: string;
@@ -21,6 +46,20 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '41-132 H',
 		capital: 'Damaskus',
 		regions: 'Syam, Irak, Mesir, Afrika Utara, Andalus, Persia hingga Asia Tengah',
+		mapRegions: [
+			'andalus',
+			'maghribAqsa',
+			'maghribTengah',
+			'ifriqiyah',
+			'mesir',
+			'syam',
+			'hijaz',
+			'jazirah',
+			'irak',
+			'persia',
+			'khurasan',
+			'transoxiana'
+		],
 		type: 'Kekhalifahan',
 		summary:
 			'Dinasti besar pertama pasca-Khulafaur Rasyidin yang menata pemerintahan imperium, administrasi Arab, dan ekspansi lintas benua.',
@@ -36,6 +75,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '132-656 H',
 		capital: 'Baghdad',
 		regions: 'Irak, Persia, Jazirah, dan jaringan pengaruh luas Sunni',
+		mapRegions: ['mesir', 'syam', 'hijaz', 'jazirah', 'irak', 'persia', 'khurasan', 'transoxiana'],
 		type: 'Kekhalifahan',
 		summary:
 			'Menggeser pusat dunia Islam ke Irak dan melahirkan era intelektual besar di Baghdad, Basrah, Kufah, dan kota-kota ilmu lain.',
@@ -51,6 +91,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '138-422 H',
 		capital: 'Cordoba',
 		regions: 'Andalus dan bagian Semenanjung Iberia',
+		mapRegions: ['andalus'],
 		type: 'Emirat lalu Kekhalifahan',
 		summary:
 			'Kelanjutan politik Umayyah di Barat Islam yang menjadikan Cordoba pusat ilmu, seni, urbanisme, dan diplomasi dunia Mediterania.',
@@ -66,6 +107,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '172-363 H',
 		capital: 'Walili lalu Fes',
 		regions: 'Maghrib al-Aqsa / Maroko',
+		mapRegions: ['maghribAqsa'],
 		type: 'Dinasti regional',
 		summary:
 			'Salah satu dinasti Muslim awal di Maghrib yang membantu Islamisasi wilayah Maroko dan pertumbuhan kota Fes.',
@@ -81,6 +123,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '184-296 H',
 		capital: 'Qayrawan',
 		regions: 'Ifriqiyah, Sicilia, Afrika Utara tengah',
+		mapRegions: ['maghribTengah', 'ifriqiyah', 'sicilia'],
 		type: 'Dinasti regional di bawah legitimasi Abbasiyah',
 		summary:
 			'Menguatkan Islam di Afrika Utara tengah dan membuka jalur ekspansi ke Sicilia sambil tetap mengakui Abbasiyah secara nominal.',
@@ -96,6 +139,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '254-292 H',
 		capital: "al-Qata'i",
 		regions: 'Mesir dan Syam',
+		mapRegions: ['mesir', 'syam'],
 		type: 'Dinasti regional',
 		summary:
 			'Salah satu dinasti semi-independen paling awal dari orbit Abbasiyah yang menjadikan Mesir basis militer dan ekonomi kuat.',
@@ -111,6 +155,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '297-567 H',
 		capital: 'al-Mahdiyyah lalu Kairo',
 		regions: 'Afrika Utara, Mesir, Hijaz, dan Syam pada periode tertentu',
+		mapRegions: ['maghribAqsa', 'maghribTengah', 'ifriqiyah', 'sicilia', 'mesir', 'syam', 'hijaz'],
 		type: 'Kekhalifahan Ismailiyah',
 		summary:
 			'Saingan besar Abbasiyah yang membangun kekhalifahan tersendiri dan mendirikan Kairo sebagai kota kekuasaan baru.',
@@ -126,6 +171,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '323-358 H',
 		capital: 'Fustat',
 		regions: 'Mesir, Palestina, dan Syam selatan',
+		mapRegions: ['mesir', 'syam'],
 		type: 'Dinasti regional',
 		summary:
 			'Meneruskan pola Mesir semi-independen di bawah bayang-bayang Abbasiyah sebelum akhirnya digantikan Fatimiyah.',
@@ -141,6 +187,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '366-582 H',
 		capital: 'Ghazni',
 		regions: 'Khurasan timur, Afghanistan, dan India utara',
+		mapRegions: ['khurasan', 'afghanistan', 'indiaUtara'],
 		type: 'Kesultanan',
 		summary:
 			'Dinasti Turko-Persia yang memperluas pengaruh Islam ke anak benua India dan membangun patronase sastra Persia.',
@@ -156,6 +203,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '429-590 H',
 		capital: 'Nishapur, Rayy, lalu Isfahan',
 		regions: 'Persia, Irak, Anatolia, Syam pada berbagai fase',
+		mapRegions: ['syam', 'jazirah', 'irak', 'anatolia', 'persia', 'khurasan'],
 		type: 'Kesultanan Sunni',
 		summary:
 			'Seljuk menghidupkan kembali kekuatan politik Sunni dan melindungi orbit Abbasiyah lewat sistem sultanat yang kuat.',
@@ -171,6 +219,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '432-541 H',
 		capital: 'Marrakesh',
 		regions: 'Maghrib dan Andalus barat',
+		mapRegions: ['andalus', 'maghribAqsa', 'maghribTengah'],
 		type: 'Dinasti regional',
 		summary:
 			'Menghubungkan Sahara, Maghrib, dan Andalus dalam satu sistem politik yang memperkuat fiqih Maliki.',
@@ -186,6 +235,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '515-667 H',
 		capital: 'Marrakesh',
 		regions: 'Maghrib dan Andalus',
+		mapRegions: ['andalus', 'maghribAqsa', 'maghribTengah', 'ifriqiyah'],
 		type: 'Kekuasaan regional',
 		summary:
 			'Menggantikan Murabithun dan menguasai ruang Maghrib-Andalus dengan proyek reformasi ideologis dan administrasi baru.',
@@ -201,6 +251,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '521-648 H',
 		capital: 'Mosul dan Aleppo',
 		regions: 'Jazirah, Irak utara, Syam utara',
+		mapRegions: ['syam', 'jazirah', 'irak'],
 		type: 'Dinasti regional',
 		summary:
 			'Zankiyah menjadi pendahulu penting bagi konsolidasi militer Sunni di Syam dan perjuangan melawan Perang Salib.',
@@ -216,6 +267,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '567-658 H',
 		capital: 'Kairo dan Damaskus',
 		regions: 'Mesir, Syam, Hijaz, Yaman pada periode tertentu',
+		mapRegions: ['mesir', 'syam', 'hijaz', 'yaman', 'jazirah'],
 		type: 'Kesultanan Sunni',
 		summary:
 			'Dinasti Salahuddin yang mengakhiri Fatimiyah dan menyatukan Mesir-Syam untuk menghadapi Perang Salib.',
@@ -231,6 +283,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '543-612 H',
 		capital: 'Firozkoh dan Ghazni',
 		regions: 'Afghanistan, Khurasan timur, India utara',
+		mapRegions: ['khurasan', 'afghanistan', 'indiaUtara'],
 		type: 'Kesultanan',
 		summary:
 			'Dinasti pegunungan Ghur yang melanjutkan dorongan politik Islam ke India utara setelah fase Ghaznawiyah.',
@@ -246,6 +299,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '602-932 H',
 		capital: 'Delhi',
 		regions: 'India utara dan tengah',
+		mapRegions: ['indiaUtara', 'indiaTengah'],
 		type: 'Kesultanan',
 		summary:
 			'Rangkaian dinasti Muslim di Delhi yang menjadi fondasi pemerintahan Islam besar di anak benua India.',
@@ -261,6 +315,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '648-923 H',
 		capital: 'Kairo',
 		regions: 'Mesir, Syam, Hijaz',
+		mapRegions: ['mesir', 'syam', 'hijaz'],
 		type: 'Kesultanan',
 		summary:
 			'Mamluk mempertahankan pusat dunia Islam barat setelah runtuhnya Baghdad dan menghadapi Mongol serta sisa-sisa Perang Salib.',
@@ -276,6 +331,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '699-1342 H',
 		capital: 'Bursa, Edirne, lalu Istanbul',
 		regions: 'Anatolia, Balkan, Syam, Mesir, Hijaz, Afrika Utara bagian tertentu',
+		mapRegions: ['ifriqiyah', 'mesir', 'syam', 'hijaz', 'jazirah', 'irak', 'anatolia', 'balkan'],
 		type: 'Kesultanan lalu Kekhalifahan',
 		summary:
 			'Kekuasaan Muslim paling panjang dan luas pada era modern awal yang menghubungkan Anatolia, Arab, dan Eropa tenggara.',
@@ -291,6 +347,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '907-1148 H',
 		capital: 'Tabriz lalu Isfahan',
 		regions: 'Iran dan kawasan sekitarnya',
+		mapRegions: ['irak', 'persia', 'khurasan'],
 		type: 'Kekuasaan regional besar',
 		summary:
 			'Safawiyah membentuk Iran awal modern dan menjadi salah satu poros politik utama dunia Islam pada era senjata api.',
@@ -306,6 +363,7 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '932-1274 H',
 		capital: 'Agra, Fatehpur Sikri, lalu Delhi',
 		regions: 'India utara dan sebagian besar anak benua India',
+		mapRegions: ['afghanistan', 'indiaUtara', 'indiaTengah'],
 		type: 'Kekaisaran',
 		summary:
 			'Puncak kekuasaan Muslim di India pada era awal modern dengan ekonomi besar, kota megah, dan patronase budaya luas.',
