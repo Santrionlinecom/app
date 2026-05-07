@@ -2,6 +2,13 @@
 import '../app.css';
 import { page } from '$app/stores';
 import { onMount } from 'svelte';
+import BadgeCheck from '@lucide/svelte/icons/badge-check';
+import Download from '@lucide/svelte/icons/download';
+import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+import Share2 from '@lucide/svelte/icons/share-2';
+import Smartphone from '@lucide/svelte/icons/smartphone';
+import Wifi from '@lucide/svelte/icons/wifi';
+import X from '@lucide/svelte/icons/x';
 	import SearchableSelect from '$lib/components/SearchableSelect.svelte';
 	import ClarityAnalytics from '$lib/components/ClarityAnalytics.svelte';
 	import CookieConsent from '$lib/components/CookieConsent.svelte';
@@ -239,8 +246,26 @@ const adminBookMenuItems: HeaderMenuItem[] = [
 ];
 
 const apkUrl = 'https://files.santrionline.com/Santrionline.apk';
-const installPromptKey = 'so_install_prompt_v1';
+const installPromptDismissedKey = 'so_install_prompt_v2_dismissed';
+const installPromptSnoozeKey = 'so_install_prompt_v2_snooze_until';
+const installSnoozeDurationMs = 7 * 24 * 60 * 60 * 1000;
+type InstallMode = 'native' | 'android' | 'ios';
+type InstallDismissReason = 'dismiss' | 'installed' | 'snooze' | 'transient';
+type BeforeInstallPromptChoice = {
+	outcome?: 'accepted' | 'dismissed';
+	platform?: string;
+};
+type BeforeInstallPromptEvent = Event & {
+	platforms?: string[];
+	prompt: () => Promise<BeforeInstallPromptChoice | void>;
+	userChoice?: Promise<BeforeInstallPromptChoice>;
+};
+
 let showInstallPopup = false;
+let installMode: InstallMode = 'android';
+let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
+let installActionBusy = false;
+let installPopupTimer: ReturnType<typeof setTimeout> | null = null;
 const translateScriptId = 'google-translate-script';
 const languageStorageKey = 'so_selected_language';
 const defaultFaviconPath = '/favicon.ico';
@@ -321,20 +346,86 @@ const syncLanguageAppearance = (lang: string) => {
 	setHtmlLanguage(lang);
 };
 
-const dismissInstallPopup = (persist = true) => {
-	showInstallPopup = false;
-	if (!persist) return;
+const isInstalledAppView = () => {
+	if (typeof window === 'undefined') return false;
+	const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
+	return window.matchMedia('(display-mode: standalone)').matches || navigatorWithStandalone.standalone === true;
+};
+
+const detectInstallMode = (): InstallMode | null => {
+	if (typeof window === 'undefined' || isInstalledAppView()) return null;
+	const userAgent = window.navigator.userAgent;
+	const isIos =
+		/iPad|iPhone|iPod/.test(userAgent) ||
+		(window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+	if (isIos) return 'ios';
+	if (/Android/i.test(userAgent)) return 'android';
+	return null;
+};
+
+const isInstallPromptSuppressed = () => {
 	try {
-		localStorage.setItem(installPromptKey, '1');
+		if (localStorage.getItem(installPromptDismissedKey)) return true;
+		const snoozedUntil = Number(localStorage.getItem(installPromptSnoozeKey) ?? '0');
+		return Number.isFinite(snoozedUntil) && Date.now() < snoozedUntil;
+	} catch {
+		return false;
+	}
+};
+
+const rememberInstallPopupDecision = (reason: InstallDismissReason) => {
+	if (reason === 'transient') return;
+	try {
+		if (reason === 'snooze') {
+			localStorage.setItem(installPromptSnoozeKey, String(Date.now() + installSnoozeDurationMs));
+			return;
+		}
+		localStorage.setItem(installPromptDismissedKey, reason);
+		localStorage.removeItem(installPromptSnoozeKey);
 	} catch {
 		// Ignore storage failures (private mode, etc).
 	}
 };
 
-const handleInstallOverlayKey = (event: KeyboardEvent) => {
-	if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') {
-		event.preventDefault();
-		dismissInstallPopup();
+const openInstallPopup = (mode: InstallMode, delayMs = 0) => {
+	if (isInstalledAppView() || isInstallPromptSuppressed()) return;
+	installMode = mode;
+	if (installPopupTimer) {
+		clearTimeout(installPopupTimer);
+		installPopupTimer = null;
+	}
+	installPopupTimer = setTimeout(() => {
+		if (!isInstalledAppView() && !isInstallPromptSuppressed()) {
+			showInstallPopup = true;
+		}
+		installPopupTimer = null;
+	}, delayMs);
+};
+
+const dismissInstallPopup = (reason: InstallDismissReason = 'snooze') => {
+	showInstallPopup = false;
+	rememberInstallPopupDecision(reason);
+};
+
+const handleNativeInstall = async () => {
+	if (!deferredInstallPrompt || installActionBusy) return;
+	installActionBusy = true;
+	const promptEvent = deferredInstallPrompt;
+	deferredInstallPrompt = null;
+	try {
+		const promptResult = await promptEvent.prompt();
+		const choice = promptEvent.userChoice ? await promptEvent.userChoice : promptResult;
+		dismissInstallPopup(choice?.outcome === 'accepted' ? 'installed' : 'snooze');
+	} catch {
+		deferredInstallPrompt = null;
+		const fallbackMode = detectInstallMode();
+		if (fallbackMode) {
+			installMode = fallbackMode;
+		} else {
+			dismissInstallPopup('transient');
+		}
+	} finally {
+		installActionBusy = false;
 	}
 };
 
@@ -347,12 +438,6 @@ const handleInstallDialogKey = (event: KeyboardEvent) => {
 
 onMount(() => {
 	try {
-		showInstallPopup = !localStorage.getItem(installPromptKey);
-	} catch {
-		showInstallPopup = true;
-	}
-
-	try {
 		const savedLanguage = localStorage.getItem(languageStorageKey) ?? '';
 		if (savedLanguage && languageOptionMap.has(savedLanguage)) {
 			selectedLanguage = savedLanguage;
@@ -364,6 +449,33 @@ onMount(() => {
 
 	syncLanguageAppearance(selectedLanguage);
 	loadTranslateWidget();
+
+	const handleBeforeInstallPrompt = (event: Event) => {
+		event.preventDefault();
+		deferredInstallPrompt = event as BeforeInstallPromptEvent;
+		openInstallPopup('native', 900);
+	};
+	const handleAppInstalled = () => {
+		deferredInstallPrompt = null;
+		dismissInstallPopup('installed');
+	};
+
+	window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+	window.addEventListener('appinstalled', handleAppInstalled);
+
+	const fallbackMode = detectInstallMode();
+	if (fallbackMode) {
+		openInstallPopup(fallbackMode, 1400);
+	}
+
+	return () => {
+		window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+		window.removeEventListener('appinstalled', handleAppInstalled);
+		if (installPopupTimer) {
+			clearTimeout(installPopupTimer);
+			installPopupTimer = null;
+		}
+	};
 });
 
 const loadTranslateWidget = () => {
@@ -1347,68 +1459,151 @@ $: if (pathname !== previousPathname) {
 
 	{#if showInstallPopup}
 		<div
-			class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4 py-6 backdrop-blur-sm"
-			role="button"
-			tabindex="0"
-			aria-label="Tutup popup instalasi"
-			on:click|self={() => dismissInstallPopup()}
-			on:keydown={handleInstallOverlayKey}
+			class="fixed inset-0 z-[60] flex items-end justify-center px-3 py-4 sm:items-center sm:px-6"
 		>
+			<button
+				type="button"
+				class="absolute inset-0 bg-slate-950/55 backdrop-blur-md"
+				aria-label="Tutup popup instalasi"
+				on:click={() => dismissInstallPopup()}
+			></button>
 			<div
-				class="relative w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+				class="relative w-full max-w-lg overflow-hidden rounded-[1.65rem] border border-white/80 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)]"
 				role="dialog"
 				aria-modal="true"
-				aria-label="Install aplikasi Santri Online"
+				aria-labelledby="install-dialog-title"
 				tabindex="0"
 				on:keydown={handleInstallDialogKey}
 			>
 				<button
-					class="btn btn-sm btn-circle absolute right-4 top-4 bg-white/80 text-slate-700 hover:bg-white"
+					type="button"
+					class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/35 bg-white/90 text-slate-700 shadow-sm transition hover:bg-white"
 					on:click={() => dismissInstallPopup()}
 					aria-label="Tutup"
 				>
-					✕
+					<X class="h-4 w-4" />
 				</button>
-				<div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 text-white">
-					<p class="text-xs uppercase tracking-[0.35em] text-white/80">Santri Online App</p>
-					<h2 class="text-2xl md:text-3xl font-bold mt-2">Install Aplikasi Resmi</h2>
-					<p class="text-sm text-white/90 mt-2">
-						Nikmati akses cepat, notifikasi, dan pengalaman yang lebih ringan di perangkat Android Anda.
-					</p>
-				</div>
-				<div class="p-6">
-					<div class="grid gap-3 md:grid-cols-3 text-sm text-slate-700">
-						<div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-3">
-							<span class="font-semibold">⚡ Akses Cepat</span>
-							<p class="mt-1 text-xs text-slate-600">Buka lebih cepat tanpa browser.</p>
+				<div class="bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.34),transparent_38%),linear-gradient(135deg,#052e16,#065f46_48%,#0f766e)] px-5 pb-6 pt-5 text-white sm:px-6">
+					<div class="flex items-start gap-4 pr-10">
+						<div class="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/12 p-2 shadow-lg shadow-emerald-950/20">
+							<img src="/icons/icon-192.png" alt="" class="h-9 w-9 rounded-lg" loading="lazy" />
 						</div>
-						<div class="rounded-2xl border border-teal-100 bg-teal-50 p-3">
-							<span class="font-semibold">🔔 Notifikasi</span>
-							<p class="mt-1 text-xs text-slate-600">Update kajian dan fitur terbaru.</p>
-						</div>
-						<div class="rounded-2xl border border-cyan-100 bg-cyan-50 p-3">
-							<span class="font-semibold">🛡️ Resmi</span>
-							<p class="mt-1 text-xs text-slate-600">APK aman dari Santri Online.</p>
+						<div class="min-w-0">
+							<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-100">
+								{deferredInstallPrompt ? 'Siap diinstall' : installMode === 'ios' ? 'iOS dan iPadOS' : 'Android resmi'}
+							</p>
+							<h2 id="install-dialog-title" class="mt-2 text-2xl font-semibold leading-tight sm:text-3xl">
+								Pasang Santri Online di layar utama
+							</h2>
+							<p class="mt-3 text-sm leading-6 text-emerald-50/90">
+								Akses hafalan, kitab, buku digital, kalender, dan dashboard lembaga dengan pengalaman yang terasa seperti aplikasi.
+							</p>
 						</div>
 					</div>
 
-					<div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-						<a
-							href={apkUrl}
-							class="btn btn-primary"
-							target="_blank"
-							rel="noopener"
-							on:click={() => dismissInstallPopup()}
+					<div class="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-emerald-950">
+						<span class="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5">
+							<BadgeCheck class="h-3.5 w-3.5" />
+							Resmi
+						</span>
+						<span class="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5">
+							<RefreshCw class="h-3.5 w-3.5" />
+							Auto update
+						</span>
+						<span class="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5">
+							<Wifi class="h-3.5 w-3.5" />
+							Cache ringan
+						</span>
+					</div>
+				</div>
+
+				<div class="max-h-[calc(100vh-20rem)] min-h-0 overflow-y-auto px-5 py-5 sm:max-h-none sm:px-6">
+					<div class="grid gap-2 sm:grid-cols-3">
+						<div class="rounded-lg border border-emerald-100 bg-emerald-50 p-3">
+							<Smartphone class="h-5 w-5 text-emerald-700" />
+							<p class="mt-3 text-sm font-semibold text-slate-950">Shortcut app</p>
+							<p class="mt-1 text-xs leading-5 text-slate-600">Buka langsung dari home screen.</p>
+						</div>
+						<div class="rounded-lg border border-sky-100 bg-sky-50 p-3">
+							<RefreshCw class="h-5 w-5 text-sky-700" />
+							<p class="mt-3 text-sm font-semibold text-slate-950">Versi terbaru</p>
+							<p class="mt-1 text-xs leading-5 text-slate-600">Update app web berjalan otomatis.</p>
+						</div>
+						<div class="rounded-lg border border-amber-100 bg-amber-50 p-3">
+							<BadgeCheck class="h-5 w-5 text-amber-700" />
+							<p class="mt-3 text-sm font-semibold text-slate-950">Akses aman</p>
+							<p class="mt-1 text-xs leading-5 text-slate-600">Utamakan install bawaan browser.</p>
+						</div>
+					</div>
+
+					<div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+						{#if deferredInstallPrompt}
+							<p class="text-sm font-semibold text-slate-950">Install langsung dari browser</p>
+							<p class="mt-1 text-sm leading-6 text-slate-600">
+								Klik tombol install, lalu konfirmasi pada prompt bawaan Chrome, Edge, atau browser Chromium lain.
+							</p>
+						{:else if installMode === 'ios'}
+							<div class="flex items-start gap-3">
+								<Share2 class="mt-0.5 h-5 w-5 shrink-0 text-slate-700" />
+								<div>
+									<p class="text-sm font-semibold text-slate-950">Untuk Safari iPhone atau iPad</p>
+									<p class="mt-1 text-sm leading-6 text-slate-600">
+										Buka menu Bagikan, pilih “Add to Home Screen”, lalu simpan Santri Online.
+									</p>
+								</div>
+							</div>
+						{:else}
+							<p class="text-sm font-semibold text-slate-950">Fallback Android tersedia</p>
+							<p class="mt-1 text-sm leading-6 text-slate-600">
+								Jika tombol install bawaan browser belum muncul, gunakan APK resmi Santri Online khusus Android.
+							</p>
+						{/if}
+					</div>
+
+					<div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+						{#if deferredInstallPrompt}
+							<button
+								type="button"
+								class="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-700 px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 disabled:cursor-wait disabled:bg-emerald-700/70"
+								on:click={handleNativeInstall}
+								disabled={installActionBusy}
+							>
+								<Download class="h-4 w-4" />
+								{installActionBusy ? 'Membuka prompt...' : 'Install dari Browser'}
+							</button>
+						{:else if installMode === 'android'}
+							<a
+								href={apkUrl}
+								class="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-700 px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800"
+								target="_blank"
+								rel="noopener"
+								on:click={() => dismissInstallPopup('dismiss')}
+							>
+								<Download class="h-4 w-4" />
+								Unduh APK Android
+							</a>
+						{:else}
+							<button
+								type="button"
+								class="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-700 px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800"
+								on:click={() => dismissInstallPopup('dismiss')}
+							>
+								<Smartphone class="h-4 w-4" />
+								Saya mengerti
+							</button>
+						{/if}
+
+						<button
+							type="button"
+							class="inline-flex h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700"
+							on:click={() => dismissInstallPopup('snooze')}
 						>
-							Unduh APK
-						</a>
-						<button class="btn btn-ghost" on:click={() => dismissInstallPopup()}>
 							Nanti saja
 						</button>
 					</div>
 
-					<p class="mt-4 text-xs text-slate-500">
-						*Jika diminta izin, aktifkan “Install unknown apps” untuk melanjutkan instalasi.
+					<p class="mt-4 text-xs leading-5 text-slate-500">
+						Popup ini akan disembunyikan sementara setelah dipilih “Nanti saja”, dan tidak muncul lagi setelah aplikasi terpasang.
 					</p>
 				</div>
 			</div>
