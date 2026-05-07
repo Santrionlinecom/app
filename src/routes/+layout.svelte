@@ -418,12 +418,7 @@ const handleNativeInstall = async () => {
 		dismissInstallPopup(choice?.outcome === 'accepted' ? 'installed' : 'snooze');
 	} catch {
 		deferredInstallPrompt = null;
-		const fallbackMode = detectInstallMode();
-		if (fallbackMode) {
-			installMode = fallbackMode;
-		} else {
-			dismissInstallPopup('transient');
-		}
+		installMode = detectInstallMode() ?? 'android';
 	} finally {
 		installActionBusy = false;
 	}
@@ -463,10 +458,8 @@ onMount(() => {
 	window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 	window.addEventListener('appinstalled', handleAppInstalled);
 
-	const fallbackMode = detectInstallMode();
-	if (fallbackMode) {
-		openInstallPopup(fallbackMode, 1400);
-	}
+	const fallbackMode = detectInstallMode() ?? 'android';
+	openInstallPopup(fallbackMode, 1400);
 
 	return () => {
 		window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
