@@ -40,7 +40,7 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 
   const rows = (results ?? []) as SitemapRow[];
   const origin = url.origin.replace(/\/+$/, '');
-  const staticRoutes = ['/blog', '/digital-store', '/tokoh', '/nabi', '/sahabat', '/tabiin', '/tabiut-tabiin', '/ulama', '/dinasti'];
+  const staticRoutes = ['/blog', '/digital-store', '/tokoh', '/nabi', '/sahabat', '/tabiin', '/tabiut-tabiin', '/ulama', '/dinasti', '/ormas'];
 
   const urls: string[] = [];
 

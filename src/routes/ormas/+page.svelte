@@ -1,0 +1,577 @@
+<script lang="ts">
+	type AffiliationSegment = {
+		label: string;
+		range: string;
+		estimate: string;
+		desc: string;
+		bar: number;
+		tone: string;
+	};
+
+	type OrganizationCard = {
+		name: string;
+		country: string;
+		founded: string;
+		founder: string;
+		scale: string;
+		type: string;
+		origin: string;
+		legacy: string;
+		tone: string;
+	};
+
+	type TimelineItem = {
+		year: string;
+		title: string;
+		desc: string;
+	};
+
+	type SourceLink = {
+		label: string;
+		href: string;
+		note: string;
+	};
+
+	const rankingNotes = [
+		'Angka ormas tidak bisa disamakan begitu saja: ada anggota formal, simpatisan, afiliasi budaya, jaringan dakwah longgar, dan lembaga internasional.',
+		'Untuk Indonesia, ukuran paling berguna adalah afiliasi publik dalam survei, bukan hanya kartu anggota formal.',
+		'Untuk dunia, beberapa gerakan seperti Tablighi Jamaat tidak memakai sistem keanggotaan rapi, sehingga skalanya hanya bisa dibaca sebagai perkiraan.'
+	];
+
+	const indonesiaAffiliations: AffiliationSegment[] = [
+		{
+			label: 'Nahdlatul Ulama (NU)',
+			range: '49,5% - 56,9%',
+			estimate: 'Sekitar 120 - 150 juta warga/simpatisan bila dihitung dari populasi Muslim Indonesia.',
+			desc: 'Menjadi afiliasi publik paling besar di Indonesia. Basisnya kuat di pesantren, kampung, jaringan kiai, majelis taklim, dan amaliyah Aswaja tradisional.',
+			bar: 56.9,
+			tone: 'from-emerald-500 to-teal-500'
+		},
+		{
+			label: 'Muhammadiyah',
+			range: '4,3% - 5,8%',
+			estimate: 'Survei afiliasi publik lebih kecil, tetapi klaim simpatisan dan jangkauan amal usaha bisa mencapai puluhan juta.',
+			desc: 'Kuat dalam pendidikan modern, rumah sakit, kampus, panti sosial, tajdid, dakwah perkotaan, dan jaringan Aisyiyah.',
+			bar: 5.8,
+			tone: 'from-sky-500 to-cyan-500'
+		},
+		{
+			label: 'Ormas lain gabungan',
+			range: '1% - 3%',
+			estimate: 'Mencakup Persis, Al-Washliyah, Nahdlatul Wathan, LDII, Hidayatullah, PUI, Al-Irsyad, dan ormas regional lain.',
+			desc: 'Masing-masing tidak selalu besar secara nasional, tetapi banyak yang sangat kuat di wilayah tertentu seperti Sumut, NTB, Banten, Jawa Barat, atau kota-kota dakwah.',
+			bar: 3,
+			tone: 'from-amber-500 to-orange-500'
+		},
+		{
+			label: 'Tidak berafiliasi / lain-lain',
+			range: 'sekitar 34% - 41%',
+			estimate: 'Kelompok besar Muslim yang tidak menyebut ormas tertentu saat survei.',
+			desc: 'Dalam praktik ibadah, sebagian tetap condong pada corak NU, Muhammadiyah, Salafi, jamaah lokal, tarekat, majelis taklim, atau praktik keluarga tanpa label ormas.',
+			bar: 41,
+			tone: 'from-slate-500 to-slate-700'
+		}
+	];
+
+	const indonesiaOrganizations: OrganizationCard[] = [
+		{
+			name: 'Nahdlatul Ulama',
+			country: 'Indonesia',
+			founded: '31 Januari 1926, Surabaya',
+			founder: "KH Hasyim Asy'ari bersama ulama pesantren seperti KH Abdul Wahab Chasbullah dan KH Bisri Syansuri",
+			scale: 'Afiliasi publik terbesar di Indonesia',
+			type: 'Aswaja pesantren, Syafiiyah, sosial-keagamaan',
+			origin: 'Lahir dari jaringan kiai pesantren, Komite Hijaz, dan kebutuhan menjaga tradisi Ahlussunnah wal Jamaah di tengah arus modernisme, kolonialisme, dan perubahan politik Hijaz.',
+			legacy: 'Pesantren, bahtsul masail, tahlil, maulid, tradisi kitab kuning, gerakan sosial, kaderisasi ulama, serta model Islam Nusantara.',
+			tone: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+		},
+		{
+			name: 'Muhammadiyah',
+			country: 'Indonesia',
+			founded: '18 November 1912, Kauman Yogyakarta',
+			founder: 'KH Ahmad Dahlan, kemudian diperkuat Nyai Ahmad Dahlan dan Aisyiyah',
+			scale: 'Ormas Islam modernis terbesar kedua di Indonesia',
+			type: 'Tajdid, pendidikan, kesehatan, amal usaha',
+			origin: 'Berangkat dari pembaruan pendidikan, pemurnian tauhid, penguatan Al-Quran dan sunnah, serta kebutuhan membangun umat yang maju melalui sekolah, rumah sakit, dan pelayanan sosial.',
+			legacy: 'Sekolah, universitas, rumah sakit, panti asuhan, Lazismu, Aisyiyah, tarjih, gerakan literasi, dan dakwah modern berbasis organisasi yang rapi.',
+			tone: 'border-sky-200 bg-sky-50 text-sky-700'
+		},
+		{
+			name: 'Persatuan Islam (Persis)',
+			country: 'Indonesia',
+			founded: '12 September 1923, Bandung',
+			founder: 'Haji Zamzam dan Haji Muhammad Yunus; kemudian kuat melalui Ahmad Hassan dan Mohammad Natsir',
+			scale: 'Kuat di Jawa Barat dan jejaring pendidikan pembaru',
+			type: 'Tajdid, kajian dalil, pendidikan',
+			origin: 'Bermula dari kelompok studi dan pengajian yang mendorong kembali kepada Al-Quran dan sunnah, kritik takhayul-khurafat-bidah, serta tradisi debat ilmiah.',
+			legacy: 'Pesantren Persis, tradisi tarjih dalil, penerbitan keagamaan, kader dakwah, dan pengaruh pemikiran pembaruan Islam Indonesia.',
+			tone: 'border-indigo-200 bg-indigo-50 text-indigo-700'
+		},
+		{
+			name: "Al-Jam'iyatul Washliyah",
+			country: 'Indonesia',
+			founded: '30 November 1930, Medan',
+			founder: 'Pelajar Maktab Islamiyah Tapanuli, dengan tokoh seperti Ismail Banda, Abdurrahman Sjihab, M. Arsjad Th. Lubis, dan Syekh Muhammad Yunus',
+			scale: 'Basis kuat Sumatera Utara dan jaringan madrasah',
+			type: 'Pendidikan, dakwah, sosial, Aswaja',
+			origin: 'Lahir dari kebutuhan menyambungkan umat yang terpecah dan memperkuat pendidikan Islam pada masa Hindia Belanda.',
+			legacy: 'Madrasah, sekolah, dakwah, amal sosial, jaringan ulama Sumatera Timur, dan kontribusi perjuangan kemerdekaan.',
+			tone: 'border-orange-200 bg-orange-50 text-orange-700'
+		},
+		{
+			name: 'Nahdlatul Wathan',
+			country: 'Indonesia',
+			founded: '1 Maret 1953, Pancor Lombok',
+			founder: 'TGKH Muhammad Zainuddin Abdul Madjid',
+			scale: 'Basis sangat kuat di NTB dan diaspora Lombok',
+			type: 'Pesantren, pendidikan, dakwah regional',
+			origin: 'Bertumbuh dari Madrasah NWDI dan NBDI yang membangun pendidikan Islam di Lombok sebelum dan sesudah kemerdekaan.',
+			legacy: 'Ribuan madrasah, pesantren, majelis, kader guru, dan dakwah Islam di Nusa Tenggara Barat.',
+			tone: 'border-lime-200 bg-lime-50 text-lime-700'
+		},
+		{
+			name: 'Lembaga Dakwah Islam Indonesia (LDII)',
+			country: 'Indonesia',
+			founded: '1972 sebagai YAKARI; 1990 menjadi LDII',
+			founder: 'Berawal dari Yayasan Lembaga Karyawan Islam; nama LDII ditetapkan setelah perubahan organisasi',
+			scale: 'Jaringan nasional dengan pembinaan warga dan masjid',
+			type: 'Dakwah, pendidikan warga, pengajian terstruktur',
+			origin: 'Mengalami beberapa fase nama organisasi sebelum memakai nama Lembaga Dakwah Islam Indonesia pada 1990.',
+			legacy: 'Pengajian rutin, pembinaan keluarga, masjid, pesantren, kader dakwah, dan program kebangsaan.',
+			tone: 'border-teal-200 bg-teal-50 text-teal-700'
+		},
+		{
+			name: 'Hidayatullah',
+			country: 'Indonesia',
+			founded: '5 Februari 1973, Balikpapan',
+			founder: 'Ustadz Abdullah Said',
+			scale: 'Jaringan pesantren dan dai nasional',
+			type: 'Pesantren, dakwah, kaderisasi dai',
+			origin: 'Bermula dari pesantren di Karang Bugis, lalu berkembang ke Gunung Tembak sebagai pusat kultur Hidayatullah.',
+			legacy: 'Pengiriman dai, pesantren, sekolah, BMH, kampus, kaderisasi, dan dakwah ke wilayah pedalaman.',
+			tone: 'border-rose-200 bg-rose-50 text-rose-700'
+		},
+		{
+			name: 'Persatuan Ummat Islam (PUI)',
+			country: 'Indonesia',
+			founded: 'Akar 1917; fusi nasional 5 April 1952, Bogor',
+			founder: 'KH Abdul Halim dan KH Ahmad Sanusi melalui penggabungan dua arus organisasi Islam Jawa Barat',
+			scale: 'Basis kuat Jawa Barat, terutama Majalengka dan Sukabumi',
+			type: 'Pendidikan, dakwah, persatuan umat',
+			origin: 'Lahir dari gagasan menyatukan gerakan pendidikan dan dakwah Islam yang sebelumnya berjalan melalui organisasi berbeda.',
+			legacy: 'Madrasah, pesantren, gerakan sosial, kader ulama Jawa Barat, dan kontribusi tokoh pejuang kemerdekaan.',
+			tone: 'border-yellow-200 bg-yellow-50 text-yellow-700'
+		},
+		{
+			name: 'Al-Irsyad Al-Islamiyyah',
+			country: 'Indonesia',
+			founded: '6 September 1914, Batavia',
+			founder: 'Syekh Ahmad Surkati dan tokoh komunitas Arab-Hadrami di Hindia Belanda',
+			scale: 'Jaringan pendidikan dan pembaruan Islam perkotaan',
+			type: 'Tajdid, pendidikan, dakwah tauhid',
+			origin: 'Berawal dari madrasah Al-Irsyad dan pembaruan pendidikan bagi komunitas Muslim urban, terutama keturunan Arab dan masyarakat luas.',
+			legacy: 'Sekolah, dakwah tauhid, reformasi sosial komunitas Hadrami, dan pengaruh pada pemikiran pembaru Islam Indonesia.',
+			tone: 'border-cyan-200 bg-cyan-50 text-cyan-700'
+		},
+		{
+			name: "Mathla'ul Anwar",
+			country: 'Indonesia',
+			founded: '10 Juli 1916, Menes Banten',
+			founder: 'KH Mas Abdurrahman, KH Tb. Mohammad Sholeh, KH E. Mohammad Yasin, dan ulama Menes',
+			scale: 'Basis kuat Banten dan jaringan pendidikan',
+			type: 'Pendidikan, dakwah, sosial',
+			origin: 'Lahir sebagai gerakan pendidikan Islam di Menes untuk mencetak ulama, guru, dan masyarakat berakhlak.',
+			legacy: 'Madrasah, pesantren, dakwah Banten, kaderisasi guru, dan penguatan tradisi keilmuan lokal.',
+			tone: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700'
+		}
+	];
+
+	const globalOrganizations: OrganizationCard[] = [
+		{
+			name: "Tablighi Jamaat",
+			country: 'India, Pakistan, Bangladesh, dan diaspora global',
+			founded: '1926, Mewat India',
+			founder: 'Maulana Muhammad Ilyas Kandhlawi',
+			scale: 'Salah satu gerakan dakwah Islam terbesar di dunia; estimasi pengikut sangat beragam karena tidak memakai keanggotaan formal rapi.',
+			type: 'Gerakan dakwah transnasional non-partai',
+			origin: 'Muncul di Mewat untuk menghidupkan kembali praktik dasar Islam di tengah masyarakat Muslim pedesaan India Utara.',
+			legacy: 'Khuruj, halaqah masjid, dakwah dari rumah ke rumah, ijtima besar, dan jaringan lintas negara.',
+			tone: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+		},
+		{
+			name: 'Nahdlatul Ulama',
+			country: 'Indonesia',
+			founded: '1926, Surabaya',
+			founder: "KH Hasyim Asy'ari dan ulama pesantren",
+			scale: 'Sering disebut ormas Islam formal terbesar berdasarkan afiliasi publik Indonesia.',
+			type: 'Ormas sosial-keagamaan tradisionalis',
+			origin: 'Berangkat dari jaringan pesantren dan kebutuhan menjaga tradisi mazhab serta otoritas ulama.',
+			legacy: 'Model organisasi massa berbasis ulama, pesantren, amaliyah Aswaja, pendidikan, dan gerakan sosial.',
+			tone: 'border-teal-200 bg-teal-50 text-teal-700'
+		},
+		{
+			name: 'Muhammadiyah',
+			country: 'Indonesia',
+			founded: '1912, Yogyakarta',
+			founder: 'KH Ahmad Dahlan',
+			scale: 'Salah satu ormas Islam modernis terbesar dengan jaringan sekolah, kampus, rumah sakit, dan layanan sosial sangat luas.',
+			type: 'Ormas pembaruan sosial-keagamaan',
+			origin: 'Lahir dari pembaruan pendidikan dan dakwah amal saleh di kota Yogyakarta.',
+			legacy: 'Amal usaha pendidikan-kesehatan, tarjih, Aisyiyah, dan gerakan Islam berkemajuan.',
+			tone: 'border-sky-200 bg-sky-50 text-sky-700'
+		},
+		{
+			name: 'Ikhwanul Muslimin / Muslim Brotherhood',
+			country: 'Mesir dan cabang transnasional',
+			founded: '1928, Ismailia Mesir',
+			founder: 'Hasan al-Banna',
+			scale: 'Gerakan sosial-politik Islam paling berpengaruh di Timur Tengah modern; status hukumnya berbeda-beda antar negara.',
+			type: 'Gerakan dakwah, sosial, dan politik',
+			origin: 'Muncul sebagai respons terhadap kolonialisme, modernitas, krisis sosial, dan perdebatan peran Islam dalam negara.',
+			legacy: 'Jaringan pendidikan, amal sosial, partai/gerakan politik, dan pengaruh pada banyak gerakan Islam abad ke-20.',
+			tone: 'border-rose-200 bg-rose-50 text-rose-700'
+		},
+		{
+			name: "Jamaat-e-Islami",
+			country: 'Pakistan, India, Bangladesh, dan diaspora Asia Selatan',
+			founded: '1941, Lahore India Britania',
+			founder: "Abul A'la Maududi",
+			scale: 'Gerakan ideologis-politik besar di Asia Selatan dengan cabang berbeda setelah pemisahan India-Pakistan.',
+			type: 'Gerakan dakwah, pemikiran, dan politik',
+			origin: 'Dibangun untuk menjadikan Islam sebagai sistem sosial-politik dan merespons nasionalisme sekuler serta kolonialisme.',
+			legacy: 'Literatur Maududi, kaderisasi, partai politik, dakwah kampus, dan perdebatan Islamisme modern.',
+			tone: 'border-amber-200 bg-amber-50 text-amber-700'
+		},
+		{
+			name: "Jamiat Ulama-i-Hind",
+			country: 'India',
+			founded: '1919, India',
+			founder: 'Ulama Deobandi dan tokoh gerakan Khilafat/anti-kolonial',
+			scale: 'Salah satu organisasi Muslim India paling tua dan berpengaruh.',
+			type: 'Organisasi ulama, pendidikan, advokasi umat',
+			origin: 'Lahir dari ulama India yang ingin memiliki wadah permanen untuk membimbing umat dan melawan kolonialisme.',
+			legacy: 'Pendidikan Deobandi, advokasi Muslim India, nasionalisme bersama, dan jaringan ulama.',
+			tone: 'border-lime-200 bg-lime-50 text-lime-700'
+		},
+		{
+			name: "Dawat-e-Islami",
+			country: 'Pakistan dan jaringan global',
+			founded: '1981, Karachi Pakistan',
+			founder: 'Muhammad Ilyas Attar Qadri',
+			scale: 'Gerakan dakwah Sunni Barelvi/Qadiri yang menyebar melalui madrasah, majelis, media, dan diaspora.',
+			type: 'Dakwah, pendidikan, media Islam',
+			origin: 'Dibentuk untuk memperkuat dakwah Sunni Barelvi dan pembinaan amaliyah keagamaan masyarakat.',
+			legacy: 'Madani Channel, majelis, kursus keislaman, jaringan masjid, publikasi, dan dakwah urban.',
+			tone: 'border-green-200 bg-green-50 text-green-700'
+		},
+		{
+			name: 'Muslim World League',
+			country: 'Arab Saudi dan kantor global',
+			founded: '1962, Makkah',
+			founder: 'Konferensi Islam di Makkah dengan dukungan Arab Saudi',
+			scale: 'Lembaga Islam internasional besar, tetapi bukan ormas massa berbasis anggota seperti NU atau Muhammadiyah.',
+			type: 'NGO internasional dan diplomasi keagamaan',
+			origin: 'Dibentuk untuk dakwah global, hubungan antar Muslim, dan representasi Islam internasional.',
+			legacy: 'Konferensi, dakwah internasional, dialog antaragama, bantuan, dan jejaring lembaga Islam dunia.',
+			tone: 'border-stone-200 bg-stone-50 text-stone-700'
+		},
+		{
+			name: 'Hizmet / Gulen Movement',
+			country: 'Turki dan diaspora',
+			founded: 'Akhir 1960-an, Izmir Turki',
+			founder: 'Fethullah Gulen',
+			scale: 'Jaringan pendidikan dan masyarakat sipil transnasional; sangat kontroversial dan dibatasi keras oleh pemerintah Turki setelah 2016.',
+			type: 'Pendidikan, filantropi, dialog, jejaring sosial',
+			origin: 'Bermula dari kelompok baca dan pembinaan pelajar yang dipengaruhi gagasan Said Nursi dan dakwah pendidikan.',
+			legacy: 'Sekolah, asrama, media, dialog antaragama, jaringan diaspora, sekaligus kontroversi politik besar di Turki.',
+			tone: 'border-violet-200 bg-violet-50 text-violet-700'
+		},
+		{
+			name: "Jama'atu Nasril Islam",
+			country: 'Nigeria',
+			founded: '1962, Nigeria Utara',
+			founder: 'Ahmadu Bello, Sardauna of Sokoto',
+			scale: 'Payung penting organisasi Islam di Nigeria, terutama kawasan utara.',
+			type: 'Organisasi payung, dakwah, advokasi umat',
+			origin: 'Dibentuk untuk menyatukan kepentingan Islam dan menjadi kanal komunikasi umat Muslim Nigeria.',
+			legacy: 'Koordinasi ormas, hubungan dengan pemerintah, dakwah, pendidikan, dan penguatan identitas Muslim Nigeria.',
+			tone: 'border-cyan-200 bg-cyan-50 text-cyan-700'
+		}
+	];
+
+	const indonesiaTimeline: TimelineItem[] = [
+		{
+			year: '1912',
+			title: 'Muhammadiyah dan pembaruan amal usaha',
+			desc: 'Gerakan sekolah, kesehatan, dan dakwah modern menjadi model baru organisasi Islam di Hindia Belanda.'
+		},
+		{
+			year: '1914-1923',
+			title: 'Al-Irsyad, Mathlaul Anwar, dan Persis',
+			desc: 'Muncul jaringan pendidikan, tajdid, dan kajian dalil di Batavia, Banten, dan Bandung.'
+		},
+		{
+			year: '1926',
+			title: 'NU dan konsolidasi pesantren',
+			desc: 'Ulama pesantren membangun wadah nasional untuk menjaga mazhab, tradisi kitab, dan kepentingan umat.'
+		},
+		{
+			year: '1930-1953',
+			title: 'Ormas regional tumbuh kuat',
+			desc: 'Al-Washliyah di Sumatera Utara, PUI di Jawa Barat, dan Nahdlatul Wathan di Lombok menguatkan pendidikan daerah.'
+		},
+		{
+			year: '1970-an',
+			title: 'Dakwah kader dan pembinaan warga',
+			desc: 'LDII dan Hidayatullah menunjukkan bentuk baru pembinaan jamaah, pesantren, dai, dan organisasi nasional.'
+		}
+	];
+
+	const sourceLinks: SourceLink[] = [
+		{
+			label: 'LSI 2019 dikutip Suara Muhammadiyah',
+			href: 'https://web.suaramuhammadiyah.id/2022/05/26/memperbarui-pola-gerakan-muhammadiyah/',
+			note: 'Rujukan angka 49,5% NU dan 4,3% Muhammadiyah dalam afiliasi publik.'
+		},
+		{
+			label: 'LSI Denny JA 2023 via Kompas',
+			href: 'https://nasional.kompas.com/read/2023/09/21/06150011/survei-lsi-denny-ja-popularitas-prabowo-di-warga-nu-muhammadiyah-mendominasi',
+			note: 'Rujukan afiliasi 56,9% NU, 5,7% Muhammadiyah, dan 3% ormas lain.'
+		},
+		{
+			label: 'Indikator Politik 2024',
+			href: 'https://indikator.co.id/wp-content/uploads/2024/05/RILIS-INDIKATOR-14-MEI-2024-1.pdf',
+			note: 'Pembanding survei terbaru yang menunjukkan distribusi afiliasi berbeda.'
+		},
+		{
+			label: 'Sejarah Muhammadiyah resmi',
+			href: 'https://muhammadiyah.or.id/',
+			note: 'Tanggal berdiri dan latar awal Muhammadiyah.'
+		},
+		{
+			label: 'Sejarah NU - NU Jabar',
+			href: 'https://jabar.nu.or.id/sejarah/nu-berdiri-pada-tanggal-31-januari-1926-m-bertepatan-dengan-16-rajab-1344-h-GocuL',
+			note: 'Tanggal berdiri NU, Komite Hijaz, dan daftar ulama pendiri.'
+		},
+		{
+			label: 'Pew Research - Tablighi Jamaat',
+			href: 'https://www.pewresearch.org/religion/2010/09/15/muslim-networks-and-movements-in-western-europe-tablighi-jamaat/',
+			note: 'Asal-usul Tablighi Jamaat di Mewat dan karakter gerakannya.'
+		},
+		{
+			label: 'Britannica - Muslim Brotherhood',
+			href: 'https://www.britannica.com/topic/Muslim-Brotherhood',
+			note: 'Asal-usul Ikhwanul Muslimin di Mesir dan konteks politik modern.'
+		},
+		{
+			label: 'Jamiat Ulama-i-Hind',
+			href: 'https://www.jamiat.org.in/masters/jamiat_history/',
+			note: 'Sejarah Jamiat Ulama-i-Hind sebagai organisasi Muslim India.'
+		}
+	];
+</script>
+
+<svelte:head>
+	<title>Ormas Islam Dunia dan Indonesia - Santri Online</title>
+	<meta
+		name="description"
+		content="Peta ormas Islam terbesar di Indonesia dan dunia, asal-usul, pendiri, basis massa, dan klasifikasi afiliasi publik NU, Muhammadiyah, serta ormas lain."
+	/>
+</svelte:head>
+
+<div class="space-y-8">
+	<section class="relative overflow-hidden rounded-[2rem] bg-[radial-gradient(circle_at_top_left,#fef3c7,transparent_32%),linear-gradient(135deg,#052e16,#164e63_55%,#0f172a)] px-6 py-10 text-white shadow-xl md:px-8">
+		<div class="absolute -right-24 top-10 h-64 w-64 rounded-full bg-emerald-300/10 blur-3xl"></div>
+		<div class="absolute -bottom-24 left-8 h-56 w-56 rounded-full bg-amber-200/10 blur-3xl"></div>
+		<div class="relative grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-100/75">Ormas Islam</p>
+				<h1 class="mt-3 text-3xl font-bold md:text-5xl">Peta ormas Islam terbesar, asal-usul, dan basis massanya</h1>
+				<p class="mt-4 max-w-3xl text-sm leading-7 text-white/78 md:text-base">
+					Halaman ini merangkum organisasi dan gerakan Islam besar di Indonesia serta dunia. Fokusnya bukan
+					hanya jumlah, tetapi juga asal-usul, pendiri, corak dakwah, dan cara membaca angka afiliasi publik.
+				</p>
+			</div>
+			<div class="rounded-[1.5rem] border border-white/15 bg-white/10 p-5 backdrop-blur">
+				<p class="text-sm font-semibold text-emerald-50">Cara membaca ranking</p>
+				<div class="mt-3 space-y-3 text-sm leading-6 text-white/78">
+					{#each rankingNotes as note}
+						<p>{note}</p>
+					{/each}
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="grid gap-4 md:grid-cols-4">
+		<div class="rounded-[1.5rem] border border-emerald-200 bg-white p-5 shadow-sm">
+			<p class="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-700">Indonesia</p>
+			<p class="mt-3 text-3xl font-bold text-slate-900">NU</p>
+			<p class="mt-2 text-sm leading-6 text-slate-600">Afiliasi publik Muslim terbesar dalam survei nasional.</p>
+		</div>
+		<div class="rounded-[1.5rem] border border-sky-200 bg-white p-5 shadow-sm">
+			<p class="text-xs font-semibold uppercase tracking-[0.25em] text-sky-700">Amal Usaha</p>
+			<p class="mt-3 text-3xl font-bold text-slate-900">Muhammadiyah</p>
+			<p class="mt-2 text-sm leading-6 text-slate-600">Jaringan pendidikan, kesehatan, dan sosial yang sangat luas.</p>
+		</div>
+		<div class="rounded-[1.5rem] border border-amber-200 bg-white p-5 shadow-sm">
+			<p class="text-xs font-semibold uppercase tracking-[0.25em] text-amber-700">Global</p>
+			<p class="mt-3 text-3xl font-bold text-slate-900">Tablighi</p>
+			<p class="mt-2 text-sm leading-6 text-slate-600">Gerakan dakwah transnasional dengan struktur longgar.</p>
+		</div>
+		<div class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+			<p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Catatan</p>
+			<p class="mt-3 text-3xl font-bold text-slate-900">Tidak identik</p>
+			<p class="mt-2 text-sm leading-6 text-slate-600">Anggota formal, simpatisan, dan kedekatan budaya adalah ukuran berbeda.</p>
+		</div>
+	</section>
+
+	<section class="rounded-[1.75rem] border border-emerald-200 bg-white p-6 shadow-sm">
+		<div class="grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-700">Klasifikasi Populasi Indonesia</p>
+				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Afiliasi publik Muslim Indonesia</h2>
+				<p class="mt-4 text-sm leading-7 text-slate-600">
+					Survei yang menanyakan kedekatan responden dengan ormas Islam menunjukkan distribusi yang timpang.
+					NU berada jauh di depan, Muhammadiyah lebih kecil dalam afiliasi survei tetapi sangat besar dalam
+					jangkauan amal usaha, sedangkan banyak Muslim tidak menyebut ormas tertentu.
+				</p>
+			</div>
+			<div class="space-y-4">
+				{#each indonesiaAffiliations as segment}
+					<article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+						<div class="flex flex-wrap items-start justify-between gap-3">
+							<div>
+								<h3 class="text-lg font-semibold text-slate-900">{segment.label}</h3>
+								<p class="mt-1 text-sm font-semibold text-emerald-700">{segment.range}</p>
+							</div>
+							<p class="max-w-sm text-xs leading-5 text-slate-500">{segment.estimate}</p>
+						</div>
+						<div class="mt-4 h-3 overflow-hidden rounded-full bg-white">
+							<div class={`h-full rounded-full bg-gradient-to-r ${segment.tone}`} style={`width: ${segment.bar}%`}></div>
+						</div>
+						<p class="mt-3 text-sm leading-6 text-slate-600">{segment.desc}</p>
+					</article>
+				{/each}
+			</div>
+		</div>
+	</section>
+
+	<section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+		<div class="flex flex-wrap items-end justify-between gap-4">
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Indonesia</p>
+				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Ormas Islam utama dan asal-usulnya</h2>
+			</div>
+			<p class="max-w-2xl text-sm leading-7 text-slate-600">
+				Urutan berikut bukan ranking mutlak anggota formal. Fokusnya adalah ormas yang punya pengaruh sosial,
+				pendidikan, dakwah, atau basis massa penting di Indonesia.
+			</p>
+		</div>
+
+		<div class="mt-6 grid gap-4 md:grid-cols-2">
+			{#each indonesiaOrganizations as org}
+				<article class={`rounded-[1.5rem] border p-5 ${org.tone}`}>
+					<div class="flex flex-wrap items-center gap-2">
+						<span class="rounded-full bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em]">
+							{org.country}
+						</span>
+						<span class="rounded-full bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em]">
+							{org.scale}
+						</span>
+					</div>
+					<h3 class="mt-4 text-2xl font-semibold text-slate-950">{org.name}</h3>
+					<div class="mt-4 grid gap-3 text-sm leading-6 text-slate-700">
+						<p><span class="font-semibold text-slate-900">Berdiri:</span> {org.founded}</p>
+						<p><span class="font-semibold text-slate-900">Tokoh awal:</span> {org.founder}</p>
+						<p><span class="font-semibold text-slate-900">Corak:</span> {org.type}</p>
+						<p>{org.origin}</p>
+						<p class="rounded-2xl bg-white/75 p-4">{org.legacy}</p>
+					</div>
+				</article>
+			{/each}
+		</div>
+	</section>
+
+	<section class="rounded-[1.75rem] border border-amber-200 bg-amber-50 p-6 shadow-sm">
+		<p class="text-xs font-semibold uppercase tracking-[0.3em] text-amber-700">Garis Waktu Indonesia</p>
+		<h2 class="mt-3 text-2xl font-semibold text-slate-900">Dari tajdid, pesantren, sampai dakwah kader</h2>
+		<div class="mt-5 grid gap-4">
+			{#each indonesiaTimeline as item}
+				<article class="grid gap-3 rounded-2xl border border-amber-100 bg-white p-5 md:grid-cols-[7rem_1fr]">
+					<p class="text-sm font-semibold uppercase tracking-[0.22em] text-amber-700">{item.year}</p>
+					<div>
+						<h3 class="text-lg font-semibold text-slate-900">{item.title}</h3>
+						<p class="mt-2 text-sm leading-7 text-slate-600">{item.desc}</p>
+					</div>
+				</article>
+			{/each}
+		</div>
+	</section>
+
+	<section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+		<div class="flex flex-wrap items-end justify-between gap-4">
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Dunia</p>
+				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Gerakan dan organisasi Islam besar lintas negara</h2>
+			</div>
+			<p class="max-w-2xl text-sm leading-7 text-slate-600">
+				Daftar dunia ini menggabungkan ormas formal, gerakan dakwah longgar, NGO internasional, dan organisasi
+				payung. Karena bentuknya berbeda, bagian ini memakai istilah pengaruh dan jaringan, bukan ranking angka tunggal.
+			</p>
+		</div>
+
+		<div class="mt-6 grid gap-4 md:grid-cols-2">
+			{#each globalOrganizations as org}
+				<article class={`rounded-[1.5rem] border p-5 ${org.tone}`}>
+					<div class="flex flex-wrap items-center gap-2">
+						<span class="rounded-full bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em]">
+							{org.country}
+						</span>
+						<span class="rounded-full bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em]">
+							{org.type}
+						</span>
+					</div>
+					<h3 class="mt-4 text-2xl font-semibold text-slate-950">{org.name}</h3>
+					<div class="mt-4 grid gap-3 text-sm leading-6 text-slate-700">
+						<p><span class="font-semibold text-slate-900">Berdiri:</span> {org.founded}</p>
+						<p><span class="font-semibold text-slate-900">Tokoh awal:</span> {org.founder}</p>
+						<p><span class="font-semibold text-slate-900">Skala:</span> {org.scale}</p>
+						<p>{org.origin}</p>
+						<p class="rounded-2xl bg-white/75 p-4">{org.legacy}</p>
+					</div>
+				</article>
+			{/each}
+		</div>
+	</section>
+
+	<section class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+		<div class="rounded-[1.75rem] border border-rose-200 bg-rose-50 p-6 shadow-sm">
+			<p class="text-xs font-semibold uppercase tracking-[0.3em] text-rose-700">Kesimpulan</p>
+			<h2 class="mt-3 text-2xl font-semibold text-slate-900">NU paling besar secara afiliasi publik Indonesia</h2>
+			<p class="mt-4 text-sm leading-7 text-slate-700">
+				Secara survei Indonesia, NU menempati posisi dominan. Muhammadiyah lebih kecil dalam afiliasi responden,
+				tetapi sangat besar dalam kualitas organisasi, amal usaha, pendidikan, kesehatan, dan pengaruh pemikiran.
+				Ormas lain sering tidak besar secara nasional, namun kuat secara regional dan membentuk keragaman umat.
+			</p>
+		</div>
+
+		<div class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+			<p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Sumber Rujukan</p>
+			<h2 class="mt-3 text-2xl font-semibold text-slate-900">Rujukan angka dan sejarah</h2>
+			<div class="mt-5 grid gap-3 md:grid-cols-2">
+				{#each sourceLinks as source}
+					<a
+						href={source.href}
+						target="_blank"
+						rel="noreferrer"
+						class="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-emerald-200 hover:bg-emerald-50"
+					>
+						<p class="text-sm font-semibold text-slate-900">{source.label}</p>
+						<p class="mt-2 text-xs leading-5 text-slate-600">{source.note}</p>
+					</a>
+				{/each}
+			</div>
+		</div>
+	</section>
+</div>

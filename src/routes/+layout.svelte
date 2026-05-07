@@ -47,6 +47,7 @@ const isTokohMenuActive = (path: string) =>
 		(prefix) => path === prefix || path.startsWith(`${prefix}/`)
 	);
 const isDynastyMenuActive = (path: string) => path === '/dinasti' || path.startsWith('/dinasti/');
+const isOrmasMenuActive = (path: string) => path === '/ormas' || path.startsWith('/ormas/');
 const isBookMenuActive = (path: string) =>
 	path === '/buku' ||
 	path.startsWith('/buku/') ||
@@ -59,6 +60,7 @@ const isLearningMenuActive = (path: string) =>
 	path.startsWith('/fitur') ||
 	isTokohMenuActive(path) ||
 	isDynastyMenuActive(path) ||
+	isOrmasMenuActive(path) ||
 	isBlogMenuActive(path) ||
 	path === '/kalender' ||
 	path.startsWith('/kalender/');
@@ -183,6 +185,11 @@ const learningMenuItems: HeaderMenuItem[] = [
 		label: 'Dinasti',
 		href: '/dinasti',
 		note: 'Peta sejarah peradaban Islam'
+	},
+	{
+		label: 'Ormas',
+		href: '/ormas',
+		note: 'NU, Muhammadiyah, dan ormas dunia'
 	}
 ];
 
@@ -680,6 +687,12 @@ const mobileExploreLinks = [
 		tone: 'border-sky-200 bg-sky-50 text-sky-700'
 	},
 	{
+		label: 'Ormas',
+		href: '/ormas',
+		note: 'Afiliasi dan asal-usul',
+		tone: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+	},
+	{
 		label: 'Mushaf',
 		href: '/kitab/quran',
 		note: 'Baca Al-Qur\'an 30 juz',
@@ -733,6 +746,13 @@ const getMobileContextMeta = (path: string) => {
 		return {
 			label: 'Dinasti Islam',
 			note: 'Peta sejarah dan peradaban'
+		};
+	}
+
+	if (isOrmasMenuActive(path)) {
+		return {
+			label: 'Ormas Islam',
+			note: 'Afiliasi, asal-usul, dan jaringan dunia'
 		};
 	}
 
