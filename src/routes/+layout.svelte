@@ -91,6 +91,11 @@ const tokohMenuItems = [
 		note: 'Khulafaur Rasyidin dan Ahlul Badr'
 	},
 	{
+		label: 'Ahlul Bait',
+		href: '/tokoh#ahlul-bait',
+		note: 'Keluarga Nabi, Sunni dan Syiah'
+	},
+	{
 		label: "Tabi'in",
 		href: '/tabiin',
 		note: 'Murid para sahabat'
