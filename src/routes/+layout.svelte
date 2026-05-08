@@ -1,7 +1,7 @@
 <script lang="ts">
 import '../app.css';
 import { page } from '$app/stores';
-import { onMount } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import BadgeCheck from '@lucide/svelte/icons/badge-check';
 import Download from '@lucide/svelte/icons/download';
 import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -15,18 +15,44 @@ import X from '@lucide/svelte/icons/x';
 	import UmamiAnalytics from '$lib/components/UmamiAnalytics.svelte';
 	import { LANGUAGE_OPTIONS } from '$lib/data/languages';
 	import languageFlagOverrides from '$lib/data/language-flag-overrides.json';
+	import { scrollDirection } from '$lib/stores/scrollDirection';
 import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
 import { islamicDynasties } from '$lib/data/dinasti';
 import { FEATURES } from '$lib/features';
 
 export let data;
+export let hideChrome = false;
+
+type PageDataWithChrome = {
+	hideChrome?: boolean;
+};
 
 let pathname = '/';
 $: pathname = $page.url.pathname as string;
 let isSuperAdmin = false;
 let isImpersonating = false;
+const mobileChromeScrollThreshold = 10;
+let isMobileViewport = false;
+let scrollY = 0;
+let scrollingDown = false;
+let hideChromeFromRoute = false;
+let hidePageChrome = false;
+let shouldHideMobileChrome = false;
+let stopChromeScrollTracking: (() => void) | null = null;
 $: isSuperAdmin = isSuperAdminUser(data?.user);
 $: isImpersonating = isImpersonatingUser(data?.user);
+$: scrollY = $scrollDirection.scrollY;
+$: scrollingDown = $scrollDirection.scrollingDown;
+$: hideChromeFromRoute = Boolean(($page.data as PageDataWithChrome | undefined)?.hideChrome);
+$: hidePageChrome = hideChrome || hideChromeFromRoute;
+$: shouldHideMobileChrome =
+	!hidePageChrome &&
+	isMobileViewport &&
+	scrollingDown &&
+	scrollY > mobileChromeScrollThreshold &&
+	!mobileMenuOpen &&
+	mobileTopMenuOpen === null &&
+	!showInstallPopup;
 const appRoutePrefixes = [
 	'/dashboard',
 	'/keuangan',
@@ -442,6 +468,26 @@ const handleInstallDialogKey = (event: KeyboardEvent) => {
 		dismissInstallPopup();
 	}
 };
+
+onMount(() => {
+	const stopScrollDirection = scrollDirection.start();
+	const updateMobileViewport = () => {
+		isMobileViewport = window.matchMedia('(max-width: 767px)').matches;
+	};
+
+	updateMobileViewport();
+	window.addEventListener('resize', updateMobileViewport, { passive: true });
+
+	stopChromeScrollTracking = () => {
+		stopScrollDirection();
+		window.removeEventListener('resize', updateMobileViewport);
+		stopChromeScrollTracking = null;
+	};
+});
+
+onDestroy(() => {
+	stopChromeScrollTracking?.();
+});
 
 onMount(() => {
 	try {
@@ -978,7 +1024,12 @@ $: if (pathname !== previousPathname) {
 <CookieConsent />
 
 <div class="min-h-screen bg-base-100">
-	<header class="sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/85 backdrop-blur-xl">
+	{#if !hidePageChrome}
+	<header
+		class={`sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/85 backdrop-blur-xl transition-transform duration-300 ease-in-out will-change-transform ${
+			shouldHideMobileChrome ? '-translate-y-full' : 'translate-y-0'
+		}`}
+	>
 		<div class="md:hidden border-b border-white/60 bg-gradient-to-br from-emerald-50/90 via-white to-cyan-50/80">
 			<div class="container mx-auto max-w-6xl px-4 py-3">
 				<div class="rounded-[1.8rem] border border-white/70 bg-white/90 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
@@ -1210,6 +1261,7 @@ $: if (pathname !== previousPathname) {
 			</div>
 		</div>
 	</header>
+	{/if}
 
 	{#if mobileMenuOpen}
 		<div class="fixed inset-0 z-[55] md:hidden">
@@ -1426,13 +1478,17 @@ $: if (pathname !== previousPathname) {
 		</div>
 	{/if}
 
-	<main class="container mx-auto max-w-6xl px-4 py-8 pb-24 md:pb-10">
+	<main class={`container mx-auto max-w-6xl px-4 py-8 md:pb-10 ${hidePageChrome ? 'pb-8' : 'pb-24'}`}>
 		<slot />
 	</main>
 
 	<!-- Bottom nav (mobile) -->
-	{#if !isAppRouteActive && !isAdminRouteActive}
-		<nav class="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom">
+	{#if !hidePageChrome && !isAppRouteActive && !isAdminRouteActive}
+		<nav
+			class={`pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom transition-transform duration-300 ease-in-out will-change-transform ${
+				shouldHideMobileChrome ? 'translate-y-full' : 'translate-y-0'
+			}`}
+		>
 			<div class="mx-auto max-w-xl px-3 py-3 pb-safe">
 				<div class="pointer-events-auto rounded-[1.7rem] border border-white/70 bg-white/92 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
 					<div class={`grid gap-1 ${mobilePublicTabs.length === 4 ? 'grid-cols-4' : 'grid-cols-5'}`}>
@@ -1452,8 +1508,12 @@ $: if (pathname !== previousPathname) {
 				</div>
 			</div>
 		</nav>
-	{:else if isAdminRouteActive && isSuperAdmin}
-		<nav class="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom">
+	{:else if !hidePageChrome && isAdminRouteActive && isSuperAdmin}
+		<nav
+			class={`pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom transition-transform duration-300 ease-in-out will-change-transform ${
+				shouldHideMobileChrome ? 'translate-y-full' : 'translate-y-0'
+			}`}
+		>
 			<div class="mx-auto max-w-xl px-3 py-3 pb-safe">
 				<div class="pointer-events-auto rounded-[1.7rem] border border-white/70 bg-white/92 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
 					<div class="grid grid-cols-4 gap-1">
