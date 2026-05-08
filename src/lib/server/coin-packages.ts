@@ -9,20 +9,20 @@ export type CoinTopupPackage = {
 
 const coinTopupPackages: readonly CoinTopupPackage[] = [
 	{
-		id: 'santri-hemat',
-		name: 'Santri Hemat',
+		id: 'paket-hemat',
+		name: 'Paket Hemat',
 		amountRupiah: 10_000,
 		coinAmount: 1_000,
 		bonusCoin: 0,
-		description: 'Cukup untuk mulai membaca bab premium.'
+		description: 'Cocok untuk mulai membuka konten premium.'
 	},
 	{
-		id: 'ngaji-rutin',
-		name: 'Ngaji Rutin',
+		id: 'paket-rutin',
+		name: 'Paket Rutin',
 		amountRupiah: 25_000,
 		coinAmount: 2_700,
 		bonusCoin: 200,
-		description: 'Paket rutin dengan bonus coin ringan.'
+		description: 'Pilihan seimbang untuk penggunaan rutin.'
 	},
 	{
 		id: 'pembaca-aktif',
@@ -30,15 +30,15 @@ const coinTopupPackages: readonly CoinTopupPackage[] = [
 		amountRupiah: 50_000,
 		coinAmount: 5_500,
 		bonusCoin: 500,
-		description: 'Lebih cocok untuk pembaca aktif.'
+		description: 'Untuk pembaca yang sering membuka bab premium.'
 	},
 	{
-		id: 'keluarga',
-		name: 'Keluarga',
+		id: 'paket-keluarga',
+		name: 'Paket Keluarga',
 		amountRupiah: 100_000,
 		coinAmount: 12_000,
 		bonusCoin: 2_000,
-		description: 'Nilai terbaik untuk bacaan keluarga.'
+		description: 'Nilai terbaik untuk kebutuhan keluarga atau tim kecil.'
 	}
 ];
 

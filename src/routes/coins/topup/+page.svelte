@@ -1,6 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import BadgeCheck from '@lucide/svelte/icons/badge-check';
+	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Clock3 from '@lucide/svelte/icons/clock-3';
+	import CreditCard from '@lucide/svelte/icons/credit-card';
+	import FileCheck2 from '@lucide/svelte/icons/file-check-2';
+	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
+	import ReceiptText from '@lucide/svelte/icons/receipt-text';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import UploadCloud from '@lucide/svelte/icons/upload-cloud';
+	import WalletCards from '@lucide/svelte/icons/wallet-cards';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -66,49 +78,78 @@
 </script>
 
 <svelte:head>
-	<title>Topup Koin - SantriOnline</title>
-	<meta name="description" content="Request topup koin SantriOnline." />
+	<title>Top Up Koin - SantriOnline</title>
+	<meta name="description" content="Tambah saldo koin SantriOnline melalui transfer manual." />
 </svelte:head>
 
 <div class="space-y-6 pb-10">
-	<section class="rounded-[1.75rem] border border-amber-100 bg-[radial-gradient(circle_at_top_right,_rgba(251,191,36,0.15),_transparent_40%),linear-gradient(135deg,_#0f172a_0%,_#1f2937_45%,_#78350f_100%)] px-5 py-8 text-white shadow-xl md:px-8">
-		<p class="text-xs font-semibold uppercase tracking-[0.35em] text-amber-100/75">Topup Koin</p>
-		<h1 class="mt-3 text-2xl font-bold text-white md:text-3xl">Pilih Paket Koin</h1>
-		<p class="mt-2 max-w-xl text-sm leading-7 text-white/70">
-			Silakan transfer sesuai nominal paket yang dipilih. Coin akan masuk setelah admin
-			memverifikasi bukti transfer Anda.
-		</p>
-	</section>
+	<header class="border-b border-slate-200 pb-6">
+		<a href="/coins" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900">
+			<ArrowLeft class="h-4 w-4" />
+			Kembali ke Saldo Koin
+		</a>
+
+		<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Top Up Koin</p>
+				<h1 class="mt-3 text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">
+					Tambah Saldo Koin
+				</h1>
+				<p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+					Pilih nominal, unggah bukti transfer, lalu tunggu verifikasi admin. Saldo akan
+					ditambahkan setelah pembayaran terkonfirmasi.
+				</p>
+			</div>
+
+			<div class="grid gap-2 text-sm text-slate-600">
+				<div class="flex items-center gap-2">
+					<ShieldCheck class="h-4 w-4 text-emerald-600" />
+					<span>Verifikasi manual oleh admin</span>
+				</div>
+				<div class="flex items-center gap-2">
+					<Clock3 class="h-4 w-4 text-amber-600" />
+					<span>Status dapat dipantau dari riwayat saldo</span>
+				</div>
+			</div>
+		</div>
+	</header>
 
 	{#if form?.message}
-		<div class="rounded-2xl border border-red-200 bg-red-50 p-4">
-			<p class="text-sm font-medium text-red-600">{form.message}</p>
+		<div class="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+			<CircleAlert class="mt-0.5 h-5 w-5 shrink-0" />
+			<p class="text-sm font-medium">{form.message}</p>
 		</div>
 	{/if}
 
 	{#if successMessage === 'topup-created'}
-		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-			<p class="text-sm font-medium text-emerald-600">
-				Request topup berhasil dibuat. Admin akan memverifikasi bukti transfer Anda.
+		<div class="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-700">
+			<CheckCircle2 class="mt-0.5 h-5 w-5 shrink-0" />
+			<p class="text-sm font-medium">
+				Permintaan top up berhasil dikirim. Admin akan memverifikasi bukti transfer Anda.
 			</p>
 		</div>
 	{/if}
 
-	<form method="POST" use:enhance class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-8">
-		<div class="space-y-7">
-			<fieldset>
-				<legend class="text-sm font-semibold text-slate-900">Pilih Paket Topup</legend>
-				<p class="mt-1 text-sm text-slate-500">
-					Rasio dasar 1 coin = Rp 10. Paket lebih besar mendapatkan bonus coin.
-				</p>
+	<form method="POST" use:enhance class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+		<div class="space-y-6">
+			<fieldset class="space-y-4">
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<legend class="text-lg font-semibold text-slate-950">Pilih Paket</legend>
+						<p class="mt-1 text-sm text-slate-500">
+							Rasio dasar 1 koin = Rp 10. Beberapa paket memiliki bonus koin.
+						</p>
+					</div>
+					<WalletCards class="mt-1 h-5 w-5 shrink-0 text-slate-400" />
+				</div>
 
-				<div class="mt-4 grid gap-4 sm:grid-cols-2">
+				<div class="grid gap-3 sm:grid-cols-2">
 					{#each packages as pkg}
 						<label
-							class={`cursor-pointer rounded-[1.5rem] border p-5 transition hover:-translate-y-0.5 hover:shadow-md ${
+							class={`group cursor-pointer rounded-lg border bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow-md ${
 								selectedPackageId === pkg.id
-									? 'border-amber-400 bg-amber-50 shadow-sm ring-2 ring-amber-200'
-									: 'border-slate-200 bg-white hover:border-amber-200'
+									? 'border-emerald-500 ring-2 ring-emerald-100'
+									: 'border-slate-200'
 							}`}
 						>
 							<input
@@ -119,99 +160,90 @@
 								required
 								class="sr-only"
 							/>
+
 							<div class="flex items-start justify-between gap-3">
 								<div>
-									<p class="text-lg font-bold text-slate-900">{pkg.name}</p>
-									<p class="mt-1 text-sm text-slate-500">{pkg.description}</p>
+									<p class="text-base font-semibold text-slate-950">{pkg.name}</p>
+									<p class="mt-1 min-h-10 text-sm leading-5 text-slate-500">{pkg.description}</p>
 								</div>
 								<span
-									class={`mt-1 h-5 w-5 rounded-full border ${
+									class={`mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full border ${
 										selectedPackageId === pkg.id
-											? 'border-amber-500 bg-amber-400 shadow-[inset_0_0_0_4px_white]'
-											: 'border-slate-300 bg-white'
+											? 'border-emerald-600 bg-emerald-600 text-white'
+											: 'border-slate-300 bg-white text-transparent'
 									}`}
 									aria-hidden="true"
-								></span>
+								>
+									<CheckCircle2 class="h-3.5 w-3.5" />
+								</span>
 							</div>
 
-							<div class="mt-5 grid gap-3 rounded-2xl border border-slate-100 bg-white/75 p-4">
+							<div class="mt-5 flex items-end justify-between gap-3">
 								<div>
-									<p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Nominal</p>
-									<p class="mt-1 text-xl font-bold text-slate-900">{formatRupiah(pkg.amountRupiah)}</p>
+									<p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Transfer</p>
+									<p class="mt-1 text-xl font-bold text-slate-950">{formatRupiah(pkg.amountRupiah)}</p>
 								</div>
-								<div class="flex flex-wrap items-end justify-between gap-2">
-									<div>
-										<p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Coin</p>
-										<p class="mt-1 text-2xl font-bold text-amber-600">
-											{pkg.coinAmount.toLocaleString('id-ID')} coin
-										</p>
-									</div>
-									{#if pkg.bonusCoin > 0}
-										<span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
-											Bonus +{pkg.bonusCoin.toLocaleString('id-ID')} coin
-										</span>
-									{:else}
-										<span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
-											Rasio standar
-										</span>
-									{/if}
+								<div class="text-right">
+									<p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Diterima</p>
+									<p class="mt-1 text-lg font-bold text-emerald-700">
+										{pkg.coinAmount.toLocaleString('id-ID')} koin
+									</p>
 								</div>
+							</div>
+
+							<div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
+								<span class="font-medium text-slate-500">Bonus</span>
+								{#if pkg.bonusCoin > 0}
+									<span class="font-semibold text-emerald-700">
+										+{pkg.bonusCoin.toLocaleString('id-ID')} koin
+									</span>
+								{:else}
+									<span class="font-medium text-slate-400">Standar</span>
+								{/if}
 							</div>
 						</label>
 					{/each}
 				</div>
 			</fieldset>
 
-			{#if selectedPackage}
-				<section class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-5">
-					<p class="text-xs font-semibold uppercase tracking-[0.25em] text-amber-700">Ringkasan Paket</p>
-					<div class="mt-3 grid gap-3 sm:grid-cols-3">
-						<div>
-							<p class="text-xs text-amber-700/75">Paket</p>
-							<p class="font-bold text-slate-900">{selectedPackage.name}</p>
-						</div>
-						<div>
-							<p class="text-xs text-amber-700/75">Transfer</p>
-							<p class="font-bold text-slate-900">{formatRupiah(selectedPackage.amountRupiah)}</p>
-						</div>
-						<div>
-							<p class="text-xs text-amber-700/75">Coin diterima</p>
-							<p class="font-bold text-slate-900">
-								{selectedPackage.coinAmount.toLocaleString('id-ID')} coin
-							</p>
-						</div>
+			<section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<h2 class="text-lg font-semibold text-slate-950">Bukti Transfer</h2>
+						<p class="mt-1 text-sm text-slate-500">
+							Unggah JPG, PNG, atau WebP maksimal 2MB.
+						</p>
 					</div>
-				</section>
-			{/if}
+					<UploadCloud class="mt-1 h-5 w-5 shrink-0 text-slate-400" />
+				</div>
 
-			<div class="space-y-4">
-				<div>
-					<label for="proof_upload" class="block text-sm font-medium text-slate-700">
-						Upload Bukti Transfer
-					</label>
+				<div class="mt-4">
+					<label for="proof_upload" class="sr-only">Upload bukti transfer</label>
 					<input
 						id="proof_upload"
 						type="file"
 						accept="image/jpeg,image/png,image/webp"
 						disabled={isProofUploading}
-						class="file-input file-input-bordered mt-2 w-full"
+						class="file-input file-input-bordered w-full"
 						on:change={uploadProof}
 					/>
 					<input type="hidden" name="proof_url" value={proofUrl} />
-					<p class="mt-1 text-xs text-slate-500">
-						Upload bukti transfer dalam format JPG, PNG, atau WebP maksimal 2MB.
-					</p>
+
 					{#if isProofUploading}
-						<p class="mt-2 text-xs font-semibold text-amber-700">Mengupload bukti transfer...</p>
+						<p class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-amber-700">
+							<LoaderCircle class="h-4 w-4 animate-spin" />
+							Mengunggah bukti transfer...
+						</p>
 					{/if}
 					{#if proofUploadError}
-						<p class="mt-2 text-xs font-semibold text-red-600">{proofUploadError}</p>
+						<p class="mt-3 text-sm font-semibold text-red-600">{proofUploadError}</p>
 					{/if}
 					{#if proofUrl}
-						<div class="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
-							<p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
-								Bukti terupload
-							</p>
+						<div class="mt-4 border-t border-emerald-100 pt-4">
+							<div class="flex items-center gap-2 text-sm font-semibold text-emerald-700">
+								<FileCheck2 class="h-4 w-4" />
+								Bukti transfer terunggah
+							</div>
 							<a
 								href={proofUrl}
 								target="_blank"
@@ -223,51 +255,113 @@
 							<img
 								src={proofUrl}
 								alt="Preview bukti transfer"
-								class="mt-3 max-h-72 w-full rounded-xl border border-emerald-100 bg-white object-contain"
+								class="mt-3 max-h-72 w-full rounded-lg border border-slate-200 bg-slate-50 object-contain"
 							/>
 						</div>
 					{/if}
 				</div>
+			</section>
 
-				<div>
-					<label for="user_note" class="block text-sm font-medium text-slate-700">
-						Catatan Pembayaran
-					</label>
-					<textarea
-						id="user_note"
-						name="user_note"
-						bind:value={userNote}
-						rows="4"
-						maxlength="500"
-						class="mt-2 block w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-						placeholder="Opsional: nomor referensi transfer, nama rekening pengirim, atau info lain."
-					></textarea>
-					<p class="mt-1 text-xs text-slate-500">
-						Opsional, maksimal 500 karakter.
-					</p>
+			<section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<h2 class="text-lg font-semibold text-slate-950">Catatan Pembayaran</h2>
+						<p class="mt-1 text-sm text-slate-500">
+							Tambahkan nomor referensi atau nama rekening pengirim bila diperlukan.
+						</p>
+					</div>
+					<ReceiptText class="mt-1 h-5 w-5 shrink-0 text-slate-400" />
 				</div>
-			</div>
 
-			<div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-				<p class="text-sm font-medium text-amber-800">Instruksi Transfer:</p>
-				<ol class="mt-2 list-inside list-decimal text-sm leading-7 text-amber-700">
-					<li>Pilih paket topup yang tersedia.</li>
-					<li>Transfer sesuai nominal paket yang dipilih.</li>
-					<li>Upload bukti transfer agar admin bisa memverifikasi.</li>
-					<li>Coin akan masuk setelah admin menyetujui request Anda.</li>
-				</ol>
-			</div>
+				<label for="user_note" class="sr-only">Catatan pembayaran</label>
+				<textarea
+					id="user_note"
+					name="user_note"
+					bind:value={userNote}
+					rows="4"
+					maxlength="500"
+					class="mt-4 block w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+					placeholder="Opsional: nomor referensi transfer, nama rekening pengirim, atau info lain."
+				></textarea>
+				<p class="mt-2 text-xs text-slate-500">{userNote.length}/500 karakter</p>
+			</section>
+		</div>
 
-			<div class="flex flex-col gap-3 sm:flex-row">
-				<a href="/coins" class="btn btn-outline btn-lg">Batal</a>
+		<aside class="space-y-4 lg:sticky lg:top-24 lg:self-start">
+			<section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+				<div class="flex items-center justify-between gap-3">
+					<h2 class="text-lg font-semibold text-slate-950">Ringkasan</h2>
+					<CreditCard class="h-5 w-5 text-slate-400" />
+				</div>
+
+				{#if selectedPackage}
+					<div class="mt-5 space-y-4">
+						<div class="flex items-center justify-between gap-4">
+							<span class="text-sm text-slate-500">Paket</span>
+							<span class="text-right text-sm font-semibold text-slate-950">{selectedPackage.name}</span>
+						</div>
+						<div class="flex items-center justify-between gap-4">
+							<span class="text-sm text-slate-500">Nominal Transfer</span>
+							<span class="text-right text-sm font-semibold text-slate-950">
+								{formatRupiah(selectedPackage.amountRupiah)}
+							</span>
+						</div>
+						<div class="flex items-center justify-between gap-4">
+							<span class="text-sm text-slate-500">Bonus</span>
+							<span class="text-right text-sm font-semibold text-emerald-700">
+								{selectedPackage.bonusCoin > 0
+									? `+${selectedPackage.bonusCoin.toLocaleString('id-ID')} koin`
+									: 'Tidak ada'}
+							</span>
+						</div>
+						<div class="border-t border-slate-100 pt-4">
+							<p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+								Total Koin Diterima
+							</p>
+							<p class="mt-2 text-3xl font-bold text-slate-950">
+								{selectedPackage.coinAmount.toLocaleString('id-ID')}
+								<span class="text-base font-semibold text-slate-500">koin</span>
+							</p>
+						</div>
+					</div>
+				{:else}
+					<p class="mt-4 text-sm text-slate-500">Pilih paket untuk melihat ringkasan.</p>
+				{/if}
+			</section>
+
+			<section class="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
+				<div class="flex items-start gap-3">
+					<BadgeCheck class="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
+					<div>
+						<h2 class="text-sm font-semibold text-emerald-950">Alur Verifikasi</h2>
+						<ol class="mt-3 space-y-2 text-sm leading-6 text-emerald-800">
+							<li>1. Transfer sesuai nominal paket.</li>
+							<li>2. Unggah bukti transfer dari formulir ini.</li>
+							<li>3. Admin memeriksa pembayaran dan menambahkan saldo.</li>
+						</ol>
+					</div>
+				</div>
+			</section>
+
+			<div class="flex flex-col gap-3">
 				<button
 					type="submit"
-					class="btn btn-primary btn-lg flex-1"
+					class="btn btn-primary btn-lg w-full gap-2"
 					disabled={isProofUploading || !selectedPackage}
 				>
-					{isProofUploading ? 'Menunggu Upload...' : 'Ajukan Topup'}
+					{#if isProofUploading}
+						<LoaderCircle class="h-4 w-4 animate-spin" />
+						Menunggu Upload
+					{:else}
+						<CreditCard class="h-4 w-4" />
+						Ajukan Top Up
+					{/if}
 				</button>
+				<a href="/coins" class="btn btn-outline btn-lg w-full gap-2">
+					<ArrowLeft class="h-4 w-4" />
+					Batal
+				</a>
 			</div>
-		</div>
+		</aside>
 	</form>
 </div>

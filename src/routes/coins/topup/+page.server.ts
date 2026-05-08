@@ -14,7 +14,7 @@ const normalizeOptionalUrl = (value: string) => {
 };
 
 const INVALID_PACKAGE_MESSAGE =
-	'Paket topup tidak valid. Silakan pilih paket yang tersedia.';
+	'Paket top up tidak valid. Silakan pilih paket yang tersedia.';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -54,7 +54,7 @@ export const actions: Actions = {
 		const rawProofUrl = typeof proofUrlValue === 'string' ? proofUrlValue.trim() : '';
 		const proofUrl = normalizeOptionalUrl(rawProofUrl);
 		if (rawProofUrl && !proofUrl) {
-			return fail(400, { message: 'URL bukti topup tidak valid' });
+			return fail(400, { message: 'URL bukti top up tidak valid' });
 		}
 
 		const rawNote = typeof userNote === 'string' ? userNote.trim() : '';
@@ -65,7 +65,7 @@ export const actions: Actions = {
 			? `[PAKET: ${selectedPackage.name}] ${rawNote}`
 			: `[PAKET: ${selectedPackage.name}]`;
 
-		// Buat request topup
+		// Buat request top up
 		const id = generateId(15);
 		const now = new Date().toISOString();
 
@@ -89,7 +89,7 @@ export const actions: Actions = {
 				.run();
 		} catch (err) {
 			console.error('Gagal membuat topup request:', err);
-			return fail(500, { message: 'Gagal membuat request topup' });
+			return fail(500, { message: 'Gagal membuat permintaan top up' });
 		}
 
 		throw redirect(303, '/coins?success=topup-created');
