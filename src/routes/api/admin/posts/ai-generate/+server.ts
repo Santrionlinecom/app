@@ -8,6 +8,22 @@ import type { RequestHandler } from './$types';
 const AI_MODEL = '@cf/meta/llama-3.1-8b-instruct';
 const RATE_LIMIT_MAX = 12;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const generatedDraftSchema = {
+	type: 'object',
+	properties: {
+		title: { type: 'string' },
+		slug: { type: 'string' },
+		excerpt: { type: 'string' },
+		content: { type: 'string' },
+		seo_keyword: { type: 'string' },
+		meta_description: { type: 'string' },
+		warnings: {
+			type: 'array',
+			items: { type: 'string' }
+		}
+	},
+	required: ['title', 'slug', 'excerpt', 'content', 'seo_keyword', 'meta_description', 'warnings']
+};
 
 type GenerateBody = {
 	topic?: unknown;
@@ -63,6 +79,23 @@ const extractJson = (value: string) => {
 		throw new Error('Respons AI tidak berisi JSON yang valid.');
 	}
 	return JSON.parse(cleaned.slice(start, end + 1)) as Partial<GeneratedDraft>;
+};
+
+const parseAiDraft = (completion: unknown) => {
+	const payload =
+		typeof completion === 'object' && completion !== null
+			? ((completion as any).response ?? (completion as any).result ?? completion)
+			: completion;
+
+	if (typeof payload === 'object' && payload !== null && !Array.isArray(payload)) {
+		return payload as Partial<GeneratedDraft>;
+	}
+
+	if (typeof payload === 'string') {
+		return extractJson(payload);
+	}
+
+	throw new Error('Respons AI tidak sesuai format draft artikel.');
 };
 
 const normalizeDraft = (draft: Partial<GeneratedDraft>, fallbackTopic: string): GeneratedDraft => {
@@ -204,14 +237,14 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 				{ role: 'user', content: prompt }
 			],
 			temperature: 0.45,
-			max_tokens: 2600
+			max_tokens: 2600,
+			response_format: {
+				type: 'json_schema',
+				json_schema: generatedDraftSchema
+			}
 		} as any);
 
-		const raw =
-			typeof completion === 'string'
-				? completion
-				: ((completion as any)?.response ?? (completion as any)?.result ?? '');
-		const parsed = extractJson(String(raw));
+		const parsed = parseAiDraft(completion);
 		const draft = normalizeDraft(parsed, topic);
 
 		return json({ ok: true, draft, model: AI_MODEL });

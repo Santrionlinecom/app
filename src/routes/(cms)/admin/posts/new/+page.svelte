@@ -147,10 +147,11 @@
 				ok?: boolean;
 				draft?: AiGeneratedDraft;
 				error?: string;
+				detail?: string;
 			};
 
 			if (!res.ok || !data.ok || !data.draft) {
-				throw new Error(data.error || 'Gagal generate konten AI.');
+				throw new Error([data.error, data.detail].filter(Boolean).join(' ') || 'Gagal generate konten AI.');
 			}
 
 			applyAiDraft(data.draft);
