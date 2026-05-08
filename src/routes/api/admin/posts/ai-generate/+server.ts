@@ -26,6 +26,7 @@ const generatedDraftSchema = {
 };
 
 type GenerateBody = {
+	mode?: unknown;
 	topic?: unknown;
 	keyword?: unknown;
 	audience?: unknown;
@@ -34,7 +35,12 @@ type GenerateBody = {
 	contentType?: unknown;
 	referenceNotes?: unknown;
 	currentTitle?: unknown;
+	currentSlug?: unknown;
 	currentContent?: unknown;
+	currentExcerpt?: unknown;
+	currentMetaDescription?: unknown;
+	currentSeoScore?: unknown;
+	failedChecks?: unknown;
 };
 
 type GeneratedDraft = {
@@ -123,7 +129,15 @@ const normalizeDraft = (draft: Partial<GeneratedDraft>, fallbackTopic: string): 
 	};
 };
 
-const buildPrompt = (body: GenerateBody) => {
+const readFailedChecks = (value: unknown) =>
+	Array.isArray(value)
+		? value
+				.map((item) => readString(item, 140))
+				.filter(Boolean)
+				.slice(0, 8)
+		: [];
+
+const buildGeneratePrompt = (body: GenerateBody) => {
 	const topic = readString(body.topic, 180);
 	const keyword = readString(body.keyword, 120);
 	const audience = readString(body.audience, 120) || 'santri dan pembaca muslim umum';
@@ -160,7 +174,7 @@ Aturan mutu:
 
 Skema JSON:
 {
-  "title": "40-70 karakter, jelas dan SEO-friendly",
+  "title": "40-60 karakter, jelas dan SEO-friendly",
   "slug": "slug-url",
   "excerpt": "ringkasan 1-2 kalimat",
   "content": "HTML artikel lengkap",
@@ -169,6 +183,65 @@ Skema JSON:
   "warnings": ["hal yang perlu diverifikasi editor"]
 }`
 	};
+};
+
+const buildSeoPrompt = (body: GenerateBody) => {
+	const keyword = readString(body.keyword, 120);
+	const topic = readString(body.topic, 180);
+	const currentTitle = readString(body.currentTitle, 180);
+	const currentSlug = readString(body.currentSlug, 140);
+	const currentContent = readString(body.currentContent, 24000);
+	const currentExcerpt = readString(body.currentExcerpt, 600);
+	const currentMetaDescription = readString(body.currentMetaDescription, 260);
+	const currentSeoScore = Number(body.currentSeoScore);
+	const failedChecks = readFailedChecks(body.failedChecks);
+	const effectiveKeyword = keyword || topic || currentTitle;
+
+	return {
+		topic: currentTitle || topic || effectiveKeyword,
+		prompt: `Optimalkan draft artikel CMS Santri Online agar skor SEO internal menjadi 100/100.
+
+Skor saat ini: ${Number.isFinite(currentSeoScore) ? currentSeoScore : '-'}
+Checklist yang belum lolos:
+${failedChecks.length ? failedChecks.map((item) => `- ${item}`).join('\n') : '- Tidak dikirim, tetap optimalkan semua aturan.'}
+
+Target wajib:
+- Judul harus 40-60 karakter.
+- Focus keyword harus ada persis di judul.
+- Focus keyword harus muncul natural pada 300 karakter pertama konten.
+- Konten minimal 300 kata setelah tag HTML dibersihkan.
+- Meta description maksimal 160 karakter dan mengandung focus keyword jika natural.
+- Slug bersih, pendek, dan sesuai judul.
+- Pertahankan maksud artikel, jangan mengarang dalil, nomor hadis, halaman kitab, atau kutipan ulama.
+- Konten harus tetap HTML sederhana untuk rich text editor.
+- Gunakan tag HTML: <h2>, <p>, <ul>, <ol>, <li>, <strong>. Jangan gunakan <script>, style inline, iframe, atau link palsu.
+- Output wajib JSON valid saja, tanpa markdown, tanpa teks pembuka.
+
+Data artikel saat ini:
+- Focus keyword: ${effectiveKeyword || '-'}
+- Judul: ${currentTitle || '-'}
+- Slug: ${currentSlug || '-'}
+- Excerpt: ${currentExcerpt || '-'}
+- Meta description: ${currentMetaDescription || '-'}
+- Konten HTML:
+${currentContent || '-'}
+
+Skema JSON:
+{
+  "title": "40-60 karakter dan mengandung focus keyword",
+  "slug": "slug-url",
+  "excerpt": "ringkasan 1-2 kalimat",
+  "content": "HTML artikel hasil optimasi",
+  "seo_keyword": "focus keyword final",
+  "meta_description": "maksimal 160 karakter",
+  "warnings": ["hal yang perlu diverifikasi editor"]
+}`
+	};
+};
+
+const buildPrompt = (body: GenerateBody) => {
+	const mode = readString(body.mode, 40);
+	return mode === 'optimize_seo' ? buildSeoPrompt(body) : buildGeneratePrompt(body);
 };
 
 export const POST: RequestHandler = async ({ request, locals, platform }) => {

@@ -43,6 +43,7 @@
 	let aiContentType = $state('artikel edukasi');
 	let aiReferenceNotes = $state('');
 	let aiLoading = $state(false);
+	let aiAction = $state<'generate' | 'seo' | ''>('');
 	let aiError = $state('');
 	let aiNotice = $state('');
 
@@ -116,6 +117,64 @@
 		if (draft.meta_description) meta_description = draft.meta_description;
 	}
 
+	const readAiError = (data: { error?: string; detail?: string }) =>
+		[data.error, data.detail].filter(Boolean).join(' ') || 'Gagal memproses konten AI.';
+
+	function evaluateDraftSeo(draft: AiGeneratedDraft, fallbackKeyword = '') {
+		const keyword = (draft.seo_keyword || fallbackKeyword).trim().toLowerCase();
+		const plainDraft = stripHtml(draft.content || '');
+		const titleDraft = draft.title || '';
+		const wordTotal = plainDraft ? plainDraft.split(/\s+/).filter(Boolean).length : 0;
+		const firstBlock = plainDraft.slice(0, 300).toLowerCase();
+		const checks = [
+			{
+				label: 'Judul 40-60 karakter',
+				met: titleDraft.trim().length >= 40 && titleDraft.trim().length <= 60,
+				help: `${titleDraft.trim().length}/60 karakter`
+			},
+			{
+				label: 'Keyword ada di judul',
+				met: keyword ? titleDraft.toLowerCase().includes(keyword) : false,
+				help: keyword || 'Isi focus keyword'
+			},
+			{
+				label: 'Keyword muncul di awal konten',
+				met: keyword ? firstBlock.includes(keyword) : false,
+				help: 'Cek 300 karakter pertama'
+			},
+			{
+				label: 'Konten minimal 300 kata',
+				met: wordTotal >= 300,
+				help: `${wordTotal} kata`
+			}
+		];
+
+		return {
+			score: checks.filter((item) => item.met).length * 25,
+			failedChecks: checks.filter((item) => !item.met).map((item) => `${item.label}: ${item.help}`)
+		};
+	}
+
+	async function requestAiDraft(payload: Record<string, unknown>) {
+		const res = await fetch('/api/admin/posts/ai-generate', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(payload)
+		});
+		const data = (await res.json().catch(() => ({}))) as {
+			ok?: boolean;
+			draft?: AiGeneratedDraft;
+			error?: string;
+			detail?: string;
+		};
+
+		if (!res.ok || !data.ok || !data.draft) {
+			throw new Error(readAiError(data));
+		}
+
+		return data.draft;
+	}
+
 	async function generateWithAi() {
 		const topic = aiTopic.trim() || title.trim() || seo_keyword.trim();
 		aiError = '';
@@ -127,20 +186,91 @@
 		}
 
 		aiLoading = true;
+		aiAction = 'generate';
 		try {
+			const draft = await requestAiDraft({
+				topic,
+				keyword: seo_keyword,
+				audience: aiAudience,
+				tone: aiTone,
+				length: aiLength,
+				contentType: aiContentType,
+				referenceNotes: aiReferenceNotes,
+				currentTitle: title,
+				currentContent: plainContent.slice(0, 1600)
+			});
+
+			let finalDraft = draft;
+			let seoOptimizeError = '';
+			let seoResult = evaluateDraftSeo(draft, seo_keyword || topic);
+			if (seoResult.score < 100) {
+				aiAction = 'seo';
+				try {
+					finalDraft = await requestAiDraft({
+						mode: 'optimize_seo',
+						topic,
+						keyword: draft.seo_keyword || seo_keyword || topic,
+						currentTitle: draft.title,
+						currentSlug: draft.slug,
+						currentContent: draft.content,
+						currentExcerpt: draft.excerpt,
+						currentMetaDescription: draft.meta_description,
+						currentSeoScore: seoResult.score,
+						failedChecks: seoResult.failedChecks
+					});
+					seoResult = evaluateDraftSeo(finalDraft, finalDraft.seo_keyword || seo_keyword || topic);
+				} catch (err: any) {
+					seoOptimizeError = err?.message || 'Optimasi SEO otomatis gagal.';
+				}
+			}
+
+			applyAiDraft(finalDraft);
+			const warningCount = finalDraft.warnings?.length ?? 0;
+			const warningText = warningCount ? ` Ada ${warningCount} catatan yang perlu diverifikasi editor.` : '';
+			aiNotice = seoOptimizeError
+				? `Draft AI dibuat, tetapi optimasi SEO otomatis gagal: ${seoOptimizeError}`
+				: seoResult.score >= 100
+					? `Draft AI dibuat dan SEO internal mencapai 100/100.${warningText}`
+					: `Draft AI dibuat dan SEO dioptimalkan ke ${seoResult.score}/100.${warningText}`;
+		} catch (err: any) {
+			aiError = err?.message || 'Gagal generate konten AI.';
+		} finally {
+			aiLoading = false;
+			aiAction = '';
+		}
+	}
+
+	async function optimizeSeoWithAi() {
+		const keyword = seo_keyword.trim() || aiTopic.trim() || title.trim();
+		aiError = '';
+		aiNotice = '';
+
+		if (!title.trim() || !plainContent.trim()) {
+			aiError = 'Generate atau isi judul dan konten dulu sebelum optimasi SEO.';
+			return;
+		}
+
+		aiLoading = true;
+		aiAction = 'seo';
+		try {
+			const failedChecks = seoChecks()
+				.filter((item) => !item.met)
+				.map((item) => `${item.label}: ${item.help}`);
+
 			const res = await fetch('/api/admin/posts/ai-generate', {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({
-					topic,
-					keyword: seo_keyword,
-					audience: aiAudience,
-					tone: aiTone,
-					length: aiLength,
-					contentType: aiContentType,
-					referenceNotes: aiReferenceNotes,
+					mode: 'optimize_seo',
+					topic: aiTopic || title,
+					keyword,
 					currentTitle: title,
-					currentContent: plainContent.slice(0, 1600)
+					currentSlug: slug,
+					currentContent: content,
+					currentExcerpt: excerpt,
+					currentMetaDescription: meta_description,
+					currentSeoScore: seoScore,
+					failedChecks
 				})
 			});
 			const data = (await res.json().catch(() => ({}))) as {
@@ -151,18 +281,16 @@
 			};
 
 			if (!res.ok || !data.ok || !data.draft) {
-				throw new Error([data.error, data.detail].filter(Boolean).join(' ') || 'Gagal generate konten AI.');
+				throw new Error(readAiError(data));
 			}
 
 			applyAiDraft(data.draft);
-			const warningCount = data.draft.warnings?.length ?? 0;
-			aiNotice = warningCount
-				? `Draft AI dibuat. Ada ${warningCount} catatan yang perlu diverifikasi editor.`
-				: 'Draft AI berhasil dibuat dan dimasukkan ke form.';
+			aiNotice = 'Optimasi SEO diterapkan. Skor akan terhitung ulang otomatis di panel SEO.';
 		} catch (err: any) {
-			aiError = err?.message || 'Gagal generate konten AI.';
+			aiError = err?.message || 'Gagal optimasi SEO.';
 		} finally {
 			aiLoading = false;
+			aiAction = '';
 		}
 	}
 
@@ -365,12 +493,27 @@
 						</div>
 
 						<button type="button" class="btn btn-primary w-full gap-2" onclick={generateWithAi} disabled={aiLoading}>
-							{#if aiLoading}
+							{#if aiLoading && aiAction === 'generate'}
 								<LoaderCircle class="h-4 w-4 animate-spin" />
 								Membuat draft...
 							{:else}
 								<WandSparkles class="h-4 w-4" />
 								Generate dengan AI
+							{/if}
+						</button>
+
+						<button
+							type="button"
+							class="btn btn-outline w-full gap-2 border-emerald-200 bg-white text-emerald-700 hover:border-emerald-500 hover:bg-emerald-50"
+							onclick={optimizeSeoWithAi}
+							disabled={aiLoading || !title.trim() || !plainContent.trim()}
+						>
+							{#if aiLoading && aiAction === 'seo'}
+								<LoaderCircle class="h-4 w-4 animate-spin" />
+								Optimasi SEO...
+							{:else}
+								<CheckCircle2 class="h-4 w-4" />
+								Optimasi SEO 100%
 							{/if}
 						</button>
 
