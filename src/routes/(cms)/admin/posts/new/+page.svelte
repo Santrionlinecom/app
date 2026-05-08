@@ -5,11 +5,24 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Eye from '@lucide/svelte/icons/eye';
 	import ImageIcon from '@lucide/svelte/icons/image';
+	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import Save from '@lucide/svelte/icons/save';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Upload from '@lucide/svelte/icons/upload';
+	import WandSparkles from '@lucide/svelte/icons/wand-sparkles';
 	import MediaGalleryModal from '$lib/components/MediaGalleryModal.svelte';
 	import RichTextEditor from '$lib/components/RichTextEditor.svelte';
+
+	type AiGeneratedDraft = {
+		title: string;
+		slug: string;
+		excerpt: string;
+		content: string;
+		seo_keyword: string;
+		meta_description: string;
+		warnings?: string[];
+	};
 
 	let slug = $state('');
 	let title = $state('');
@@ -23,6 +36,15 @@
 	let schedule_time = $state('');
 	let status = $state<'draft' | 'published'>('draft');
 	let fileInput: HTMLInputElement | null = null;
+	let aiTopic = $state('');
+	let aiAudience = $state('santri dan pembaca muslim umum');
+	let aiTone = $state('edukatif, santun, profesional');
+	let aiLength = $state('sedang');
+	let aiContentType = $state('artikel edukasi');
+	let aiReferenceNotes = $state('');
+	let aiLoading = $state(false);
+	let aiError = $state('');
+	let aiNotice = $state('');
 
 	const stripHtml = (value: string) => value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 	const slugify = (value: string) =>
@@ -83,6 +105,65 @@
 		if (seoScore >= 50) return 'bg-amber-500';
 		return 'bg-rose-500';
 	});
+
+	function applyAiDraft(draft: AiGeneratedDraft) {
+		if (draft.title) title = draft.title;
+		if (draft.slug) slug = slugify(draft.slug);
+		else if (!editingSlug && draft.title) slug = slugify(draft.title);
+		if (draft.content) content = draft.content;
+		if (draft.excerpt) excerpt = draft.excerpt;
+		if (draft.seo_keyword) seo_keyword = draft.seo_keyword;
+		if (draft.meta_description) meta_description = draft.meta_description;
+	}
+
+	async function generateWithAi() {
+		const topic = aiTopic.trim() || title.trim() || seo_keyword.trim();
+		aiError = '';
+		aiNotice = '';
+
+		if (!topic) {
+			aiError = 'Isi topik, judul, atau focus keyword sebelum generate.';
+			return;
+		}
+
+		aiLoading = true;
+		try {
+			const res = await fetch('/api/admin/posts/ai-generate', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					topic,
+					keyword: seo_keyword,
+					audience: aiAudience,
+					tone: aiTone,
+					length: aiLength,
+					contentType: aiContentType,
+					referenceNotes: aiReferenceNotes,
+					currentTitle: title,
+					currentContent: plainContent.slice(0, 1600)
+				})
+			});
+			const data = (await res.json().catch(() => ({}))) as {
+				ok?: boolean;
+				draft?: AiGeneratedDraft;
+				error?: string;
+			};
+
+			if (!res.ok || !data.ok || !data.draft) {
+				throw new Error(data.error || 'Gagal generate konten AI.');
+			}
+
+			applyAiDraft(data.draft);
+			const warningCount = data.draft.warnings?.length ?? 0;
+			aiNotice = warningCount
+				? `Draft AI dibuat. Ada ${warningCount} catatan yang perlu diverifikasi editor.`
+				: 'Draft AI berhasil dibuat dan dimasukkan ke form.';
+		} catch (err: any) {
+			aiError = err?.message || 'Gagal generate konten AI.';
+		} finally {
+			aiLoading = false;
+		}
+	}
 
 	async function onPickFeatured(e: Event) {
 		const target = e.target as HTMLInputElement;
@@ -210,6 +291,101 @@
 			</div>
 
 			<aside class="space-y-4 lg:sticky lg:top-24 lg:self-start">
+				<section class="overflow-hidden rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-amber-50 p-4 shadow-sm">
+					<div class="flex items-start justify-between gap-3">
+						<div>
+							<div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
+								<Sparkles class="h-3.5 w-3.5" />
+								Cloudflare AI
+							</div>
+							<h2 class="mt-3 text-base font-semibold text-slate-950">Generate draft artikel</h2>
+							<p class="mt-1 text-xs leading-5 text-slate-600">
+								Hasil AI mengisi form sebagai draft. Verifikasi ulang dalil, rujukan, dan istilah sebelum publikasi.
+							</p>
+						</div>
+					</div>
+
+					<div class="mt-4 space-y-3">
+						<div>
+							<label class="text-xs font-semibold uppercase tracking-wide text-slate-500" for="ai_topic">Topik</label>
+							<input
+								id="ai_topic"
+								type="text"
+								bind:value={aiTopic}
+								class="input input-bordered mt-2 w-full bg-white"
+								placeholder="Contoh: adab menuntut ilmu bagi santri"
+							/>
+						</div>
+
+						<div class="grid grid-cols-2 gap-3">
+							<div>
+								<label class="text-xs font-semibold uppercase tracking-wide text-slate-500" for="ai_content_type">Jenis</label>
+								<select id="ai_content_type" bind:value={aiContentType} class="select select-bordered mt-2 w-full bg-white">
+									<option value="artikel edukasi">Artikel edukasi</option>
+									<option value="kajian ringan">Kajian ringan</option>
+									<option value="sejarah Islam">Sejarah Islam</option>
+									<option value="panduan praktis">Panduan praktis</option>
+									<option value="berita komunitas">Berita komunitas</option>
+								</select>
+							</div>
+							<div>
+								<label class="text-xs font-semibold uppercase tracking-wide text-slate-500" for="ai_length">Panjang</label>
+								<select id="ai_length" bind:value={aiLength} class="select select-bordered mt-2 w-full bg-white">
+									<option value="ringkas">Ringkas</option>
+									<option value="sedang">Sedang</option>
+									<option value="panjang">Panjang</option>
+								</select>
+							</div>
+						</div>
+
+						<div>
+							<label class="text-xs font-semibold uppercase tracking-wide text-slate-500" for="ai_audience">Target pembaca</label>
+							<input
+								id="ai_audience"
+								type="text"
+								bind:value={aiAudience}
+								class="input input-bordered mt-2 w-full bg-white"
+							/>
+						</div>
+
+						<div>
+							<label class="text-xs font-semibold uppercase tracking-wide text-slate-500" for="ai_tone">Gaya bahasa</label>
+							<input id="ai_tone" type="text" bind:value={aiTone} class="input input-bordered mt-2 w-full bg-white" />
+						</div>
+
+						<div>
+							<label class="text-xs font-semibold uppercase tracking-wide text-slate-500" for="ai_reference_notes">Catatan rujukan</label>
+							<textarea
+								id="ai_reference_notes"
+								bind:value={aiReferenceNotes}
+								class="textarea textarea-bordered mt-2 min-h-24 w-full bg-white text-sm"
+								placeholder="Opsional: kitab, tokoh, data, atau batasan yang wajib dipakai."
+							></textarea>
+						</div>
+
+						<button type="button" class="btn btn-primary w-full gap-2" onclick={generateWithAi} disabled={aiLoading}>
+							{#if aiLoading}
+								<LoaderCircle class="h-4 w-4 animate-spin" />
+								Membuat draft...
+							{:else}
+								<WandSparkles class="h-4 w-4" />
+								Generate dengan AI
+							{/if}
+						</button>
+
+						{#if aiError}
+							<p class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
+								{aiError}
+							</p>
+						{/if}
+						{#if aiNotice}
+							<p class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+								{aiNotice}
+							</p>
+						{/if}
+					</div>
+				</section>
+
 				<section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
 					<h2 class="text-sm font-semibold text-slate-950">Publikasi</h2>
 					<div class="mt-4 space-y-4">
