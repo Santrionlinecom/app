@@ -35,6 +35,7 @@ declare global {
                 SEED_SECRET?: string;
                 LICENSE_SIGNING_SECRET?: string;
                 STREAMER_LICENSE_SIGNING_SECRET?: string;
+                GROQ_API_KEY?: string;
                 TURNSTILE_SITE_KEY?: string;
                 TURNSTILE_SECRET_KEY?: string;
                 R2_PUBLIC_BASE_URL?: string;

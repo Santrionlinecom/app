@@ -4,12 +4,15 @@
 	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Eye from '@lucide/svelte/icons/eye';
+	import FileAudio2 from '@lucide/svelte/icons/file-audio-2';
 	import ImageIcon from '@lucide/svelte/icons/image';
+	import ImagePlus from '@lucide/svelte/icons/image-plus';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import Save from '@lucide/svelte/icons/save';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Upload from '@lucide/svelte/icons/upload';
+	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import WandSparkles from '@lucide/svelte/icons/wand-sparkles';
 	import MediaGalleryModal from '$lib/components/MediaGalleryModal.svelte';
 	import RichTextEditor from '$lib/components/RichTextEditor.svelte';
@@ -22,6 +25,30 @@
 		seo_keyword: string;
 		meta_description: string;
 		warnings?: string[];
+	};
+
+	type GeneratedArticlePayload = {
+		judul: string;
+		ringkasan: string;
+		meta_description: string;
+		focus_keyword: string;
+		isi: string;
+		image_prompt: string;
+	};
+
+	type GenerateArtikelResponse = {
+		success?: boolean;
+		data?: GeneratedArticlePayload;
+		error?: string;
+		detail?: string;
+	};
+
+	type GeneratedAssetResponse = {
+		success?: boolean;
+		url?: string;
+		error?: string;
+		detail?: string;
+		truncated?: boolean;
 	};
 
 	let slug = $state('');
@@ -39,13 +66,19 @@
 	let aiTopic = $state('');
 	let aiAudience = $state('santri dan pembaca muslim umum');
 	let aiTone = $state('edukatif, santun, profesional');
-	let aiLength = $state('sedang');
-	let aiContentType = $state('artikel edukasi');
+	let aiLength = $state('Sedang');
+	let aiContentType = $state('Artikel edukasi');
 	let aiReferenceNotes = $state('');
 	let aiLoading = $state(false);
-	let aiAction = $state<'generate' | 'seo' | ''>('');
+	let aiAction = $state<'complete' | 'seo' | ''>('');
 	let aiError = $state('');
 	let aiNotice = $state('');
+	let aiGenerateStep = $state('');
+	let isGeneratingThumb = $state(false);
+	let isGeneratingAudio = $state(false);
+	let generatedImagePrompt = $state('');
+	let audioIdUrl = $state('');
+	let audioArabUrl = $state('');
 
 	const stripHtml = (value: string) => value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 	const slugify = (value: string) =>
@@ -120,123 +153,147 @@
 	const readAiError = (data: { error?: string; detail?: string }) =>
 		[data.error, data.detail].filter(Boolean).join(' ') || 'Gagal memproses konten AI.';
 
-	function evaluateDraftSeo(draft: AiGeneratedDraft, fallbackKeyword = '') {
-		const keyword = (draft.seo_keyword || fallbackKeyword).trim().toLowerCase();
-		const plainDraft = stripHtml(draft.content || '');
-		const titleDraft = draft.title || '';
-		const wordTotal = plainDraft ? plainDraft.split(/\s+/).filter(Boolean).length : 0;
-		const firstBlock = plainDraft.slice(0, 300).toLowerCase();
-		const checks = [
-			{
-				label: 'Judul 40-60 karakter',
-				met: titleDraft.trim().length >= 40 && titleDraft.trim().length <= 60,
-				help: `${titleDraft.trim().length}/60 karakter`
-			},
-			{
-				label: 'Keyword ada di judul',
-				met: keyword ? titleDraft.toLowerCase().includes(keyword) : false,
-				help: keyword || 'Isi focus keyword'
-			},
-			{
-				label: 'Keyword muncul di awal konten',
-				met: keyword ? firstBlock.includes(keyword) : false,
-				help: 'Cek 300 karakter pertama'
-			},
-			{
-				label: 'Konten minimal 300 kata',
-				met: wordTotal >= 300,
-				help: `${wordTotal} kata`
-			}
-		];
+	const extractFirstArabicText = (html: string) => {
+		const plain = stripHtml(html);
+		const matches = plain.match(/[\u0600-\u06FF][\u0600-\u06FF\s\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED،؛؟ـ]{8,}/g);
+		return matches?.[0]?.replace(/\s+/g, ' ').trim().slice(0, 200) || '';
+	};
 
-		return {
-			score: checks.filter((item) => item.met).length * 25,
-			failedChecks: checks.filter((item) => !item.met).map((item) => `${item.label}: ${item.help}`)
-		};
-	}
-
-	async function requestAiDraft(payload: Record<string, unknown>) {
-		const res = await fetch('/api/admin/posts/ai-generate', {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify(payload)
-		});
-		const data = (await res.json().catch(() => ({}))) as {
-			ok?: boolean;
-			draft?: AiGeneratedDraft;
-			error?: string;
-			detail?: string;
-		};
-
-		if (!res.ok || !data.ok || !data.draft) {
+	async function parseAssetResponse(res: Response) {
+		const data = (await res.json().catch(() => ({}))) as GeneratedAssetResponse;
+		if (!res.ok || !data.success) {
 			throw new Error(readAiError(data));
 		}
-
-		return data.draft;
+		return data;
 	}
 
-	async function generateWithAi() {
+	async function generateLengkap() {
 		const topic = aiTopic.trim() || title.trim() || seo_keyword.trim();
 		aiError = '';
 		aiNotice = '';
+		aiGenerateStep = '';
+		audioIdUrl = '';
+		audioArabUrl = '';
+		generatedImagePrompt = '';
 
 		if (!topic) {
-			aiError = 'Isi topik, judul, atau focus keyword sebelum generate.';
+			aiError = 'Isi topik, judul, atau focus keyword sebelum generate lengkap.';
 			return;
 		}
 
 		aiLoading = true;
-		aiAction = 'generate';
+		aiAction = 'complete';
+		aiGenerateStep = 'Membuat artikel...';
 		try {
-			const draft = await requestAiDraft({
-				topic,
-				keyword: seo_keyword,
-				audience: aiAudience,
-				tone: aiTone,
-				length: aiLength,
-				contentType: aiContentType,
-				referenceNotes: aiReferenceNotes,
-				currentTitle: title,
-				currentContent: plainContent.slice(0, 1600)
+			const generationId =
+				typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now());
+			const artikelRes = await fetch('/api/admin/generate-artikel', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					topik: topic,
+					jenis: aiContentType,
+					panjang: aiLength,
+					target: aiAudience,
+					gaya: aiTone,
+					catatan: aiReferenceNotes,
+					post_id: generationId
+				})
 			});
+			const artikelData = (await artikelRes.json().catch(() => ({}))) as GenerateArtikelResponse;
 
-			let finalDraft = draft;
-			let seoOptimizeError = '';
-			let seoResult = evaluateDraftSeo(draft, seo_keyword || topic);
-			if (seoResult.score < 100) {
-				aiAction = 'seo';
+			if (!artikelRes.ok || !artikelData.success || !artikelData.data) {
+				throw new Error(readAiError(artikelData));
+			}
+
+			const article = artikelData.data;
+			title = article.judul;
+			if (!editingSlug) slug = slugify(article.judul);
+			content = article.isi;
+			excerpt = article.ringkasan;
+			meta_description = article.meta_description;
+			seo_keyword = article.focus_keyword;
+			generatedImagePrompt = article.image_prompt;
+
+			const assetWarnings: string[] = [];
+
+			aiGenerateStep = 'Membuat thumbnail...';
+			isGeneratingThumb = true;
+			try {
+				const thumbRes = await fetch('/api/admin/generate-thumbnail', {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({
+						image_prompt: article.image_prompt,
+						post_id: generationId
+					})
+				});
+				const thumbData = await parseAssetResponse(thumbRes);
+				if (thumbData.url) thumbnail_url = thumbData.url;
+			} catch (err: any) {
+				assetWarnings.push(`Thumbnail belum dibuat: ${err?.message || 'gagal memproses gambar'}.`);
+			} finally {
+				isGeneratingThumb = false;
+			}
+
+			const arabText = extractFirstArabicText(article.isi);
+			if (arabText) {
+				aiGenerateStep = 'Membuat audio Arab...';
+				isGeneratingAudio = true;
 				try {
-					finalDraft = await requestAiDraft({
-						mode: 'optimize_seo',
-						topic,
-						keyword: draft.seo_keyword || seo_keyword || topic,
-						currentTitle: draft.title,
-						currentSlug: draft.slug,
-						currentContent: draft.content,
-						currentExcerpt: draft.excerpt,
-						currentMetaDescription: draft.meta_description,
-						currentSeoScore: seoResult.score,
-						failedChecks: seoResult.failedChecks
+					const ttsArRes = await fetch('/api/admin/generate-tts-ar', {
+						method: 'POST',
+						headers: { 'content-type': 'application/json' },
+						body: JSON.stringify({
+							teks_arab: arabText,
+							post_id: generationId
+						})
 					});
-					seoResult = evaluateDraftSeo(finalDraft, finalDraft.seo_keyword || seo_keyword || topic);
+					const ttsArData = await parseAssetResponse(ttsArRes);
+					if (ttsArData.url) audioArabUrl = ttsArData.url;
 				} catch (err: any) {
-					seoOptimizeError = err?.message || 'Optimasi SEO otomatis gagal.';
+					assetWarnings.push(`Audio Arab belum dibuat: ${err?.message || 'gagal memproses audio'}.`);
+				} finally {
+					isGeneratingAudio = false;
 				}
 			}
 
-			applyAiDraft(finalDraft);
-			const warningCount = finalDraft.warnings?.length ?? 0;
-			const warningText = warningCount ? ` Ada ${warningCount} catatan yang perlu diverifikasi editor.` : '';
-			aiNotice = seoOptimizeError
-				? `Draft AI dibuat, tetapi optimasi SEO otomatis gagal: ${seoOptimizeError}`
-				: seoResult.score >= 100
-					? `Draft AI dibuat dan SEO internal mencapai 100/100.${warningText}`
-					: `Draft AI dibuat dan SEO dioptimalkan ke ${seoResult.score}/100.${warningText}`;
+			aiGenerateStep = 'Membuat narasi Indonesia...';
+			isGeneratingAudio = true;
+			try {
+				const ttsIdRes = await fetch('/api/admin/generate-tts-id', {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({
+						teks: stripHtml(article.isi),
+						post_id: generationId
+					})
+				});
+				const ttsIdData = await parseAssetResponse(ttsIdRes);
+				if (ttsIdData.url) audioIdUrl = ttsIdData.url;
+				if (ttsIdData.truncated) {
+					assetWarnings.push('Narasi Indonesia dibuat dari cuplikan awal artikel.');
+				}
+			} catch (err: any) {
+				assetWarnings.push(`Narasi Indonesia belum dibuat: ${err?.message || 'gagal memproses audio'}.`);
+			} finally {
+				isGeneratingAudio = false;
+			}
+
+			aiGenerateStep = 'Selesai';
+			aiNotice = assetWarnings.length
+				? `Artikel berhasil dibuat. ${assetWarnings.join(' ')}`
+				: 'Artikel, thumbnail, dan audio berhasil dibuat.';
 		} catch (err: any) {
 			aiError = err?.message || 'Gagal generate konten AI.';
 		} finally {
 			aiLoading = false;
 			aiAction = '';
+			isGeneratingThumb = false;
+			isGeneratingAudio = false;
+			setTimeout(() => {
+				if (!aiLoading) aiGenerateStep = '';
+			}, 3000);
 		}
 	}
 
@@ -425,11 +482,11 @@
 						<div>
 							<div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
 								<Sparkles class="h-3.5 w-3.5" />
-								Cloudflare AI
+								Groq AI + CF Image
 							</div>
-							<h2 class="mt-3 text-base font-semibold text-slate-950">Generate draft artikel</h2>
+							<h2 class="mt-3 text-base font-semibold text-slate-950">Generate lengkap</h2>
 							<p class="mt-1 text-xs leading-5 text-slate-600">
-								Hasil AI mengisi form sebagai draft. Verifikasi ulang dalil, rujukan, dan istilah sebelum publikasi.
+								Hasil AI mengisi artikel, thumbnail, dan audio. Verifikasi ulang dalil, rujukan, dan istilah sebelum publikasi.
 							</p>
 						</div>
 					</div>
@@ -450,19 +507,18 @@
 							<div>
 								<label class="text-xs font-semibold uppercase tracking-wide text-slate-500" for="ai_content_type">Jenis</label>
 								<select id="ai_content_type" bind:value={aiContentType} class="select select-bordered mt-2 w-full bg-white">
-									<option value="artikel edukasi">Artikel edukasi</option>
-									<option value="kajian ringan">Kajian ringan</option>
-									<option value="sejarah Islam">Sejarah Islam</option>
-									<option value="panduan praktis">Panduan praktis</option>
-									<option value="berita komunitas">Berita komunitas</option>
+									<option value="Artikel edukasi">Artikel edukasi</option>
+									<option value="Opini">Opini</option>
+									<option value="Berita">Berita</option>
+									<option value="Panduan">Panduan</option>
 								</select>
 							</div>
 							<div>
 								<label class="text-xs font-semibold uppercase tracking-wide text-slate-500" for="ai_length">Panjang</label>
 								<select id="ai_length" bind:value={aiLength} class="select select-bordered mt-2 w-full bg-white">
-									<option value="ringkas">Ringkas</option>
-									<option value="sedang">Sedang</option>
-									<option value="panjang">Panjang</option>
+									<option value="Pendek">Pendek</option>
+									<option value="Sedang">Sedang</option>
+									<option value="Panjang">Panjang</option>
 								</select>
 							</div>
 						</div>
@@ -492,15 +548,53 @@
 							></textarea>
 						</div>
 
-						<button type="button" class="btn btn-primary w-full gap-2" onclick={generateWithAi} disabled={aiLoading}>
-							{#if aiLoading && aiAction === 'generate'}
+						<button type="button" class="btn btn-primary w-full gap-2" onclick={generateLengkap} disabled={aiLoading}>
+							{#if aiLoading && aiAction === 'complete'}
 								<LoaderCircle class="h-4 w-4 animate-spin" />
-								Membuat draft...
+								{aiGenerateStep || 'Memproses...'}
 							{:else}
 								<WandSparkles class="h-4 w-4" />
-								Generate dengan AI
+								Generate Lengkap
 							{/if}
 						</button>
+
+						{#if aiLoading && aiAction === 'complete'}
+							<div class="space-y-2 border-t border-emerald-100 pt-3">
+								<div class={`flex items-center gap-2 text-xs font-semibold ${aiGenerateStep.includes('artikel') ? 'text-emerald-700' : 'text-slate-500'}`}>
+									<WandSparkles class="h-3.5 w-3.5" />
+									Menulis artikel
+								</div>
+								<div class={`flex items-center gap-2 text-xs font-semibold ${isGeneratingThumb || aiGenerateStep.includes('thumbnail') ? 'text-emerald-700' : 'text-slate-500'}`}>
+									<ImagePlus class="h-3.5 w-3.5" />
+									Membuat thumbnail
+								</div>
+								<div class={`flex items-center gap-2 text-xs font-semibold ${isGeneratingAudio || aiGenerateStep.includes('audio') || aiGenerateStep.includes('narasi') ? 'text-emerald-700' : 'text-slate-500'}`}>
+									<FileAudio2 class="h-3.5 w-3.5" />
+									Membuat audio
+								</div>
+							</div>
+						{/if}
+
+						{#if audioIdUrl || audioArabUrl || generatedImagePrompt}
+							<div class="space-y-2 border-t border-emerald-100 pt-3">
+								<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Aset AI</p>
+								{#if audioIdUrl}
+									<a href={audioIdUrl} target="_blank" rel="noreferrer" class="flex items-center gap-2 text-xs font-semibold text-emerald-700 hover:text-emerald-900">
+										<Volume2 class="h-3.5 w-3.5" />
+										Narasi Indonesia
+									</a>
+								{/if}
+								{#if audioArabUrl}
+									<a href={audioArabUrl} target="_blank" rel="noreferrer" class="flex items-center gap-2 text-xs font-semibold text-emerald-700 hover:text-emerald-900">
+										<FileAudio2 class="h-3.5 w-3.5" />
+										Audio bacaan Arab
+									</a>
+								{/if}
+								{#if generatedImagePrompt}
+									<p class="break-words text-xs leading-5 text-slate-500">{generatedImagePrompt}</p>
+								{/if}
+							</div>
+						{/if}
 
 						<button
 							type="button"

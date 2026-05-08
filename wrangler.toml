@@ -16,6 +16,7 @@ GOOGLE_CLIENT_ID = "511759368556-iu4bj02gusic1e0tqindpi5lriis9lkv.apps.googleuse
 # Secrets are not stored in wrangler.toml.
 # GOOGLE_CLIENT_SECRET -> wrangler secret put GOOGLE_CLIENT_SECRET
 # LICENSE_SIGNING_SECRET -> wrangler secret put LICENSE_SIGNING_SECRET
+# GROQ_API_KEY -> wrangler secret put GROQ_API_KEY
 # TURNSTILE_SECRET_KEY -> wrangler secret put TURNSTILE_SECRET_KEY
 
 # --- Konfigurasi Database D1 ---
