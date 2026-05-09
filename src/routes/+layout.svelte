@@ -12,6 +12,8 @@ import X from '@lucide/svelte/icons/x';
 	import SearchableSelect from '$lib/components/SearchableSelect.svelte';
 	import ClarityAnalytics from '$lib/components/ClarityAnalytics.svelte';
 	import CookieConsent from '$lib/components/CookieConsent.svelte';
+	import SchemaOrg from '$lib/components/seo/SchemaOrg.svelte';
+	import SeoHead from '$lib/components/seo/SeoHead.svelte';
 	import UmamiAnalytics from '$lib/components/UmamiAnalytics.svelte';
 	import { LANGUAGE_OPTIONS } from '$lib/data/languages';
 	import languageFlagOverrides from '$lib/data/language-flag-overrides.json';
@@ -220,6 +222,16 @@ const learningMenuItems: HeaderMenuItem[] = [
 ];
 
 const bookPublicMenuItems: HeaderMenuItem[] = [
+	{
+		label: 'Kitab Turats',
+		href: '/kitab',
+		note: 'Kitab pilihan dan belajar per bab'
+	},
+	{
+		label: 'Al-Quran',
+		href: '/kitab/quran',
+		note: 'Mushaf 30 juz dan materi tadabbur'
+	},
 	{
 		label: 'Buku Digital',
 		href: '/buku',
@@ -998,9 +1010,9 @@ $: mobilePublicTabs = data?.user
 		]
 	: [
 			baseNav[0],
-			baseNav[1],
 			bookNavItem,
-			baseNav[5],
+			{ ...quranNavItem, label: 'Belajar' },
+			baseNav[2],
 			{
 				label: 'Daftar',
 				href: '/register',
@@ -1022,6 +1034,9 @@ $: if (pathname !== previousPathname) {
 <UmamiAnalytics />
 <ClarityAnalytics />
 <CookieConsent />
+<SeoHead canonical={pathname} noindex={isAdminRouteActive || isAppRouteActive || pathname.startsWith('/auth') || pathname.startsWith('/akun')} />
+<SchemaOrg type="website" />
+<SchemaOrg type="organization" />
 
 <div class="min-h-screen bg-base-100">
 	{#if !hidePageChrome}
@@ -1176,6 +1191,8 @@ $: if (pathname !== previousPathname) {
 								</div>
 							</div>
 						</div>
+
+							<a href="/blog" class="desktop-nav-link" class:desktop-nav-link-active={isBlogMenuActive(pathname)}>Blog</a>
 
 							{#if isSuperAdmin}
 								<div class="group relative">
@@ -1481,6 +1498,30 @@ $: if (pathname !== previousPathname) {
 	<main class={`container mx-auto max-w-6xl px-4 py-8 md:pb-10 ${hidePageChrome ? 'pb-8' : 'pb-24'}`}>
 		<slot />
 	</main>
+
+	{#if !hidePageChrome}
+		<footer class="border-t border-slate-200 bg-white">
+			<div class="container mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+				<div>
+					<a href="/" class="inline-flex items-center gap-2">
+						<img src="/logo-santri.png" alt="SantriOnline" class="h-8 w-auto" loading="lazy" />
+						<span class="text-sm font-semibold text-slate-950">SantriOnline</span>
+					</a>
+					<p class="mt-3 max-w-xl text-sm leading-6 text-slate-500">
+						Platform ekosistem pesantren digital untuk belajar Islam, kitab, buku, hafalan, dan manajemen lembaga.
+					</p>
+				</div>
+				<nav aria-label="Footer" class="grid gap-2 text-sm font-semibold text-slate-600 sm:grid-cols-2 md:min-w-[22rem]">
+					<a href="/tentang" class="hover:text-emerald-700">Tentang SantriOnline</a>
+					<a href="/kontak" class="hover:text-emerald-700">Kontak</a>
+					<a href="/privacy" class="hover:text-emerald-700">Kebijakan Privasi</a>
+					<a href="/syarat" class="hover:text-emerald-700">Syarat dan Ketentuan</a>
+					<a href="/buku" class="hover:text-emerald-700">Buku Digital</a>
+					<a href="/blog" class="hover:text-emerald-700">Blog SantriOnline</a>
+				</nav>
+			</div>
+		</footer>
+	{/if}
 
 	<!-- Bottom nav (mobile) -->
 	{#if !hidePageChrome && !isAppRouteActive && !isAdminRouteActive}

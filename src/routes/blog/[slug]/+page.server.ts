@@ -1,4 +1,5 @@
 import { error } from '@sveltejs/kit';
+import type { D1Database } from '@cloudflare/workers-types';
 import { getPostBySlug } from '$lib/server/cms';
 import type { PageServerLoad } from './$types';
 
@@ -6,7 +7,8 @@ const stripHtml = (value: string) =>
   value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 
 export const load: PageServerLoad = async ({ params, platform, url }) => {
-  const post = await getPostBySlug(platform!.env.DB, params.slug);
+  const db = platform!.env.DB as D1Database;
+  const post = await getPostBySlug(db, params.slug);
   
   if (!post || post.status !== 'published') {
     throw error(404, 'Post not found');
@@ -37,6 +39,23 @@ export const load: PageServerLoad = async ({ params, platform, url }) => {
       publisherName: 'Santri Online',
       publisherLogoUrl: `${origin}/icons/icon-192.png`,
       keywords: post.seo_keyword
-    }
+    },
+    relatedPosts: (
+      (
+        await db
+          .prepare(
+            `SELECT title, slug, thumbnail_url as thumbnail
+             FROM cms_posts
+             WHERE status = 'published'
+               AND slug <> ?
+               AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now')*1000)
+             ORDER BY COALESCE(updated_at, scheduled_at, created_at) DESC
+             LIMIT 5`
+          )
+          .bind(post.slug)
+          .all()
+          .catch(() => ({ results: [] }))
+      ).results ?? []
+    ) as Array<{ title: string; slug: string; thumbnail?: string | null }>
   };
 };
