@@ -258,8 +258,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json(
 			{
 				ok: false,
-				error:
-					'Cloudflare Workers AI belum tersedia. Jalankan dengan Wrangler/Pages binding dan pastikan binding AI aktif.'
+				error: 'Layanan AI belum tersedia. Hubungi super admin.'
 			},
 			{ status: 500 }
 		);
@@ -320,14 +319,13 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		const parsed = parseAiDraft(completion);
 		const draft = normalizeDraft(parsed, topic);
 
-		return json({ ok: true, draft, model: AI_MODEL });
+		return json({ ok: true, draft });
 	} catch (err: any) {
 		console.error('AI post generation failed:', err);
 		return json(
 			{
 				ok: false,
-				error: 'Gagal menghasilkan konten AI. Coba lagi atau perjelas topik.',
-				detail: String(err?.message ?? err ?? '')
+				error: 'Gagal menghasilkan konten AI. Coba lagi atau perjelas topik.'
 			},
 			{ status: 500 }
 		);

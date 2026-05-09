@@ -81,7 +81,7 @@ const noteKeys = ['catatan', 'keterangan', 'notes', 'note'];
 const requireScheduleContext = async (locals: App.Locals) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	const orgId = assertOrgMember(user);
@@ -175,7 +175,7 @@ export const actions: Actions = {
 				.run();
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal imam belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal imam belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -226,7 +226,7 @@ export const actions: Actions = {
 			}
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal imam belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal imam belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -254,7 +254,7 @@ export const actions: Actions = {
 			}
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal imam belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal imam belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -357,7 +357,7 @@ export const actions: Actions = {
 			);
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal imam belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal imam belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -477,7 +477,7 @@ export const actions: Actions = {
 			);
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal tarawih belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal tarawih belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -531,7 +531,7 @@ export const actions: Actions = {
 				.run();
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal tarawih belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal tarawih belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -586,7 +586,7 @@ export const actions: Actions = {
 			}
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal tarawih belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal tarawih belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -614,7 +614,7 @@ export const actions: Actions = {
 			}
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal tarawih belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal tarawih belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -720,7 +720,7 @@ export const actions: Actions = {
 			);
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal khotib belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal khotib belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -771,7 +771,7 @@ export const actions: Actions = {
 				.run();
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal khotib belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal khotib belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -821,7 +821,7 @@ export const actions: Actions = {
 			}
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal khotib belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal khotib belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -849,7 +849,7 @@ export const actions: Actions = {
 			}
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel jadwal khotib belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan jadwal khotib belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}

@@ -163,7 +163,7 @@ const fetchCommunitySchedule = async (
 const requireCommunityContext = async (locals: App.Locals) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	const orgId = assertOrgMember(user);
@@ -480,7 +480,7 @@ export const actions: Actions = {
 			);
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan aset belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -533,7 +533,7 @@ export const actions: Actions = {
 				.run();
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan aset belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -588,7 +588,7 @@ export const actions: Actions = {
 				.run();
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan aset belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -616,7 +616,7 @@ export const actions: Actions = {
 				.run();
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan aset belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}

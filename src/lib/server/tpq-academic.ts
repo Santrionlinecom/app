@@ -81,7 +81,7 @@ export const todayIsoDate = () => new Date().toISOString().slice(0, 10);
 export const requireTpqAcademicContext = async (locals: App.Locals) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	const institutionId = assertOrgMember(user);

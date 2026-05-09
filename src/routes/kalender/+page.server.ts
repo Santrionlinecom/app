@@ -36,7 +36,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	addNote: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 
 		const db = locals.db!;
 		const data = await request.formData();
@@ -67,7 +67,7 @@ export const actions: Actions = {
 
 	updateNote: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 		const db = locals.db!;
 		const data = await request.formData();
 		const id = data.get('id') as string;
@@ -108,7 +108,7 @@ export const actions: Actions = {
 
 	deleteNote: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 		const db = locals.db!;
 		const data = await request.formData();
 		const id = data.get('id') as string;

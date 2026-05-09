@@ -66,7 +66,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		const version = typeof body.version === 'string' ? body.version.trim() : '';
 
 		if (!licenseKey || !deviceIdHashRaw || !app || !version) {
-			return bad(400, 'invalid_payload', 'license_key, device_id_hash, app, dan version wajib diisi');
+			return bad(400, 'invalid_payload', 'Data lisensi, perangkat, aplikasi, dan versi wajib diisi');
 		}
 		if (app !== 'santri-streamer') {
 			return bad(400, 'invalid_app', 'app harus "santri-streamer"');
@@ -74,7 +74,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 		const deviceIdHash = normalizeDeviceIdHash(deviceIdHashRaw);
 		if (deviceIdHash.length < 8 || deviceIdHash.length > 255) {
-			return bad(400, 'invalid_device_id_hash', 'device_id_hash tidak valid');
+			return bad(400, 'invalid_device_id_hash', 'Data perangkat tidak valid');
 		}
 
 		const now = Date.now();
@@ -132,7 +132,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 		const signingSecret = getSigningSecret(platform);
 		if (!signingSecret) {
-			return bad(500, 'signing_secret_missing', 'Signing secret license belum dikonfigurasi');
+			return bad(500, 'signing_secret_missing', 'Konfigurasi lisensi belum siap');
 		}
 
 		let token = '';
@@ -148,11 +148,11 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 				signingSecret
 			);
 		} catch {
-			return bad(500, 'signing_secret_missing', 'Signing secret belum dikonfigurasi');
+			return bad(500, 'signing_secret_missing', 'Konfigurasi lisensi belum siap');
 		}
 
 		return json({ token });
 	} catch {
-		return bad(500, 'server_error', 'Terjadi kesalahan pada server');
+		return bad(500, 'server_error', 'Terjadi kesalahan pada layanan');
 	}
 };

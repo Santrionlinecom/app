@@ -40,7 +40,7 @@ const TEACHER_ROLES = new Set(['ustadz', 'ustadzah']);
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = assertLoggedIn({ locals });
-	if (!locals.db) throw error(500, 'Database tidak tersedia');
+	if (!locals.db) throw error(500, 'Layanan data tidak tersedia');
 
 	const orgId = assertOrgMember(user);
 	const org = await getOrganizationById(locals.db, orgId);

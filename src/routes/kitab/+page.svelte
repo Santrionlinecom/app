@@ -36,7 +36,7 @@
 
 	const shortText = (value: string | null | undefined, length = 170) => {
 		const source = plainText(value);
-		if (!source) return 'Deskripsi kitab akan tampil di sini setelah dilengkapi dari CMS Hub.';
+		if (!source) return 'Deskripsi kitab akan tampil di sini setelah dilengkapi dari pusat konten.';
 		return source.length > length ? `${source.slice(0, length).trim()}...` : source;
 	};
 
@@ -76,7 +76,7 @@
 	<title>Perpustakaan Kitab - Santri Online</title>
 	<meta
 		name="description"
-		content="Katalog kitab digital Santri Online yang dikelola dinamis dari CMS Hub."
+		content="Katalog kitab digital Santri Online yang dikelola dinamis."
 	/>
 </svelte:head>
 
@@ -88,10 +88,10 @@
 			<div class="max-w-3xl">
 				<p class="text-xs uppercase tracking-[0.35em] text-emerald-200/70">Perpustakaan Kitab</p>
 				<h1 class="mt-3 text-3xl font-bold md:text-5xl">
-					Halaman kitab sekarang tampil dinamis dari CMS Hub
+					Halaman kitab sekarang tampil dinamis
 				</h1>
 				<p class="mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
-					Halaman ini menampung dua jalur konten: kitab yang dipublish dari CMS Hub dan materi native
+					Halaman ini menampung dua jalur konten: kitab yang diterbitkan admin dan materi pilihan
 					SantriOnline yang ditulis khusus agar lebih enak dipelajari langsung dari web.
 				</p>
 				<div class="mt-6 flex flex-wrap gap-3">
@@ -113,7 +113,7 @@
 				<div class="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
 					<p class="text-[11px] uppercase tracking-[0.24em] text-white/55">Unggulan</p>
 					<p class="mt-3 text-3xl font-semibold">{data.stats.featuredItems}</p>
-					<p class="mt-1 text-xs text-white/65">Diprioritaskan dari CMS Hub.</p>
+					<p class="mt-1 text-xs text-white/65">Diprioritaskan dari pengaturan pilihan.</p>
 				</div>
 				<div class="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
 					<p class="text-[11px] uppercase tracking-[0.24em] text-white/55">Sumber PDF</p>
@@ -136,7 +136,7 @@
 					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Koleksi Dinamis</p>
 					<h2 class="mt-3 text-2xl font-semibold text-slate-900">Tambah kitab sekali, tampil otomatis di publik</h2>
 					<p class="mt-3 text-sm leading-7 text-slate-600">
-						Alur baru memindahkan pengelolaan kitab ke CMS Hub. Tim admin cukup upload PDF atau isi
+						Alur baru memudahkan pengelolaan kitab. Tim admin cukup upload PDF atau isi
 						link Google Drive, lalu ubah status ke <strong>published</strong>.
 					</p>
 				</div>
@@ -163,7 +163,7 @@
 			<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Arah Baru</p>
 			<h2 class="mt-3 text-2xl font-semibold text-slate-900">Bukan halaman statis lagi</h2>
 			<p class="mt-3 text-sm leading-7 text-slate-600">
-				Koleksi kitab publik tetap mengikuti CMS Hub, tetapi kami juga bisa menambahkan materi native
+				Koleksi kitab publik tetap mengikuti pengaturan konten, tetapi kami juga bisa menambahkan materi pilihan
 				khusus untuk pembelajaran yang lebih terstruktur, seperti modul bahasa Arab pemula.
 			</p>
 			<div class="mt-6 grid gap-3 sm:grid-cols-2">
@@ -277,7 +277,7 @@
 					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Pilihan Utama</p>
 					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Kitab unggulan</h2>
 				</div>
-				<p class="text-sm text-slate-500">Dipilih langsung dari pengaturan featured di CMS Hub.</p>
+				<p class="text-sm text-slate-500">Dipilih langsung dari pengaturan kitab pilihan.</p>
 			</div>
 
 			<div class="grid gap-5 lg:grid-cols-2">
@@ -336,14 +336,14 @@
 				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Katalog Publik</p>
 				<h2 class="mt-2 text-2xl font-semibold text-slate-900">Semua kitab yang sudah dipublish</h2>
 			</div>
-			<p class="text-sm text-slate-500">Daftar ini disusun otomatis dari data CMS Hub.</p>
+			<p class="text-sm text-slate-500">Daftar ini disusun otomatis dari data konten.</p>
 		</div>
 
 		{#if items.length === 0}
 			<div class="rounded-[1.75rem] border border-dashed border-slate-300 bg-white px-6 py-10 text-center shadow-sm">
 				<p class="text-base font-semibold text-slate-900">Belum ada kitab yang dipublikasikan.</p>
 				<p class="mt-2 text-sm text-slate-500">
-					Tambahkan kitab dari Admin &gt; Super Admin &gt; CMS Hub, lalu ubah statusnya menjadi published.
+					Tambahkan kitab dari halaman pengelolaan konten, lalu ubah statusnya menjadi terbit.
 				</p>
 			</div>
 		{:else}

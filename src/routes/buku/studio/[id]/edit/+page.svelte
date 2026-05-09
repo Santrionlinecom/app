@@ -248,7 +248,7 @@
 						disabled={!canEditBook}
 					/>
 					<p class="mt-2 text-xs leading-5 text-slate-500">
-						Field ini tetap tersedia sebagai fallback. Jika upload berhasil, URL R2 publik otomatis masuk di sini.
+						Field ini tetap tersedia sebagai fallback. Jika upload berhasil, URL cover publik otomatis masuk di sini.
 					</p>
 				</label>
 			</div>

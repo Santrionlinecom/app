@@ -22,7 +22,7 @@ export const actions: Actions = {
 			return blockedAction;
 		}
 
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 		const db = locals.db!;
 
 		const formData = await request.formData();

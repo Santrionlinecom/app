@@ -36,7 +36,7 @@ export const actions: Actions = {
 
 		// Ambil DB dari locals (lebih aman) atau platform
 		const db = locals.db ?? platform?.env.DB;
-		if (!db) return fail(500, { message: 'Database error: D1 tidak terhubung.' });
+		if (!db) return fail(500, { message: 'Layanan data sedang tidak tersedia.' });
 
 			let user: { id: string; password_hash: unknown; role: string | null } | null = null;
 			try {
@@ -93,7 +93,7 @@ export const actions: Actions = {
 
 			} catch (e) {
 				console.error(e);
-				return fail(500, { message: 'Terjadi kesalahan server saat login.' });
+				return fail(500, { message: 'Terjadi kesalahan saat login.' });
 			}
 
 			// 6. Lempar ke Dashboard

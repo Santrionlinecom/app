@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 
 	const db = locals.db ?? platform?.env?.DB;
 	if (!db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	const [summary, ledger] = await Promise.all([

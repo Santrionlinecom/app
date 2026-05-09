@@ -69,7 +69,7 @@
     if (url) editor?.chain().focus().setLink({ href: url }).run();
   }
 
-  // Upload gambar ke R2 lalu sisipkan ke editor
+  // Upload gambar lalu sisipkan ke editor
   let fileInput: HTMLInputElement | null = null;
   async function onPickImage(e: Event) {
     const target = e.target as HTMLInputElement;
@@ -84,7 +84,7 @@
       if (url) editor?.chain().focus().setImage({ src: url, alt: file.name }).run();
     } catch (err) {
       console.error('Upload image error:', err);
-      alert('Gagal mengunggah gambar. Pastikan binding R2 aktif.');
+      alert('Gagal mengunggah gambar. Pastikan layanan unggah media aktif.');
     } finally {
       // reset agar bisa memilih file yang sama lagi jika perlu
       if (target) target.value = '';
@@ -297,7 +297,7 @@
         <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M7.5 10a2.5 2.5 0 012.5-2.5h3V6h-3a4 4 0 100 8h3v-1.5h-3A2.5 2.5 0 017.5 10zm5-1.5h-3V10h3A2.5 2.5 0 0115.5 12.5 2.5 2.5 0 0113 15h-3v1.5h3a4 4 0 100-8z"/></svg>
       </button>
 
-      <!-- Insert Image (upload ke R2 lalu sisipkan) -->
+      <!-- Insert Image -->
       <button
         type="button"
         class="btn btn-sm btn-ghost"

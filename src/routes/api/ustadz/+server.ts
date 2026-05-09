@@ -8,7 +8,7 @@ const ensureSantri = async (locals: App.Locals) => {
 		throw error(401, 'Unauthorized');
 	}
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	if (locals.user.role !== 'santri') {
 		throw error(403, 'Forbidden');

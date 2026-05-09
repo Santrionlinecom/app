@@ -105,7 +105,7 @@ const resolveMemberContext = async (
 
 export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request, platform }) => {
 	const db = locals.db;
-	if (!db) throw error(500, 'Database tidak tersedia');
+	if (!db) throw error(500, 'Layanan data tidak tersedia');
 	const ipAddress = getRequestIp(request);
 
 	const lucia = initializeLucia(db);

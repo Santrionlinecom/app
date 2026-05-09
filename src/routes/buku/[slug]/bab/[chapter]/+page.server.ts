@@ -32,7 +32,7 @@ export const load: PageServerLoad = async ({ params, locals, platform }) => {
 
 	const db = locals.db ?? platform?.env?.DB;
 	if (!db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	await ensureBukuLibrarySchema(db);
@@ -107,7 +107,7 @@ export const actions: Actions = {
 
 		const db = locals.db ?? platform?.env?.DB;
 		if (!db) {
-			return fail(500, { error: 'Database tidak tersedia.' });
+			return fail(500, { error: 'Layanan data tidak tersedia.' });
 		}
 
 		await ensureBukuLibrarySchema(db);

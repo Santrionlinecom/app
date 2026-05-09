@@ -428,7 +428,7 @@
 </script>
 
 <svelte:head>
-	<title>CMS Hub - Super Admin</title>
+	<title>Pusat Konten - Super Admin</title>
 </svelte:head>
 
 <div class="container mx-auto space-y-8 px-6 py-10">
@@ -437,7 +437,7 @@
 		<div class="flex items-center gap-3">
 			<a href="/admin/super/overview" class="text-sm text-slate-500 hover:text-slate-700">← Kembali</a>
 		</div>
-		<h1 class="text-3xl font-bold text-slate-900">CMS Hub</h1>
+		<h1 class="text-3xl font-bold text-slate-900">Pusat Konten</h1>
 		<p class="text-slate-600">Blog, Produk Digital, dan Perpustakaan Kitab dalam satu ruang super admin</p>
 	</div>
 
@@ -447,7 +447,7 @@
 		</div>
 	{/if}
 
-	<!-- CMS Hub Overview Section -->
+	<!-- Ringkasan pusat konten -->
 	<section class="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-lg backdrop-blur">
 		<div class="grid gap-6 xl:grid-cols-[1.05fr,0.95fr]">
 			<!-- CMS Artikel Card -->

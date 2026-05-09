@@ -13,8 +13,7 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
   if (!db) {
     return {
       posts: [],
-      error:
-        'Database (D1) tidak tersedia. Jalankan dev via Wrangler: `npx wrangler pages dev` atau pastikan binding DB pada wrangler.toml.'
+      error: 'Layanan data belum tersedia. Hubungi super admin.'
     };
   }
 
@@ -39,7 +38,7 @@ export const actions: Actions = {
       return fail(403, { error: 'Tidak diizinkan' });
     }
     const db = locals.db ?? platform?.env?.DB;
-    if (!db) return fail(500, { error: 'Database (D1) tidak tersedia' });
+    if (!db) return fail(500, { error: 'Layanan data belum tersedia. Hubungi super admin.' });
     await ensureCmsSchema(db as any);
     const data = await request.formData();
     const id = data.get('id') as string;
@@ -51,7 +50,7 @@ export const actions: Actions = {
       return fail(403, { error: 'Tidak diizinkan' });
     }
     const db = locals.db ?? platform?.env?.DB;
-    if (!db) return fail(500, { error: 'Database (D1) tidak tersedia' });
+    if (!db) return fail(500, { error: 'Layanan data belum tersedia. Hubungi super admin.' });
     await ensureCmsSchema(db as any);
     const data = await request.formData();
     const id = data.get('id') as string;

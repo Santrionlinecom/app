@@ -325,7 +325,7 @@
 							<img src={item.coverUrl} alt={`Cover ${item.title}`} class="h-full w-full object-cover" />
 						{:else}
 							<div class="flex min-h-[320px] items-center justify-center px-8 text-center text-sm text-white/65">
-								Cover kitab belum ditambahkan di CMS Hub.
+								Cover kitab belum ditambahkan.
 							</div>
 						{/if}
 					</div>
@@ -350,7 +350,7 @@
 					</div>
 					<h1 class="mt-4 text-3xl font-bold md:text-5xl">{item.title}</h1>
 					<p class="mt-4 text-sm leading-7 text-white/75 md:text-base">
-						{plainText(item.summary || item.description) || 'Detail kitab ini dikelola langsung dari CMS Hub.'}
+						{plainText(item.summary || item.description) || 'Detail kitab ini dikelola dari pusat konten.'}
 					</p>
 
 					<div class="mt-6 flex flex-wrap gap-3">
@@ -418,7 +418,7 @@
 				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Informasi Kitab</p>
 				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Catatan publik</h2>
 				<p class="mt-3 text-sm leading-7 text-slate-600">
-					Halaman ini membaca data kitab yang sudah dipublish dari CMS Hub. Jika admin mengubah cover,
+					Halaman ini membaca data kitab yang sudah diterbitkan. Jika admin mengubah cover,
 					deskripsi, atau sumber file, halaman ini akan ikut berubah otomatis.
 				</p>
 

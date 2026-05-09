@@ -20,8 +20,8 @@
 				<h2 class="text-xl font-bold text-emerald-800 mb-3">Data yang Kami Simpan</h2>
 				<ul class="space-y-2 text-gray-700">
 					<li>• Akun dasar: email, nama/username, serta metode login (email atau Google).</li>
-					<li>• Kata sandi disimpan sebagai hash <code>Scrypt</code> (bukan teks asli).</li>
-					<li>• Login Google: ID Google, nama, dan email; token akses tidak disimpan setelah sesi dibuat.</li>
+					<li>• Kata sandi disimpan dalam bentuk terlindungi, bukan teks asli.</li>
+					<li>• Login Google: ID Google, nama, dan email; akses sementara tidak disimpan setelah sesi dibuat.</li>
 					<li>• Progres hafalan santri: setoran ayat/surah dan statistik terkait.</li>
 					<li>• Referensi konten Aswaja: data surah/kitab/riwayat yang tampil di aplikasi.</li>
 					<li>• Sesi login dan cookie untuk menjaga Anda tetap masuk.</li>
@@ -44,9 +44,9 @@
 			<div class="rounded-2xl border border-cyan-100 bg-white p-6 shadow-sm">
 				<h2 class="text-xl font-bold text-cyan-800 mb-3">Penyimpanan & Keamanan</h2>
 				<ul class="space-y-2 text-gray-700">
-					<li>• Data disimpan di basis data SQL.</li>
-					<li>• Password di-hash dengan <code>Scrypt</code>; token Google dibuang setelah validasi.</li>
-					<li>• Cookie sesi memakai pengaturan aman (httpOnly, sameSite) dan <code>secure</code> di produksi.</li>
+					<li>• Data disimpan di sistem penyimpanan yang dikelola secara aman.</li>
+					<li>• Kata sandi dilindungi dengan metode keamanan modern; akses Google sementara dibuang setelah validasi.</li>
+					<li>• Cookie sesi memakai pengaturan keamanan sesuai standar produksi.</li>
 					<li>• Akses dibatasi sesuai peran pengguna.</li>
 				</ul>
 			</div>

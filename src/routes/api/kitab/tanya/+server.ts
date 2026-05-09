@@ -7,7 +7,7 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 		throw error(401, 'Unauthorized');
 	}
 	if (!platform?.env?.AI || !platform?.env?.VECTORIZE_INDEX) {
-		throw error(500, 'AI atau Vectorize binding tidak tersedia');
+		throw error(500, 'Layanan pencarian kitab belum tersedia');
 	}
 
 	const body = await request.json().catch(() => ({}));

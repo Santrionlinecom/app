@@ -80,7 +80,7 @@
 		<a href="/buku/studio" class="text-sm font-medium text-emerald-700 hover:text-emerald-800">Kembali ke Studio</a>
 		<h1 class="mt-4 text-3xl font-semibold text-slate-900 md:text-4xl">Buat buku baru</h1>
 		<p class="mt-3 text-sm leading-7 text-slate-600">
-			Buku baru otomatis dibuat sebagai draft. Slug dibuat dari judul dan akan dibuat unik oleh server.
+			Buku baru otomatis dibuat sebagai draft. Slug dibuat dari judul dan akan dibuat unik otomatis.
 		</p>
 	</header>
 
@@ -175,7 +175,7 @@
 						bind:value={coverUrl}
 					/>
 					<p class="mt-2 text-xs leading-5 text-slate-500">
-						Field ini tetap tersedia sebagai fallback. Jika upload berhasil, URL R2 publik otomatis masuk di sini.
+						Field ini tetap tersedia sebagai fallback. Jika upload berhasil, URL cover publik otomatis masuk di sini.
 					</p>
 				</label>
 			</div>

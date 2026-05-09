@@ -1,9 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getD1, getR2Bucket, getR2PublicBaseUrl } from '$lib/server/cloudflare';
-import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
-
-const adminRoles = new Set(['admin', 'SUPER_ADMIN']);
+import { isSuperAdminUser } from '$lib/auth/session-user';
 
 const toErrorMessage = (err: unknown) => {
 	if (err instanceof Error) return err.message;
@@ -11,9 +9,8 @@ const toErrorMessage = (err: unknown) => {
 };
 
 export const GET: RequestHandler = async ({ locals, platform }) => {
-	const role = locals.user?.role ?? null;
-	if (!locals.user || (!adminRoles.has(role ?? '') && !isSuperAdminRole(role))) {
-		throw error(403, 'Forbidden');
+	if (!locals.user || !isSuperAdminUser(locals.user)) {
+		throw error(403, 'Tidak diizinkan.');
 	}
 
 	const db = getD1({ locals, platform });
@@ -26,14 +23,14 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 	};
 
 	if (!db) {
-		d1.message = 'Binding D1 (DB) belum tersedia.';
+		d1.message = 'Layanan data belum tersedia.';
 	} else {
 		try {
 			await db.prepare('SELECT 1 as ok').first<{ ok: number }>();
 			d1.ok = true;
-			d1.message = 'D1 query test berhasil.';
+			d1.message = 'Layanan data aktif.';
 		} catch (err) {
-			d1.message = `D1 query test gagal: ${toErrorMessage(err)}`;
+			d1.message = `Tes layanan data gagal: ${toErrorMessage(err)}`;
 		}
 	}
 
@@ -45,14 +42,14 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 	};
 
 	if (!bucket) {
-		r2.message = 'Binding R2 (BUCKET) belum tersedia.';
+		r2.message = 'Layanan media belum tersedia.';
 	} else {
 		try {
 			await bucket.list({ limit: 1 });
 			r2.ok = true;
-			r2.message = 'R2 list test berhasil.';
+			r2.message = 'Layanan media aktif.';
 		} catch (err) {
-			r2.message = `R2 list test gagal: ${toErrorMessage(err)}`;
+			r2.message = `Tes layanan media gagal: ${toErrorMessage(err)}`;
 		}
 	}
 

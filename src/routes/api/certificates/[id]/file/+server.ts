@@ -7,7 +7,7 @@ import { getOrganizationById } from '$lib/server/organizations';
 export const GET: RequestHandler = async ({ locals, params, platform }) => {
     const user = assertLoggedIn({ locals });
     if (!locals.db) {
-        throw error(500, 'Database tidak tersedia');
+        throw error(500, 'Layanan data tidak tersedia');
     }
     const orgId = assertOrgMember(user);
     const org = await getOrganizationById(locals.db!, orgId);
@@ -38,7 +38,7 @@ export const GET: RequestHandler = async ({ locals, params, platform }) => {
 
     const bucket = platform?.env?.BUCKET;
     if (!bucket) {
-        throw error(500, 'Storage R2 tidak tersedia');
+        throw error(500, 'Layanan penyimpanan media tidak tersedia');
     }
 
     const objectKey = buildStorageKey(cert.santri_id, cert.id);

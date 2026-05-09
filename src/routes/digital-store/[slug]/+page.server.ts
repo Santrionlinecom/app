@@ -16,7 +16,7 @@ const normalizeText = (value: FormDataEntryValue | null) =>
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	await ensureDigitalCommerceSchema(locals.db);
@@ -35,7 +35,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 export const actions: Actions = {
 	createOrder: async ({ request, params, locals, platform }) => {
 		if (!locals.db) {
-			return fail(500, { error: 'Database tidak tersedia.' });
+			return fail(500, { error: 'Layanan data tidak tersedia.' });
 		}
 
 		const formData = await request.formData();

@@ -34,7 +34,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		throw error(403, 'Forbidden');
 	}
 	const db = locals.db!;
-	if (!db) throw error(500, 'Database tidak tersedia');
+	if (!db) throw error(500, 'Layanan data tidak tersedia');
 	const page = Number(url.searchParams.get('page') ?? '1');
 	const limit = Number(url.searchParams.get('limit') ?? '10');
 	const pagination = normalizePagination(page, limit);
@@ -135,7 +135,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		throw error(403, 'Forbidden');
 	}
 	const db = locals.db!;
-	if (!db) throw error(500, 'Database tidak tersedia');
+	if (!db) throw error(500, 'Layanan data tidak tersedia');
 	const body = await request.json().catch(() => ({}));
 	const isAdmin = isAdminRole(user.role);
 

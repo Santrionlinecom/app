@@ -8,7 +8,7 @@ export const POST: RequestHandler = async ({ request, locals, url, platform }) =
 		throw error(401, 'Unauthorized');
 	}
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	const body = await request.json().catch(() => ({}));

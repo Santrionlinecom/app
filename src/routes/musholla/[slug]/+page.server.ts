@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const db = locals.db;
 	if (!db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	const slug = params.slug;
 	const org = await getOrganizationBySlug(db, slug, 'musholla');

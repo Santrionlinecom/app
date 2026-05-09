@@ -26,13 +26,13 @@ const loadOrder = async (
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	await ensureDigitalCommerceSchema(locals.db);
 	const token = (url.searchParams.get('token') ?? '').trim();
 	if (!token) {
-		throw error(404, 'Token pesanan tidak valid');
+		throw error(404, 'Kode akses pesanan tidak valid');
 	}
 
 	const order = await loadOrder(locals.db, params.reference, token);
@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 export const actions: Actions = {
 	uploadProof: async ({ request, params, locals, platform }) => {
 		if (!locals.db) {
-			return fail(500, { error: 'Database tidak tersedia.' });
+			return fail(500, { error: 'Layanan data tidak tersedia.' });
 		}
 
 		await ensureDigitalCommerceSchema(locals.db);
@@ -61,7 +61,7 @@ export const actions: Actions = {
 		const proofFile = formData.get('proofFile');
 
 		if (!token) {
-			return fail(400, { error: 'Token order tidak valid.' });
+			return fail(400, { error: 'Kode akses pesanan tidak valid.' });
 		}
 
 		const order = await getDigitalOrderByReference(locals.db, params.reference, token);

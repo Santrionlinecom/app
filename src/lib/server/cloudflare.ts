@@ -23,7 +23,7 @@ export const getD1 = ({ locals, platform }: BindingContext): D1Database | null =
 export const requireD1 = (ctx: BindingContext): D1Database => {
 	const db = getD1(ctx);
 	if (!db) {
-		throw error(500, 'Database (D1) tidak tersedia. Pastikan binding `DB` aktif di Wrangler.');
+		throw error(500, 'Layanan data belum tersedia. Hubungi super admin.');
 	}
 	return db;
 };
@@ -34,7 +34,7 @@ export const getR2Bucket = (platform?: App.Platform | null): R2Bucket | null =>
 export const requireR2Bucket = (platform?: App.Platform | null): R2Bucket => {
 	const bucket = getR2Bucket(platform);
 	if (!bucket) {
-		throw error(500, 'Storage (R2 BUCKET) tidak tersedia. Pastikan binding `BUCKET` aktif di Wrangler.');
+		throw error(500, 'Layanan penyimpanan media belum tersedia. Hubungi super admin.');
 	}
 	return bucket;
 };

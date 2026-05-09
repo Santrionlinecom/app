@@ -7,7 +7,7 @@ const MAX_CALENDAR_RANGE_DAYS = 370;
 
 const requireDb = (locals: App.Locals) => {
 	if (!locals.db) {
-		throw error(500, 'Database not available');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	return locals.db as D1Database;
 };
@@ -103,6 +103,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			return json({ error: err.body?.message ?? 'Request tidak valid' }, { status: err.status });
 		}
 		console.error('GET /api/calendar error', err);
-		return json({ error: 'Internal Error: pastikan tabel calendar_notes sudah ada.' }, { status: 500 });
+		return json({ error: 'Layanan kalender belum siap. Hubungi super admin.' }, { status: 500 });
 	}
 };

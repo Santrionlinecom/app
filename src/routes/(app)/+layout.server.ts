@@ -16,7 +16,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	}
 
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	if (superAdmin) {

@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({ locals, params, platform }) => {
     throw redirect(302, '/dashboard');
   }
   const db = locals.db ?? platform?.env?.DB;
-  if (!db) throw error(500, 'Database (D1) tidak tersedia');
+  if (!db) throw error(500, 'Layanan data belum tersedia. Hubungi super admin.');
   await ensureCmsSchema(db as any);
 
   const post = await getPostById(db, params.id);
@@ -31,7 +31,7 @@ export const actions: Actions = {
       return fail(403, { error: 'Tidak diizinkan' });
     }
     const db = locals.db ?? platform?.env?.DB;
-    if (!db) return fail(500, { error: 'Database (D1) tidak tersedia' });
+    if (!db) return fail(500, { error: 'Layanan data belum tersedia. Hubungi super admin.' });
     await ensureCmsSchema(db as any);
     const data = await request.formData();
     const title = data.get('title') as string;

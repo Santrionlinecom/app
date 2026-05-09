@@ -396,7 +396,7 @@ export const curatedKitabMaterials: CuratedKitabMaterial[] = [
 		totalModules: 8,
 		tags: ['Bahasa Arab', 'Fi\'il', 'Mudhari', 'Durusul Lughah'],
 		sourceNote:
-			'Diadaptasi dari PDF "Panduan Durusul Lughah al-Arabiyah 2" dan disusun agar siap dilanjutkan ke pola seri dinamis SantriOnline. Sumber PDF masih bisa dipindah ke R2/CMS Hub tanpa mengubah struktur materi.',
+			'Diadaptasi dari PDF "Panduan Durusul Lughah al-Arabiyah 2" dan disusun agar siap dilanjutkan ke pola seri dinamis SantriOnline. Sumber PDF masih bisa dipindah ke pusat konten tanpa mengubah struktur materi.',
 		objectives: [
 			'Mengenali peralihan dari kalimat nominal sederhana ke kalimat verbal yang lebih hidup.',
 			'Memahami negasi, perbandingan, angka dasar, serta perubahan bentuk kata kerja lampau dan sedang-akan.',
@@ -718,7 +718,7 @@ export const curatedKitabMaterials: CuratedKitabMaterial[] = [
 		totalModules: 8,
 		tags: ['Bahasa Arab', 'I\'rab', 'Ism Fa\'il', 'Pasif'],
 		sourceNote:
-			'Diadaptasi dari PDF "Panduan Durusul Lughah al-Arabiyah 3". Susunan modul ini sengaja dirapikan untuk menyiapkan migrasi seri ke model dinamis penuh, termasuk saat sumber PDF dipindah ke R2.',
+			'Diadaptasi dari PDF "Panduan Durusul Lughah al-Arabiyah 3". Susunan modul ini dirapikan agar materi lebih mudah dipelajari dan diperbarui.',
 		objectives: [
 			'Menguatkan pemahaman i\'rab isim dan fi\'il sebagai dasar membaca teks yang lebih serius.',
 			'Membedakan aktif-pasif dan mengenali turunan kata benda dari akar fi\'il.',
@@ -1040,7 +1040,7 @@ export const curatedKitabMaterials: CuratedKitabMaterial[] = [
 		totalModules: 8,
 		tags: ['Bahasa Arab', 'Bab Fi\'il', 'Dhamir', 'Maf\'ul'],
 		sourceNote:
-			'Diadaptasi dari PDF "Panduan Durusul Lughah al-Arabiyah 4". Materi ini disusun sebagai seri dinamis terakhir dari fase inti dan siap diarahkan ke R2/CMS Hub tanpa mengubah slug maupun modul.',
+			'Diadaptasi dari PDF "Panduan Durusul Lughah al-Arabiyah 4". Materi ini disusun sebagai seri dinamis terakhir dari fase inti dan siap diarahkan ke pusat konten tanpa mengubah slug maupun modul.',
 		objectives: [
 			'Membaca dan membedakan sejumlah bab fi\'il turunan yang sering muncul pada kitab dasar-menengah.',
 			'Memahami fungsi objek lanjutan, penekanan, dan hubungan antarklausa yang lebih kompleks.',

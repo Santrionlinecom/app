@@ -28,7 +28,7 @@ export const OPTIONS = notAllowedHandler;
 
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const db = locals.db ?? platform?.env?.DB;
-	if (!db) return bad(503, 'db_unavailable', 'Database D1 tidak tersedia');
+	if (!db) return bad(503, 'db_unavailable', 'Layanan data tidak tersedia');
 
 	await ensureStreamerLicenseTables(db);
 
@@ -42,29 +42,29 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const token = typeof body.token === 'string' ? body.token.trim() : '';
 	const deviceIdHashRaw = typeof body.device_id_hash === 'string' ? body.device_id_hash.trim() : '';
 	if (!token || !deviceIdHashRaw) {
-		return bad(400, 'invalid_payload', 'token dan device_id_hash wajib diisi');
+		return bad(400, 'invalid_payload', 'Data perangkat wajib diisi');
 	}
 
 	const deviceIdHash = normalizeDeviceIdHash(deviceIdHashRaw);
 	const signingSecret = getSigningSecret(platform);
 	if (!signingSecret) {
-		return bad(500, 'signing_secret_missing', 'Signing secret license belum dikonfigurasi');
+		return bad(500, 'signing_secret_missing', 'Konfigurasi lisensi belum siap');
 	}
 
 	let claims = null;
 	try {
 		claims = await verifyLicenseToken(token, signingSecret);
 	} catch {
-		return bad(500, 'signing_secret_missing', 'Signing secret license belum dikonfigurasi');
+		return bad(500, 'signing_secret_missing', 'Konfigurasi lisensi belum siap');
 	}
 	if (!claims) {
-		return bad(401, 'invalid_token', 'Token tidak valid atau signature gagal diverifikasi');
+		return bad(401, 'invalid_token', 'Kode akses tidak valid');
 	}
 	if (claims.device_id_hash !== deviceIdHash) {
-		return bad(400, 'device_mismatch', 'device_id_hash tidak cocok dengan token');
+		return bad(400, 'device_mismatch', 'Data perangkat tidak cocok');
 	}
 	if (claims.app !== 'santri-streamer') {
-		return bad(400, 'invalid_token_app', 'Token bukan untuk aplikasi santri-streamer');
+		return bad(400, 'invalid_token_app', 'Kode akses bukan untuk aplikasi ini');
 	}
 
 	const now = Date.now();
@@ -110,7 +110,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			signingSecret
 		);
 	} catch {
-		return bad(500, 'signing_secret_missing', 'Signing secret belum dikonfigurasi');
+		return bad(500, 'signing_secret_missing', 'Konfigurasi lisensi belum siap');
 	}
 
 	return json({ token: nextToken });

@@ -17,7 +17,7 @@ import { getOrganizationById } from '$lib/server/organizations';
 const ensureAuth = (locals: App.Locals) => {
     const user = assertLoggedIn({ locals });
     if (!locals.db) {
-        throw error(500, 'Database tidak tersedia');
+        throw error(500, 'Layanan data tidak tersedia');
     }
     return user;
 };
@@ -66,7 +66,7 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
     const user = ensureAuth(locals);
     const bucket = platform?.env?.BUCKET;
     if (!bucket) {
-        throw error(500, 'Storage R2 tidak tersedia');
+        throw error(500, 'Layanan penyimpanan media tidak tersedia');
     }
     const orgId = assertOrgMember(user);
     const org = await getOrganizationById(locals.db!, orgId);

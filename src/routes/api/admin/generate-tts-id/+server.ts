@@ -123,8 +123,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json(
 			{
 				success: false,
-				error: 'Gagal generate narasi Indonesia.',
-				detail: String(err?.message ?? err ?? '')
+				error: 'Gagal generate narasi Indonesia.'
 			},
 			{ status: 500 }
 		);

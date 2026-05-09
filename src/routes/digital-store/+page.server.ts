@@ -8,7 +8,7 @@ import {
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	await ensureDigitalCommerceSchema(locals.db);

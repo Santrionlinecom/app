@@ -72,7 +72,7 @@
 				</div>
 				<h1 class="mt-4 text-3xl font-bold md:text-5xl">{data.product.title}</h1>
 				<p class="mt-4 text-sm leading-7 text-white/75 md:text-base">
-					{plainText(data.product.summary || data.product.description) || 'Produk digital ini dikelola dari CMS Hub.'}
+					{plainText(data.product.summary || data.product.description) || 'Produk digital ini dikelola dari pusat konten.'}
 				</p>
 
 				<div class="mt-6 grid gap-3 sm:grid-cols-3">

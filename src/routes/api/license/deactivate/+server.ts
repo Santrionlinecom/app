@@ -89,33 +89,33 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		await ensureStreamerLicenseTables(db);
 
 		if (!token || !deviceIdHashInput) {
-			return json({ ok: false, error: 'invalid_payload', message: 'token dan device_id_hash wajib diisi' }, { status: 400 });
+			return json({ ok: false, error: 'invalid_payload', message: 'Data perangkat wajib diisi' }, { status: 400 });
 		}
 
 		const signingSecret = getSigningSecret(platform);
 		if (!signingSecret) {
-			return json({ ok: false, message: 'Signing secret license belum dikonfigurasi' }, { status: 500 });
+			return json({ ok: false, message: 'Konfigurasi lisensi belum siap' }, { status: 500 });
 		}
 
 		let claims = null;
 		try {
 			claims = await verifyLicenseToken(token, signingSecret);
 		} catch {
-			return json({ ok: false, message: 'Signing secret license belum dikonfigurasi' }, { status: 500 });
+			return json({ ok: false, message: 'Konfigurasi lisensi belum siap' }, { status: 500 });
 		}
 		if (!claims) {
-			return json({ ok: false, error: 'invalid_token', message: 'Token tidak valid' }, { status: 401 });
+			return json({ ok: false, error: 'invalid_token', message: 'Kode akses tidak valid' }, { status: 401 });
 		}
 
 		const deviceIdHash = normalizeDeviceIdHash(deviceIdHashInput);
 		if (claims.device_id_hash !== deviceIdHash) {
 			return json(
-				{ ok: false, error: 'device_mismatch', message: 'device_id_hash tidak cocok dengan token' },
+				{ ok: false, error: 'device_mismatch', message: 'Data perangkat tidak cocok' },
 				{ status: 400 }
 			);
 		}
 		if (claims.app !== 'santri-streamer') {
-			return json({ ok: false, error: 'invalid_token_app', message: 'Token bukan untuk aplikasi santri-streamer' }, { status: 400 });
+			return json({ ok: false, error: 'invalid_token_app', message: 'Kode akses bukan untuk aplikasi ini' }, { status: 400 });
 		}
 
 		const license = await getStreamerLicenseById(db, claims.license_id);

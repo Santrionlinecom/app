@@ -35,7 +35,7 @@ export const actions: Actions = {
 
 		const db = locals.db ?? platform?.env?.DB;
 		if (!db) {
-			return fail(500, { message: 'Database tidak tersedia' });
+			return fail(500, { message: 'Layanan data tidak tersedia' });
 		}
 
 		const formData = await request.formData();

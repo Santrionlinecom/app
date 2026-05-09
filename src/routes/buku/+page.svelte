@@ -190,7 +190,7 @@
 		{#if books.length === 0}
 			<div class="rounded-[1.75rem] border border-dashed border-slate-300 bg-white px-6 py-10 text-center shadow-sm">
 				<p class="text-base font-semibold text-slate-900">Belum ada buku yang dipublikasikan.</p>
-				<p class="mt-2 text-sm text-slate-500">Tambahkan data dummy lewat D1 untuk menguji halaman ini.</p>
+				<p class="mt-2 text-sm text-slate-500">Tambahkan buku terbit untuk menguji halaman ini.</p>
 			</div>
 		{:else}
 			<div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

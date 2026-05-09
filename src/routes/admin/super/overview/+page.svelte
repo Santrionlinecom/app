@@ -914,7 +914,7 @@
 		<div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 			<div>
 				<h2 class="section-title text-xl font-semibold text-slate-900">Global User Search</h2>
-				<p class="text-xs text-slate-500">Cari user berdasarkan nama atau email di seluruh database.</p>
+				<p class="text-xs text-slate-500">Cari user berdasarkan nama atau email di seluruh data pengguna.</p>
 			</div>
 			<form method="GET" class="flex w-full max-w-md gap-2">
 				<input
@@ -961,18 +961,18 @@
 		</div>
 	</section>
 
-	<!-- CMS Hub moved to separate page at /admin/super/cms-hub -->
+	<!-- Pusat konten dipindahkan ke halaman terpisah di /admin/super/cms-hub -->
 	<section class="reveal rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-lg backdrop-blur" style="animation-delay: 150ms;">
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 			<div class="max-w-2xl">
-				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-600">CMS Hub</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-600">Pusat Konten</p>
 				<h2 class="section-title mt-2 text-2xl font-semibold text-slate-900">Blog dan Produk Digital dalam satu ruang super admin</h2>
 				<p class="mt-2 text-sm text-slate-500">
 					Halaman CMS telah dipindahkan ke halaman terpisah untuk kemudahan akses dan manajemen konten yang lebih terorganisir.
 				</p>
 			</div>
 			<a href="/admin/super/cms-hub" class="inline-flex items-center rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">
-				Buka CMS Hub →
+				Buka Pusat Konten →
 			</a>
 		</div>
 	</section>
@@ -984,11 +984,11 @@
 				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Produk Digital & Penjualan</p>
 				<h2 class="section-title mt-2 text-2xl font-semibold text-slate-900">Kelola produk digital, metode pembayaran, dan penjualan</h2>
 				<p class="mt-2 text-sm text-slate-500">
-					Semua fitur manajemen produk digital, metode pembayaran, dan ringkasan penjualan telah dipindahkan ke halaman CMS Hub untuk kemudahan akses.
+					Semua fitur manajemen produk digital, metode pembayaran, dan ringkasan penjualan telah dipindahkan ke halaman pusat konten untuk kemudahan akses.
 				</p>
 			</div>
 			<a href="/admin/super/cms-hub" class="inline-flex items-center rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">
-				Buka CMS Hub →
+				Buka Pusat Konten →
 			</a>
 		</div>
 	</section>

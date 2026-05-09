@@ -30,7 +30,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		throw error(403, 'Forbidden');
 	}
 	const db = locals.db!;
-	if (!db) throw error(500, 'Database tidak tersedia');
+	if (!db) throw error(500, 'Layanan data tidak tersedia');
 	const id = params.id;
 	if (!id) throw error(400, 'ID tidak valid');
 
@@ -144,7 +144,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		throw error(403, 'Forbidden');
 	}
 	const db = locals.db!;
-	if (!db) throw error(500, 'Database tidak tersedia');
+	if (!db) throw error(500, 'Layanan data tidak tersedia');
 	const id = params.id;
 	if (!id) throw error(400, 'ID tidak valid');
 

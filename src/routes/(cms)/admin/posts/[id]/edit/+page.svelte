@@ -103,7 +103,7 @@
       thumbnail_url = url;
     } catch (err) {
       console.error('Upload featured image error:', err);
-      alert('Gagal mengunggah gambar. Pastikan storage R2 aktif.');
+      alert('Gagal mengunggah gambar. Pastikan layanan unggah media aktif.');
     } finally {
       if (target) target.value = '';
     }

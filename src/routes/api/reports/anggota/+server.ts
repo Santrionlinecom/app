@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	}
 
 	const db = locals.db!;
-	if (!db) throw error(500, 'Database tidak tersedia');
+	if (!db) throw error(500, 'Layanan data tidak tersedia');
 
 	const orgId = assertOrgMember(user);
 	const { isSystemAdmin } = getOrgScope(user);

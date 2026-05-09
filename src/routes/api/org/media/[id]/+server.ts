@@ -9,7 +9,7 @@ const requireOrgAccess = (locals: App.Locals) => {
 		throw error(401, 'Unauthorized');
 	}
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	if (!locals.user.orgId) {
 		throw error(403, 'Organisasi belum terhubung');

@@ -23,7 +23,7 @@ const assertAllowed = async (locals: App.Locals) => {
 	if (!allowedRoles.includes(user.role)) {
 		throw error(403, 'Fitur ini tersedia untuk semua akun.');
 	}
-	if (!locals.db) throw error(500, 'Database tidak tersedia');
+	if (!locals.db) throw error(500, 'Layanan data tidak tersedia');
 	const orgId = assertOrgMember(user);
 	const org = await getOrganizationById(locals.db, orgId);
 	if (!org) throw error(404, 'Lembaga tidak ditemukan');

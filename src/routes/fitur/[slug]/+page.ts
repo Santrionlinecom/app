@@ -102,7 +102,7 @@ const FEATURE_DETAILS: Record<string, FeatureDetail> = {
 		access: [
 			{ label: 'Artikel Dzikir dan Doa', desc: 'Materi praktis dan ringan untuk diamalkan.', href: '/blog' },
 			{ label: 'Rujukan Ulama', desc: 'Kenali ulama sebagai rujukan sanad ilmu.', href: '/ulama' },
-			{ label: 'Perpustakaan Kitab', desc: 'Buka katalog kitab mu\'tabar yang dikelola dari CMS Hub.', href: '/kitab' }
+			{ label: 'Perpustakaan Kitab', desc: 'Buka katalog kitab mu\'tabar yang dikelola dalam perpustakaan digital.', href: '/kitab' }
 		],
 		theme: {
 			hero: 'bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600',

@@ -415,7 +415,7 @@
 						<p class="text-xs font-bold uppercase tracking-[0.28em] text-amber-700">Bab Premium</p>
 						<h2 class="mt-3 text-2xl font-semibold">Bab ini terkunci</h2>
 						<p class={`mt-4 text-sm leading-7 ${isDarkReader ? 'text-stone-300' : 'text-slate-700'}`}>
-							Bab ini bisa dibuka permanen memakai coin. Pengurangan coin hanya diproses di server.
+							Bab ini bisa dibuka permanen memakai coin. Pengurangan coin diproses secara aman.
 						</p>
 						<div
 							class={`mt-6 rounded-2xl border px-4 py-4 text-sm ${

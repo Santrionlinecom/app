@@ -406,7 +406,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	}
 
 	const db = locals.db!;
-	if (!db) throw error(500, 'Database tidak tersedia');
+	if (!db) throw error(500, 'Layanan data tidak tersedia');
 	const orgId = assertOrgMember(user);
 	const targetId = params.id;
 	if (!targetId) throw error(400, 'ID tidak valid');

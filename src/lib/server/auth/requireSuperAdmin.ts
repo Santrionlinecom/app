@@ -12,7 +12,7 @@ export const requireSuperAdmin = (locals: App.Locals) => {
 		throw error(403, 'Tidak memiliki akses super admin');
 	}
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	return {
 		user: locals.user,

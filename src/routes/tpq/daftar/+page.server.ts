@@ -16,7 +16,7 @@ export const load: PageServerLoad = async () => {
 
 export const actions: Actions = {
 	default: async ({ request, locals, cookies, platform }) => {
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 		const db = locals.db!;
 
 		const formData = await request.formData();

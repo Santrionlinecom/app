@@ -34,7 +34,7 @@
 
 	const shortText = (value: string | null | undefined, length = 160) => {
 		const source = plainText(value);
-		if (!source) return 'Deskripsi produk akan muncul di sini setelah dilengkapi dari CMS Hub.';
+		if (!source) return 'Deskripsi produk akan muncul di sini setelah dilengkapi dari pusat konten.';
 		return source.length > length ? `${source.slice(0, length).trim()}...` : source;
 	};
 
@@ -53,7 +53,7 @@
 	<title>Digital Store - Santri Online</title>
 	<meta
 		name="description"
-		content="Katalog produk digital Santri Online yang dikelola dari CMS Hub."
+		content="Katalog produk digital Santri Online yang dikelola dari pusat konten."
 	/>
 </svelte:head>
 
@@ -64,7 +64,7 @@
 		<div class="relative grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
 			<div class="max-w-3xl">
 				<p class="text-xs uppercase tracking-[0.35em] text-emerald-200/70">Digital Store</p>
-				<h1 class="mt-3 text-3xl font-bold md:text-5xl">Produk digital yang tampil langsung dari CMS Hub</h1>
+				<h1 class="mt-3 text-3xl font-bold md:text-5xl">Produk digital pilihan SantriOnline</h1>
 				<p class="mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
 					Halaman ini menampilkan katalog produk digital yang sudah dipublish dari panel super admin. Cocok
 					untuk e-book, modul, file panduan, atau materi premium lain yang Anda jual dengan alur pembayaran manual yang rapi.
@@ -106,7 +106,7 @@
 					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Pilihan Utama</p>
 					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Produk unggulan</h2>
 				</div>
-				<p class="text-sm text-slate-500">Diprioritaskan dari pengaturan featured di CMS Hub.</p>
+				<p class="text-sm text-slate-500">Diprioritaskan dari pengaturan produk pilihan.</p>
 			</div>
 
 			<div class="grid gap-5 lg:grid-cols-2">
@@ -174,7 +174,7 @@
 			<div class="rounded-[1.75rem] border border-dashed border-slate-300 bg-white px-6 py-10 text-center shadow-sm">
 				<p class="text-base font-semibold text-slate-900">Belum ada produk digital yang dipublikasikan.</p>
 				<p class="mt-2 text-sm text-slate-500">
-					Tambahkan produk dari Admin &gt; Super Admin &gt; CMS Hub, lalu ubah statusnya menjadi published.
+					Tambahkan produk dari halaman pengelolaan konten, lalu ubah statusnya menjadi terbit.
 				</p>
 			</div>
 		{:else}

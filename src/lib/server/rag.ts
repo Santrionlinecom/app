@@ -18,7 +18,7 @@ const CHAT_MODEL = '@cf/meta/llama-3-8b-instruct';
 
 const assertBindings = (platform: App.Platform) => {
 	if (!platform?.env?.AI || !platform?.env?.VECTORIZE_INDEX) {
-		throw new Error('Binding AI atau VECTORIZE_INDEX tidak tersedia');
+		throw new Error('Layanan pencarian kitab belum tersedia');
 	}
 	return {
 		ai: platform.env.AI as Ai,
@@ -53,7 +53,7 @@ export const insertDokumen = async (
 ) => {
 	const { ai, index } = assertBindings(platform);
 	const db = platform.env.DB;
-	if (!db) throw new Error('Binding DB tidak tersedia');
+	if (!db) throw new Error('Layanan data tidak tersedia');
 
 	const id = randomId();
 	const enriched: KitabMetadata = { ...metadata, text };
@@ -67,8 +67,8 @@ export const insertDokumen = async (
 			.bind(id, enriched.judul_kitab, String(enriched.halaman ?? ''), enriched.jilid ?? null, text)
 			.run();
 	} catch (err) {
-		console.error('Gagal simpan D1 kitab_referensi', err);
-		throw new Error('Gagal menyimpan ke database');
+		console.error('Gagal simpan referensi kitab', err);
+		throw new Error('Gagal menyimpan data');
 	}
 
 	const embedding = await generateEmbedding(ai, text);

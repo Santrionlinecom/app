@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 	const ai = (platform?.env?.AI ?? null) as Ai | null;
 	if (!ai) {
-		return json({ success: false, error: 'Binding Cloudflare Workers AI belum tersedia.' }, { status: 500 });
+		return json({ success: false, error: 'Layanan gambar AI belum tersedia. Hubungi super admin.' }, { status: 500 });
 	}
 
 	const body = (await request.json().catch(() => ({}))) as GenerateThumbnailBody;
@@ -78,16 +78,14 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json({
 			success: true,
 			url: publicUrl,
-			key: filename,
-			model: IMAGE_MODEL
+			key: filename
 		});
 	} catch (err: any) {
 		console.error('Thumbnail generation error:', err);
 		return json(
 			{
 				success: false,
-				error: 'Gagal generate thumbnail.',
-				detail: String(err?.message ?? err ?? '')
+				error: 'Gagal generate thumbnail.'
 			},
 			{ status: 500 }
 		);

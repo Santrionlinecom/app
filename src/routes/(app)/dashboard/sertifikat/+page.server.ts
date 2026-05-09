@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         throw redirect(302, '/dashboard');
     }
     if (!locals.db) {
-        throw error(500, 'Database tidak tersedia');
+        throw error(500, 'Layanan data tidak tersedia');
     }
     const orgId = assertOrgMember(user);
     const org = await getOrganizationById(locals.db, orgId);

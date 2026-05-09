@@ -8,7 +8,7 @@ import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 const requireUser = (locals: App.Locals) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
-		throw error(500, 'Database not available');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	return { user: user as NonNullable<App.Locals['user']>, db: locals.db! };
 };
@@ -97,7 +97,7 @@ export const PUT: RequestHandler = async ({ locals, params, request }) => {
 		return json({ note: { ...note, title, content, eventDate, updatedAt: now } });
 	} catch (err: any) {
 		const msg = typeof err?.message === 'string' && err.message.includes('calendar_notes')
-			? 'Tabel calendar_notes belum ada. Jalankan migrasi /api/admin/migrate.'
+			? 'Layanan catatan kalender belum siap. Hubungi super admin.'
 			: err?.message || 'Gagal memperbarui catatan';
 		console.error('PUT /api/notes/[id] error', err);
 		return json({ error: msg }, { status: 500 });
@@ -129,7 +129,7 @@ export const DELETE: RequestHandler = async ({ locals, params }) => {
 		return json({ ok: true });
 	} catch (err: any) {
 		const msg = typeof err?.message === 'string' && err.message.includes('calendar_notes')
-			? 'Tabel calendar_notes belum ada. Jalankan migrasi /api/admin/migrate.'
+			? 'Layanan catatan kalender belum siap. Hubungi super admin.'
 			: err?.message || 'Gagal menghapus catatan';
 		console.error('DELETE /api/notes/[id] error', err);
 		return json({ error: msg }, { status: 500 });

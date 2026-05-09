@@ -72,7 +72,7 @@ const assetDateKeys = ['acquiredat', 'acquired', 'tanggal', 'tgl', 'date', 'pero
 const requireOrgContext = async (locals: App.Locals) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	const orgId = assertOrgMember(user);
@@ -132,7 +132,7 @@ export const actions: Actions = {
 		if (!locals.user || !isSuperAdminRole(locals.user.role)) {
 			return fail(403, { error: 'Tidak memiliki akses' });
 		}
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 
 		const formData = await request.formData();
 		const orgId = formData.get('orgId');
@@ -151,7 +151,7 @@ export const actions: Actions = {
 		if (!locals.user || !isSuperAdminRole(locals.user.role)) {
 			return fail(403, { error: 'Tidak memiliki akses' });
 		}
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 
 		const formData = await request.formData();
 		const orgId = formData.get('orgId');
@@ -170,7 +170,7 @@ export const actions: Actions = {
 		if (!locals.user || !isSuperAdminRole(locals.user.role)) {
 			return fail(403, { error: 'Tidak memiliki akses' });
 		}
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 
 		const formData = await request.formData();
 		const orgId = formData.get('orgId');
@@ -280,7 +280,7 @@ export const actions: Actions = {
 			);
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan aset belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -333,7 +333,7 @@ export const actions: Actions = {
 				.run();
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan aset belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -388,7 +388,7 @@ export const actions: Actions = {
 				.run();
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan aset belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -416,7 +416,7 @@ export const actions: Actions = {
 				.run();
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel aset belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan aset belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}

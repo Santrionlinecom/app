@@ -32,7 +32,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 	const groqApiKey = platform?.env?.GROQ_API_KEY;
 	if (!groqApiKey) {
-		return json({ success: false, error: 'GROQ_API_KEY belum tersedia.' }, { status: 500 });
+		return json({ success: false, error: 'Layanan audio AI belum tersedia. Hubungi super admin.' }, { status: 500 });
 	}
 
 	const body = (await request.json().catch(() => ({}))) as GenerateArabicTtsBody;
@@ -60,12 +60,11 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		});
 
 		if (!response.ok) {
-			const detail = await response.text().catch(() => response.statusText);
+			await response.text().catch(() => response.statusText);
 			return json(
 				{
 					success: false,
-					error: 'Groq TTS Arab menolak permintaan.',
-					detail
+					error: 'Layanan audio AI menolak permintaan.'
 				},
 				{ status: response.status }
 			);
@@ -99,7 +98,6 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			success: true,
 			url: publicUrl,
 			key: filename,
-			model: GROQ_ARABIC_TTS_MODEL,
 			voice
 		});
 	} catch (err: any) {
@@ -107,8 +105,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json(
 			{
 				success: false,
-				error: 'Gagal generate audio Arab.',
-				detail: String(err?.message ?? err ?? '')
+				error: 'Gagal generate audio Arab.'
 			},
 			{ status: 500 }
 		);

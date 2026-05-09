@@ -26,7 +26,7 @@ const assertKitabAccess = async (locals: App.Locals) => {
 		return locals.user;
 	}
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	if (!locals.user.orgId) {
 		throw error(403, 'Akun belum terhubung ke lembaga.');
@@ -43,7 +43,7 @@ const assertKitabAccess = async (locals: App.Locals) => {
 
 export const GET: RequestHandler = async ({ platform, locals }) => {
 	await assertKitabAccess(locals);
-	if (!platform?.env?.DB) throw error(500, 'DB tidak tersedia');
+	if (!platform?.env?.DB) throw error(500, 'Layanan data tidak tersedia');
 	try {
 		const { results } =
 			(await platform.env.DB.prepare(
@@ -62,7 +62,7 @@ export const GET: RequestHandler = async ({ platform, locals }) => {
 export const POST: RequestHandler = async ({ request, platform, locals }) => {
 	const user = await assertKitabAccess(locals);
 	if (!platform?.env?.AI || !platform?.env?.VECTORIZE_INDEX || !platform?.env?.DB) {
-		throw error(500, 'AI, Vectorize, atau DB binding tidak tersedia');
+		throw error(500, 'Layanan pencarian kitab belum tersedia');
 	}
 	const bucket = platform?.env?.BUCKET;
 

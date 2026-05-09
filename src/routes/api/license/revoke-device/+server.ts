@@ -48,7 +48,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const licenseKey = typeof body.license_key === 'string' ? body.license_key.trim() : '';
 	const deviceIdHashRaw = typeof body.device_id_hash === 'string' ? body.device_id_hash.trim() : '';
 	if (!licenseKey || !deviceIdHashRaw) {
-		return bad(400, 'invalid_payload', 'license_key dan device_id_hash wajib diisi');
+		return bad(400, 'invalid_payload', 'Data lisensi dan perangkat wajib diisi');
 	}
 
 	const license = await getStreamerLicenseByKey(db, licenseKey);

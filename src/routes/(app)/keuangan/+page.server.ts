@@ -95,7 +95,7 @@ const safeAll = async <T>(promise: Promise<{ results: T[] | null | undefined }>)
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	const orgId = assertOrgMember(user);
 	const org = await getOrganizationById(locals.db, orgId);
@@ -169,7 +169,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	importKas: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 
 		const orgId = assertOrgMember(user);
 		const { isSystemAdmin } = getOrgScope(user);
@@ -280,7 +280,7 @@ export const actions: Actions = {
 			);
 		} catch (err) {
 			if (isMissingTableError(err)) {
-				return fail(500, { error: 'Tabel kas belum siap. Jalankan migrasi.' });
+				return fail(500, { error: 'Layanan kas belum siap. Hubungi super admin.' });
 			}
 			throw err;
 		}
@@ -289,7 +289,7 @@ export const actions: Actions = {
 	},
 	addKas: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 
 		const orgId = assertOrgMember(user);
 		const { isSystemAdmin } = getOrgScope(user);
@@ -354,7 +354,7 @@ export const actions: Actions = {
 
 	updateKas: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 
 		const orgId = assertOrgMember(user);
 		const { isSystemAdmin } = getOrgScope(user);
@@ -419,7 +419,7 @@ export const actions: Actions = {
 
 	deleteKas: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 
 		const orgId = assertOrgMember(user);
 		const { isSystemAdmin } = getOrgScope(user);

@@ -98,7 +98,7 @@
         <h1 class="mt-2 text-3xl font-semibold">Terbitkan Sertifikat Santri</h1>
         <p class="mt-2 max-w-3xl text-sm text-emerald-50">
             Hitung capaian hafalan santri, pastikan memenuhi syarat, lalu terbitkan sertifikat PDF otomatis.
-            File tersimpan di R2 dan dapat diunduh oleh santri.
+            File tersimpan aman dan dapat diunduh oleh santri.
         </p>
     </div>
 

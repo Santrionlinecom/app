@@ -364,7 +364,7 @@
 			thumbnail_url = url;
 		} catch (err) {
 			console.error('Upload featured image error:', err);
-			alert('Gagal mengunggah gambar. Pastikan storage R2 aktif.');
+			alert('Gagal mengunggah gambar. Pastikan layanan unggah media aktif.');
 		} finally {
 			target.value = '';
 		}
@@ -482,7 +482,7 @@
 						<div>
 							<div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
 								<Sparkles class="h-3.5 w-3.5" />
-								Groq AI + CF Image
+								Asisten Konten AI
 							</div>
 							<h2 class="mt-3 text-base font-semibold text-slate-950">Generate lengkap</h2>
 							<p class="mt-1 text-xs leading-5 text-slate-600">

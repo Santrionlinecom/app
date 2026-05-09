@@ -153,7 +153,7 @@
 				</button>
 			</div>
 		</form>
-		<p class="mt-2 text-xs text-slate-500">Frontend hanya mengirim request ke API. Signing secret tetap di server.</p>
+		<p class="mt-2 text-xs text-slate-500">Pengecekan dilakukan otomatis dengan konfigurasi keamanan yang terlindungi.</p>
 		{#if infoMessage}
 			<p class="mt-3 text-sm text-emerald-700">{infoMessage}</p>
 		{/if}

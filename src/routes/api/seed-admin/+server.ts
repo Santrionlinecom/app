@@ -18,10 +18,10 @@ const assertSeedAccess = (params: {
 		throw error(403, 'Forbidden');
 	}
 	if (secret && token !== secret) {
-		throw error(403, 'Invalid seed token');
+		throw error(403, 'Akses seed tidak valid');
 	}
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	return locals.db;
 };

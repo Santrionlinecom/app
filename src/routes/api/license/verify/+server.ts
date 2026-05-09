@@ -60,7 +60,7 @@ const invalidResponse = (params: {
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const db = locals.db ?? platform?.env?.DB;
 	if (!db) {
-		return json(invalidResponse({ status: 'not_found', message: 'Database tidak tersedia', now: Date.now() }), {
+		return json(invalidResponse({ status: 'not_found', message: 'Layanan data tidak tersedia', now: Date.now() }), {
 			status: 503
 		});
 	}

@@ -4,13 +4,13 @@ import { ensureDigitalCommerceSchema, getDigitalOrderByReference } from '$lib/se
 
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	await ensureDigitalCommerceSchema(locals.db);
 	const token = (url.searchParams.get('token') ?? '').trim();
 	if (!token) {
-		throw error(404, 'Token order tidak valid');
+		throw error(404, 'Kode akses pesanan tidak valid');
 	}
 
 	const order = await getDigitalOrderByReference(locals.db, params.reference, token);

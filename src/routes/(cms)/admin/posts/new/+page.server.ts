@@ -42,12 +42,10 @@ export const actions: Actions = {
       return fail(400, { error: 'Missing required fields' });
     }
 
-    // Pastikan binding D1 tersedia (saat dev pakai `npx wrangler pages dev` / `wrangler dev`)
     const db = (locals.db ?? platform?.env?.DB) as unknown as D1Database | undefined;
     if (!db) {
       return fail(500, {
-        error:
-          'Database (D1) belum terhubung. Jalankan dev dengan Cloudflare Wrangler: `npx wrangler pages dev` atau pastikan binding DB ada di wrangler.toml.'
+        error: 'Layanan data belum tersedia. Hubungi super admin.'
       });
     }
 
@@ -72,9 +70,7 @@ export const actions: Actions = {
         return fail(400, { error: 'Slug sudah digunakan. Silakan pilih slug lain.' });
       }
       return fail(500, {
-        error:
-          'Gagal menyimpan ke database. Pastikan migrasi D1 sudah dijalankan (lihat folder migrations/ atau file schema.sql).',
-        detail: msg
+        error: 'Gagal menyimpan data. Hubungi super admin.'
       });
     }
 

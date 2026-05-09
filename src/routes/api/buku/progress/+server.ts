@@ -19,7 +19,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 	const db = locals.db ?? platform?.env?.DB;
 	if (!db) {
-		return json({ error: 'Database tidak tersedia.' }, { status: 500 });
+		return json({ error: 'Layanan data tidak tersedia.' }, { status: 500 });
 	}
 
 	const body = await request.json().catch(() => ({}));

@@ -16,7 +16,7 @@ const roleLabel = (value: string) => {
 
 export const load: PageServerLoad = async ({ params, locals, url }) => {
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	const org = await getOrganizationBySlug(locals.db!, params.slug, 'tpq');
 	if (!org) {
@@ -36,7 +36,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 
 export const actions: Actions = {
 	default: async ({ request, locals, cookies, params, url, platform }) => {
-		if (!locals.db) return fail(500, { error: 'Database tidak tersedia' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
 		const db = locals.db!;
 		const org = await getOrganizationBySlug(db, params.slug, 'tpq');
 		if (!org) {

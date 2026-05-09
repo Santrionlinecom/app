@@ -8,7 +8,7 @@ import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 
 const requireDb = (locals: App.Locals) => {
 	if (!locals.db) {
-		throw error(500, 'Database not available');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	return locals.db!;
 };
@@ -78,7 +78,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	} catch (err) {
 		console.error('GET /api/notes error', err);
 		return json(
-			{ error: 'Internal Error: pastikan tabel calendar_notes sudah ada (jalankan migrasi /api/admin/migrate).' },
+			{ error: 'Layanan catatan kalender belum siap. Hubungi super admin.' },
 			{ status: 500 }
 		);
 	}
@@ -153,7 +153,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		console.error('POST /api/notes error', err);
 		const msg =
 			typeof err?.message === 'string' && err.message.includes('datatype mismatch')
-				? 'Tipe kolom tidak sesuai. Coba hapus tabel calendar_notes lama agar recreate otomatis.'
+				? 'Layanan catatan kalender belum siap. Hubungi super admin.'
 				: typeof err?.message === 'string'
 					? err.message
 					: 'Gagal menyimpan catatan';

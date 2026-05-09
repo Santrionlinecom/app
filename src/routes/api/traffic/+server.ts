@@ -27,7 +27,7 @@ const normalizeSource = (value: string) => {
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const db = locals.db;
-	if (!db) throw error(500, 'Database tidak tersedia');
+	if (!db) throw error(500, 'Layanan data tidak tersedia');
 
 	const body = await request.json().catch(() => ({}));
 	const orgSlug = typeof body.orgSlug === 'string' ? body.orgSlug.trim() : '';

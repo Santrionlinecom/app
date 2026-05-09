@@ -9,7 +9,7 @@ const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
 const ensureAuth = (locals: App.Locals) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
-		throw error(500, 'Database tidak tersedia');
+		throw error(500, 'Layanan data tidak tersedia');
 	}
 	return user;
 };

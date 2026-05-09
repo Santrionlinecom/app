@@ -51,7 +51,7 @@ const extractJson = (value: string) => {
 	const start = cleaned.indexOf('{');
 	const end = cleaned.lastIndexOf('}');
 	if (start === -1 || end === -1 || end <= start) {
-		throw new Error('Respons Groq tidak berisi JSON valid.');
+		throw new Error('Respons AI tidak berisi JSON valid.');
 	}
 	return JSON.parse(cleaned.slice(start, end + 1)) as Partial<GeneratedArticle>;
 };
@@ -101,7 +101,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json(
 			{
 				success: false,
-				error: 'GROQ_API_KEY belum tersedia. Set sebagai Cloudflare secret, bukan di wrangler.toml.'
+				error: 'Layanan AI belum tersedia. Hubungi super admin.'
 			},
 			{ status: 500 }
 		);
@@ -205,8 +205,7 @@ ${catatan ? `Catatan rujukan: ${catatan}` : ''}`;
 			return json(
 				{
 					success: false,
-					error: 'Groq API menolak permintaan generate artikel.',
-					detail: data.error?.message || response.statusText
+					error: 'Layanan AI menolak permintaan generate artikel.'
 				},
 				{ status: response.status }
 			);
@@ -214,7 +213,7 @@ ${catatan ? `Catatan rujukan: ${catatan}` : ''}`;
 
 		const content = data.choices?.[0]?.message?.content;
 		if (!content) {
-			return json({ success: false, error: 'Respons Groq kosong.' }, { status: 500 });
+			return json({ success: false, error: 'Respons AI kosong.' }, { status: 500 });
 		}
 
 		const parsed = extractJson(content);
@@ -233,14 +232,13 @@ ${catatan ? `Catatan rujukan: ${catatan}` : ''}`;
 			}
 		}
 
-		return json({ success: true, data: article, model: GROQ_ARTICLE_MODEL });
+		return json({ success: true, data: article });
 	} catch (err: any) {
 		console.error('Groq article generation failed:', err);
 		return json(
 			{
 				success: false,
-				error: 'Gagal menghubungi Groq API.',
-				detail: String(err?.message ?? err ?? '')
+				error: 'Gagal menghubungi layanan AI.'
 			},
 			{ status: 500 }
 		);

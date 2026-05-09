@@ -157,7 +157,7 @@ export const actions: Actions = {
 
 	registerOrg: async ({ request, locals }) => {
 		if (!locals.user) return fail(401, { message: 'Unauthenticated', type: 'org' });
-		if (!locals.db) return fail(500, { message: 'Database tidak tersedia', type: 'org' });
+		if (!locals.db) return fail(500, { message: 'Layanan data tidak tersedia', type: 'org' });
 
 		const db = locals.db!;
 
