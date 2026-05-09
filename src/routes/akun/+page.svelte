@@ -350,6 +350,13 @@
 								<p class="mt-1 text-xs text-slate-500">Lengkapi identitas untuk membagikan profil publik</p>
 							</div>
 						{/if}
+						<a
+							href="/akun/perangkat"
+							class="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
+						>
+							<p class="text-sm font-semibold text-slate-900">Perangkat Reader</p>
+							<p class="mt-1 text-xs text-slate-500">Kelola perangkat untuk membaca buku</p>
+						</a>
 						<form method="POST" action="/logout" class="contents">
 							<button
 								type="submit"

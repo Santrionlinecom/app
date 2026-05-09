@@ -102,7 +102,7 @@
 					</div>
 					<div class="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur">
 						<p class="text-[11px] uppercase tracking-[0.24em] text-white/55">Harga Terkunci</p>
-						<p class="mt-2 text-lg font-semibold text-white">{book.pricePerChapter} coin</p>
+						<p class="mt-2 text-lg font-semibold text-white">{book.pricePerChapter} koin</p>
 					</div>
 				</div>
 
@@ -121,6 +121,12 @@
 							class={readingProgress ? 'btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10' : 'btn border-none bg-white text-slate-900 hover:bg-emerald-50'}
 						>
 							{readingProgress ? 'Mulai dari Awal' : 'Mulai Membaca'}
+						</a>
+						<a
+							href={`/buku/${book.slug}/baca?chapter=${readingProgress?.chapterNumber ?? firstChapter.chapterNumber}`}
+							class="btn border-none bg-emerald-500 text-white hover:bg-emerald-400"
+						>
+							Reader PDF
 						</a>
 					{/if}
 					<a href="#daftar-bab" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
@@ -161,8 +167,8 @@
 			<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-700">Akses Baca</p>
 			<h2 class="mt-3 text-2xl font-semibold text-slate-900">Bab gratis lebih dulu</h2>
 			<p class="mt-4 text-sm leading-7 text-slate-700">
-				Bab dengan nomor sampai {book.freeChapterLimit} dapat dibaca penuh. Bab setelahnya sudah ditandai
-				terkunci dan akan memakai coin pada tahap berikutnya.
+				Bab dengan nomor sampai {book.freeChapterLimit} dapat dibaca penuh. Bab setelahnya dapat dibuka
+				dengan koin dan dibaca melalui reader SantriOnline.
 			</p>
 		</article>
 	</section>
