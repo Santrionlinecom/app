@@ -56,6 +56,24 @@
   <div class="prose prose-lg max-w-none prose-slate prose-headings:text-slate-900 prose-p:text-slate-700 prose-img:rounded-xl">
     {@html data.post.content}
   </div>
+
+  {#if data.post.is_auto_generated && (data.post.source_name || data.post.source_url)}
+    <div class="mt-8 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+      <span class="font-semibold text-slate-800">Dirangkum dari:</span>
+      {#if data.post.source_url}
+        <a
+          href={data.post.source_url}
+          target="_blank"
+          rel="nofollow noopener noreferrer"
+          class="break-all text-emerald-700 hover:text-emerald-800"
+        >
+          {data.post.source_name || data.post.source_url}
+        </a>
+      {:else}
+        <span>{data.post.source_name}</span>
+      {/if}
+    </div>
+  {/if}
 </article>
 
 <div class="container mx-auto max-w-3xl px-4">

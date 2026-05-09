@@ -10,6 +10,11 @@ export interface CmsPost {
   thumbnail_url: string | null;
   seo_keyword: string | null;
   meta_description: string | null;
+  source_name?: string | null;
+  source_url?: string | null;
+  is_auto_generated?: number | boolean | null;
+  kategori?: string | null;
+  tags?: string | null;
   scheduled_at: number | null;
   created_at: number;
   updated_at: number;
@@ -47,6 +52,11 @@ export async function ensureCmsSchema(db: D1Database) {
         scheduled_at INTEGER,
         seo_keyword TEXT,
         meta_description TEXT,
+        source_name TEXT,
+        source_url TEXT,
+        is_auto_generated INTEGER DEFAULT 0,
+        kategori TEXT DEFAULT 'umum',
+        tags TEXT DEFAULT '[]',
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )`
@@ -78,6 +88,40 @@ export async function ensureCmsSchema(db: D1Database) {
   } catch (_) {
     // abaikan jika sudah ada
   }
+  try {
+    await db.prepare('ALTER TABLE cms_posts ADD COLUMN source_name TEXT').run();
+  } catch (_) {
+    // abaikan jika sudah ada
+  }
+  try {
+    await db.prepare('ALTER TABLE cms_posts ADD COLUMN source_url TEXT').run();
+  } catch (_) {
+    // abaikan jika sudah ada
+  }
+  try {
+    await db.prepare("ALTER TABLE cms_posts ADD COLUMN is_auto_generated INTEGER DEFAULT 0").run();
+  } catch (_) {
+    // abaikan jika sudah ada
+  }
+  try {
+    await db.prepare("ALTER TABLE cms_posts ADD COLUMN kategori TEXT DEFAULT 'umum'").run();
+  } catch (_) {
+    // abaikan jika sudah ada
+  }
+  try {
+    await db.prepare("ALTER TABLE cms_posts ADD COLUMN tags TEXT DEFAULT '[]'").run();
+  } catch (_) {
+    // abaikan jika sudah ada
+  }
+
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_cms_posts_auto ON cms_posts(is_auto_generated)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_cms_posts_kategori ON cms_posts(kategori)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_cms_posts_source ON cms_posts(source_url)').run();
+  await db
+    .prepare(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_cms_posts_source_unique ON cms_posts(source_url) WHERE source_url IS NOT NULL'
+    )
+    .run();
 }
 
 export async function getAllPosts(

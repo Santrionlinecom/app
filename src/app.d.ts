@@ -36,6 +36,8 @@ declare global {
                 LICENSE_SIGNING_SECRET?: string;
                 STREAMER_LICENSE_SIGNING_SECRET?: string;
                 GROQ_API_KEY?: string;
+                NEWS_FETCH_SECRET?: string;
+                NEWS_FETCHER_URL?: string;
                 TURNSTILE_SITE_KEY?: string;
                 TURNSTILE_SECRET_KEY?: string;
                 R2_PUBLIC_BASE_URL?: string;

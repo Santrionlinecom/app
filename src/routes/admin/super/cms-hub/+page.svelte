@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { Clock3, Newspaper, RefreshCw } from 'lucide-svelte';
 	import {
 		KITAB_CATEGORY_OPTIONS,
 		getKitabCategoryLabel,
@@ -209,6 +210,11 @@
 	let formError = '';
 	$: formError = form && 'error' in form ? form.error ?? '' : '';
 
+	let isFetchingNews = false;
+	let fetchNewsMessage = '';
+	let fetchNewsStatus: 'idle' | 'success' | 'error' = 'idle';
+	let fetchNewsMessageTimer: ReturnType<typeof setTimeout> | null = null;
+
 	let coverInput: HTMLInputElement | null = null;
 	let digitalFileInput: HTMLInputElement | null = null;
 	let kitabCoverInput: HTMLInputElement | null = null;
@@ -335,6 +341,44 @@
 
 	const generateKitabSlug = () => {
 		kitabSlug = normalizeSlug(kitabSlug || kitabTitle);
+	};
+
+	const ambilBeritaSekarang = async () => {
+		if (isFetchingNews) return;
+		isFetchingNews = true;
+		fetchNewsStatus = 'idle';
+		fetchNewsMessage = 'Mengambil berita dari RSS global...';
+
+		if (fetchNewsMessageTimer) {
+			clearTimeout(fetchNewsMessageTimer);
+			fetchNewsMessageTimer = null;
+		}
+
+		try {
+			const response = await fetch('/api/admin/trigger-news', { method: 'POST' });
+			const payload = (await response.json().catch(() => ({}))) as {
+				success?: boolean;
+				message?: string;
+				error?: string;
+			};
+
+			if (!response.ok || payload.success === false) {
+				throw new Error(payload.error || payload.message || 'Gagal mengambil berita.');
+			}
+
+			fetchNewsStatus = 'success';
+			fetchNewsMessage = payload.message || 'Pengambilan berita dimulai. Tunggu 2-3 menit.';
+		} catch (err) {
+			fetchNewsStatus = 'error';
+			fetchNewsMessage = err instanceof Error ? err.message : 'Gagal mengambil berita.';
+		} finally {
+			isFetchingNews = false;
+			fetchNewsMessageTimer = setTimeout(() => {
+				fetchNewsMessage = '';
+				fetchNewsStatus = 'idle';
+				fetchNewsMessageTimer = null;
+			}, 7000);
+		}
 	};
 
 	const uploadCoverAsset = async (
@@ -473,6 +517,45 @@
 							<p class="mt-1 text-xs text-white/70">{card.note}</p>
 						</div>
 					{/each}
+				</div>
+
+				<div class="mt-6 rounded-2xl border border-white/15 bg-white/10 p-4">
+					<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+						<div class="min-w-0">
+							<div class="flex items-center gap-2">
+								<Newspaper class="h-4 w-4 text-emerald-200" aria-hidden="true" />
+								<p class="text-sm font-semibold text-white">Berita Otomatis</p>
+							</div>
+							<div class="mt-2 flex items-start gap-2 text-xs leading-6 text-white/70">
+								<Clock3 class="mt-1 h-3.5 w-3.5 shrink-0 text-white/50" aria-hidden="true" />
+								<span>Jadwal cron: 06.00, 12.00, dan 18.00 WIB.</span>
+							</div>
+						</div>
+						<button
+							type="button"
+							on:click={ambilBeritaSekarang}
+							disabled={isFetchingNews}
+							class="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-70"
+						>
+							<RefreshCw class={`h-4 w-4 ${isFetchingNews ? 'animate-spin' : ''}`} aria-hidden="true" />
+							<span>{isFetchingNews ? 'Mengambil...' : 'Ambil Berita Sekarang'}</span>
+						</button>
+					</div>
+
+					{#if fetchNewsMessage}
+						<p
+							class={`mt-3 rounded-xl border px-3 py-2 text-xs font-semibold ${
+								fetchNewsStatus === 'error'
+									? 'border-rose-200 bg-rose-50 text-rose-700'
+									: fetchNewsStatus === 'success'
+										? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+										: 'border-white/15 bg-white/10 text-white/75'
+							}`}
+							aria-live="polite"
+						>
+							{fetchNewsMessage}
+						</p>
+					{/if}
 				</div>
 
 				<div class="mt-6 space-y-3">
