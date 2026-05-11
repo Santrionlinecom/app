@@ -1,11 +1,13 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import {
+		KITAB_CATEGORY_OPTIONS,
 		KITAB_CATEGORY_ORDER,
 		getKitabCategoryDescription,
 		getKitabCategoryLabel,
 		getKitabCategoryToneClass
 	} from '$lib/data/kitab-categories';
+	import { toKitabDownloadUrl } from '$lib/kitab';
 
 	export let data: PageData;
 
@@ -18,6 +20,7 @@
 		toneClass: string;
 		items: CuratedItem[];
 	};
+	type CategoryFilter = 'all' | (typeof KITAB_CATEGORY_OPTIONS)[number]['value'];
 
 	const formatDate = (value: number | null | undefined) =>
 		value
@@ -47,16 +50,79 @@
 	const kitabCategoryLabel = (value?: string | null) => getKitabCategoryLabel(value);
 	const kitabCategoryDescription = (value?: string | null) => getKitabCategoryDescription(value);
 	const kitabCategoryTone = (value?: string | null) => getKitabCategoryToneClass(value);
+	const sourceHref = (item: { sourceType: KitabItem['sourceType']; sourceUrl: string | null | undefined }) =>
+		toKitabDownloadUrl(item.sourceType, item.sourceUrl) ?? item.sourceUrl ?? '';
+	const categoryFilterLabel = (value: string) =>
+		value === 'quran-tahsin' ? "Qur'an/Tajwid" : kitabCategoryLabel(value);
+	const textValue = (value: unknown) => {
+		if (Array.isArray(value)) return value.join(' ');
+		if (typeof value === 'string' || typeof value === 'number') return String(value);
+		return '';
+	};
+	const normalizeSearchText = (value: string | null | undefined) =>
+		plainText(value)
+			.toLowerCase()
+			.replace(/['’`]/g, '')
+			.replace(/[^a-z0-9]+/g, ' ')
+			.trim();
+	const kitabSearchText = (item: KitabItem | CuratedItem) => {
+		const record = item as Record<string, unknown>;
+		return normalizeSearchText(
+			[
+				record.title,
+				record.author,
+				record.penulis,
+				record.writer,
+				record.category,
+				kitabCategoryLabel(textValue(record.category)),
+				record.madzhab,
+				record.madhhab,
+				record.level,
+				record.tags,
+				record.summary,
+				record.description,
+				record.seriesTitle,
+				record.duration,
+				record.sourceNote
+			]
+				.map(textValue)
+				.filter(Boolean)
+				.join(' ')
+		);
+	};
+	const matchesKitab = (
+		item: KitabItem | CuratedItem,
+		queryTokens: string[],
+		category: CategoryFilter
+	) => {
+		if (category !== 'all' && item.category !== category) return false;
+		if (queryTokens.length === 0) return true;
+		const searchable = kitabSearchText(item);
+		return queryTokens.every((token) => searchable.includes(token));
+	};
 	const sortCuratedItems = (left: CuratedItem, right: CuratedItem) => left.seriesOrder - right.seriesOrder;
 
+	let searchQuery = '';
+	let selectedCategory: CategoryFilter = 'all';
+	let allItems: KitabItem[] = [];
 	let items: KitabItem[] = [];
 	let featuredItems: KitabItem[] = [];
+	let allCuratedItems: CuratedItem[] = [];
 	let curatedItems: CuratedItem[] = [];
 	let curatedSections: CuratedSection[] = [];
+	let normalizedQuery = '';
+	let queryTokens: string[] = [];
+	let hasActiveFilters = false;
+	let hasMatchingKitabs = false;
 
-	$: items = Array.isArray(data.items) ? data.items : [];
+	$: allItems = Array.isArray(data.items) ? data.items : [];
+	$: allCuratedItems = Array.isArray(data.curatedItems) ? data.curatedItems : [];
+	$: normalizedQuery = normalizeSearchText(searchQuery);
+	$: queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+	$: hasActiveFilters = queryTokens.length > 0 || selectedCategory !== 'all';
+	$: items = allItems.filter((item) => matchesKitab(item, queryTokens, selectedCategory));
 	$: featuredItems = items.filter((item) => item.featured);
-	$: curatedItems = Array.isArray(data.curatedItems) ? data.curatedItems : [];
+	$: curatedItems = allCuratedItems.filter((item) => matchesKitab(item, queryTokens, selectedCategory));
 	$: curatedSections = KITAB_CATEGORY_ORDER.map((category) => {
 		const sectionItems = curatedItems
 			.filter((item) => item.category === category)
@@ -70,6 +136,12 @@
 			items: sectionItems
 		};
 	}).filter((section) => section.items.length > 0);
+	$: hasMatchingKitabs = curatedItems.length + items.length > 0;
+
+	const resetFilters = () => {
+		searchQuery = '';
+		selectedCategory = 'all';
+	};
 </script>
 
 <svelte:head>
@@ -179,6 +251,69 @@
 		</article>
 	</section>
 
+	<section class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+		<div class="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+			<div>
+				<label for="kitab-search" class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">
+					Cari Kitab
+				</label>
+				<input
+					id="kitab-search"
+					type="search"
+					bind:value={searchQuery}
+					placeholder="tajwid, aqidah, safinatun, bidayatul, bahasa arab, hadits"
+					class="input input-bordered mt-2 w-full bg-slate-50"
+				/>
+			</div>
+
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Filter Kategori</p>
+				<div class="mt-2 flex flex-wrap gap-2">
+					<button
+						type="button"
+						class={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+							selectedCategory === 'all'
+								? 'border-slate-900 bg-slate-900 text-white'
+								: 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-white'
+						}`}
+						on:click={() => (selectedCategory = 'all')}
+					>
+						Semua
+					</button>
+					{#each KITAB_CATEGORY_OPTIONS as category}
+						<button
+							type="button"
+							class={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+								selectedCategory === category.value
+									? 'border-emerald-600 bg-emerald-600 text-white'
+									: 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-white'
+							}`}
+							on:click={() => (selectedCategory = category.value)}
+						>
+							{categoryFilterLabel(category.value)}
+						</button>
+					{/each}
+				</div>
+			</div>
+		</div>
+
+		{#if hasActiveFilters}
+			<div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+				<p class="text-sm font-semibold text-slate-700">
+					{hasMatchingKitabs ? 'Hasil pencarian ditampilkan di bawah.' : 'Belum ada kitab yang sesuai pencarian.'}
+				</p>
+				<button type="button" class="btn btn-outline btn-sm" on:click={resetFilters}>
+					Reset
+				</button>
+			</div>
+		{/if}
+	</section>
+
+	{#if hasActiveFilters && !hasMatchingKitabs}
+		<section class="rounded-[1.75rem] border border-dashed border-slate-300 bg-white px-6 py-10 text-center shadow-sm">
+			<p class="text-base font-semibold text-slate-900">Belum ada kitab yang sesuai pencarian.</p>
+		</section>
+	{:else}
 	{#if curatedSections.length > 0}
 		<section class="space-y-4">
 			<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
@@ -255,7 +390,7 @@
 
 											<div class="mt-5 flex flex-wrap gap-2">
 												<a href={`/kitab/${item.slug}`} class="btn btn-primary">Buka Materi</a>
-												<a href={item.sourceUrl} target="_blank" rel="noreferrer" class="btn btn-outline">
+												<a href={sourceHref(item)} target="_blank" rel="noreferrer" class="btn btn-outline">
 													PDF Asli
 												</a>
 											</div>
@@ -320,7 +455,10 @@
 									Diperbarui {formatDate(item.updatedAt)}
 								</p>
 								<div class="mt-5 flex flex-wrap gap-2">
-									<a href={`/kitab/${item.slug}`} class="btn btn-primary">Buka Kitab</a>
+									<a href={`/kitab/${item.slug}`} class="btn btn-primary">Buka Materi</a>
+									<a href={sourceHref(item)} target="_blank" rel="noreferrer" class="btn btn-outline">
+										PDF Asli
+									</a>
 								</div>
 							</div>
 						</div>
@@ -330,7 +468,8 @@
 		</section>
 	{/if}
 
-	<section id="koleksi-kitab" class="space-y-4">
+	{#if !hasActiveFilters || items.length > 0}
+		<section id="koleksi-kitab" class="space-y-4">
 		<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
 			<div>
 				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Katalog Publik</p>
@@ -396,12 +535,17 @@
 							</div>
 
 							<div class="flex gap-2">
-								<a href={`/kitab/${item.slug}`} class="btn btn-primary flex-1">Buka Kitab</a>
+								<a href={`/kitab/${item.slug}`} class="btn btn-primary flex-1">Buka Materi</a>
+								<a href={sourceHref(item)} target="_blank" rel="noreferrer" class="btn btn-outline flex-1">
+									PDF Asli
+								</a>
 							</div>
 						</div>
 					</article>
 				{/each}
 			</div>
 		{/if}
-	</section>
+		</section>
+	{/if}
+	{/if}
 </div>
