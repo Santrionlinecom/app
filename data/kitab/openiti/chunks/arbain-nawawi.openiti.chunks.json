@@ -1,0 +1,38 @@
+[
+  {
+    "kitabSlug": "arbain-nawawi-openiti",
+    "title": "Al-Arba'in An-Nawawiyyah",
+    "author": "Imam An-Nawawi",
+    "category": "Hadits",
+    "madhhab": "Syafi'i",
+    "sourceType": "openiti",
+    "sourceNote": "Sumber teks: OpenITI corpus. Perlu verifikasi ulang dengan edisi cetak.",
+    "chunkIndex": 1,
+    "chapter": "Hadits Pertama",
+    "sectionTitle": null,
+    "pageNumber": null,
+    "arabicText": "إنما الأعمال بالنيات، وإنما لكل امرئ ما نوى.",
+    "translationText": null,
+    "explanationText": null,
+    "chunkText": "إنما الأعمال بالنيات، وإنما لكل امرئ ما نوى.",
+    "sourceRef": "Al-Arba'in An-Nawawiyyah, Hadits Pertama, chunk 1"
+  },
+  {
+    "kitabSlug": "arbain-nawawi-openiti",
+    "title": "Al-Arba'in An-Nawawiyyah",
+    "author": "Imam An-Nawawi",
+    "category": "Hadits",
+    "madhhab": "Syafi'i",
+    "sourceType": "openiti",
+    "sourceNote": "Sumber teks: OpenITI corpus. Perlu verifikasi ulang dengan edisi cetak.",
+    "chunkIndex": 2,
+    "chapter": "Hadits Kedua",
+    "sectionTitle": null,
+    "pageNumber": null,
+    "arabicText": "بينما نحن جلوس عند رسول الله صلى الله عليه وسلم ذات يوم...",
+    "translationText": null,
+    "explanationText": null,
+    "chunkText": "بينما نحن جلوس عند رسول الله صلى الله عليه وسلم ذات يوم...",
+    "sourceRef": "Al-Arba'in An-Nawawiyyah, Hadits Kedua, chunk 2"
+  }
+]
