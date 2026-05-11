@@ -1,5 +1,11 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import type { KitabSourceType, KitabStatus } from '$lib/kitab';
+import {
+	getKitabStats,
+	getPublishedKitabs,
+	normalizeKitabStatus,
+	type KitabSourceType,
+	type KitabStatus
+} from '$lib/kitab';
 
 type KitabRow = {
 	id: string;
@@ -15,8 +21,8 @@ type KitabRow = {
 	mime_type: string | null;
 	file_size: number | null;
 	page_count: number | null;
-	status: KitabStatus;
-	featured: number | boolean | null;
+	status: string | null;
+	featured: number | boolean | string | null;
 	created_at: number;
 	updated_at: number;
 };
@@ -46,9 +52,16 @@ export type KitabOverview = {
 		totalItems: number;
 		publishedItems: number;
 		draftItems: number;
+		archivedItems: number;
 		featuredItems: number;
 	};
 	items: KitabListItem[];
+};
+
+const statusRank: Record<KitabStatus, number> = {
+	published: 0,
+	draft: 1,
+	archived: 2
 };
 
 const mapKitab = (row: KitabRow): KitabListItem => ({
@@ -65,11 +78,19 @@ const mapKitab = (row: KitabRow): KitabListItem => ({
 	mimeType: row.mime_type,
 	fileSize: row.file_size,
 	pageCount: row.page_count,
-	status: row.status,
-	featured: Boolean(row.featured),
+	status: normalizeKitabStatus(row.status),
+	featured: row.featured === true || row.featured === 1 || row.featured === '1',
 	createdAt: row.created_at,
 	updatedAt: row.updated_at
 });
+
+const sortKitabItems = (items: KitabListItem[]) =>
+	[...items].sort((left, right) => {
+		const statusDelta = statusRank[left.status] - statusRank[right.status];
+		if (statusDelta !== 0) return statusDelta;
+		if (left.featured !== right.featured) return left.featured ? -1 : 1;
+		return right.updatedAt - left.updatedAt;
+	});
 
 export async function ensureKitabCatalogSchema(db: D1Database) {
 	await db
@@ -114,31 +135,15 @@ export async function listKitabItems(db: D1Database): Promise<KitabListItem[]> {
 		.prepare(
 			`SELECT *
 			 FROM kitab_catalog
-			 ORDER BY
-			 	CASE status
-					WHEN 'published' THEN 0
-					WHEN 'draft' THEN 1
-					ELSE 2
-				END,
-				featured DESC,
-				updated_at DESC`
+			 ORDER BY updated_at DESC`
 		)
 		.all<KitabRow>();
 
-	return (results ?? []).map((row) => mapKitab(row));
+	return sortKitabItems((results ?? []).map((row) => mapKitab(row)));
 }
 
 export async function listPublishedKitabItems(db: D1Database): Promise<KitabListItem[]> {
-	const { results } = await db
-		.prepare(
-			`SELECT *
-			 FROM kitab_catalog
-			 WHERE status = 'published'
-			 ORDER BY featured DESC, updated_at DESC`
-		)
-		.all<KitabRow>();
-
-	return (results ?? []).map((row) => mapKitab(row));
+	return getPublishedKitabs(await listKitabItems(db));
 }
 
 export async function getKitabItemById(db: D1Database, id: string): Promise<KitabListItem | null> {
@@ -151,42 +156,24 @@ export async function getKitabItemBySlug(
 	slug: string,
 	options?: { publishedOnly?: boolean }
 ): Promise<KitabListItem | null> {
-	const row = options?.publishedOnly
-		? await db
-				.prepare("SELECT * FROM kitab_catalog WHERE slug = ? AND status = 'published'")
-				.bind(slug)
-				.first<KitabRow>()
-		: await db.prepare('SELECT * FROM kitab_catalog WHERE slug = ?').bind(slug).first<KitabRow>();
+	const row = await db.prepare('SELECT * FROM kitab_catalog WHERE slug = ?').bind(slug).first<KitabRow>();
+	const item = row ? mapKitab(row) : null;
 
-	return row ? mapKitab(row) : null;
+	if (options?.publishedOnly && item?.status !== 'published') return null;
+	return item;
 }
 
 export async function getKitabOverview(db: D1Database): Promise<KitabOverview> {
-	const [items, stats] = await Promise.all([
-		listKitabItems(db),
-		db
-			.prepare(
-				`SELECT
-					COUNT(1) as totalItems,
-					COALESCE(SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END), 0) as publishedItems,
-					COALESCE(SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END), 0) as draftItems,
-					COALESCE(SUM(CASE WHEN featured = 1 THEN 1 ELSE 0 END), 0) as featuredItems
-				 FROM kitab_catalog`
-			)
-			.first<{
-				totalItems: number | null;
-				publishedItems: number | null;
-				draftItems: number | null;
-				featuredItems: number | null;
-			}>()
-	]);
+	const items = await listKitabItems(db);
+	const stats = getKitabStats(items);
 
 	return {
 		stats: {
-			totalItems: Number(stats?.totalItems ?? 0),
-			publishedItems: Number(stats?.publishedItems ?? 0),
-			draftItems: Number(stats?.draftItems ?? 0),
-			featuredItems: Number(stats?.featuredItems ?? 0)
+			totalItems: stats.totalItems,
+			publishedItems: stats.publishedItems,
+			draftItems: stats.draftItems,
+			archivedItems: stats.archivedItems,
+			featuredItems: stats.featuredItems
 		},
 		items
 	};
@@ -235,7 +222,7 @@ export async function upsertKitabItem(
 				input.mimeType?.trim() || null,
 				input.fileSize ?? null,
 				input.pageCount ?? null,
-				input.status,
+				normalizeKitabStatus(input.status),
 				input.featured ? 1 : 0,
 				now,
 				id
@@ -264,7 +251,7 @@ export async function upsertKitabItem(
 			input.mimeType?.trim() || null,
 			input.fileSize ?? null,
 			input.pageCount ?? null,
-			input.status,
+			normalizeKitabStatus(input.status),
 			input.featured ? 1 : 0,
 			now,
 			now

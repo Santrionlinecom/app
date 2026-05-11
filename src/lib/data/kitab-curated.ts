@@ -29,6 +29,8 @@ export type CuratedKitabChapter = {
 export type CuratedKitabMaterial = {
 	slug: string;
 	title: string;
+	author?: string;
+	madzhab?: string;
 	category: KitabCategoryKey;
 	seriesKey: string;
 	seriesTitle: string;
