@@ -263,6 +263,22 @@
     progress.textContent = `Lembar ${index + 1} dari ${total} - Halaman ${pageNumber(page)}`;
   };
 
+  const suppressInstallPopup = () => {
+    try {
+      localStorage.setItem('so_install_prompt_v2_snooze_until', String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+    } catch {
+      // Ignore storage failures; the visual overlay still needs to be hidden for the reader.
+    }
+
+    const dialogTitle = document.getElementById('install-dialog-title');
+    const dialog = dialogTitle?.closest('[role="dialog"]');
+    const overlay = dialog?.parentElement;
+    if (overlay instanceof HTMLElement) {
+      overlay.hidden = true;
+      overlay.style.display = 'none';
+    }
+  };
+
   const setupBook = (book) => {
     if (!isQuranMobile() || initializedBooks.has(book) || book.querySelector('.stf__parent')) return;
 
@@ -506,6 +522,7 @@
     }
 
     ensureSearchControls();
+    suppressInstallPopup();
     if (!isQuranMobile()) return;
 
     const book = document.querySelector('.mushaf-book');
