@@ -1,6 +1,6 @@
 # OpenITI Local Importer
 
-Pipeline ini membaca file teks OpenITI lokal, membersihkan markup dasar, lalu membuat JSON chunk yang siap dipakai untuk tahap import kitab berikutnya.
+Pipeline ini membaca file teks OpenITI lokal, membersihkan markup dasar, lalu membuat JSON chunk yang siap diimpor ke referensi kitab production.
 
 Dataset OpenITI tidak disimpan di repo ini. Simpan corpus di luar project, misalnya:
 
@@ -30,6 +30,17 @@ npm run openiti:parse -- --mapping scripts/openiti/openiti-books.sample.json
 ```
 
 Output dibuat sebagai JSON array di path `output`. Folder `data/kitab/openiti/chunks/` hanya disiapkan sebagai tujuan output kecil lokal; jangan commit dataset atau hasil chunk besar tanpa review.
+
+## Import ke Production
+
+Setelah JSON chunk selesai dibuat, super admin bisa membuka Pusat Konten > Perpustakaan Kitab dan memakai tombol `Import OpenITI JSON`.
+
+Importer production:
+
+- menerima JSON array hasil parser ini,
+- menyimpan chunk ke D1 `kitab_referensi`,
+- mengirim embedding ke Vectorize,
+- memakai ID stabil per `kitabSlug + chunkIndex`, sehingga re-import file yang sama akan memperbarui chunk lama tanpa menggandakan referensi.
 
 ## Format Output
 
@@ -61,4 +72,4 @@ Setiap chunk berisi metadata kitab, posisi chunk, teks Arab, dan catatan sumber:
 - Parser ini hanya local tooling. Belum ada AI, belum ada Vectorize, dan belum ada OCR.
 - OpenITI menggunakan lisensi CC BY-NC-SA 4.0. Pastikan atribusi dan batas penggunaan non-komersial dipatuhi.
 - Teks hasil parse harus diverifikasi ulang dengan edisi cetak atau sumber mu'tabar sebelum dipakai publik.
-- Parser ini tidak mengimpor seluruh OpenITI dan tidak membuat endpoint D1 baru.
+- Parser ini tidak mengimpor seluruh OpenITI secara otomatis; import production tetap dilakukan sadar oleh super admin.

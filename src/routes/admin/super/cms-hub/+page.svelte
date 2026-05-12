@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
-	import { Clock3, Newspaper, RefreshCw } from 'lucide-svelte';
+	import { Clock3, FileUp, Newspaper, RefreshCw } from 'lucide-svelte';
 	import {
 		KITAB_CATEGORY_OPTIONS,
 		getKitabCategoryLabel,
@@ -218,9 +218,13 @@
 	let coverInput: HTMLInputElement | null = null;
 	let digitalFileInput: HTMLInputElement | null = null;
 	let kitabCoverInput: HTMLInputElement | null = null;
+	let openitiImportInput: HTMLInputElement | null = null;
 	let uploadingCover = false;
 	let uploadingDigitalFile = false;
 	let uploadingKitabCover = false;
+	let importingOpeniti = false;
+	let openitiImportMessage = '';
+	let openitiImportStatus: 'idle' | 'success' | 'error' = 'idle';
 
 	let kitabFormSeed = '';
 	let kitabId = '';
@@ -467,6 +471,54 @@
 		} finally {
 			uploadingDigitalFile = false;
 			if (target) target.value = '';
+		}
+	};
+
+	const onPickOpenitiImport = async (event: Event) => {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (!file || importingOpeniti) return;
+
+		importingOpeniti = true;
+		openitiImportMessage = '';
+		openitiImportStatus = 'idle';
+
+		try {
+			const raw = await file.text();
+			const rows = JSON.parse(raw);
+			if (!Array.isArray(rows)) {
+				throw new Error('File OpenITI harus berupa JSON array hasil parser.');
+			}
+
+			const response = await fetch('/api/admin/kitab/openiti-import', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ rows })
+			});
+			const payload = (await response.json().catch(() => ({}))) as {
+				ok?: boolean;
+				error?: string;
+				importedChunks?: number;
+				books?: Array<{ title?: string; chunks?: number }>;
+			};
+
+			if (!response.ok || payload.ok === false) {
+				throw new Error(payload.error || 'Import OpenITI gagal.');
+			}
+
+			const bookSummary = (payload.books ?? [])
+				.map((book) => `${book.title ?? 'Kitab'} (${formatNumber(book.chunks ?? 0)} chunk)`)
+				.join(', ');
+			openitiImportStatus = 'success';
+			openitiImportMessage = bookSummary
+				? `Import selesai: ${bookSummary}.`
+				: `Import selesai: ${formatNumber(payload.importedChunks ?? rows.length)} chunk.`;
+		} catch (err) {
+			openitiImportStatus = 'error';
+			openitiImportMessage = err instanceof Error ? err.message : 'Import OpenITI gagal.';
+		} finally {
+			importingOpeniti = false;
+			target.value = '';
 		}
 	};
 </script>
@@ -1000,6 +1052,22 @@
 				</p>
 			</div>
 			<div class="flex flex-wrap gap-2">
+				<button
+					type="button"
+					class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-70"
+					on:click={() => openitiImportInput?.click()}
+					disabled={importingOpeniti}
+				>
+					<FileUp class="h-4 w-4" aria-hidden="true" />
+					<span>{importingOpeniti ? 'Mengimpor...' : 'Import OpenITI JSON'}</span>
+				</button>
+				<input
+					bind:this={openitiImportInput}
+					type="file"
+					accept="application/json,.json"
+					class="hidden"
+					on:change={onPickOpenitiImport}
+				/>
 				<a href="/kitab" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
 					Lihat Halaman Publik
 				</a>
@@ -1008,6 +1076,19 @@
 				</a>
 			</div>
 		</div>
+
+		{#if openitiImportMessage}
+			<p
+				class={`mb-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${
+					openitiImportStatus === 'error'
+						? 'border-rose-200 bg-rose-50 text-rose-700'
+						: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+				}`}
+				aria-live="polite"
+			>
+				{openitiImportMessage}
+			</p>
+		{/if}
 
 		<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 			{#each kitabCards as card}

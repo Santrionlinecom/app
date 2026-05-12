@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { extractPdfTextPages, splitText, toDriveDownloadUrl } from '$lib/server/pdf';
-import { insertDokumen } from '$lib/server/rag';
+import { ensureKitabReferenceSchema, insertDokumen } from '$lib/server/rag';
 import { getOrganizationById } from '$lib/server/organizations';
 import { isEducationalOrgType } from '$lib/server/utils';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
@@ -45,6 +45,7 @@ export const GET: RequestHandler = async ({ platform, locals }) => {
 	await assertKitabAccess(locals);
 	if (!platform?.env?.DB) throw error(500, 'Layanan data tidak tersedia');
 	try {
+		await ensureKitabReferenceSchema(platform.env.DB);
 		const { results } =
 			(await platform.env.DB.prepare(
 				`SELECT id, judul, halaman, jilid, created_at as createdAt 
