@@ -50,7 +50,7 @@
       @media (max-width: 767px) {
         .quran-top-search-btn {
           position: relative;
-          z-index: 2;
+          z-index: 95;
           width: 2.25rem;
           min-width: 2.25rem;
           height: 2.25rem;
@@ -74,7 +74,8 @@
             0 0;
           z-index: 80;
           display: block;
-          background: rgba(2, 6, 23, 0.26);
+          pointer-events: none;
+          background: transparent;
           backdrop-filter: none;
         }
 
@@ -519,6 +520,15 @@
     if (event.key !== 'Escape') return;
     document.body.classList.remove('quran-search-open');
     const button = document.querySelector('.quran-top-search-btn');
+    if (button) syncSearchButton(button);
+  });
+  document.addEventListener('click', (event) => {
+    if (!mobileQuery.matches || !document.body.classList.contains('quran-search-open')) return;
+    const panel = document.querySelector('.quran-search-panel');
+    const button = document.querySelector('.quran-top-search-btn');
+    const target = event.target;
+    if (panel?.contains(target) || button?.contains(target)) return;
+    document.body.classList.remove('quran-search-open');
     if (button) syncSearchButton(button);
   });
   window.addEventListener('pageshow', scan);
