@@ -1,6 +1,5 @@
 {
-	"files.associations": {
-		"*.css": "tailwind"
-	},
-	"java.configuration.updateBuildConfiguration": "interactive"
+  "files.associations": {
+    "*.css": "tailwind"
+  }
 }

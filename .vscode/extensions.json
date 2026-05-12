@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    "svelte.svelte-vscode",
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode"
+  ],
+  "unwantedRecommendations": [
+    "vscjava.vscode-java-pack",
+    "redhat.java",
+    "vscjava.vscode-java-debug",
+    "vscjava.vscode-java-dependency",
+    "vscjava.vscode-gradle",
+    "vscjava.vscode-maven",
+    "vscjava.vscode-java-test",
+    "vscjava.vscode-java-upgrade",
+    "vscjava.migrate-java-to-azure"
+  ]
+}
