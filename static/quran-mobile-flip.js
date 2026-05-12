@@ -70,7 +70,7 @@
         body.quran-search-open .quran-search-overlay-backdrop {
           position: fixed;
           inset:
-            max(4.65rem, calc(env(safe-area-inset-top) + 4.15rem))
+            max(8.35rem, calc(env(safe-area-inset-top) + 7.85rem))
             0 0;
           z-index: 80;
           display: block;
@@ -82,11 +82,11 @@
         body.quran-search-open .quran-search-panel {
           position: fixed !important;
           inset:
-            max(4.75rem, calc(env(safe-area-inset-top) + 4.25rem))
+            max(8.75rem, calc(env(safe-area-inset-top) + 8.25rem))
             0.75rem auto 0.75rem;
           z-index: 90;
           display: flex !important;
-          max-height: min(30rem, calc(100dvh - 6rem));
+          max-height: min(28rem, calc(100dvh - 10rem));
           overflow: auto;
           border-color: rgba(16, 185, 129, 0.28) !important;
           border-radius: 1rem !important;
