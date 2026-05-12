@@ -2,8 +2,74 @@
   const mobileQuery = window.matchMedia('(max-width: 767px)');
   const pagePath = '/kitab/quran';
   const initializedBooks = new WeakSet();
+  const styleId = 'quran-mobile-flip-style';
 
   const isQuranMobile = () => location.pathname === pagePath && mobileQuery.matches;
+
+  const ensureStyle = () => {
+    if (document.getElementById(styleId)) return;
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      @media (max-width: 767px) {
+        .mushaf-book.quran-js-flip-ready {
+          position: relative !important;
+          overflow: hidden !important;
+          perspective: 1600px;
+        }
+
+        .mushaf-book.quran-js-flip-ready > .mushaf-page {
+          position: absolute !important;
+          inset: 0;
+          display: block !important;
+          width: 100% !important;
+          height: 100% !important;
+          opacity: 0;
+          transform: rotateY(0deg);
+          transform-style: preserve-3d;
+          transition:
+            transform 680ms cubic-bezier(0.2, 0.78, 0.2, 1),
+            opacity 420ms ease;
+          backface-visibility: hidden;
+          will-change: transform, opacity;
+        }
+
+        .mushaf-book.quran-js-flip-ready > .mushaf-page[hidden] {
+          display: none !important;
+        }
+
+        .mushaf-book.quran-js-flip-ready > .mushaf-page.is-active,
+        .mushaf-book.quran-js-flip-ready > .mushaf-page.is-entering {
+          opacity: 1;
+        }
+
+        .mushaf-book.quran-js-flip-ready > .mushaf-page.is-active {
+          z-index: 2;
+        }
+
+        .mushaf-book.quran-js-flip-ready > .mushaf-page.is-entering {
+          z-index: 1;
+          transform: rotateY(0deg);
+        }
+
+        .mushaf-book.quran-js-flip-ready > .mushaf-page.is-leaving {
+          z-index: 3;
+          opacity: 0.16;
+        }
+
+        .mushaf-book.quran-js-flip-ready > .mushaf-page.is-leaving.flip-next {
+          transform: rotateY(-96deg);
+          transform-origin: left center;
+        }
+
+        .mushaf-book.quran-js-flip-ready > .mushaf-page.is-leaving.flip-prev {
+          transform: rotateY(96deg);
+          transform-origin: right center;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  };
 
   const pageNumber = (page) => {
     const footer = page.querySelector('.mushaf-footer');
@@ -22,6 +88,8 @@
 
     const pages = Array.from(book.querySelectorAll(':scope > .mushaf-page'));
     if (pages.length < 2) return;
+
+    ensureStyle();
 
     const toolbar = document.querySelector('.mushaf-toolbar');
     const buttons = Array.from(toolbar?.querySelectorAll('button') || []);
