@@ -48,6 +48,54 @@
 	$: descriptionText = curatedItem
 		? plainText(curatedItem.description || curatedItem.summary)
 		: plainText(item?.description || item?.summary);
+	const learningDisclaimer =
+		'Materi kitab ini untuk pembelajaran. Untuk masalah hukum dan amaliah, tetap utamakan bimbingan guru/ustadz.';
+	const emptyMeta = 'Belum diisi';
+	const readMetaText = (
+		source: Record<string, unknown> | null | undefined,
+		keys: string[]
+	) => {
+		if (!source) return '';
+		for (const key of keys) {
+			const value = source[key];
+			if (typeof value === 'string' && value.trim()) return value.trim();
+			if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+		}
+		return '';
+	};
+
+	$: itemRecord = item as Record<string, unknown> | null | undefined;
+	$: curatedRecord = curatedItem as Record<string, unknown> | null | undefined;
+	$: detailAuthor =
+		readMetaText(curatedRecord, ['author', 'penulis', 'writer']) ||
+		readMetaText(itemRecord, ['author', 'penulis', 'writer']) ||
+		(curatedItem ? 'Tim SantriOnline' : emptyMeta);
+	$: detailCategory = kitabCategoryLabel(curatedItem?.category ?? item?.category) || emptyMeta;
+	$: detailMadzhab =
+		readMetaText(curatedRecord, ['madzhab', 'madhhab']) ||
+		readMetaText(itemRecord, ['madzhab', 'madhhab']) ||
+		emptyMeta;
+	$: detailLevel = (curatedItem?.level ?? readMetaText(itemRecord, ['level'])) || emptyMeta;
+	$: detailPathway =
+		curatedItem?.duration ||
+		readMetaText(itemRecord, ['duration', 'pathway', 'jalur']) ||
+		(item?.pageCount ? `${item.pageCount} halaman` : emptyMeta);
+	$: detailPosition =
+		(curatedItem ? `Jilid ${curatedItem.seriesOrder}` : '') ||
+		readMetaText(itemRecord, ['position', 'posisi', 'jilid', 'volume']) ||
+		emptyMeta;
+	$: detailTags = curatedItem?.tags ?? [
+		...(item?.category ? [kitabCategoryLabel(item.category)] : []),
+		sourceLabel[sourceType]
+	];
+	$: detailSourceNote =
+		curatedItem?.sourceNote ?? readMetaText(itemRecord, ['sourceNote', 'source_note']);
+	$: detailSummary = curatedItem
+		? plainText(curatedItem.summary)
+		: plainText(item?.summary) || 'Ringkasan belum ditambahkan.';
+	$: detailDescription = curatedItem
+		? plainText(curatedItem.description)
+		: plainText(item?.description) || 'Deskripsi lengkap belum ditambahkan.';
 
 	const moduleHref = (slug: string, moduleId: string) => getCuratedKitabModuleHref(slug, moduleId);
 	const chapterModuleHref = (moduleSpan: string) => {
@@ -97,6 +145,11 @@
 								Mulai Bab 1
 							</a>
 						{/if}
+						{#if readerUrl}
+							<a href="#reader-sumber" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
+								Baca PDF di sini
+							</a>
+						{/if}
 						{#if downloadUrl}
 							<a
 								href={downloadUrl}
@@ -134,6 +187,35 @@
 						<p class="mt-3 text-sm leading-7 text-white/75">{plainText(curatedItem.description)}</p>
 					</div>
 					<div class="rounded-[1.75rem] border border-white/10 bg-slate-950/45 p-6">
+						<p class="text-xs font-semibold uppercase tracking-[0.32em] text-white/55">Informasi Kitab</p>
+						<div class="mt-4 grid gap-3 sm:grid-cols-2">
+							<div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+								<p class="text-[11px] uppercase tracking-[0.24em] text-white/45">Penulis/Penyusun</p>
+								<p class="mt-2 text-sm font-semibold text-white">{detailAuthor}</p>
+							</div>
+							<div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+								<p class="text-[11px] uppercase tracking-[0.24em] text-white/45">Kategori</p>
+								<p class="mt-2 text-sm font-semibold text-white">{detailCategory}</p>
+							</div>
+							<div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+								<p class="text-[11px] uppercase tracking-[0.24em] text-white/45">Madzhab</p>
+								<p class="mt-2 text-sm font-semibold text-white">{detailMadzhab}</p>
+							</div>
+							<div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+								<p class="text-[11px] uppercase tracking-[0.24em] text-white/45">Level</p>
+								<p class="mt-2 text-sm font-semibold text-white">{detailLevel}</p>
+							</div>
+							<div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+								<p class="text-[11px] uppercase tracking-[0.24em] text-white/45">Jalur/Modul</p>
+								<p class="mt-2 text-sm font-semibold text-white">{detailPathway}</p>
+							</div>
+							<div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+								<p class="text-[11px] uppercase tracking-[0.24em] text-white/45">Posisi/Jilid</p>
+								<p class="mt-2 text-sm font-semibold text-white">{detailPosition}</p>
+							</div>
+						</div>
+					</div>
+					<div class="rounded-[1.75rem] border border-white/10 bg-slate-950/45 p-6">
 						<p class="text-xs font-semibold uppercase tracking-[0.32em] text-white/55">Tag Utama</p>
 						<div class="mt-4 flex flex-wrap gap-2">
 							{#each curatedItem.tags as tag}
@@ -149,8 +231,19 @@
 
 		<section>
 			<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Tujuan Kitab</p>
-				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Apa yang ingin dibangun</h2>
+				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Reader Awal</p>
+				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Ringkasan kitab dan arah belajar</h2>
+				<div class="mt-6 grid gap-3 lg:grid-cols-2">
+					<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Ringkasan</p>
+						<p class="mt-2 text-sm leading-7 text-slate-700">{detailSummary}</p>
+					</div>
+					<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Deskripsi</p>
+						<p class="mt-2 text-sm leading-7 text-slate-700">{detailDescription}</p>
+					</div>
+				</div>
+				<p class="mt-6 text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Tujuan Kitab</p>
 				<div class="mt-6 grid gap-3">
 					{#each curatedItem.objectives as objective}
 						<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-7 text-slate-700">
@@ -158,9 +251,15 @@
 						</div>
 					{/each}
 				</div>
-				<div class="mt-6 rounded-[1.5rem] border border-amber-100 bg-amber-50 px-5 py-5">
-					<p class="text-xs font-semibold uppercase tracking-[0.28em] text-amber-700">Catatan Sumber</p>
-					<p class="mt-3 text-sm leading-7 text-amber-950/80">{curatedItem.sourceNote}</p>
+				{#if detailSourceNote}
+					<div class="mt-6 rounded-[1.5rem] border border-amber-100 bg-amber-50 px-5 py-5">
+						<p class="text-xs font-semibold uppercase tracking-[0.28em] text-amber-700">Catatan Sumber</p>
+						<p class="mt-3 text-sm leading-7 text-amber-950/80">{detailSourceNote}</p>
+					</div>
+				{/if}
+				<div class="mt-4 rounded-[1.5rem] border border-emerald-100 bg-emerald-50 px-5 py-5">
+					<p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-700">Disclaimer</p>
+					<p class="mt-3 text-sm leading-7 text-emerald-950/80">{learningDisclaimer}</p>
 				</div>
 			</article>
 		</section>
@@ -194,9 +293,9 @@
 							{#if chapterHref}
 								<a
 									href={chapterHref}
-									class="mt-4 inline-flex text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+									class="mt-4 inline-flex rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
 								>
-									Buka bab terkait →
+									Buka Bab
 								</a>
 							{/if}
 
@@ -260,8 +359,8 @@
 								<span>{module.examples.length} contoh</span>
 								<span>{module.practice.length} latihan</span>
 							</div>
-							<span class="text-sm font-semibold text-emerald-700 transition group-hover:text-emerald-800">
-								Buka Bab →
+							<span class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition group-hover:bg-emerald-700">
+								Buka Bab
 							</span>
 						</div>
 					</a>
@@ -289,7 +388,7 @@
 		</section>
 
 		{#if readerUrl}
-			<section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+			<section id="reader-sumber" class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
 				<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
 					<div>
 						<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Viewer Sumber</p>
@@ -355,13 +454,13 @@
 
 					<div class="mt-6 flex flex-wrap gap-3">
 						{#if readerUrl}
-							<a href={readerUrl} target="_blank" rel="noreferrer" class="btn border-none bg-white text-slate-900 hover:bg-emerald-50">
-								Buka Viewer
+							<a href="#reader-sumber" class="btn border-none bg-white text-slate-900 hover:bg-emerald-50">
+								Baca di Halaman Ini
 							</a>
 						{/if}
 						{#if downloadUrl}
 							<a href={downloadUrl} target="_blank" rel="noreferrer" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
-								Buka Sumber
+								PDF Asli
 							</a>
 						{/if}
 					</div>
@@ -385,7 +484,7 @@
 		</section>
 
 		<section class="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
-			<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+			<article id="reader-sumber" class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
 				<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
 					<div>
 						<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Viewer Kitab</p>
@@ -422,19 +521,66 @@
 					deskripsi, atau sumber file, halaman ini akan ikut berubah otomatis.
 				</p>
 
+				<div class="mt-6 grid gap-3 sm:grid-cols-2">
+					<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Penulis/Penyusun</p>
+						<p class="mt-2 text-sm font-semibold text-slate-900">{detailAuthor}</p>
+					</div>
+					<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Kategori</p>
+						<p class="mt-2 text-sm font-semibold text-slate-900">{detailCategory}</p>
+					</div>
+					<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Madzhab</p>
+						<p class="mt-2 text-sm font-semibold text-slate-900">{detailMadzhab}</p>
+					</div>
+					<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Level</p>
+						<p class="mt-2 text-sm font-semibold text-slate-900">{detailLevel}</p>
+					</div>
+					<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Jalur/Modul</p>
+						<p class="mt-2 text-sm font-semibold text-slate-900">{detailPathway}</p>
+					</div>
+					<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Posisi/Jilid</p>
+						<p class="mt-2 text-sm font-semibold text-slate-900">{detailPosition}</p>
+					</div>
+					<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Tags</p>
+						<div class="mt-2 flex flex-wrap gap-2">
+							{#each detailTags as tag}
+								<span class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+									{tag}
+								</span>
+							{/each}
+						</div>
+					</div>
+				</div>
+
 				<div class="mt-6 space-y-3">
 					<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
 						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Ringkasan</p>
 						<p class="mt-2 text-sm leading-7 text-slate-700">
-							{plainText(item.summary) || 'Ringkasan belum ditambahkan.'}
+							{detailSummary}
 						</p>
 					</div>
 					<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
 						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Deskripsi</p>
 						<p class="mt-2 text-sm leading-7 text-slate-700">
-							{plainText(item.description) || 'Deskripsi lengkap belum ditambahkan.'}
+							{detailDescription}
 						</p>
 					</div>
+					{#if detailSourceNote}
+						<div class="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-4">
+							<p class="text-xs uppercase tracking-[0.24em] text-amber-700">Catatan Sumber</p>
+							<p class="mt-2 text-sm leading-7 text-amber-950/80">{detailSourceNote}</p>
+						</div>
+					{/if}
+				</div>
+				<div class="mt-6 rounded-[1.5rem] border border-emerald-100 bg-emerald-50 px-5 py-5">
+					<p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-700">Disclaimer</p>
+					<p class="mt-3 text-sm leading-7 text-emerald-950/80">{learningDisclaimer}</p>
 				</div>
 			</article>
 		</section>

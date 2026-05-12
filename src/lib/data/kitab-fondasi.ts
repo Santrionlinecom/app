@@ -8,6 +8,8 @@ export const fondasiKitabMaterials: CuratedKitabMaterial[] = [
 	{
 		slug: 'ilmu-tajwid-lengkap',
 		title: 'Ilmu Tajwid Lengkap',
+		author: 'Tim SantriOnline',
+		madzhab: 'Tidak khusus',
 		category: 'quran-tahsin',
 		seriesKey: SERIES_KEY,
 		seriesTitle: SERIES_TITLE,
@@ -248,6 +250,8 @@ export const fondasiKitabMaterials: CuratedKitabMaterial[] = [
 	{
 		slug: 'terjemah-aqidatul-awam',
 		title: 'Terjemah Akidatul Awam',
+		author: 'Sayyid Ahmad al-Marzuqi',
+		madzhab: 'Ahlussunnah wal Jamaah',
 		category: 'aqidah',
 		seriesKey: SERIES_KEY,
 		seriesTitle: SERIES_TITLE,
@@ -521,6 +525,8 @@ export const fondasiKitabMaterials: CuratedKitabMaterial[] = [
 	{
 		slug: 'safinatun-najah-makna-perkata',
 		title: 'Safinatun Najah Makna Perkata',
+		author: 'Syekh Salim bin Sumair al-Hadhrami',
+		madzhab: "Syafi'i",
 		category: 'fiqih',
 		seriesKey: SERIES_KEY,
 		seriesTitle: SERIES_TITLE,
@@ -827,6 +833,8 @@ export const fondasiKitabMaterials: CuratedKitabMaterial[] = [
 	{
 		slug: 'terjemah-syarah-arbain-nawawiyah-ibnu-daqiqil-ied',
 		title: 'Terjemah Syarah Arba\'in Nawawiyah - Ibnu Daqiqil \'Ied',
+		author: 'Imam an-Nawawi dan Ibnu Daqiqil \'Ied',
+		madzhab: 'Lintas madzhab',
 		category: 'hadits',
 		seriesKey: SERIES_KEY,
 		seriesTitle: SERIES_TITLE,
@@ -1133,6 +1141,8 @@ export const fondasiKitabMaterials: CuratedKitabMaterial[] = [
 	{
 		slug: 'terjemah-bidayatul-hidayah',
 		title: 'Terjemah Bidayatul Hidayah',
+		author: 'Imam al-Ghazali',
+		madzhab: "Syafi'i",
 		category: 'adab-tasawuf',
 		seriesKey: SERIES_KEY,
 		seriesTitle: SERIES_TITLE,

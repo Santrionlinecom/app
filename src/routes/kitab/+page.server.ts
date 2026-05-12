@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { getKitabCategoryMeta } from '$lib/data/kitab-categories';
 import { ensureKitabCatalogSchema, listPublishedKitabItems } from '$lib/server/kitab-catalog';
 import { featuredCuratedKitab } from '$lib/data/kitab-curated';
+import { getKitabStats } from '$lib/kitab';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
 	const db = locals.db ?? platform?.env?.DB;
@@ -21,7 +22,6 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 	await ensureKitabCatalogSchema(db);
 	const items = await listPublishedKitabItems(db);
 	const publishedBySlug = new Map(items.map((item) => [item.slug, item]));
-	const curatedSlugs = new Set(featuredCuratedKitab.map((item) => item.slug));
 	const curatedItems = featuredCuratedKitab.map((item) => {
 		const mirrored = publishedBySlug.get(item.slug);
 		if (!mirrored) return item;
@@ -33,16 +33,16 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 			updatedAt: mirrored.updatedAt || item.updatedAt
 		};
 	});
-	const publicItems = items.filter((item) => !curatedSlugs.has(item.slug));
+	const stats = getKitabStats(items);
 
 	return {
 		curatedItems,
-		items: publicItems,
+		items,
 		stats: {
-			totalItems: items.length,
-			featuredItems: items.filter((item) => item.featured).length,
-			pdfItems: items.filter((item) => item.sourceType === 'pdf').length,
-			driveItems: items.filter((item) => item.sourceType === 'drive').length
+			totalItems: stats.publishedItems,
+			featuredItems: stats.featuredItems,
+			pdfItems: stats.pdfItems,
+			driveItems: stats.driveItems
 		}
 	};
 };

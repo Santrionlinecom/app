@@ -1,0 +1,12 @@
+[
+  {
+    "input": "~/datasets/openiti/sample/arbain-nawawi.txt",
+    "output": "data/kitab/openiti/chunks/arbain-nawawi.openiti.chunks.json",
+    "kitabSlug": "arbain-nawawi-openiti",
+    "title": "Al-Arba'in An-Nawawiyyah",
+    "author": "Imam An-Nawawi",
+    "category": "Hadits",
+    "madhhab": "Syafi'i",
+    "sourceNote": "Sumber teks: OpenITI corpus. Perlu verifikasi ulang dengan edisi cetak."
+  }
+]
