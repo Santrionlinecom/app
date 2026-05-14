@@ -5,6 +5,8 @@
 	let copiedUrl = $state<string | null>(null);
 
 	const formatNumber = (value: number) => new Intl.NumberFormat('id-ID').format(value);
+	const formatShortDate = (dateKey: string) =>
+		new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short' }).format(new Date(`${dateKey}T00:00:00Z`));
 	const normalizeDateTime = (value: string) => (value.includes('T') ? value : `${value.replace(' ', 'T')}Z`);
 	const formatDateTime = (value: string) =>
 		new Intl.DateTimeFormat('id-ID', {
@@ -28,6 +30,8 @@
 		{ label: '7 hari', value: data.summary.clicks7d },
 		{ label: '30 hari', value: data.summary.clicks30d }
 	]);
+	const chartDailyStats = $derived([...data.dailyStats].reverse());
+	const maxDailyClicks = $derived(Math.max(...chartDailyStats.map((row) => row.clicks), 1));
 </script>
 
 <svelte:head>
@@ -83,9 +87,24 @@
 	<div class="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
 		<div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
 			<div class="flex items-center justify-between gap-3">
-				<h2 class="text-base font-bold text-slate-950">Klik Harian 30 Hari</h2>
+				<h2 class="text-base font-bold text-slate-950">Grafik Klik 30 Hari</h2>
+			</div>
+			<div class="mt-5 flex h-60 items-end gap-1 border-b border-slate-200 px-1 sm:gap-2">
+				{#each chartDailyStats as row}
+					<div class="flex h-full min-w-0 flex-1 flex-col justify-end gap-2">
+						<div class="flex h-full items-end">
+							<div
+								class="w-full rounded-t bg-emerald-600 transition hover:bg-emerald-700"
+								style={`height: ${Math.max((row.clicks / maxDailyClicks) * 100, row.clicks > 0 ? 5 : 0)}%`}
+								title={`${row.dateKey}: ${formatNumber(row.clicks)} klik`}
+							></div>
+						</div>
+						<p class="hidden truncate text-center text-[11px] text-slate-500 sm:block">{formatShortDate(row.dateKey)}</p>
+					</div>
+				{/each}
 			</div>
 			<div class="mt-4 overflow-x-auto">
+				<h3 class="mb-3 text-sm font-semibold text-slate-700">Tabel klik harian</h3>
 				<table class="min-w-full divide-y divide-slate-200 text-sm">
 					<thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
 						<tr>

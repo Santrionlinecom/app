@@ -5,6 +5,18 @@
 	let copiedSlug = $state<string | null>(null);
 
 	const formatNumber = (value: number) => new Intl.NumberFormat('id-ID').format(value);
+	const formatShortDate = (dateKey: string) =>
+		new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short' }).format(new Date(`${dateKey}T00:00:00Z`));
+	const maxDailyClicks = $derived(Math.max(...data.dailyChart.map((row) => row.clicks), 1));
+	const topShortlinks = $derived([...data.shortlinks].sort((a, b) => b.totalClicks - a.totalClicks).slice(0, 6));
+	const maxTopClicks = $derived(Math.max(...topShortlinks.map((link) => link.totalClicks), 1));
+	const summaryCards = $derived([
+		{ label: 'Total shortlink', value: data.summary.totalLinks },
+		{ label: 'Shortlink aktif', value: data.summary.activeLinks },
+		{ label: 'Total klik', value: data.summary.totalClicks },
+		{ label: 'Klik hari ini', value: data.summary.clicksToday },
+		{ label: 'Klik 7 hari', value: data.summary.clicks7d }
+	]);
 
 	const copyLink = async (slug: string, url: string) => {
 		await navigator.clipboard.writeText(url);
@@ -31,6 +43,59 @@
 		>
 			Buat Shortlink
 		</a>
+	</div>
+
+	<div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+		{#each summaryCards as card}
+			<div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+				<p class="text-sm font-medium text-slate-500">{card.label}</p>
+				<p class="mt-2 text-2xl font-bold text-slate-950">{formatNumber(card.value)}</p>
+			</div>
+		{/each}
+	</div>
+
+	<div class="mt-6 grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+		<div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+			<div class="flex items-center justify-between gap-3">
+				<h2 class="text-base font-bold text-slate-950">Grafik Klik 14 Hari</h2>
+				<p class="text-sm text-slate-500">{formatNumber(data.summary.clicks7d)} klik 7 hari</p>
+			</div>
+			<div class="mt-5 flex h-56 items-end gap-2 border-b border-slate-200 px-1">
+				{#each data.dailyChart as row}
+					<div class="flex h-full min-w-0 flex-1 flex-col justify-end gap-2">
+						<div class="flex h-full items-end">
+							<div
+								class="w-full rounded-t bg-emerald-600 transition hover:bg-emerald-700"
+								style={`height: ${Math.max((row.clicks / maxDailyClicks) * 100, row.clicks > 0 ? 5 : 0)}%`}
+								title={`${row.dateKey}: ${formatNumber(row.clicks)} klik`}
+							></div>
+						</div>
+						<p class="truncate text-center text-[11px] text-slate-500">{formatShortDate(row.dateKey)}</p>
+					</div>
+				{/each}
+			</div>
+		</div>
+
+		<div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+			<h2 class="text-base font-bold text-slate-950">Top Shortlink</h2>
+			<div class="mt-5 space-y-4">
+				{#each topShortlinks as link}
+					<div>
+						<div class="mb-1 flex items-center justify-between gap-3 text-sm">
+							<a href={`/admin/shortlinks/${link.slug}`} class="min-w-0 truncate font-semibold text-slate-800 hover:text-emerald-700">
+								/{link.slug}
+							</a>
+							<span class="shrink-0 text-slate-600">{formatNumber(link.totalClicks)}</span>
+						</div>
+						<div class="h-2 overflow-hidden rounded-full bg-slate-100">
+							<div class="h-full rounded-full bg-emerald-600" style={`width: ${(link.totalClicks / maxTopClicks) * 100}%`}></div>
+						</div>
+					</div>
+				{:else}
+					<p class="text-sm text-slate-500">Belum ada data klik.</p>
+				{/each}
+			</div>
+		</div>
 	</div>
 
 	<div class="mt-6 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
