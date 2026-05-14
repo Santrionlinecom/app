@@ -587,12 +587,6 @@
 
 <svelte:head>
 	<title>Super Admin Command Center</title>
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-	<link
-		rel="stylesheet"
-		href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
-	/>
 </svelte:head>
 
 <div class="super-admin-shell relative space-y-10 pb-16">
@@ -1110,11 +1104,11 @@
 
 <style>
 	:global(.super-admin-shell) {
-		font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+		font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	}
 
 	:global(.super-admin-shell .section-title) {
-		font-family: 'Space Grotesk', 'Times New Roman', serif;
+		font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	}
 
 	:global(.super-admin-shell .reveal) {

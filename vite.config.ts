@@ -128,18 +128,6 @@ export default defineConfig({
 							}
 						}
 					},
-					// 6. Simpan Font (Google Fonts / Amiri)
-					{
-						urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com',
-						handler: 'CacheFirst',
-						options: {
-							cacheName: 'santri-fonts',
-							expiration: {
-								maxEntries: 10,
-								maxAgeSeconds: 60 * 60 * 24 * 365 // Simpan setahun
-							}
-						}
-					}
 				]
 			}
 		})

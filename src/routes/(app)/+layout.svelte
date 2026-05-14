@@ -385,15 +385,6 @@
 	const displayName = data?.user?.username || data?.user?.email || 'Guest';
 </script>
 
-<svelte:head>
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-	<link
-		rel="stylesheet"
-		href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap"
-	/>
-</svelte:head>
-
 <div class="app-shell relative min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-amber-50 text-slate-900">
 	<div class="pointer-events-none absolute inset-0">
 		<div class="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-teal-200/40 blur-3xl"></div>
@@ -585,11 +576,11 @@
 	}
 
 	:global(.app-shell) {
-		font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+		font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	}
 
 	:global(.app-title) {
-		font-family: 'Fraunces', 'Times New Roman', serif;
+		font-family: Georgia, 'Times New Roman', serif;
 		letter-spacing: 0.02em;
 	}
 

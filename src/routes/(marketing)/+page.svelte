@@ -382,12 +382,6 @@
 		name="description"
 		content="Santri Online memuat TPQ, kitab, mushaf, buku digital, tokoh, dinasti, kalender, dan halaman belajar lain dalam satu tempat."
 	/>
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-	<link
-		href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap"
-		rel="stylesheet"
-	/>
 </svelte:head>
 
 <div class="min-h-screen home-root">
@@ -853,8 +847,8 @@
 
 <style>
 	.home-root {
-		--so-display: 'Space Grotesk', 'Manrope', sans-serif;
-		--so-body: 'Manrope', sans-serif;
+		--so-display: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		--so-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 		--so-ink: #0f172a;
 		--so-muted: #475569;
 		--so-accent: #0f766e;
