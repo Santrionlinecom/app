@@ -55,14 +55,14 @@ const COMMUNITY_FEATURES = new Set<FeatureKey>([
 ]);
 
 const normalizeSystemRole = (role?: string | null) =>
-	role?.trim().replace(/-/g, '_').toUpperCase();
+	role?.trim().replace(/[-\s]+/g, '_').toUpperCase();
 
 export const isSystemAdmin = (role?: string | null): role is SystemRole =>
-	normalizeSystemRole(role) === 'SUPER_ADMIN';
+	['SUPER_ADMIN', 'SUPERADMIN'].includes(normalizeSystemRole(role) ?? '');
 
 export const normalizeRole = (role?: string | null): UserRole | null => {
 	if (!role) return null;
-	if (normalizeSystemRole(role) === 'SUPER_ADMIN') return 'SUPER_ADMIN';
+	if (isSystemAdmin(role)) return 'SUPER_ADMIN';
 	const normalized = role.toLowerCase().trim();
 	if (normalized === 'admin_lembaga') return 'admin';
 	const allowed: OrgRole[] = [

@@ -2,10 +2,10 @@ import { error } from '@sveltejs/kit';
 import { isSuperAdminUser } from '$lib/auth/session-user';
 
 const normalizeSystemRole = (role?: string | null) =>
-	role?.trim().replace(/-/g, '_').toUpperCase();
+	role?.trim().replace(/[-\s]+/g, '_').toUpperCase();
 
 export const isSuperAdminRole = (role?: string | null) =>
-	normalizeSystemRole(role) === 'SUPER_ADMIN';
+	['SUPER_ADMIN', 'SUPERADMIN'].includes(normalizeSystemRole(role) ?? '');
 
 export const requireSuperAdmin = (locals: App.Locals) => {
 	if (!locals.user || !isSuperAdminUser(locals.user)) {
