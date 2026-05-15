@@ -21,8 +21,8 @@ const readForm = async (request: Request) => {
 export const load: PageServerLoad = async (event) => {
 	requireAdmin(event);
 
-	const slug = sanitizeSlug(event.params.slug);
-	if (!slug || slug !== event.params.slug.trim().toLowerCase()) {
+	const slug = sanitizeSlug(event.params.id);
+	if (!slug || slug !== event.params.id.trim().toLowerCase()) {
 		throw error(404, 'Shortlink tidak ditemukan.');
 	}
 
@@ -45,8 +45,8 @@ export const actions: Actions = {
 	default: async (event) => {
 		requireAdmin(event);
 
-		const slug = sanitizeSlug(event.params.slug);
-		if (!slug || slug !== event.params.slug.trim().toLowerCase()) {
+		const slug = sanitizeSlug(event.params.id);
+		if (!slug || slug !== event.params.id.trim().toLowerCase()) {
 			return fail(400, { error: 'Slug tidak valid.' });
 		}
 

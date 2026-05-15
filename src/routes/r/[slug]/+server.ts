@@ -33,6 +33,18 @@ const notFoundResponse = () =>
 		}
 	);
 
+const inactiveResponse = () =>
+	new Response(
+		'<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Link Tidak Aktif</title></head><body style="margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;background:#f8fafc;color:#0f172a"><main style="min-height:100vh;display:grid;place-items:center;padding:24px"><section style="max-width:520px;border:1px solid #e2e8f0;background:white;border-radius:12px;padding:28px;box-shadow:0 1px 2px rgba(15,23,42,.06)"><p style="margin:0 0 8px;color:#b45309;font-weight:700">410</p><h1 style="margin:0;font-size:26px;line-height:1.2">Link ini sudah tidak aktif.</h1></section></main></body></html>',
+		{
+			status: 410,
+			headers: {
+				'content-type': 'text/html; charset=utf-8',
+				'cache-control': 'no-store'
+			}
+		}
+	);
+
 export const GET: RequestHandler = async ({ params, url, locals, platform, request }) => {
 	const rawSlug = params.slug ?? '';
 	const normalizedSlug = rawSlug.trim().toLowerCase();
@@ -43,7 +55,8 @@ export const GET: RequestHandler = async ({ params, url, locals, platform, reque
 	if (!db) return notFoundResponse();
 
 	const link = await getShortLinkBySlug(db, slug);
-	if (!link || Number(link.is_active) !== 1) return notFoundResponse();
+	if (!link) return notFoundResponse();
+	if (Number(link.is_active) !== 1) return inactiveResponse();
 	const activeLink = link;
 
 	const cf = (request as Request & { cf?: RequestCf }).cf;
