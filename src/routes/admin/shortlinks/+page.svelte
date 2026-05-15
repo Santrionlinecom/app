@@ -11,7 +11,6 @@
 		description: string;
 		targetUrl: string;
 		category: string;
-		tagsInput: string;
 		notes: string;
 		isActive: boolean;
 	};
@@ -23,7 +22,6 @@
 			description: '',
 			targetUrl: '',
 			category: data.createDefaults.category,
-			tagsInput: '',
 			notes: '',
 			isActive: data.createDefaults.isActive
 		}
@@ -118,7 +116,7 @@
 	<div class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
 		<div class="flex flex-col gap-1">
 			<h2 class="text-base font-bold text-slate-950">Buat Shortlink</h2>
-			<p class="text-sm text-slate-500">Tambahkan kategori dan tag supaya analytics afiliasi mudah dipisah.</p>
+			<p class="text-sm text-slate-500">Tambahkan kategori supaya analytics afiliasi mudah dipisah.</p>
 		</div>
 
 		{#if form?.error}
@@ -182,17 +180,6 @@
 						<option value={category.key} selected={values.category === category.key}>{category.label}</option>
 					{/each}
 				</select>
-			</div>
-			<div>
-				<label for="tags" class="block text-sm font-semibold text-slate-700">Tags</label>
-				<input
-					id="tags"
-					name="tags"
-					class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-					value={values.tagsInput}
-					placeholder="gotrade, saham"
-				/>
-				<p class="mt-1 text-xs text-slate-500">pisahkan dengan koma</p>
 			</div>
 			<div>
 				<label for="description" class="block text-sm font-semibold text-slate-700">Description</label>
@@ -345,12 +332,22 @@
 
 	<div class="mt-6 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
 		<div class="overflow-x-auto">
-			<table class="min-w-full divide-y divide-slate-200 text-sm">
+			<table class="w-full min-w-[1180px] table-fixed divide-y divide-slate-200 text-sm">
+				<colgroup>
+					<col class="w-[220px]" />
+					<col class="w-[150px]" />
+					<col class="w-[320px]" />
+					<col class="w-[100px]" />
+					<col class="w-[80px]" />
+					<col class="w-[90px]" />
+					<col class="w-[90px]" />
+					<col class="w-[260px]" />
+					<col class="w-[90px]" />
+				</colgroup>
 				<thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
 					<tr>
 						<th class="px-4 py-3">Shortlink</th>
 						<th class="px-4 py-3">Category</th>
-						<th class="px-4 py-3">Tags</th>
 						<th class="px-4 py-3">Target</th>
 						<th class="px-4 py-3">Status</th>
 						<th class="px-4 py-3 text-right">Total</th>
@@ -385,17 +382,14 @@
 									{link.categoryLabel}
 								</span>
 							</td>
-							<td class="px-4 py-4">
-								<div class="flex max-w-48 flex-wrap gap-1">
-									{#each link.tags as tag}
-										<span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">{tag}</span>
-									{:else}
-										<span class="text-slate-400">-</span>
-									{/each}
-								</div>
-							</td>
-							<td class="max-w-sm px-4 py-4 text-slate-600">
-								<a href={link.targetUrl} class="break-all hover:text-emerald-700" target="_blank" rel="noreferrer">
+							<td class="px-4 py-4 text-slate-600">
+								<a
+									href={link.targetUrl}
+									class="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap hover:text-emerald-700"
+									target="_blank"
+									rel="noreferrer"
+									title={link.targetUrl}
+								>
 									{link.targetUrl}
 								</a>
 							</td>
@@ -420,9 +414,9 @@
 							<td class="px-4 py-4 text-right text-slate-700">{formatNumber(link.clicksToday)}</td>
 							<td class="px-4 py-4 text-right text-slate-700">{formatNumber(link.clicks7d)}</td>
 							<td class="px-4 py-4">
-								<div class="flex min-w-64 items-center gap-2">
+								<div class="flex w-full items-center gap-2">
 									<input
-										class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600"
+										class="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600"
 										readonly
 										value={link.copyUrl}
 									/>
@@ -443,7 +437,7 @@
 						</tr>
 					{:else}
 						<tr>
-							<td colspan="10" class="px-4 py-10 text-center text-slate-500">Belum ada shortlink.</td>
+							<td colspan="9" class="px-4 py-10 text-center text-slate-500">Belum ada shortlink.</td>
 						</tr>
 					{/each}
 				</tbody>

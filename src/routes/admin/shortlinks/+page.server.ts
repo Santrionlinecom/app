@@ -23,7 +23,6 @@ type ShortLinkListRow = {
 	description: string | null;
 	target_url: string;
 	category: ShortlinkCategoryKey | string;
-	tags: string | null;
 	notes: string | null;
 	is_active: number;
 	total_clicks: number | null;
@@ -50,36 +49,12 @@ const cleanText = (value: string, maxLength = 500) => {
 	return text ? text.slice(0, maxLength) : '';
 };
 
-const parseTagsInput = (value: string) => {
-	const tags = value
-		.split(',')
-		.map((tag) => tag.trim().toLowerCase())
-		.filter(Boolean)
-		.map((tag) => tag.replace(/\s+/g, '-').slice(0, 40));
-
-	return Array.from(new Set(tags)).slice(0, 12);
-};
-
-const stringifyTags = (tags: string[]) => (tags.length > 0 ? JSON.stringify(tags) : null);
-
-const parseStoredTags = (value: string | null) => {
-	if (!value) return [];
-	try {
-		const parsed = JSON.parse(value);
-		if (!Array.isArray(parsed)) return [];
-		return parsed.filter((tag): tag is string => typeof tag === 'string').slice(0, 12);
-	} catch {
-		return [];
-	}
-};
-
 const normalizeCategory = (value: string | null): ShortlinkCategoryKey =>
 	value && isShortlinkCategoryKey(value) ? value : DEFAULT_SHORTLINK_CATEGORY;
 
 const readCreateForm = async (request: Request) => {
 	const form = await request.formData();
 	const category = normalizeCategory(String(form.get('category') ?? ''));
-	const tags = parseTagsInput(String(form.get('tags') ?? ''));
 
 	return {
 		slug: sanitizeSlug(String(form.get('slug') ?? '')),
@@ -87,8 +62,6 @@ const readCreateForm = async (request: Request) => {
 		description: cleanText(String(form.get('description') ?? ''), 500),
 		targetUrl: String(form.get('target_url') ?? '').trim(),
 		category,
-		tags,
-		tagsInput: tags.join(', '),
 		notes: cleanText(String(form.get('notes') ?? ''), 1000),
 		isActive: form.get('is_active') === 'on'
 	};
@@ -137,7 +110,6 @@ export const load: PageServerLoad = async (event) => {
 					sl.description,
 					sl.target_url,
 					sl.category,
-					sl.tags,
 					sl.notes,
 					sl.is_active,
 					COALESCE(total.total_clicks, 0) AS total_clicks,
@@ -207,7 +179,6 @@ export const load: PageServerLoad = async (event) => {
 			targetUrl: row.target_url,
 			category,
 			categoryLabel: SHORTLINK_CATEGORY_MAP.get(category)?.label ?? 'Lainnya',
-			tags: parseStoredTags(row.tags),
 			notes: row.notes,
 			hasNotes: Boolean(row.notes?.trim()),
 			isActive: Number(row.is_active) === 1,
@@ -298,8 +269,8 @@ export const actions: Actions = {
 			await db
 				.prepare(
 					`INSERT INTO short_links (
-						slug, title, description, target_url, category, tags, notes, is_active, created_by, created_at, updated_at
-					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+						slug, title, description, target_url, category, notes, is_active, created_by, created_at, updated_at
+					) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
 				)
 				.bind(
 					values.slug,
@@ -307,7 +278,6 @@ export const actions: Actions = {
 					values.description || null,
 					values.targetUrl,
 					values.category,
-					stringifyTags(values.tags),
 					values.notes || null,
 					values.isActive ? 1 : 0,
 					user.id

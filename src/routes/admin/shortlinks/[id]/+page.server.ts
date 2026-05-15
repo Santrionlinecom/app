@@ -52,44 +52,18 @@ const cleanText = (value: string, maxLength = 500) => {
 	return text ? text.slice(0, maxLength) : '';
 };
 
-const parseTagsInput = (value: string) => {
-	const tags = value
-		.split(',')
-		.map((tag) => tag.trim().toLowerCase())
-		.filter(Boolean)
-		.map((tag) => tag.replace(/\s+/g, '-').slice(0, 40));
-
-	return Array.from(new Set(tags)).slice(0, 12);
-};
-
-const stringifyTags = (tags: string[]) => (tags.length > 0 ? JSON.stringify(tags) : null);
-
-const parseStoredTags = (value: string | null) => {
-	if (!value) return [];
-	try {
-		const parsed = JSON.parse(value);
-		if (!Array.isArray(parsed)) return [];
-		return parsed.filter((tag): tag is string => typeof tag === 'string').slice(0, 12);
-	} catch {
-		return [];
-	}
-};
-
 const normalizeCategory = (value: string | null): ShortlinkCategoryKey =>
 	value && isShortlinkCategoryKey(value) ? value : DEFAULT_SHORTLINK_CATEGORY;
 
 const readUpdateForm = async (request: Request) => {
 	const form = await request.formData();
 	const category = normalizeCategory(String(form.get('category') ?? ''));
-	const tags = parseTagsInput(String(form.get('tags') ?? ''));
 
 	return {
 		title: cleanText(String(form.get('title') ?? ''), 160),
 		description: cleanText(String(form.get('description') ?? ''), 500),
 		targetUrl: String(form.get('target_url') ?? '').trim(),
 		category,
-		tags,
-		tagsInput: tags.join(', '),
 		notes: cleanText(String(form.get('notes') ?? ''), 1000),
 		isActive: form.get('is_active') === 'on'
 	};
@@ -221,7 +195,6 @@ export const load: PageServerLoad = async (event) => {
 	});
 
 	const baseShortUrl = `https://app.santrionline.com/r/${link.slug}`;
-	const tags = parseStoredTags(link.tags);
 
 	return {
 		categories: SHORTLINK_CATEGORIES,
@@ -234,8 +207,6 @@ export const load: PageServerLoad = async (event) => {
 			category,
 			categoryLabel: categoryMetadata?.label ?? 'Lainnya',
 			categoryColor: categoryMetadata?.color ?? 'gray',
-			tags,
-			tagsInput: tags.join(', '),
 			notes: link.notes ?? '',
 			isActive: Number(link.is_active) === 1,
 			shortUrl: baseShortUrl
@@ -292,7 +263,6 @@ export const actions: Actions = {
 						description = ?,
 						target_url = ?,
 						category = ?,
-						tags = ?,
 						notes = ?,
 						is_active = ?,
 						updated_at = CURRENT_TIMESTAMP
@@ -303,7 +273,6 @@ export const actions: Actions = {
 					values.description || null,
 					values.targetUrl,
 					values.category,
-					stringifyTags(values.tags),
 					values.notes || null,
 					values.isActive ? 1 : 0,
 					slug
