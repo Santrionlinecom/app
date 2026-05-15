@@ -1221,8 +1221,6 @@
 											</button>
 											{#if selectedVerseKey === verse.verse_key && selectedAsbabItems.length}
 												<span class="badge badge-warning badge-outline">Asbab tersedia</span>
-											{:else if insight?.asbab}
-												<span class="badge badge-warning badge-outline">Asbab tersedia</span>
 											{/if}
 											{#if insight?.tafsir}
 												<span class="badge badge-success badge-outline">Tafsir tersedia</span>
@@ -1297,10 +1295,6 @@
 																</article>
 															{/each}
 														</div>
-													{:else if insight?.asbab}
-														<p class="mt-2 whitespace-pre-line text-sm leading-7 text-slate-700">
-															{insight.asbab}
-														</p>
 													{:else}
 														<p class="mt-2 whitespace-pre-line text-sm leading-7 text-slate-700">
 															{selectedAsbab?.message ?? EMPTY_ASBAB_MESSAGE}
