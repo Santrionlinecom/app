@@ -209,7 +209,11 @@
 			<div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
 				<h2 class="text-base font-bold text-slate-950">Short URL</h2>
 				<div class="mt-4 flex items-center gap-2">
-					<input class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700" readonly value={data.link.shortUrl} />
+					<input
+						class="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+						readonly
+						value={data.link.shortUrl}
+					/>
 					<button
 						type="button"
 						class="rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
@@ -225,7 +229,11 @@
 				<div class="mt-4 space-y-2">
 					{#each data.campaignExamples as url}
 						<div class="flex items-center gap-2">
-							<input class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600" readonly value={url} />
+							<input
+								class="min-w-0 flex-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600"
+								readonly
+								value={url}
+							/>
 							<button
 								type="button"
 								class="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
@@ -267,7 +275,7 @@
 		</div>
 	</div>
 
-	<div class="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+	<div class="mt-6 space-y-6">
 		<div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
 			<div class="flex items-center justify-between gap-3">
 				<h2 class="text-base font-bold text-slate-950">Grafik Klik 30 Hari</h2>
@@ -309,7 +317,7 @@
 			</div>
 		</div>
 
-		<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-1">
+		<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 			{@render TopTable('Top Source', data.topSource)}
 			{@render TopTable('Top Campaign', data.topCampaign)}
 			{@render TopTable('Top Country', data.topCountry)}
@@ -320,7 +328,17 @@
 	<div class="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
 		<h2 class="text-base font-bold text-slate-950">Click Logs</h2>
 		<div class="mt-4 overflow-x-auto">
-			<table class="min-w-full divide-y divide-slate-200 text-sm">
+			<table class="min-w-[1120px] table-fixed divide-y divide-slate-200 text-sm">
+				<colgroup>
+					<col class="w-[170px]" />
+					<col class="w-[130px]" />
+					<col class="w-[150px]" />
+					<col class="w-[120px]" />
+					<col class="w-[160px]" />
+					<col class="w-[190px]" />
+					<col class="w-[230px]" />
+					<col class="w-[90px]" />
+				</colgroup>
 				<thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
 					<tr>
 						<th class="px-3 py-2">Waktu</th>
@@ -337,14 +355,14 @@
 					{#each data.clickLogs as click}
 						<tr class="align-top">
 							<td class="whitespace-nowrap px-3 py-2 text-slate-700">{formatDateTime(click.clickedAt)}</td>
-							<td class="px-3 py-2 text-slate-700">{click.source ?? '-'}</td>
-							<td class="px-3 py-2 text-slate-700">{click.campaign ?? '-'}</td>
-							<td class="px-3 py-2 text-slate-700">{click.medium ?? '-'}</td>
-							<td class="px-3 py-2 text-slate-700">
+							<td class="truncate px-3 py-2 text-slate-700" title={click.source ?? '-'}>{click.source ?? '-'}</td>
+							<td class="truncate px-3 py-2 text-slate-700" title={click.campaign ?? '-'}>{click.campaign ?? '-'}</td>
+							<td class="truncate px-3 py-2 text-slate-700" title={click.medium ?? '-'}>{click.medium ?? '-'}</td>
+							<td class="truncate px-3 py-2 text-slate-700" title={[click.city, click.country, click.colo].filter(Boolean).join(', ') || '-'}>
 								{[click.city, click.country, click.colo].filter(Boolean).join(', ') || '-'}
 							</td>
-							<td class="max-w-md break-all px-3 py-2 text-slate-600">{click.referrer ?? '-'}</td>
-							<td class="max-w-md break-all px-3 py-2 text-slate-600">{click.userAgent ?? '-'}</td>
+							<td class="truncate px-3 py-2 text-slate-600" title={click.referrer ?? '-'}>{click.referrer ?? '-'}</td>
+							<td class="truncate px-3 py-2 text-slate-600" title={click.userAgent ?? '-'}>{click.userAgent ?? '-'}</td>
 							<td class="px-3 py-2 text-slate-700">{click.hasIpHash ? 'Ada' : '-'}</td>
 						</tr>
 					{:else}
@@ -364,7 +382,7 @@
 		<div class="mt-4 space-y-3">
 			{#each rows as row}
 				<div class="flex items-start justify-between gap-3 text-sm">
-					<span class="min-w-0 break-all text-slate-600">{row.label}</span>
+					<span class="min-w-0 truncate text-slate-600" title={row.label}>{row.label}</span>
 					<span class="shrink-0 font-semibold text-slate-950">{formatNumber(row.total)}</span>
 				</div>
 			{:else}
