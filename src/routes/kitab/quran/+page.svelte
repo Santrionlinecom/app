@@ -46,6 +46,32 @@
 		text: string;
 	};
 
+	type AsbabItem = {
+		id: number;
+		source_key: string;
+		source_title: string;
+		source_author: string | null;
+		source_publisher: string | null;
+		surah_number: number;
+		ayah_start: number;
+		ayah_end: number;
+		title: string | null;
+		content: string;
+		riwayat: string | null;
+		takhrij: string | null;
+		grade: string | null;
+		page_ref: string | null;
+	};
+
+	type AsbabResponse = {
+		ok: boolean;
+		surah: number;
+		ayah: number;
+		items: AsbabItem[];
+		message?: string;
+		error?: string;
+	};
+
 	type SearchScope = 'semua' | 'arab' | 'terjemah' | 'tafsir' | 'asbab';
 
 	const JUZ_LIST = Array.from({ length: 30 }, (_v, idx) => idx + 1);
@@ -67,6 +93,8 @@
 		{ value: 'sadi', label: 'As-Saadi' },
 		{ value: 'muyassar', label: 'Al-Muyassar' }
 	];
+	const EMPTY_ASBAB_MESSAGE =
+		'Belum ditemukan riwayat asbabun nuzul khusus untuk ayat ini. Namun ayat ini dapat berkaitan dengan konteks ayat sebelum/sesudahnya.';
 
 	let activeTab: 'mushaf' | 'sejarah' = 'mushaf';
 	let viewMode: 'lembaran' | 'teks' = 'lembaran';
@@ -93,6 +121,10 @@
 	let classicalTafsirCache: Record<string, ClassicalTafsir> = {};
 	let classicalTafsirLoadingKey = '';
 	let classicalTafsirError = '';
+	let asbabCache: Record<string, AsbabResponse> = {};
+	let asbabLoadingKey = '';
+	let asbabErrorKey = '';
+	let asbabError = '';
 
 	const surahLookup = new Map(SURAH_DATA.map((surah) => [surah.number, surah.name]));
 	const padJuz = (value: number) => String(value).padStart(2, '0');
@@ -122,6 +154,8 @@
 
 	const insightFor = (verse: Verse | null | undefined) =>
 		verse ? insightMap.get(verse.verse_key) : undefined;
+
+	const asbabCacheKey = (verse: Verse) => `${verse.surahNumber}:${verse.ayahNumber}`;
 
 	const verseDomId = (verse: Verse) => `quran-verse-${verse.verse_key.replace(':', '-')}`;
 
@@ -373,6 +407,12 @@
 		}
 	};
 
+	const asbabRangeLabel = (item: AsbabItem) => {
+		const range =
+			item.ayah_start === item.ayah_end ? `${item.ayah_start}` : `${item.ayah_start}-${item.ayah_end}`;
+		return `QS. ${surahName(item.surah_number)} ${range}`;
+	};
+
 	const handleJuzChange = (event: Event) => {
 		const value = Number((event.target as HTMLSelectElement).value);
 		void loadJuz(value);
@@ -385,6 +425,49 @@
 			void initFlipbook();
 		} else {
 			destroyFlipbook();
+		}
+	};
+
+	const loadAsbabForVerse = async (verse: Verse | null | undefined) => {
+		if (!verse) return;
+		const cacheKey = asbabCacheKey(verse);
+		if (asbabCache[cacheKey] || asbabLoadingKey === cacheKey) return;
+
+		asbabLoadingKey = cacheKey;
+		asbabErrorKey = '';
+		asbabError = '';
+
+		try {
+			const params = new URLSearchParams({
+				surah: String(verse.surahNumber),
+				ayah: String(verse.ayahNumber)
+			});
+			const res = await fetch(`/api/quran/asbab?${params.toString()}`, {
+				headers: {
+					accept: 'application/json'
+				}
+			});
+
+			const data = (await res.json()) as AsbabResponse;
+			if (!res.ok || !data.ok) {
+				throw new Error(data.error || 'Asbabun nuzul belum bisa dimuat.');
+			}
+
+			asbabCache = {
+				...asbabCache,
+				[cacheKey]: {
+					...data,
+					items: data.items ?? [],
+					message: data.message ?? EMPTY_ASBAB_MESSAGE
+				}
+			};
+		} catch (err: any) {
+			asbabErrorKey = cacheKey;
+			asbabError = err?.message || 'Gagal memuat asbabun nuzul.';
+		} finally {
+			if (asbabLoadingKey === cacheKey) {
+				asbabLoadingKey = '';
+			}
 		}
 	};
 
@@ -442,6 +525,11 @@
 	$: totalSpreads = Math.ceil(totalPages / 2);
 	$: selectedVerse = verses.find((verse) => verse.verse_key === selectedVerseKey) ?? verses[0] ?? null;
 	$: selectedInsight = insightFor(selectedVerse);
+	$: selectedAsbabKey = selectedVerse ? asbabCacheKey(selectedVerse) : '';
+	$: selectedAsbab = selectedAsbabKey ? asbabCache[selectedAsbabKey] : null;
+	$: selectedAsbabItems = selectedAsbab?.items ?? [];
+	$: selectedAsbabLoading = Boolean(selectedAsbabKey && asbabLoadingKey === selectedAsbabKey);
+	$: selectedAsbabError = selectedAsbabKey && asbabErrorKey === selectedAsbabKey ? asbabError : '';
 	$: selectedClassicalCacheKey = selectedVerse ? `${selectedTafsirSource}:${selectedVerse.verse_key}` : '';
 	$: selectedClassicalTafsir = selectedClassicalCacheKey
 		? classicalTafsirCache[selectedClassicalCacheKey]
@@ -455,6 +543,7 @@
 	).length;
 	$: if (selectedVerse && activeTab === 'mushaf') {
 		void loadClassicalTafsir(selectedVerse, selectedTafsirSource);
+		void loadAsbabForVerse(selectedVerse);
 	}
 </script>
 
@@ -705,7 +794,9 @@
 												<BookOpenText class="h-4 w-4" />
 												Tafsir & Asbab
 											</button>
-											{#if insight?.asbab}
+											{#if selectedVerseKey === verse.verse_key && selectedAsbabItems.length}
+												<span class="badge badge-warning badge-outline">Asbab tersedia</span>
+											{:else if insight?.asbab}
 												<span class="badge badge-warning badge-outline">Asbab tersedia</span>
 											{/if}
 											{#if insight?.tafsir}
@@ -729,9 +820,67 @@
 														<ScrollText class="h-4 w-4" />
 														Asbabun Nuzul
 													</h3>
-													<p class="mt-2 whitespace-pre-line text-sm leading-7 text-slate-700">
-														{insight?.asbab || 'Belum ada riwayat asbabun nuzul yang terhubung untuk ayat ini.'}
-													</p>
+													{#if selectedAsbabLoading}
+														<p class="mt-3 inline-flex items-center gap-2 text-sm text-slate-600">
+															<LoaderCircle class="h-4 w-4 animate-spin" />
+															Memuat asbabun nuzul...
+														</p>
+													{:else if selectedAsbabError}
+														<p class="mt-2 text-sm leading-7 text-amber-700">{selectedAsbabError}</p>
+													{:else if selectedAsbabItems.length}
+														<div class="mt-3 space-y-4">
+															{#each selectedAsbabItems as item}
+																<article class="rounded-lg border border-amber-200 bg-white/70 p-3">
+																	{#if item.title}
+																		<h4 class="text-sm font-semibold text-amber-950">{item.title}</h4>
+																	{/if}
+																	<div class="mt-2 space-y-1 text-xs leading-5 text-amber-950/80">
+																		<p>Sumber: {item.source_title}</p>
+																		{#if item.source_author}
+																			<p>Penulis: {item.source_author}</p>
+																		{/if}
+																		{#if item.source_publisher}
+																			<p>Penerbit: {item.source_publisher}</p>
+																		{/if}
+																		<p>Range: {asbabRangeLabel(item)}</p>
+																	</div>
+																	<p class="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">{item.content}</p>
+																	{#if item.riwayat}
+																		<div class="mt-3">
+																			<p class="text-xs font-semibold uppercase tracking-wide text-amber-900">Riwayat</p>
+																			<p class="mt-1 whitespace-pre-line text-sm leading-7 text-slate-700">{item.riwayat}</p>
+																		</div>
+																	{/if}
+																	{#if item.takhrij}
+																		<div class="mt-3">
+																			<p class="text-xs font-semibold uppercase tracking-wide text-amber-900">Takhrij</p>
+																			<p class="mt-1 whitespace-pre-line text-sm leading-7 text-slate-700">{item.takhrij}</p>
+																		</div>
+																	{/if}
+																	{#if item.grade}
+																		<p class="mt-3 text-sm leading-7 text-slate-700">
+																			<span class="font-semibold text-amber-950">Grade/status hadis:</span>
+																			{item.grade}
+																		</p>
+																	{/if}
+																	{#if item.page_ref}
+																		<p class="mt-2 text-sm leading-7 text-slate-700">
+																			<span class="font-semibold text-amber-950">Rujukan halaman:</span>
+																			{item.page_ref}
+																		</p>
+																	{/if}
+																</article>
+															{/each}
+														</div>
+													{:else if insight?.asbab}
+														<p class="mt-2 whitespace-pre-line text-sm leading-7 text-slate-700">
+															{insight.asbab}
+														</p>
+													{:else}
+														<p class="mt-2 whitespace-pre-line text-sm leading-7 text-slate-700">
+															{selectedAsbab?.message ?? EMPTY_ASBAB_MESSAGE}
+														</p>
+													{/if}
 												</section>
 												<section class="rounded-lg border border-slate-200 bg-slate-50 p-4 lg:col-span-2">
 													<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
