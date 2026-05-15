@@ -179,6 +179,43 @@ export async function getAsbabSources(db: D1Database): Promise<QuranAsbabSource[
 	}
 }
 
+export async function getPublishedAsbabIndex(db: D1Database): Promise<QuranAsbabEntry[]> {
+	try {
+		const { results } = await db
+			.prepare(
+				`SELECT
+					e.id,
+					e.source_key,
+					s.title AS source_title,
+					s.author AS source_author,
+					s.publisher AS source_publisher,
+					COALESCE(s.priority, 100) AS source_priority,
+					e.surah_number,
+					e.ayah_start,
+					e.ayah_end,
+					e.title,
+					e.content,
+					e.riwayat,
+					e.takhrij,
+					e.grade,
+					e.page_ref,
+					e.status,
+					e.verified_by
+				FROM quran_asbab_entries e
+				JOIN quran_asbab_sources s ON s.source_key = e.source_key
+				WHERE e.status = 'published'
+					AND s.is_active = 1
+				ORDER BY e.surah_number ASC, e.ayah_start ASC, e.ayah_end ASC, COALESCE(s.priority, 100) ASC, e.id ASC`
+			)
+			.all<QuranAsbabEntry>();
+
+		return results ?? [];
+	} catch (err) {
+		if (isMissingTableError(err)) return [];
+		throw err;
+	}
+}
+
 export function validateAsbabEntry(input: QuranAsbabEntryInput): QuranAsbabValidationResult {
 	const errors: string[] = [];
 	const sourceKey = cleanText(input.source_key, 120);

@@ -72,9 +72,88 @@
 		error?: string;
 	};
 
+	type AsbabIndexItem = Pick<
+		AsbabItem,
+		| 'id'
+		| 'source_key'
+		| 'source_title'
+		| 'source_author'
+		| 'source_publisher'
+		| 'surah_number'
+		| 'ayah_start'
+		| 'ayah_end'
+		| 'title'
+		| 'grade'
+		| 'page_ref'
+	>;
+
+	type AsbabIndexResponse = {
+		ok: boolean;
+		count: number;
+		items: AsbabIndexItem[];
+		error?: string;
+	};
+
 	type SearchScope = 'semua' | 'arab' | 'terjemah' | 'tafsir' | 'asbab';
 
-	const JUZ_LIST = Array.from({ length: 30 }, (_v, idx) => idx + 1);
+	type VerseRef = {
+		surahNumber: number;
+		ayahNumber: number;
+	};
+
+	type JuzRange = {
+		juz: number;
+		start: VerseRef;
+		end: VerseRef;
+	};
+
+	type SmartSearchTarget =
+		| {
+				kind: 'ayah';
+				surahNumber: number;
+				ayahNumber: number;
+				juz: number;
+				label: string;
+				verseKey: string;
+		  }
+		| {
+				kind: 'juz';
+				juz: number;
+				label: string;
+		  };
+
+	const JUZ_RANGES: JuzRange[] = [
+		{ juz: 1, start: { surahNumber: 1, ayahNumber: 1 }, end: { surahNumber: 2, ayahNumber: 141 } },
+		{ juz: 2, start: { surahNumber: 2, ayahNumber: 142 }, end: { surahNumber: 2, ayahNumber: 252 } },
+		{ juz: 3, start: { surahNumber: 2, ayahNumber: 253 }, end: { surahNumber: 3, ayahNumber: 92 } },
+		{ juz: 4, start: { surahNumber: 3, ayahNumber: 93 }, end: { surahNumber: 4, ayahNumber: 23 } },
+		{ juz: 5, start: { surahNumber: 4, ayahNumber: 24 }, end: { surahNumber: 4, ayahNumber: 147 } },
+		{ juz: 6, start: { surahNumber: 4, ayahNumber: 148 }, end: { surahNumber: 5, ayahNumber: 81 } },
+		{ juz: 7, start: { surahNumber: 5, ayahNumber: 82 }, end: { surahNumber: 6, ayahNumber: 110 } },
+		{ juz: 8, start: { surahNumber: 6, ayahNumber: 111 }, end: { surahNumber: 7, ayahNumber: 87 } },
+		{ juz: 9, start: { surahNumber: 7, ayahNumber: 88 }, end: { surahNumber: 8, ayahNumber: 40 } },
+		{ juz: 10, start: { surahNumber: 8, ayahNumber: 41 }, end: { surahNumber: 9, ayahNumber: 92 } },
+		{ juz: 11, start: { surahNumber: 9, ayahNumber: 93 }, end: { surahNumber: 11, ayahNumber: 5 } },
+		{ juz: 12, start: { surahNumber: 11, ayahNumber: 6 }, end: { surahNumber: 12, ayahNumber: 52 } },
+		{ juz: 13, start: { surahNumber: 12, ayahNumber: 53 }, end: { surahNumber: 14, ayahNumber: 52 } },
+		{ juz: 14, start: { surahNumber: 15, ayahNumber: 1 }, end: { surahNumber: 16, ayahNumber: 128 } },
+		{ juz: 15, start: { surahNumber: 17, ayahNumber: 1 }, end: { surahNumber: 18, ayahNumber: 74 } },
+		{ juz: 16, start: { surahNumber: 18, ayahNumber: 75 }, end: { surahNumber: 20, ayahNumber: 135 } },
+		{ juz: 17, start: { surahNumber: 21, ayahNumber: 1 }, end: { surahNumber: 22, ayahNumber: 78 } },
+		{ juz: 18, start: { surahNumber: 23, ayahNumber: 1 }, end: { surahNumber: 25, ayahNumber: 20 } },
+		{ juz: 19, start: { surahNumber: 25, ayahNumber: 21 }, end: { surahNumber: 27, ayahNumber: 55 } },
+		{ juz: 20, start: { surahNumber: 27, ayahNumber: 56 }, end: { surahNumber: 29, ayahNumber: 45 } },
+		{ juz: 21, start: { surahNumber: 29, ayahNumber: 46 }, end: { surahNumber: 33, ayahNumber: 30 } },
+		{ juz: 22, start: { surahNumber: 33, ayahNumber: 31 }, end: { surahNumber: 36, ayahNumber: 27 } },
+		{ juz: 23, start: { surahNumber: 36, ayahNumber: 28 }, end: { surahNumber: 39, ayahNumber: 31 } },
+		{ juz: 24, start: { surahNumber: 39, ayahNumber: 32 }, end: { surahNumber: 41, ayahNumber: 46 } },
+		{ juz: 25, start: { surahNumber: 41, ayahNumber: 47 }, end: { surahNumber: 45, ayahNumber: 37 } },
+		{ juz: 26, start: { surahNumber: 46, ayahNumber: 1 }, end: { surahNumber: 51, ayahNumber: 30 } },
+		{ juz: 27, start: { surahNumber: 51, ayahNumber: 31 }, end: { surahNumber: 57, ayahNumber: 29 } },
+		{ juz: 28, start: { surahNumber: 58, ayahNumber: 1 }, end: { surahNumber: 66, ayahNumber: 12 } },
+		{ juz: 29, start: { surahNumber: 67, ayahNumber: 1 }, end: { surahNumber: 77, ayahNumber: 50 } },
+		{ juz: 30, start: { surahNumber: 78, ayahNumber: 1 }, end: { surahNumber: 114, ayahNumber: 6 } }
+	];
 	const DATA_VERSION = '2';
 	const STORAGE_KEY = 'quran.juz.selected';
 	const CACHE_KEY = `quran.juz.cached.v${DATA_VERSION}`;
@@ -105,8 +184,12 @@
 	let loading = false;
 	let error = '';
 	let pageWarning = '';
+	let navigationMessage = '';
 	let query = '';
 	let searchScope: SearchScope = 'semua';
+	let selectedSurah = '1';
+	let selectedAyah = '1';
+	let smartSearchTarget: SmartSearchTarget | null = null;
 	let cachedJuz: number[] = [];
 	let offline = false;
 	let flipContainer: HTMLDivElement | null = null;
@@ -125,10 +208,25 @@
 	let asbabLoadingKey = '';
 	let asbabErrorKey = '';
 	let asbabError = '';
+	let asbabIndexItems: AsbabIndexItem[] = [];
+	let asbabIndexLoading = false;
+	let asbabIndexError = '';
 
 	const surahLookup = new Map(SURAH_DATA.map((surah) => [surah.number, surah.name]));
+	const surahMetaLookup = new Map(SURAH_DATA.map((surah) => [surah.number, surah]));
 	const padJuz = (value: number) => String(value).padStart(2, '0');
 	const surahName = (surahNumber: number) => surahLookup.get(surahNumber) ?? `Surah ${surahNumber}`;
+	const verseKeyFor = (surahNumber: number, ayahNumber: number) => `${surahNumber}:${ayahNumber}`;
+	const verseRefLabel = (surahNumber: number, ayahNumber: number) =>
+		`${surahName(surahNumber)} ${ayahNumber} (${verseKeyFor(surahNumber, ayahNumber)})`;
+	const compareVerseRef = (a: VerseRef, b: VerseRef) =>
+		a.surahNumber === b.surahNumber ? a.ayahNumber - b.ayahNumber : a.surahNumber - b.surahNumber;
+	const isVerseInRange = (verse: VerseRef, range: JuzRange) =>
+		compareVerseRef(verse, range.start) >= 0 && compareVerseRef(verse, range.end) <= 0;
+	const findJuzForVerse = (surahNumber: number, ayahNumber: number) =>
+		JUZ_RANGES.find((range) => isVerseInRange({ surahNumber, ayahNumber }, range))?.juz ?? null;
+	const formatJuzRange = (range: JuzRange) =>
+		`${surahName(range.start.surahNumber)} ${range.start.ayahNumber} - ${surahName(range.end.surahNumber)} ${range.end.ayahNumber}`;
 
 	const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
 	const toArabicNumber = (value: number) =>
@@ -152,6 +250,24 @@
 			.replace(/\s+/g, ' ')
 			.trim();
 
+	const normalizeReferenceText = (value: string) =>
+		normalizeSearchText(value)
+			.replace(/[^a-z0-9 ]+/g, ' ')
+			.replace(/\b(qs|quran|surah|surat|sura|ayat|ayah|no|nomor|ke)\b/g, ' ')
+			.replace(/\s+/g, ' ')
+			.trim();
+
+	const surahSearchIndex = SURAH_DATA.map((surah) => {
+		const normalized = normalizeReferenceText(surah.name);
+		const withoutArticle = normalized.replace(/^(al|an|ar|as|ash|at|az|ad|adh|aul)\s+/, '');
+		const compact = normalized.replace(/\s+/g, '');
+		const compactWithoutArticle = withoutArticle.replace(/\s+/g, '');
+		return {
+			...surah,
+			aliases: Array.from(new Set([normalized, withoutArticle, compact, compactWithoutArticle, String(surah.number)]))
+		};
+	});
+
 	const insightFor = (verse: Verse | null | undefined) =>
 		verse ? insightMap.get(verse.verse_key) : undefined;
 
@@ -164,7 +280,7 @@
 
 	const searchCorpusFor = (verse: Verse, scope: SearchScope) => {
 		const insight = insightFor(verse);
-		const refs = `${verseReference(verse)} surah ${surahName(verse.surahNumber)} ayat ${verse.ayahNumber}`;
+		const refs = `${verseReference(verse)} surah ${surahName(verse.surahNumber)} ayat ${verse.ayahNumber} qs ${verse.surahNumber} ayat ${verse.ayahNumber}`;
 		const buckets: Record<SearchScope, string> = {
 			semua: [
 				refs,
@@ -186,6 +302,10 @@
 
 	const matchesSearch = (verse: Verse) => {
 		if (!normalizedQuery) return true;
+		const target = smartSearchTarget;
+		if (target?.kind === 'ayah') {
+			return verse.surahNumber === target.surahNumber && verse.ayahNumber === target.ayahNumber;
+		}
 		return searchCorpusFor(verse, searchScope).includes(normalizedQuery);
 	};
 
@@ -195,6 +315,74 @@
 		if (searchScope === 'tafsir') return insight?.tafsir || 'Tafsir ayat ini sedang dimuat.';
 		if (searchScope === 'asbab') return insight?.asbab || 'Belum ada catatan asbabun nuzul untuk ayat ini.';
 		return insight?.translation || insight?.tafsir || verse.text;
+	};
+
+	const findSurahByQueryName = (value: string) => {
+		const normalized = normalizeReferenceText(value);
+		if (!normalized) return null;
+		const compact = normalized.replace(/\s+/g, '');
+
+		return (
+			surahSearchIndex.find((surah) => surah.aliases.some((alias) => alias === normalized || alias === compact)) ??
+			surahSearchIndex.find((surah) => surah.aliases.some((alias) => normalized.endsWith(` ${alias}`))) ??
+			null
+		);
+	};
+
+	const parseSmartSearchTarget = (value: string): SmartSearchTarget | null => {
+		const raw = value.trim();
+		if (!raw) return null;
+
+		const juzMatch = raw.match(/^\s*juz\s+(\d{1,2})\s*$/i);
+		if (juzMatch) {
+			const juz = Number(juzMatch[1]);
+			if (Number.isInteger(juz) && juz >= 1 && juz <= 30) {
+				return { kind: 'juz', juz, label: `Juz ${juz}` };
+			}
+		}
+
+		const numericRefMatch = raw.match(/^\s*(?:qs\.?\s*)?(\d{1,3})\s*[:.]\s*(\d{1,3})\s*$/i);
+		const numericWordsMatch = raw.match(/^\s*(?:qs\.?\s*)?(\d{1,3})\s+(?:ayat\s+)?(\d{1,3})\s*$/i);
+		const numericMatch = numericRefMatch ?? numericWordsMatch;
+		if (numericMatch) {
+			const surahNumber = Number(numericMatch[1]);
+			const ayahNumber = Number(numericMatch[2]);
+			return buildSmartAyahTarget(surahNumber, ayahNumber);
+		}
+
+		const normalized = normalizeReferenceText(raw);
+		const ayahMatch = normalized.match(/(.+?)\s+(\d{1,3})$/);
+		if (!ayahMatch) return null;
+
+		const surah = findSurahByQueryName(ayahMatch[1]);
+		if (!surah) return null;
+
+		return buildSmartAyahTarget(surah.number, Number(ayahMatch[2]));
+	};
+
+	const buildSmartAyahTarget = (surahNumber: number, ayahNumber: number): SmartSearchTarget | null => {
+		const surah = surahMetaLookup.get(surahNumber);
+		if (!surah || !Number.isInteger(ayahNumber) || ayahNumber < 1 || ayahNumber > surah.totalAyah) {
+			return null;
+		}
+
+		const juz = findJuzForVerse(surahNumber, ayahNumber);
+		if (!juz) return null;
+
+		return {
+			kind: 'ayah',
+			surahNumber,
+			ayahNumber,
+			juz,
+			label: verseRefLabel(surahNumber, ayahNumber),
+			verseKey: verseKeyFor(surahNumber, ayahNumber)
+		};
+	};
+
+	const syncNavigationFromVerse = (verse: Verse | null | undefined) => {
+		if (!verse) return;
+		selectedSurah = String(verse.surahNumber);
+		selectedAyah = String(verse.ayahNumber);
 	};
 
 	const buildPages = (list: Verse[]) => {
@@ -303,6 +491,7 @@
 			});
 			pages = buildPages(verses);
 			selectedVerseKey = verses[0]?.verse_key ?? '';
+			syncNavigationFromVerse(verses[0]);
 			if (!pages.length && verses.length) {
 				pageWarning = 'Data lembaran belum terunduh. Coba muat ulang saat online agar halaman muncul.';
 				if (viewMode === 'lembaran') {
@@ -351,6 +540,7 @@
 
 	const selectVerse = (verse: Verse) => {
 		selectedVerseKey = verse.verse_key;
+		syncNavigationFromVerse(verse);
 	};
 
 	const openVerseFromSearch = async (verse: Verse) => {
@@ -407,7 +597,7 @@
 		}
 	};
 
-	const asbabRangeLabel = (item: AsbabItem) => {
+	const asbabRangeLabel = (item: { surah_number: number; ayah_start: number; ayah_end: number }) => {
 		const range =
 			item.ayah_start === item.ayah_end ? `${item.ayah_start}` : `${item.ayah_start}-${item.ayah_end}`;
 		return `QS. ${surahName(item.surah_number)} ${range}`;
@@ -415,7 +605,19 @@
 
 	const handleJuzChange = (event: Event) => {
 		const value = Number((event.target as HTMLSelectElement).value);
+		navigationMessage = '';
 		void loadJuz(value);
+	};
+
+	const handleSurahChange = () => {
+		const surahNumber = Number(selectedSurah);
+		const surah = surahMetaLookup.get(surahNumber);
+		if (!surah) return;
+
+		const ayahNumber = Number(selectedAyah) || 1;
+		selectedAyah = String(Math.min(Math.max(ayahNumber, 1), surah.totalAyah));
+		const juz = findJuzForVerse(surahNumber, Number(selectedAyah));
+		navigationMessage = juz ? `${surah.name} ayat ${selectedAyah} berada di Juz ${juz}.` : '';
 	};
 
 	const handleViewChange = (mode: 'lembaran' | 'teks') => {
@@ -471,6 +673,114 @@
 		}
 	};
 
+	const loadAsbabIndex = async (force = false) => {
+		if (asbabIndexLoading || (!force && asbabIndexItems.length > 0)) return;
+
+		asbabIndexLoading = true;
+		asbabIndexError = '';
+
+		try {
+			const res = await fetch('/api/quran/asbab/index', {
+				headers: {
+					accept: 'application/json'
+				}
+			});
+			const data = (await res.json()) as AsbabIndexResponse;
+			if (!res.ok || !data.ok) {
+				throw new Error(data.error || 'Daftar asbabun nuzul belum bisa dimuat.');
+			}
+			asbabIndexItems = data.items ?? [];
+		} catch (err: any) {
+			asbabIndexError = err?.message || 'Gagal memuat daftar asbabun nuzul.';
+		} finally {
+			asbabIndexLoading = false;
+		}
+	};
+
+	const openVerseReference = async (surahNumber: number, ayahNumber: number) => {
+		const surah = surahMetaLookup.get(surahNumber);
+		if (!surah) {
+			navigationMessage = 'Surah tidak valid.';
+			return;
+		}
+
+		const safeAyah = Math.min(Math.max(ayahNumber, 1), surah.totalAyah);
+		const targetJuz = findJuzForVerse(surahNumber, safeAyah);
+		if (!targetJuz) {
+			navigationMessage = 'Ayat tidak ditemukan dalam data juz.';
+			return;
+		}
+
+		if (targetJuz !== selectedJuzNumber || verses.length === 0) {
+			await loadJuz(targetJuz);
+		}
+
+		const verse = verses.find((item) => item.surahNumber === surahNumber && item.ayahNumber === safeAyah);
+		if (!verse) {
+			navigationMessage = `QS. ${surah.name} ${safeAyah} berada di Juz ${targetJuz}, tetapi belum termuat.`;
+			return;
+		}
+
+		if (viewMode !== 'teks') {
+			viewMode = 'teks';
+			localStorage.setItem(VIEW_KEY, 'teks');
+			destroyFlipbook();
+		}
+
+		selectVerse(verse);
+		navigationMessage = `Dibuka: ${verseRefLabel(surahNumber, safeAyah)} • Juz ${targetJuz}.`;
+
+		await tick();
+		document.getElementById(verseDomId(verse))?.scrollIntoView({
+			behavior: 'smooth',
+			block: 'center'
+		});
+	};
+
+	const openSelectedAyah = () => {
+		const surahNumber = Number(selectedSurah);
+		const ayahNumber = Number(selectedAyah);
+		void openVerseReference(surahNumber, ayahNumber);
+	};
+
+	const openSmartSearchTarget = () => {
+		const target = smartSearchTarget;
+		if (!target) return;
+		query = '';
+
+		if (target.kind === 'juz') {
+			navigationMessage = '';
+			void loadJuz(target.juz);
+			return;
+		}
+
+		void openVerseReference(target.surahNumber, target.ayahNumber);
+	};
+
+	const navigateRelativeVerse = (step: -1 | 1) => {
+		const currentSurah = Number(selectedSurah);
+		const currentAyah = Number(selectedAyah);
+		const currentMeta = surahMetaLookup.get(currentSurah);
+		if (!currentMeta) return;
+
+		let nextSurah = currentSurah;
+		let nextAyah = currentAyah + step;
+
+		if (nextAyah < 1) {
+			const previousSurah = surahMetaLookup.get(currentSurah - 1);
+			if (!previousSurah) return;
+			nextSurah = previousSurah.number;
+			nextAyah = previousSurah.totalAyah;
+		} else if (nextAyah > currentMeta.totalAyah) {
+			const nextSurahMeta = surahMetaLookup.get(currentSurah + 1);
+			if (!nextSurahMeta) return;
+			nextSurah = nextSurahMeta.number;
+			nextAyah = 1;
+		}
+
+		void openVerseReference(nextSurah, nextAyah);
+	};
+
 	const flipPrev = () => {
 		flipInstance?.flipPrev();
 	};
@@ -518,12 +828,18 @@
 
 	$: selectedJuzNumber = Number(selectedJuz) || 1;
 	$: normalizedQuery = normalizeSearchText(query);
+	$: smartSearchTarget = parseSmartSearchTarget(query);
 	$: filteredVerses = normalizedQuery ? verses.filter(matchesSearch) : verses;
+	$: selectedSurahMeta = surahMetaLookup.get(Number(selectedSurah)) ?? SURAH_DATA[0];
+	$: selectedJuzRange = JUZ_RANGES.find((range) => range.juz === selectedJuzNumber);
 	$: totalPages = pages.length;
 	$: currentPageNumber = pages[currentPageIndex]?.pageNumber;
 	$: currentSpread = Math.floor(currentPageIndex / 2) + 1;
 	$: totalSpreads = Math.ceil(totalPages / 2);
 	$: selectedVerse = verses.find((verse) => verse.verse_key === selectedVerseKey) ?? verses[0] ?? null;
+	$: selectedVerseJuz = selectedVerse
+		? findJuzForVerse(selectedVerse.surahNumber, selectedVerse.ayahNumber)
+		: selectedJuzNumber;
 	$: selectedInsight = insightFor(selectedVerse);
 	$: selectedAsbabKey = selectedVerse ? asbabCacheKey(selectedVerse) : '';
 	$: selectedAsbab = selectedAsbabKey ? asbabCache[selectedAsbabKey] : null;
@@ -571,18 +887,56 @@
 
 	{#if activeTab === 'mushaf'}
 		<div class="rounded-2xl border bg-base-100 p-4 md:p-6 shadow-sm space-y-4">
-			<div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-				<div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-					<label class="form-control w-full sm:w-48">
+			<div class="grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end">
+				<div class="grid gap-3 md:grid-cols-[160px_minmax(220px,1fr)_140px_auto] md:items-end">
+					<label class="form-control w-full">
 						<div class="label">
 							<span class="label-text">Pilih Juz</span>
 						</div>
 						<select class="select select-bordered w-full" bind:value={selectedJuz} on:change={handleJuzChange}>
-							{#each JUZ_LIST as juz}
-								<option value={juz}>Juz {juz}</option>
+							{#each JUZ_RANGES as range}
+								<option value={String(range.juz)}>Juz {range.juz}</option>
 							{/each}
 						</select>
 					</label>
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text">Surah</span>
+						</div>
+						<select class="select select-bordered w-full" bind:value={selectedSurah} on:change={handleSurahChange}>
+							{#each SURAH_DATA as surah}
+								<option value={String(surah.number)}>{surah.number}. {surah.name}</option>
+							{/each}
+						</select>
+					</label>
+					<label class="form-control w-full">
+						<div class="label">
+							<span class="label-text">Ayat</span>
+						</div>
+						<input
+							class="input input-bordered w-full"
+							type="number"
+							min="1"
+							max={selectedSurahMeta.totalAyah}
+							bind:value={selectedAyah}
+							on:change={handleSurahChange}
+						/>
+					</label>
+					<div class="flex flex-wrap gap-2">
+						<button class="btn btn-primary" on:click={openSelectedAyah} disabled={loading}>
+							Buka Ayat
+						</button>
+						<div class="join">
+							<button class="btn join-item btn-outline" on:click={() => navigateRelativeVerse(-1)} disabled={loading}>
+								Sebelum
+							</button>
+							<button class="btn join-item btn-outline" on:click={() => navigateRelativeVerse(1)} disabled={loading}>
+								Sesudah
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="flex flex-wrap items-center gap-2">
 					<div class="join">
 						<button
 							class={`btn join-item ${viewMode === 'lembaran' ? 'btn-primary' : 'btn-ghost'}`}
@@ -597,8 +951,6 @@
 							Teks
 						</button>
 					</div>
-				</div>
-				<div class="flex items-center gap-2">
 					<button class="btn btn-primary" on:click={() => loadJuz(selectedJuzNumber)} disabled={loading}>
 						{loading ? 'Memuat...' : 'Muat Juz'}
 					</button>
@@ -606,6 +958,20 @@
 						Reset
 					</button>
 				</div>
+			</div>
+			<div class="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600 md:grid-cols-2">
+				<p>
+					Juz {selectedJuzNumber}: {selectedJuzRange ? formatJuzRange(selectedJuzRange) : 'rentang belum tersedia'}.
+				</p>
+				<p class="md:text-right">
+					Surah {selectedSurahMeta.name} memiliki {selectedSurahMeta.totalAyah} ayat.
+					{#if selectedVerse}
+						Ayat aktif: {verseRefLabel(selectedVerse.surahNumber, selectedVerse.ayahNumber)} • Juz {selectedVerseJuz}.
+					{/if}
+				</p>
+				{#if navigationMessage}
+					<p class="font-medium text-emerald-700 md:col-span-2">{navigationMessage}</p>
+				{/if}
 			</div>
 
 			<div class="quran-reader-grid">
@@ -618,7 +984,7 @@
 							<Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 							<input
 								class="input input-bordered w-full pl-10 pr-10"
-								placeholder="Cari Arab, arti, tafsir, asbab, atau Al-Baqarah 255"
+								placeholder="Cari 2:255, Al-Baqarah 142, Juz 30, arti, tafsir, atau Arab"
 								bind:value={query}
 							/>
 							{#if query}
@@ -659,8 +1025,67 @@
 						{/if}
 					</div>
 
+					<div class="rounded-lg border border-amber-100 bg-amber-50 p-3">
+						<div class="flex items-center justify-between gap-3">
+							<div>
+								<p class="text-sm font-semibold text-amber-950">Indeks Asbabun Nuzul</p>
+								<p class="text-xs leading-5 text-amber-900/80">
+									Daftar ayat yang punya data asbab published di database.
+								</p>
+							</div>
+							<button class="btn btn-xs btn-outline" on:click={() => loadAsbabIndex(true)} disabled={asbabIndexLoading}>
+								{asbabIndexLoading ? 'Memuat' : asbabIndexItems.length ? 'Refresh' : 'Muat'}
+							</button>
+						</div>
+						{#if asbabIndexError}
+							<p class="mt-2 text-xs leading-5 text-amber-700">{asbabIndexError}</p>
+						{:else if asbabIndexItems.length}
+							<div class="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
+								{#each asbabIndexItems as item}
+									<button
+										type="button"
+										class="w-full rounded-lg border border-amber-200 bg-white/80 px-3 py-2 text-left text-xs transition hover:border-amber-300 hover:bg-white"
+										on:click={() => openVerseReference(item.surah_number, item.ayah_start)}
+									>
+										<span class="block font-semibold text-amber-950">{asbabRangeLabel(item)}</span>
+										<span class="mt-1 block leading-5 text-slate-700">{item.title || 'Asbabun Nuzul'}</span>
+										<span class="mt-1 block leading-5 text-slate-500">{item.source_title}</span>
+										{#if item.page_ref || item.grade}
+											<span class="mt-1 block leading-5 text-slate-500">
+												{#if item.grade}{item.grade}{/if}
+												{#if item.grade && item.page_ref} • {/if}
+												{#if item.page_ref}{item.page_ref}{/if}
+											</span>
+										{/if}
+									</button>
+								{/each}
+							</div>
+						{:else}
+							<p class="mt-2 text-xs leading-5 text-amber-900/80">
+								Belum ada daftar termuat. Klik Muat untuk melihat data published yang tersedia.
+							</p>
+						{/if}
+					</div>
+
 					{#if normalizedQuery}
 						<div class="space-y-2">
+							{#if smartSearchTarget}
+								<button
+									type="button"
+									class="search-result is-active border-emerald-200 bg-emerald-50"
+									on:click={openSmartSearchTarget}
+								>
+									<span class="font-semibold text-emerald-900">
+										{smartSearchTarget.kind === 'ayah' ? 'Buka ayat tepat' : 'Buka juz'}
+									</span>
+									<span class="line-clamp-2 text-xs leading-5 text-emerald-900/80">
+										{smartSearchTarget.label}
+										{#if smartSearchTarget.kind === 'ayah'}
+											• Juz {smartSearchTarget.juz}
+										{/if}
+									</span>
+								</button>
+							{/if}
 							<div class="flex items-center justify-between text-xs text-slate-500">
 								<span>{filteredVerses.length} hasil</span>
 								<span>Juz {selectedJuzNumber}</span>
