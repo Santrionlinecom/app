@@ -1,5 +1,8 @@
 <script lang="ts">
+	import Download from '@lucide/svelte/icons/download';
+	import FileSpreadsheet from '@lucide/svelte/icons/file-spreadsheet';
 	import StickyNote from '@lucide/svelte/icons/sticky-note';
+	import Upload from '@lucide/svelte/icons/upload';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -92,6 +95,14 @@
 		{ label: 'Klik 7 hari', value: data.summary.clicks7d }
 	]);
 
+	const reportUrl = (format: 'xlsx' | 'csv') => {
+		const params = new URLSearchParams({ format });
+		if (data.filters.q) params.set('q', data.filters.q);
+		if (data.filters.category !== 'all') params.set('category', data.filters.category);
+		if (data.filters.isActive !== 'all') params.set('is_active', data.filters.isActive);
+		return `/api/reports/shortlinks?${params.toString()}`;
+	};
+
 	const copyLink = async (slug: string, url: string) => {
 		await navigator.clipboard.writeText(url);
 		copiedSlug = slug;
@@ -110,6 +121,32 @@
 		<div>
 			<p class="text-sm font-semibold text-emerald-700">Admin</p>
 			<h1 class="text-2xl font-bold text-slate-950">Shortlink Analytics</h1>
+		</div>
+		<div class="flex flex-wrap gap-2">
+			<a
+				href={reportUrl('xlsx')}
+				class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+				download
+			>
+				<Download size={16} strokeWidth={2.2} />
+				Excel
+			</a>
+			<a
+				href={reportUrl('csv')}
+				class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+				download
+			>
+				<Download size={16} strokeWidth={2.2} />
+				CSV
+			</a>
+			<a
+				href="/api/reports/shortlinks/template"
+				class="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+				download
+			>
+				<FileSpreadsheet size={16} strokeWidth={2.2} />
+				Template
+			</a>
 		</div>
 	</div>
 
@@ -130,6 +167,14 @@
 		{:else if form?.updated}
 			<div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
 				Status shortlink diperbarui.
+			</div>
+		{:else if form?.imported}
+			<div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+				Import berhasil: {form.importSummary?.inserted ?? 0} shortlink masuk, {form.importSummary?.duplicateRows ?? 0} duplikat,
+				{form.importSummary?.invalidRows ?? 0} invalid.
+				{#if form.importSummary?.truncatedRows}
+					{form.importSummary.truncatedRows} baris melewati batas.
+				{/if}
 			</div>
 		{/if}
 
@@ -213,6 +258,31 @@
 				</button>
 			</div>
 		</form>
+	</div>
+
+	<div class="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+		<div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+			<div>
+				<h2 class="text-base font-bold text-slate-950">Upload Massal Shortlink</h2>
+				<p class="mt-1 text-sm text-slate-500">Unggah file .xlsx, .xls, atau .csv dengan kolom slug, title, target_url, category, description, notes, is_active.</p>
+			</div>
+			<form method="POST" action="?/importShortlinks" enctype="multipart/form-data" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+				<input
+					name="file"
+					type="file"
+					accept=".xlsx,.xls,.csv"
+					required
+					class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200 sm:w-[320px]"
+				/>
+				<button
+					type="submit"
+					class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800"
+				>
+					<Upload size={16} strokeWidth={2.2} />
+					Upload
+				</button>
+			</form>
+		</div>
 	</div>
 
 	<div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">

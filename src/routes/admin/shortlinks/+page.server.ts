@@ -1,5 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import * as XLSX from 'xlsx';
 import {
 	DEFAULT_SHORTLINK_CATEGORY,
 	isShortlinkCategoryKey,
@@ -42,6 +43,19 @@ type CategoryStatsRow = {
 	total_clicks: number | null;
 };
 
+type ShortlinkImportItem = {
+	slug: string;
+	title: string;
+	description: string | null;
+	targetUrl: string;
+	category: ShortlinkCategoryKey;
+	notes: string | null;
+	isActive: boolean;
+	slugWasProvided: boolean;
+};
+
+const IMPORT_FILE_MAX_BYTES = 2 * 1024 * 1024;
+const IMPORT_ROW_LIMIT = 1000;
 const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
 const cleanText = (value: string, maxLength = 500) => {
@@ -49,8 +63,136 @@ const cleanText = (value: string, maxLength = 500) => {
 	return text ? text.slice(0, maxLength) : '';
 };
 
+const normalizeHeader = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const pickMapValue = (map: Map<string, unknown>, keys: string[]) => {
+	for (const key of keys) {
+		if (map.has(key)) return map.get(key);
+	}
+	return null;
+};
+
 const normalizeCategory = (value: string | null): ShortlinkCategoryKey =>
 	value && isShortlinkCategoryKey(value) ? value : DEFAULT_SHORTLINK_CATEGORY;
+
+const slugKeys = ['slug', 'shortlink', 'shorturl', 'kode', 'code'];
+const titleKeys = ['title', 'judul', 'nama', 'name'];
+const targetUrlKeys = ['targeturl', 'target', 'url', 'link', 'destinationurl', 'destination'];
+const categoryKeys = ['category', 'kategori'];
+const descriptionKeys = ['description', 'deskripsi', 'desc'];
+const notesKeys = ['notes', 'note', 'catatan', 'keterangan'];
+const activeKeys = ['isactive', 'active', 'aktif', 'status'];
+
+const normalizeCategoryInput = (value: unknown): ShortlinkCategoryKey => {
+	const raw = `${value ?? ''}`.trim();
+	if (!raw) return DEFAULT_SHORTLINK_CATEGORY;
+
+	const direct = raw.toLowerCase().replace(/\s+/g, '_');
+	if (isShortlinkCategoryKey(direct)) return direct;
+
+	const normalized = normalizeHeader(raw);
+	const match = SHORTLINK_CATEGORIES.find(
+		(category) => normalizeHeader(category.key) === normalized || normalizeHeader(category.label) === normalized
+	);
+	return match?.key ?? DEFAULT_SHORTLINK_CATEGORY;
+};
+
+const parseActiveInput = (value: unknown) => {
+	const raw = `${value ?? ''}`.trim().toLowerCase();
+	if (!raw) return true;
+
+	const normalized = normalizeHeader(raw);
+	return !['0', 'false', 'no', 'n', 'inactive', 'nonaktif', 'tidak', 'tidakaktif', 'off', 'mati'].includes(
+		normalized
+	);
+};
+
+const titleFromUrl = (targetUrl: string) => {
+	try {
+		const url = new URL(targetUrl);
+		return url.hostname.replace(/^www\./, '');
+	} catch {
+		return '';
+	}
+};
+
+const slugBaseFromUrl = (targetUrl: string, rowNumber: number) => {
+	try {
+		const url = new URL(targetUrl);
+		const firstPath = url.pathname.split('/').filter(Boolean)[0] ?? '';
+		const seed = [url.hostname.replace(/^www\./, ''), firstPath].filter(Boolean).join('-');
+		const slug = sanitizeSlug(seed);
+		return slug || `shortlink-${rowNumber}`;
+	} catch {
+		return `shortlink-${rowNumber}`;
+	}
+};
+
+const makeUniqueSlug = (base: string, usedSlugs: Set<string>) => {
+	const safeBase = sanitizeSlug(base).slice(0, 80) || 'shortlink';
+	let candidate = safeBase;
+	let counter = 2;
+
+	while (usedSlugs.has(candidate)) {
+		const suffix = `-${counter}`;
+		candidate = `${safeBase.slice(0, 96 - suffix.length)}${suffix}`;
+		counter += 1;
+	}
+
+	usedSlugs.add(candidate);
+	return candidate;
+};
+
+const parseImportRows = (rows: Record<string, unknown>[]) => {
+	const items: ShortlinkImportItem[] = [];
+	let invalidRows = 0;
+	const limitedRows = rows.slice(0, IMPORT_ROW_LIMIT);
+
+	for (const [index, row] of limitedRows.entries()) {
+		const map = new Map<string, unknown>();
+		for (const [key, value] of Object.entries(row)) {
+			const normalized = normalizeHeader(key);
+			if (normalized) map.set(normalized, value);
+		}
+
+		const rowNumber = index + 2;
+		const targetUrl = `${pickMapValue(map, targetUrlKeys) ?? ''}`.trim();
+		if (!isValidTargetUrl(targetUrl)) {
+			invalidRows += 1;
+			continue;
+		}
+
+		const rawSlug = sanitizeSlug(`${pickMapValue(map, slugKeys) ?? ''}`);
+		const title =
+			cleanText(`${pickMapValue(map, titleKeys) ?? ''}`, 160) ||
+			cleanText(rawSlug || titleFromUrl(targetUrl) || `Shortlink ${rowNumber}`, 160);
+		const description = cleanText(`${pickMapValue(map, descriptionKeys) ?? ''}`, 500);
+		const notes = cleanText(`${pickMapValue(map, notesKeys) ?? ''}`, 1000);
+		const slugBase = rawSlug || sanitizeSlug(title) || slugBaseFromUrl(targetUrl, rowNumber);
+
+		if (!title || !slugBase) {
+			invalidRows += 1;
+			continue;
+		}
+
+		items.push({
+			slug: slugBase,
+			title,
+			description: description || null,
+			targetUrl,
+			category: normalizeCategoryInput(pickMapValue(map, categoryKeys)),
+			notes: notes || null,
+			isActive: parseActiveInput(pickMapValue(map, activeKeys)),
+			slugWasProvided: Boolean(rawSlug)
+		});
+	}
+
+	return {
+		items,
+		invalidRows,
+		truncatedRows: Math.max(rows.length - IMPORT_ROW_LIMIT, 0)
+	};
+};
 
 const readCreateForm = async (request: Request) => {
 	const form = await request.formData();
@@ -289,6 +431,105 @@ export const actions: Actions = {
 		}
 
 		return { created: true };
+	},
+	importShortlinks: async (event) => {
+		const user = requireAdmin(event);
+		const db = requireD1(event);
+		const data = await event.request.formData();
+		const file = data.get('file');
+
+		if (!(file instanceof File) || file.size === 0) {
+			return fail(400, { error: 'File Excel atau CSV wajib diunggah.' });
+		}
+		if (file.size > IMPORT_FILE_MAX_BYTES) {
+			return fail(400, { error: 'Ukuran file maksimal 2 MB.' });
+		}
+
+		let rows: Record<string, unknown>[] = [];
+		try {
+			const buffer = await file.arrayBuffer();
+			const workbook = XLSX.read(buffer, { type: 'array' });
+			const sheetName = workbook.SheetNames[0];
+			const sheet = sheetName ? workbook.Sheets[sheetName] : null;
+			if (!sheet) {
+				return fail(400, { error: 'Sheet Excel tidak ditemukan.' });
+			}
+			rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: true }) as Record<string, unknown>[];
+		} catch (err) {
+			console.error('shortlink:import:read', err);
+			return fail(400, { error: 'File tidak dapat dibaca. Gunakan format .xlsx, .xls, atau .csv.' });
+		}
+
+		const parsed = parseImportRows(rows);
+		if (parsed.items.length === 0) {
+			return fail(400, { error: 'Tidak ada data shortlink valid di file.' });
+		}
+
+		const existingRows = await db.prepare('SELECT slug FROM short_links').all<{ slug: string }>();
+		const usedSlugs = new Set((existingRows.results ?? []).map((row) => row.slug));
+		let duplicateRows = 0;
+		const items: ShortlinkImportItem[] = [];
+
+		for (const item of parsed.items) {
+			if (item.slugWasProvided) {
+				if (usedSlugs.has(item.slug)) {
+					duplicateRows += 1;
+					continue;
+				}
+				usedSlugs.add(item.slug);
+				items.push(item);
+				continue;
+			}
+
+			items.push({
+				...item,
+				slug: makeUniqueSlug(item.slug, usedSlugs)
+			});
+		}
+
+		if (items.length === 0) {
+			return fail(400, {
+				error: `Tidak ada shortlink baru yang bisa diimpor. ${duplicateRows} baris duplikat, ${parsed.invalidRows} baris invalid.`
+			});
+		}
+
+		try {
+			const statements = items.map((item) =>
+				db
+					.prepare(
+						`INSERT INTO short_links (
+							slug, title, description, target_url, category, notes, is_active, created_by, created_at, updated_at
+						) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+					)
+					.bind(
+						item.slug,
+						item.title,
+						item.description,
+						item.targetUrl,
+						item.category,
+						item.notes,
+						item.isActive ? 1 : 0,
+						user.id
+					)
+			);
+
+			for (let index = 0; index < statements.length; index += 100) {
+				await db.batch(statements.slice(index, index + 100));
+			}
+		} catch (err) {
+			console.error('shortlink:import', err);
+			return fail(500, { error: 'Gagal mengimpor shortlink. Periksa kembali isi file.' });
+		}
+
+		return {
+			imported: true,
+			importSummary: {
+				inserted: items.length,
+				duplicateRows,
+				invalidRows: parsed.invalidRows,
+				truncatedRows: parsed.truncatedRows
+			}
+		};
 	},
 	toggleStatus: async (event) => {
 		requireAdmin(event);
