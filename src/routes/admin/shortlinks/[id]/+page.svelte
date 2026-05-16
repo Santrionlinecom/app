@@ -1,8 +1,19 @@
 <script lang="ts">
+	import Copy from '@lucide/svelte/icons/copy';
+	import Download from '@lucide/svelte/icons/download';
+	import QrCode from '@lucide/svelte/icons/qr-code';
+	import QRCode from 'qrcode';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let copiedUrl = $state<string | null>(null);
+	let qrModalOpen = $state(false);
+	let qrModalTitle = $state('');
+	let qrModalSlug = $state('');
+	let qrModalShortUrl = $state('');
+	let qrModalDataUrl = $state('');
+	let qrModalLoading = $state(false);
+	let qrModalError = $state('');
 
 	type UpdateValues = {
 		title: string;
@@ -60,6 +71,53 @@
 		}, 1500);
 	};
 
+	const shortUrlForSlug = (slug: string) => `${window.location.origin}/r/${slug}`;
+
+	const qrPngName = (slug: string) => `santrionline-qr-${slug}.png`;
+
+	const generateQrDataUrl = async (shortUrl: string) =>
+		QRCode.toDataURL(shortUrl, {
+			width: 1024,
+			margin: 1,
+			errorCorrectionLevel: 'M'
+		});
+
+	const downloadQrPng = async (slug: string, shortUrl: string) => {
+		const dataUrl = await generateQrDataUrl(shortUrl);
+		const link = document.createElement('a');
+		link.href = dataUrl;
+		link.download = qrPngName(slug);
+		link.click();
+	};
+
+	const openQrModal = async () => {
+		qrModalOpen = true;
+		qrModalTitle = data.link.title;
+		qrModalSlug = data.link.slug;
+		qrModalShortUrl = shortUrlForSlug(data.link.slug);
+		qrModalDataUrl = '';
+		qrModalError = '';
+		qrModalLoading = true;
+
+		try {
+			qrModalDataUrl = await generateQrDataUrl(qrModalShortUrl);
+		} catch {
+			qrModalError = 'QR Code gagal dibuat.';
+		} finally {
+			qrModalLoading = false;
+		}
+	};
+
+	const closeQrModal = () => {
+		qrModalOpen = false;
+		qrModalTitle = '';
+		qrModalSlug = '';
+		qrModalShortUrl = '';
+		qrModalDataUrl = '';
+		qrModalError = '';
+		qrModalLoading = false;
+	};
+
 	const metricCards = $derived([
 		{ label: 'Total klik', value: data.summary.totalClicks },
 		{ label: 'Unique klik', value: data.summary.uniqueClicks },
@@ -103,10 +161,34 @@
 				{data.link.targetUrl}
 			</a>
 		</div>
-		<div class="flex flex-wrap gap-2">
-			<a
-				href={data.link.shortUrl}
-				target="_blank"
+	<div class="flex flex-wrap gap-2">
+		<button
+			type="button"
+			class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+			onclick={openQrModal}
+		>
+			<QrCode size={16} strokeWidth={2.2} />
+			QR Code / Barcode
+		</button>
+		<button
+			type="button"
+			class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+			onclick={() => downloadQrPng(data.link.slug, shortUrlForSlug(data.link.slug))}
+		>
+			<Download size={16} strokeWidth={2.2} />
+			Download QR PNG
+		</button>
+		<button
+			type="button"
+			class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+			onclick={() => copyUrl(shortUrlForSlug(data.link.slug))}
+		>
+			<Copy size={16} strokeWidth={2.2} />
+			Copy Short URL
+		</button>
+		<a
+			href={data.link.shortUrl}
+			target="_blank"
 				rel="noreferrer"
 				class="inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800"
 			>
@@ -374,6 +456,86 @@
 			</table>
 		</div>
 	</div>
+
+	{#if qrModalOpen}
+		<div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
+			<button
+				type="button"
+				class="absolute inset-0 bg-slate-950/60"
+				aria-label="Tutup modal QR"
+				onclick={closeQrModal}
+			></button>
+			<div
+				class="relative z-10 w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-2xl"
+				role="dialog"
+				tabindex="-1"
+				aria-modal="true"
+				aria-labelledby="qr-modal-title"
+			>
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<h2 id="qr-modal-title" class="text-base font-bold text-slate-950">QR Code / Barcode</h2>
+						<p class="mt-1 text-sm text-slate-500">{qrModalTitle}</p>
+					</div>
+					<button
+						type="button"
+						class="rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+						onclick={closeQrModal}
+					>
+						Tutup
+					</button>
+				</div>
+
+				<div class="mt-4 space-y-3 text-sm">
+					<div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+						<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Slug</p>
+						<p class="mt-1 break-all font-mono text-slate-900">{qrModalSlug}</p>
+					</div>
+					<div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+						<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Short URL</p>
+						<p class="mt-1 break-all font-mono text-slate-900">{qrModalShortUrl}</p>
+					</div>
+				</div>
+
+				<div class="mt-5 rounded-lg border border-slate-200 bg-white p-4">
+					{#if qrModalLoading}
+						<p class="text-sm text-slate-600">Memuat QR Code...</p>
+					{:else if qrModalError}
+						<p class="text-sm text-red-700">{qrModalError}</p>
+					{:else if qrModalDataUrl}
+						<div class="grid place-items-center">
+							<img
+								src={qrModalDataUrl}
+								alt={`QR Code ${qrModalTitle}`}
+								class="h-64 w-64 rounded-lg border border-slate-200 bg-white p-3"
+							/>
+						</div>
+					{/if}
+				</div>
+
+				<div class="mt-5 flex flex-wrap gap-2">
+					<button
+						type="button"
+						class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+						onclick={() => qrModalShortUrl && copyUrl(qrModalShortUrl)}
+						disabled={!qrModalShortUrl}
+					>
+						<Copy size={16} strokeWidth={2.2} />
+						Salin Short URL
+					</button>
+					<button
+						type="button"
+						class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+						onclick={() => qrModalSlug && qrModalShortUrl && downloadQrPng(qrModalSlug, qrModalShortUrl)}
+						disabled={!qrModalSlug || !qrModalShortUrl}
+					>
+						<Download size={16} strokeWidth={2.2} />
+						Download QR PNG
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
 </section>
 
 {#snippet TopTable(title: string, rows: { label: string; total: number }[])}
