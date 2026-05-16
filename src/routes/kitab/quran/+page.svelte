@@ -94,6 +94,30 @@
 		error?: string;
 	};
 
+	type TafsirIndonesiaItem = {
+		id: number;
+		source_key: string;
+		source_title: string;
+		source_author: string | null;
+		source_publisher: string | null;
+		surah_number: number;
+		ayah_number: number;
+		title: string | null;
+		content: string;
+		summary: string | null;
+		page_ref: string | null;
+	};
+
+	type TafsirIndonesiaResponse = {
+		ok: boolean;
+		source_origin: 'd1';
+		surah: number;
+		ayah: number;
+		items: TafsirIndonesiaItem[];
+		message?: string;
+		error?: string;
+	};
+
 	type SearchScope = 'semua' | 'arab' | 'terjemah' | 'tafsir' | 'asbab';
 
 	type VerseRef = {
@@ -174,6 +198,8 @@
 	];
 	const EMPTY_ASBAB_MESSAGE =
 		'Belum ditemukan riwayat asbabun nuzul khusus untuk ayat ini. Namun ayat ini dapat berkaitan dengan konteks ayat sebelum/sesudahnya.';
+	const EMPTY_TAFSIR_INDONESIA_MESSAGE =
+		'Tafsir Indonesia belum tersedia untuk ayat ini. SantriOnline sedang menyiapkan data tafsir dari sumber tervalidasi.';
 
 	let activeTab: 'mushaf' | 'sejarah' = 'mushaf';
 	let viewMode: 'lembaran' | 'teks' = 'lembaran';
@@ -201,6 +227,10 @@
 	let insightsError = '';
 	let selectedVerseKey = '';
 	let selectedTafsirSource: TafsirSourceKey = 'jalalain';
+	let tafsirIndonesiaCache: Record<string, TafsirIndonesiaResponse> = {};
+	let tafsirIndonesiaLoadingKey = '';
+	let tafsirIndonesiaErrorKey = '';
+	let tafsirIndonesiaError = '';
 	let classicalTafsirCache: Record<string, ClassicalTafsir> = {};
 	let classicalTafsirLoadingKey = '';
 	let classicalTafsirError = '';
@@ -217,6 +247,7 @@
 	const padJuz = (value: number) => String(value).padStart(2, '0');
 	const surahName = (surahNumber: number) => surahLookup.get(surahNumber) ?? `Surah ${surahNumber}`;
 	const verseKeyFor = (surahNumber: number, ayahNumber: number) => `${surahNumber}:${ayahNumber}`;
+	const tafsirIndonesiaCacheKey = (verse: Verse) => `${verse.surahNumber}:${verse.ayahNumber}`;
 	const verseRefLabel = (surahNumber: number, ayahNumber: number) =>
 		`${surahName(surahNumber)} ${ayahNumber} (${verseKeyFor(surahNumber, ayahNumber)})`;
 	const compareVerseRef = (a: VerseRef, b: VerseRef) =>
@@ -558,6 +589,49 @@
 		});
 	};
 
+	const loadTafsirIndonesiaForVerse = async (verse: Verse | null | undefined) => {
+		if (!verse) return;
+
+		const cacheKey = tafsirIndonesiaCacheKey(verse);
+		if (tafsirIndonesiaCache[cacheKey] || tafsirIndonesiaLoadingKey === cacheKey) return;
+
+		tafsirIndonesiaLoadingKey = cacheKey;
+		tafsirIndonesiaErrorKey = '';
+		tafsirIndonesiaError = '';
+
+		try {
+			const res = await fetch(
+				`/api/quran/tafsir-indonesia/${verse.surahNumber}/${verse.ayahNumber}`,
+				{
+					headers: {
+						accept: 'application/json'
+					}
+				}
+			);
+			const data = (await res.json()) as TafsirIndonesiaResponse;
+
+			if (!res.ok || !data.ok) {
+				throw new Error(data.error || 'Tafsir Indonesia belum bisa dimuat.');
+			}
+
+			tafsirIndonesiaCache = {
+				...tafsirIndonesiaCache,
+				[cacheKey]: {
+					...data,
+					items: data.items ?? [],
+					message: data.message ?? EMPTY_TAFSIR_INDONESIA_MESSAGE
+				}
+			};
+		} catch (err: any) {
+			tafsirIndonesiaErrorKey = cacheKey;
+			tafsirIndonesiaError = err?.message || 'Gagal memuat tafsir Indonesia.';
+		} finally {
+			if (tafsirIndonesiaLoadingKey === cacheKey) {
+				tafsirIndonesiaLoadingKey = '';
+			}
+		}
+	};
+
 	const loadClassicalTafsir = async (verse: Verse | null | undefined, source: TafsirSourceKey) => {
 		if (!verse) return;
 		const cacheKey = `${source}:${verse.verse_key}`;
@@ -841,6 +915,21 @@
 		? findJuzForVerse(selectedVerse.surahNumber, selectedVerse.ayahNumber)
 		: selectedJuzNumber;
 	$: selectedInsight = insightFor(selectedVerse);
+	$: selectedTafsirIndonesiaKey = selectedVerse ? tafsirIndonesiaCacheKey(selectedVerse) : '';
+	$: selectedTafsirIndonesiaResponse = selectedTafsirIndonesiaKey
+		? tafsirIndonesiaCache[selectedTafsirIndonesiaKey]
+		: null;
+	$: selectedTafsirIndonesiaItems = selectedTafsirIndonesiaResponse?.items ?? [];
+	$: selectedTafsirIndonesia = selectedTafsirIndonesiaItems[0]?.content || selectedInsight?.tafsir || '';
+	$: selectedTafsirIndonesiaMessage =
+		selectedTafsirIndonesiaResponse?.message ?? EMPTY_TAFSIR_INDONESIA_MESSAGE;
+	$: selectedTafsirIndonesiaLoading = Boolean(
+		selectedTafsirIndonesiaKey && tafsirIndonesiaLoadingKey === selectedTafsirIndonesiaKey
+	);
+	$: selectedTafsirIndonesiaError =
+		selectedTafsirIndonesiaKey && tafsirIndonesiaErrorKey === selectedTafsirIndonesiaKey
+			? tafsirIndonesiaError
+			: '';
 	$: selectedAsbabKey = selectedVerse ? asbabCacheKey(selectedVerse) : '';
 	$: selectedAsbab = selectedAsbabKey ? asbabCache[selectedAsbabKey] : null;
 	$: selectedAsbabItems = selectedAsbab?.items ?? [];
@@ -858,6 +947,7 @@
 		(item) => item.translation || item.tafsir || item.asbab
 	).length;
 	$: if (selectedVerse && activeTab === 'mushaf') {
+		void loadTafsirIndonesiaForVerse(selectedVerse);
 		void loadClassicalTafsir(selectedVerse, selectedTafsirSource);
 		void loadAsbabForVerse(selectedVerse);
 	}
@@ -1222,7 +1312,7 @@
 											{#if selectedVerseKey === verse.verse_key && selectedAsbabItems.length}
 												<span class="badge badge-warning badge-outline">Asbab tersedia</span>
 											{/if}
-											{#if insight?.tafsir}
+											{#if insight?.tafsir || (selectedVerseKey === verse.verse_key && selectedTafsirIndonesiaItems.length)}
 												<span class="badge badge-success badge-outline">Tafsir tersedia</span>
 											{/if}
 										</div>
@@ -1234,9 +1324,52 @@
 														<BookOpenText class="h-4 w-4" />
 														Tafsir Indonesia
 													</h3>
-													<p class="mt-2 whitespace-pre-line text-sm leading-7 text-slate-700">
-														{insight?.tafsir || 'Tafsir ayat ini sedang dimuat atau belum tersedia.'}
-													</p>
+													{#if selectedTafsirIndonesiaItems.length}
+														<div class="mt-3 space-y-4">
+															{#each selectedTafsirIndonesiaItems as item}
+																<article class="rounded-lg border border-emerald-200 bg-white/70 p-3">
+																	{#if item.title}
+																		<h4 class="text-sm font-semibold text-emerald-950">{item.title}</h4>
+																	{/if}
+																	<div class="mt-2 space-y-1 text-xs leading-5 text-emerald-950/80">
+																		<p>Sumber: {item.source_title}</p>
+																		{#if item.source_author}
+																			<p>Penulis: {item.source_author}</p>
+																		{/if}
+																		{#if item.source_publisher}
+																			<p>Penerbit: {item.source_publisher}</p>
+																		{/if}
+																		<p>Ayat: QS. {surahName(item.surah_number)} {item.ayah_number}</p>
+																		{#if item.page_ref}
+																			<p>Rujukan halaman: {item.page_ref}</p>
+																		{/if}
+																	</div>
+																	{#if item.summary}
+																		<p class="mt-3 text-sm leading-7 text-slate-700">{item.summary}</p>
+																	{/if}
+																	<p class="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">{item.content}</p>
+																</article>
+															{/each}
+														</div>
+													{:else if selectedTafsirIndonesia}
+														<div class="mt-3 rounded-lg border border-emerald-200 bg-white/70 p-3">
+															<p class="text-xs leading-5 text-emerald-950/80">Sumber: Database Tafsir Indonesia</p>
+															<p class="mt-2 whitespace-pre-line text-sm leading-7 text-slate-700">
+																{selectedTafsirIndonesia}
+															</p>
+														</div>
+													{:else if selectedTafsirIndonesiaLoading}
+														<p class="mt-3 inline-flex items-center gap-2 text-sm text-slate-600">
+															<LoaderCircle class="h-4 w-4 animate-spin" />
+															Memuat tafsir Indonesia...
+														</p>
+													{:else if selectedTafsirIndonesiaError}
+														<p class="mt-2 text-sm leading-7 text-amber-700">{selectedTafsirIndonesiaError}</p>
+													{:else}
+														<p class="mt-2 whitespace-pre-line text-sm leading-7 text-slate-700">
+															{selectedTafsirIndonesiaMessage}
+														</p>
+													{/if}
 												</section>
 												<section class="rounded-lg border border-amber-100 bg-amber-50 p-4">
 													<h3 class="flex items-center gap-2 text-sm font-semibold text-amber-950">

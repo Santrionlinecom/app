@@ -13,6 +13,8 @@
     "flags:sync": "node scripts/sync-language-flags.mjs",
     "asbab:import": "node scripts/asbab/import-asbab-json.mjs",
     "asbab:parse:lpmq": "node scripts/asbab/parse-lpmq-text.mjs",
+    "tafsir:import": "node scripts/tafsir/import-tafsir-json.mjs",
+    "tafsir:parse:ringkas": "node scripts/tafsir/parse-tafsir-ringkas-text.mjs",
     "openiti:parse": "node scripts/openiti/parse-openiti.mjs",
     "deploy:pages": "npm run build && npx wrangler@4 pages deploy .svelte-kit/cloudflare --project-name app-santrionline",
     "check": "NODE_OPTIONS=--no-deprecation svelte-kit sync && NODE_OPTIONS=--no-deprecation svelte-check --tsconfig ./tsconfig.json",

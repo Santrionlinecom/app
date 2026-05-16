@@ -1,5 +1,9 @@
 import { error, json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 import { SURAH_DATA } from '$lib/surah-data';
+import { requireD1 } from '$lib/server/cloudflare';
+import { getTafsirIndonesiaForSurah } from '$lib/server/quran-tafsir-indonesia';
+import type { D1Database } from '@cloudflare/workers-types';
 
 type MuslimAyah = {
 	id?: string;
@@ -16,19 +20,7 @@ type MuslimAsbab = {
 	text?: string | null;
 };
 
-type EquranTafsir = {
-	ayat?: number;
-	teks?: string | null;
-};
-
-type EquranTafsirResponse = {
-	data?: {
-		tafsir?: EquranTafsir[];
-	};
-};
-
 const MUSLIM_QURAN_API = 'https://muslim-api-three.vercel.app/v1/quran';
-const EQURAN_API = 'https://equran.id/api/v2';
 
 const cleanText = (value: unknown) =>
 	String(value ?? '')
@@ -63,18 +55,12 @@ const loadAsbabMap = async (fetcher: typeof fetch) => {
 	}
 };
 
-const loadTafsirMap = async (fetcher: typeof fetch, surahNumbers: number[]) => {
+const loadTafsirMap = async (db: D1Database, surahNumbers: number[]) => {
 	const entries = await Promise.all(
 		surahNumbers.map(async (surahNumber) => {
 			try {
-				const payload = await fetchJson<EquranTafsirResponse>(
-					fetcher,
-					`${EQURAN_API}/tafsir/${surahNumber}`
-				);
-				return (payload.data?.tafsir ?? []).map((item) => [
-					`${surahNumber}:${Number(item.ayat)}`,
-					cleanText(item.teks)
-				] as const);
+				const tafsirItems = await getTafsirIndonesiaForSurah(db, surahNumber);
+				return tafsirItems.map((item) => [`${surahNumber}:${item.ayah_number}`, item.content] as const);
 			} catch {
 				return [] as Array<readonly [string, string]>;
 			}
@@ -84,7 +70,8 @@ const loadTafsirMap = async (fetcher: typeof fetch, surahNumbers: number[]) => {
 	return new Map(entries.flat().filter(([, text]) => text));
 };
 
-export const GET = async ({ params, fetch, setHeaders }) => {
+export const GET: RequestHandler = async (event) => {
+	const { params, fetch, setHeaders } = event;
 	const juz = Number(params.juz);
 
 	if (!Number.isInteger(juz) || juz < 1 || juz > 30) {
@@ -106,10 +93,11 @@ export const GET = async ({ params, fetch, setHeaders }) => {
 				.filter((surahNumber) => Number.isInteger(surahNumber) && surahNumber >= 1 && surahNumber <= 114)
 		)
 	];
+	const db = requireD1(event);
 
 	const [asbabById, tafsirByVerse] = await Promise.all([
 		loadAsbabMap(fetch),
-		loadTafsirMap(fetch, surahNumbers)
+		loadTafsirMap(db, surahNumbers)
 	]);
 
 	const verses = ayahRows
