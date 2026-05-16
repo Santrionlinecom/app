@@ -21,7 +21,7 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	const db = requireD1(event);
-	const items = await getTafsirIndonesiaForAyah(db, surah, ayah);
+	const items = await getTafsirIndonesiaForAyah(db, surah, ayah, { includeDraft: true });
 	const isAuthenticated = Boolean(event.locals.user);
 
 	setHeaders({

@@ -110,6 +110,7 @@
 		content: string;
 		summary: string | null;
 		page_ref: string | null;
+		status?: string;
 		is_truncated?: boolean;
 		requires_login?: boolean;
 	};
@@ -197,11 +198,13 @@
 		| 'title'
 		| 'summary'
 		| 'page_ref'
+		| 'status'
 	>;
 
 	type TafsirIndonesiaIndexResponse = {
 		ok: boolean;
 		count: number;
+		status_filter?: string;
 		items: TafsirIndonesiaIndexItem[];
 		error?: string;
 	};
@@ -443,6 +446,7 @@
 	let tafsirIndonesiaErrorKey = '';
 	let tafsirIndonesiaError = '';
 	let tafsirIndexItems: TafsirIndonesiaIndexItem[] = [];
+	let tafsirIndexCount = 0;
 	let tafsirIndexLoading = false;
 	let tafsirIndexError = '';
 	let classicalTafsirCache: Record<string, ClassicalTafsir> = {};
@@ -1036,7 +1040,7 @@
 		tafsirIndexError = '';
 
 		try {
-			const res = await fetch('/api/quran/tafsir-indonesia/index?limit=500', {
+			const res = await fetch('/api/quran/tafsir-indonesia/index?limit=all', {
 				headers: {
 					accept: 'application/json'
 				}
@@ -1046,6 +1050,7 @@
 				throw new Error(data.error || 'Daftar tafsir Indonesia belum bisa dimuat.');
 			}
 			tafsirIndexItems = data.items ?? [];
+			tafsirIndexCount = data.count ?? tafsirIndexItems.length;
 		} catch (err: any) {
 			tafsirIndexError = err?.message || 'Gagal memuat daftar tafsir Indonesia.';
 		} finally {
@@ -1320,6 +1325,8 @@
 			viewMode = savedView;
 		}
 
+		void loadTafsirIndonesiaIndex();
+
 		void (async () => {
 			try {
 				const initialTarget =
@@ -1583,7 +1590,7 @@
 							<div>
 								<p class="text-sm font-semibold text-emerald-950">Indeks Tafsir Indonesia</p>
 								<p class="text-xs leading-5 text-emerald-900/80">
-									Daftar ayat yang punya tafsir published di database.
+									Semua ayat yang punya data tafsir dari hasil parser.
 								</p>
 							</div>
 							<button
@@ -1592,12 +1599,15 @@
 								on:click={() => loadTafsirIndonesiaIndex(true)}
 								disabled={tafsirIndexLoading}
 							>
-								{tafsirIndexLoading ? 'Memuat' : tafsirIndexItems.length ? 'Refresh' : 'Muat'}
+								{tafsirIndexLoading ? 'Memuat' : tafsirIndexItems.length ? 'Muat ulang' : 'Muat'}
 							</button>
 						</div>
 						{#if tafsirIndexError}
 							<p class="mt-2 text-xs leading-5 text-emerald-700">{tafsirIndexError}</p>
 						{:else if tafsirIndexItems.length}
+							<p class="mt-2 text-xs leading-5 text-emerald-900/80">
+								{tafsirIndexCount || tafsirIndexItems.length} entry tafsir tersedia.
+							</p>
 							<div class="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
 								{#each tafsirIndexItems as item}
 									<button
@@ -1616,7 +1626,7 @@
 							</div>
 						{:else}
 							<p class="mt-2 text-xs leading-5 text-emerald-900/80">
-								Belum ada daftar termuat. Klik Muat untuk melihat data tafsir yang sudah published.
+								Belum ada daftar termuat. Klik Muat untuk melihat data tafsir yang tersedia.
 							</p>
 						{/if}
 					</div>

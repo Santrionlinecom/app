@@ -4,12 +4,12 @@ Folder ini berisi alat bantu untuk menyiapkan dan mengimpor data Tafsir Indonesi
 
 ## Parse Tafsir Ringkas Kemenag
 
-Raw TXT Archive.org harus berada di:
+Raw TXT yang dipakai parser adalah hasil ekstraksi bersih. Simpan file di:
 
-- `data/tafsir/raw/TAFSIR RINGKAS JILID 1.1_djvu.txt`
-- `data/tafsir/raw/TAFSIR RINGKAS JILID 1.2_djvu.txt`
-- `data/tafsir/raw/TAFSIR RINGKAS JILID 2.1_djvu.txt`
-- `data/tafsir/raw/TAFSIR RINGKAS JILID 2.2_djvu.txt`
+- `data/tafsir/raw/tafsir-ringkas-jilid-1.1.txt`
+- `data/tafsir/raw/tafsir-ringkas-jilid-1.2.txt`
+- `data/tafsir/raw/tafsir-ringkas-jilid-2.1.txt`
+- `data/tafsir/raw/tafsir-ringkas-jilid-2.2.txt`
 
 Jalankan:
 

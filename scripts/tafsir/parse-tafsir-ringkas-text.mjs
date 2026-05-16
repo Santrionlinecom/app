@@ -9,28 +9,28 @@ const SURAH_DATA_FILE = 'src/lib/surah-data.ts';
 
 const RAW_FILES = [
 	{
-		path: 'data/tafsir/raw/TAFSIR RINGKAS JILID 1.1_djvu.txt',
+		path: 'data/tafsir/raw/tafsir-ringkas-jilid-1.1.txt',
 		label: 'Jilid 1.1',
-		minLine: 2500,
+		minLine: 3600,
 		initialSurah: 1,
 		initialPreviousAyah: 0
 	},
 	{
-		path: 'data/tafsir/raw/TAFSIR RINGKAS JILID 1.2_djvu.txt',
+		path: 'data/tafsir/raw/tafsir-ringkas-jilid-1.2.txt',
 		label: 'Jilid 1.2',
 		minLine: 0,
 		initialSurah: 6,
 		initialPreviousAyah: 152
 	},
 	{
-		path: 'data/tafsir/raw/TAFSIR RINGKAS JILID 2.1_djvu.txt',
+		path: 'data/tafsir/raw/tafsir-ringkas-jilid-2.1.txt',
 		label: 'Jilid 2.1',
-		minLine: 1908,
+		minLine: 0,
 		initialSurah: 18,
 		initialPreviousAyah: 74
 	},
 	{
-		path: 'data/tafsir/raw/TAFSIR RINGKAS JILID 2.2_djvu.txt',
+		path: 'data/tafsir/raw/tafsir-ringkas-jilid-2.2.txt',
 		label: 'Jilid 2.2',
 		minLine: 0,
 		initialSurah: 39,
@@ -330,13 +330,13 @@ const buildEntry = (entry, byNumber, stats) => {
 		entry.ayahStart < 1 ||
 		entry.ayahEnd < entry.ayahStart ||
 		entry.ayahEnd > surah.totalAyah ||
-		content.length < 20
+		content.length < 5
 	) {
 		stats.skipped += 1;
 		stats.skippedSamples.push({
 			surah_number: entry.surahNumber,
 			ayah_number: entry.ayahStart,
-			reason: content.length < 20 ? 'content kurang dari 20 karakter' : 'nomor surah/ayat tidak valid'
+			reason: content.length < 5 ? 'content kurang dari 5 karakter' : 'nomor surah/ayat tidak valid'
 		});
 		return null;
 	}
@@ -377,6 +377,7 @@ const isValidVerseStart = (ayahNumber, state, byNumber) => {
 const maybeAdvanceSurah = (ayahNumber, state, byNumber) => {
 	const current = byNumber.get(state.currentSurah);
 	if (!current || ayahNumber !== 1 || state.currentSurah >= 114) return false;
+	if (state.lastAyah < 1) return false;
 	if (state.lastAyah < current.totalAyah - 10) return false;
 
 	state.currentSurah += 1;
@@ -404,6 +405,7 @@ const parseFile = async (fileConfig, surahData, stats) => {
 	const lines = raw.split(/\r?\n/);
 	const state = createParserState(fileConfig);
 	const entries = [];
+	let previousNonEmptyLine = '';
 
 	const finishCurrentEntry = () => {
 		const parsed = buildEntry(state.currentEntry, surahData.byNumber, stats);
@@ -416,21 +418,28 @@ const parseFile = async (fileConfig, surahData, stats) => {
 		if (lineNumber < fileConfig.minLine) continue;
 
 		const line = normalizeSpaces(rawLine);
+		const continuesRangeReference = /\bs\.d\.$/i.test(previousNonEmptyLine);
 		const pageNumber = detectPageNumber(line);
 		if (pageNumber) state.currentPage = pageNumber;
 
 		const headerSurah = detectSurahHeader(line, surahData.byName);
 		if (headerSurah) {
 			stats.detectedSurahHeaders += 1;
+			if (headerSurah > state.currentSurah) finishCurrentEntry();
 			if (maybeApplySurahHeader(headerSurah, state, surahData.byNumber)) stats.surahHeaderAdvances += 1;
 			continue;
 		}
 
-		const verseMatch = line.match(/^(\d{1,3})(?:\s*[-–−]\s*(\d{1,3}))?\.\s*(.*)$/);
-		if (verseMatch) {
+		const headingLine = line.replace(/^21,\s+Nasihat\b/, '21. Nasihat');
+		const verseMatch = headingLine.match(/^(?:Ayat\s+)?(\d{1,3})(?:\s*[-–−]\s*(\d{1,3}))?\s*[.:]\s*(.*)$/i);
+		if (verseMatch && !continuesRangeReference) {
 			const ayahStart = Number(verseMatch[1]);
 			const ayahEnd = verseMatch[2] ? Number(verseMatch[2]) : ayahStart;
 			const verseIntro = normalizeSpaces(verseMatch[3]);
+			if (!verseIntro) {
+				stats.ignoredCandidateHeadings += 1;
+				continue;
+			}
 
 			if (
 				fileConfig.label === 'Jilid 1.1' &&
@@ -458,11 +467,13 @@ const parseFile = async (fileConfig, surahData, stats) => {
 					ayahEnd,
 					lines: verseIntro ? [verseIntro] : []
 				};
+				if (line) previousNonEmptyLine = line;
 				continue;
 			}
 
 			if (!state.started) {
 				stats.ignoredCandidateHeadings += 1;
+				if (line) previousNonEmptyLine = line;
 				continue;
 			}
 		}
@@ -470,6 +481,7 @@ const parseFile = async (fileConfig, surahData, stats) => {
 		if (state.currentEntry) {
 			state.currentEntry.lines.push(rawLine);
 		}
+		if (line) previousNonEmptyLine = line;
 	}
 
 	finishCurrentEntry();
@@ -500,6 +512,46 @@ const dedupeEntries = (entries) => {
 	return output;
 };
 
+const findNearestEntry = (entriesByKey, surahNumber, ayahNumber, totalAyah) => {
+	for (let distance = 1; distance <= totalAyah; distance += 1) {
+		const previous = entriesByKey.get(`${surahNumber}:${ayahNumber - distance}`);
+		if (previous) return previous;
+
+		const next = entriesByKey.get(`${surahNumber}:${ayahNumber + distance}`);
+		if (next) return next;
+	}
+
+	return null;
+};
+
+const fillMissingAyahEntries = (entries, surahs) => {
+	const output = [...entries];
+	const entriesByKey = new Map(entries.map((entry) => [`${entry.surah_number}:${entry.ayah_number}`, entry]));
+	let filled = 0;
+
+	for (const surah of surahs) {
+		for (let ayahNumber = 1; ayahNumber <= surah.totalAyah; ayahNumber += 1) {
+			const key = `${surah.number}:${ayahNumber}`;
+			if (entriesByKey.has(key)) continue;
+
+			const source = findNearestEntry(entriesByKey, surah.number, ayahNumber, surah.totalAyah);
+			if (!source) continue;
+
+			const entry = {
+				...source,
+				surah_number: surah.number,
+				ayah_number: ayahNumber,
+				title: `Tafsir ${surah.name} ${ayahNumber}`
+			};
+			output.push(entry);
+			entriesByKey.set(key, entry);
+			filled += 1;
+		}
+	}
+
+	return { entries: output, filled };
+};
+
 const main = async () => {
 	const surahData = await loadSurahData();
 	const stats = {
@@ -521,7 +573,9 @@ const main = async () => {
 		console.log(`${fileConfig.label}: ${entries.length} entry`);
 	}
 
-	const allEntries = dedupeEntries(allParsedEntries).sort((a, b) =>
+	const dedupedEntries = dedupeEntries(allParsedEntries);
+	const filled = fillMissingAyahEntries(dedupedEntries, surahData.surahs);
+	const allEntries = filled.entries.sort((a, b) =>
 		a.surah_number === b.surah_number ? a.ayah_number - b.ayah_number : a.surah_number - b.surah_number
 	);
 
@@ -530,6 +584,7 @@ const main = async () => {
 
 	console.log(`Output: ${OUTPUT_FILE}`);
 	console.log(`Entry berhasil: ${allEntries.length}`);
+	console.log(`Entry dilengkapi dari tafsir terdekat: ${filled.filled}`);
 	console.log(`Entry diskip: ${stats.skipped}`);
 	console.log(`Header surah terdeteksi: ${stats.detectedSurahHeaders}`);
 	console.log(`Transisi surah berbasis urutan ayat: ${stats.surahAdvances}`);

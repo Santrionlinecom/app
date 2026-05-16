@@ -1,22 +1,26 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireD1 } from '$lib/server/cloudflare';
-import { getPublishedTafsirIndonesiaIndex } from '$lib/server/quran-tafsir-indonesia';
+import { getTafsirIndonesiaIndex } from '$lib/server/quran-tafsir-indonesia';
 
 const parseLimit = (url: URL) => {
 	const raw = url.searchParams.get('limit');
-	if (!raw) return 500;
+	if (!raw || raw === 'all') return null;
 	const value = Number(raw);
-	return Number.isInteger(value) && value > 0 ? Math.min(value, 2000) : 500;
+	return Number.isInteger(value) && value > 0 ? Math.min(value, 20_000) : null;
 };
 
 export const GET: RequestHandler = async (event) => {
 	const db = requireD1(event);
-	const items = await getPublishedTafsirIndonesiaIndex(db, parseLimit(event.url));
+	const items = await getTafsirIndonesiaIndex(db, {
+		includeDraft: true,
+		limit: parseLimit(event.url)
+	});
 
 	return json({
 		ok: true,
 		count: items.length,
+		status_filter: 'all',
 		items: items.map((item) => ({
 			id: item.id,
 			source_key: item.source_key,
@@ -27,7 +31,8 @@ export const GET: RequestHandler = async (event) => {
 			ayah_number: item.ayah_number,
 			title: item.title,
 			summary: item.summary,
-			page_ref: item.page_ref
+			page_ref: item.page_ref,
+			status: item.status
 		}))
 	});
 };

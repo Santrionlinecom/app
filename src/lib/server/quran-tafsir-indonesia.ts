@@ -39,6 +39,10 @@ type GetTafsirOptions = {
 	includeDraft?: boolean;
 };
 
+type GetTafsirIndexOptions = GetTafsirOptions & {
+	limit?: number | null;
+};
+
 export const TAFSIR_INDONESIA_EMPTY_MESSAGE =
 	'Data tafsir ayat ini masih perlu dimuat. Tunggu sebentar, lalu coba muat ulang atau pilih ayat lain yang sudah tersedia.';
 export const TAFSIR_INDONESIA_PREVIEW_LIMIT = 520;
@@ -156,16 +160,19 @@ export async function getTafsirIndonesiaForSurah(
 	}
 }
 
-export async function getPublishedTafsirIndonesiaIndex(
+export async function getTafsirIndonesiaIndex(
 	db: D1Database,
-	limit = 500
+	options: GetTafsirIndexOptions = {}
 ): Promise<QuranTafsirIndexEntry[]> {
-	const safeLimit = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 2000) : 500;
+	const safeLimit =
+		typeof options.limit === 'number' && Number.isInteger(options.limit) && options.limit > 0
+			? Math.min(options.limit, 20_000)
+			: null;
+	const limitSql = safeLimit ? 'LIMIT ?' : '';
 
 	try {
-		const { results } = await db
-			.prepare(
-				`SELECT
+		const statement = db.prepare(
+			`SELECT
 					e.id,
 					e.source_key,
 					s.title AS source_title,
@@ -180,17 +187,27 @@ export async function getPublishedTafsirIndonesiaIndex(
 					e.status
 				FROM quran_tafsir_entries e
 				JOIN quran_tafsir_sources s ON s.source_key = e.source_key
-				WHERE e.status = 'published'
+				WHERE 1 = 1
+					${publishedStatusSql(options)}
 					AND s.is_active = 1
 				ORDER BY e.surah_number ASC, e.ayah_number ASC, COALESCE(s.priority, 100) ASC, e.id ASC
-				LIMIT ?`
-			)
-			.bind(safeLimit)
-			.all<QuranTafsirIndexEntry>();
+				${limitSql}`
+		);
+
+		const { results } = safeLimit
+			? await statement.bind(safeLimit).all<QuranTafsirIndexEntry>()
+			: await statement.all<QuranTafsirIndexEntry>();
 
 		return results ?? [];
 	} catch (err) {
 		if (isMissingTableError(err)) return [];
 		throw err;
 	}
+}
+
+export async function getPublishedTafsirIndonesiaIndex(
+	db: D1Database,
+	limit = 500
+): Promise<QuranTafsirIndexEntry[]> {
+	return getTafsirIndonesiaIndex(db, { limit });
 }
