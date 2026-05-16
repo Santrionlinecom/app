@@ -2,7 +2,6 @@
 	import Copy from '@lucide/svelte/icons/copy';
 	import Download from '@lucide/svelte/icons/download';
 	import QrCode from '@lucide/svelte/icons/qr-code';
-	import QRCode from 'qrcode';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -75,12 +74,14 @@
 
 	const qrPngName = (slug: string) => `santrionline-qr-${slug}.png`;
 
-	const generateQrDataUrl = async (shortUrl: string) =>
-		QRCode.toDataURL(shortUrl, {
+	const generateQrDataUrl = async (shortUrl: string) => {
+		const { default: QRCode } = await import('qrcode');
+		return QRCode.toDataURL(shortUrl, {
 			width: 1024,
 			margin: 1,
 			errorCorrectionLevel: 'M'
 		});
+	};
 
 	const downloadQrPng = async (slug: string, shortUrl: string) => {
 		const dataUrl = await generateQrDataUrl(shortUrl);

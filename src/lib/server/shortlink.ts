@@ -9,7 +9,6 @@ export type ShortLink = {
 	description: string | null;
 	target_url: string;
 	category: string;
-	tags: string | null;
 	notes: string | null;
 	is_active: number;
 	created_by: string | null;
@@ -85,7 +84,7 @@ export async function getShortLinkBySlug(db: D1Database, slug: string): Promise<
 	try {
 		return await db
 			.prepare(
-				`SELECT id, slug, title, description, target_url, category, tags, notes, is_active, created_by, created_at, updated_at
+				`SELECT id, slug, title, description, target_url, category, notes, is_active, created_by, created_at, updated_at
 				 FROM short_links
 				 WHERE slug = ?
 				 LIMIT 1`

@@ -5,7 +5,6 @@
 	import QrCode from '@lucide/svelte/icons/qr-code';
 	import StickyNote from '@lucide/svelte/icons/sticky-note';
 	import Upload from '@lucide/svelte/icons/upload';
-	import QRCode from 'qrcode';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -129,12 +128,14 @@
 
 	const qrPngName = (slug: string) => `santrionline-qr-${slug}.png`;
 
-	const generateQrDataUrl = async (shortUrl: string) =>
-		QRCode.toDataURL(shortUrl, {
+	const generateQrDataUrl = async (shortUrl: string) => {
+		const { default: QRCode } = await import('qrcode');
+		return QRCode.toDataURL(shortUrl, {
 			width: 1024,
 			margin: 1,
 			errorCorrectionLevel: 'M'
 		});
+	};
 
 	const downloadQrPng = async (slug: string, shortUrl: string) => {
 		const dataUrl = await generateQrDataUrl(shortUrl);
@@ -220,10 +221,6 @@
 		{#if form?.error}
 			<div class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
 				{form.error}
-			</div>
-		{:else if form?.created}
-			<div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-				Shortlink berhasil dibuat.
 			</div>
 		{:else if form?.updated}
 			<div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">

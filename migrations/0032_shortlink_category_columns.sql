@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS short_links_category_metadata_backup (
       'other'
     )
   ),
-  tags TEXT,
   notes TEXT,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -52,7 +51,6 @@ CREATE TABLE short_links_category_migration_new (
       'other'
     )
   ),
-  tags TEXT,
   notes TEXT,
   is_active INTEGER NOT NULL DEFAULT 1,
   created_by TEXT,
@@ -67,7 +65,6 @@ INSERT OR IGNORE INTO short_links_category_migration_new (
   description,
   target_url,
   category,
-  tags,
   notes,
   is_active,
   created_by,
@@ -93,7 +90,6 @@ SELECT
     ) THEN category
     ELSE 'other'
   END,
-  tags,
   notes,
   is_active,
   created_by,
@@ -107,7 +103,6 @@ FROM (
     description,
     target_url,
     'other' AS category,
-    NULL AS tags,
     NULL AS notes,
     is_active,
     created_by,
@@ -121,10 +116,6 @@ SET
   category = COALESCE(
     (SELECT category FROM short_links_category_metadata_backup WHERE short_links_category_metadata_backup.slug = short_links_category_migration_new.slug),
     category
-  ),
-  tags = COALESCE(
-    (SELECT tags FROM short_links_category_metadata_backup WHERE short_links_category_metadata_backup.slug = short_links_category_migration_new.slug),
-    tags
   ),
   notes = COALESCE(
     (SELECT notes FROM short_links_category_metadata_backup WHERE short_links_category_metadata_backup.slug = short_links_category_migration_new.slug),
@@ -140,13 +131,12 @@ DROP TABLE short_links;
 
 ALTER TABLE short_links_category_migration_new RENAME TO short_links;
 
-INSERT INTO short_links_category_metadata_backup (slug, category, tags, notes, updated_at)
-SELECT slug, category, tags, notes, CURRENT_TIMESTAMP
+INSERT INTO short_links_category_metadata_backup (slug, category, notes, updated_at)
+SELECT slug, category, notes, CURRENT_TIMESTAMP
 FROM short_links
 WHERE 1
 ON CONFLICT(slug) DO UPDATE SET
   category = excluded.category,
-  tags = excluded.tags,
   notes = excluded.notes,
   updated_at = CURRENT_TIMESTAMP;
 
@@ -157,24 +147,22 @@ DROP TRIGGER IF EXISTS short_links_category_backup_delete;
 CREATE TRIGGER short_links_category_backup_insert
 AFTER INSERT ON short_links
 BEGIN
-  INSERT INTO short_links_category_metadata_backup (slug, category, tags, notes, updated_at)
-  VALUES (NEW.slug, NEW.category, NEW.tags, NEW.notes, CURRENT_TIMESTAMP)
+  INSERT INTO short_links_category_metadata_backup (slug, category, notes, updated_at)
+  VALUES (NEW.slug, NEW.category, NEW.notes, CURRENT_TIMESTAMP)
   ON CONFLICT(slug) DO UPDATE SET
     category = excluded.category,
-    tags = excluded.tags,
     notes = excluded.notes,
     updated_at = CURRENT_TIMESTAMP;
 END;
 
 CREATE TRIGGER short_links_category_backup_update
-AFTER UPDATE OF slug, category, tags, notes ON short_links
+AFTER UPDATE OF slug, category, notes ON short_links
 BEGIN
   DELETE FROM short_links_category_metadata_backup WHERE slug = OLD.slug AND OLD.slug <> NEW.slug;
-  INSERT INTO short_links_category_metadata_backup (slug, category, tags, notes, updated_at)
-  VALUES (NEW.slug, NEW.category, NEW.tags, NEW.notes, CURRENT_TIMESTAMP)
+  INSERT INTO short_links_category_metadata_backup (slug, category, notes, updated_at)
+  VALUES (NEW.slug, NEW.category, NEW.notes, CURRENT_TIMESTAMP)
   ON CONFLICT(slug) DO UPDATE SET
     category = excluded.category,
-    tags = excluded.tags,
     notes = excluded.notes,
     updated_at = CURRENT_TIMESTAMP;
 END;

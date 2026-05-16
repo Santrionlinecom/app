@@ -1,4 +1,4 @@
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import * as XLSX from 'xlsx';
 import {
@@ -430,7 +430,7 @@ export const actions: Actions = {
 			return fail(500, { error: 'Gagal membuat shortlink. Pastikan slug belum dipakai.', values });
 		}
 
-		return { created: true };
+		throw redirect(303, `/admin/shortlinks/${values.slug}`);
 	},
 	importShortlinks: async (event) => {
 		const user = requireAdmin(event);
