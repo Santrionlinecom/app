@@ -185,6 +185,27 @@
 		error?: string;
 	};
 
+	type TafsirIndonesiaIndexItem = Pick<
+		TafsirIndonesiaItem,
+		| 'id'
+		| 'source_key'
+		| 'source_title'
+		| 'source_author'
+		| 'source_publisher'
+		| 'surah_number'
+		| 'ayah_number'
+		| 'title'
+		| 'summary'
+		| 'page_ref'
+	>;
+
+	type TafsirIndonesiaIndexResponse = {
+		ok: boolean;
+		count: number;
+		items: TafsirIndonesiaIndexItem[];
+		error?: string;
+	};
+
 	type QuranProgressResponse = {
 		ok: boolean;
 		lastRead?: {
@@ -249,7 +270,7 @@
 	const EMPTY_ASBAB_MESSAGE =
 		'Belum ditemukan riwayat asbabun nuzul khusus untuk ayat ini. Namun ayat ini dapat berkaitan dengan konteks ayat sebelum/sesudahnya.';
 	const EMPTY_TAFSIR_INDONESIA_MESSAGE =
-		'Tafsir Indonesia belum tersedia untuk ayat ini. SantriOnline sedang menyiapkan data tafsir dari sumber tervalidasi.';
+		'Data tafsir ayat ini masih perlu dimuat. Tunggu sebentar, lalu coba muat ulang atau pilih ayat lain yang sudah tersedia.';
 	const QURAN_HISTORY_FACTS: QuranHistoryFact[] = [
 		{
 			value: '23 tahun',
@@ -405,6 +426,9 @@
 	let tafsirIndonesiaLoadingKey = '';
 	let tafsirIndonesiaErrorKey = '';
 	let tafsirIndonesiaError = '';
+	let tafsirIndexItems: TafsirIndonesiaIndexItem[] = [];
+	let tafsirIndexLoading = false;
+	let tafsirIndexError = '';
 	let classicalTafsirCache: Record<string, ClassicalTafsir> = {};
 	let classicalTafsirLoadingKey = '';
 	let classicalTafsirError = '';
@@ -428,6 +452,8 @@
 	const surahName = (surahNumber: number) => surahLookup.get(surahNumber) ?? `Surah ${surahNumber}`;
 	const verseKeyFor = (surahNumber: number, ayahNumber: number) => `${surahNumber}:${ayahNumber}`;
 	const tafsirIndonesiaCacheKey = (verse: Verse) => `${verse.surahNumber}:${verse.ayahNumber}`;
+	const tafsirIndexLabel = (item: TafsirIndonesiaIndexItem) =>
+		`QS. ${surahName(item.surah_number)} ${item.ayah_number}`;
 	const verseRefLabel = (surahNumber: number, ayahNumber: number) =>
 		`${surahName(surahNumber)} ${ayahNumber} (${verseKeyFor(surahNumber, ayahNumber)})`;
 	const compareVerseRef = (a: VerseRef, b: VerseRef) =>
@@ -809,11 +835,16 @@
 		});
 	};
 
-	const loadTafsirIndonesiaForVerse = async (verse: Verse | null | undefined) => {
+	const loadTafsirIndonesiaForVerse = async (verse: Verse | null | undefined, force = false) => {
 		if (!verse) return;
 
 		const cacheKey = tafsirIndonesiaCacheKey(verse);
-		if (tafsirIndonesiaCache[cacheKey] || tafsirIndonesiaLoadingKey === cacheKey) return;
+		if (!force && (tafsirIndonesiaCache[cacheKey] || tafsirIndonesiaLoadingKey === cacheKey)) return;
+		if (force && tafsirIndonesiaCache[cacheKey]) {
+			const nextCache = { ...tafsirIndonesiaCache };
+			delete nextCache[cacheKey];
+			tafsirIndonesiaCache = nextCache;
+		}
 
 		tafsirIndonesiaLoadingKey = cacheKey;
 		tafsirIndonesiaErrorKey = '';
@@ -964,6 +995,30 @@
 			if (asbabLoadingKey === cacheKey) {
 				asbabLoadingKey = '';
 			}
+		}
+	};
+
+	const loadTafsirIndonesiaIndex = async (force = false) => {
+		if (tafsirIndexLoading || (!force && tafsirIndexItems.length > 0)) return;
+
+		tafsirIndexLoading = true;
+		tafsirIndexError = '';
+
+		try {
+			const res = await fetch('/api/quran/tafsir-indonesia/index?limit=500', {
+				headers: {
+					accept: 'application/json'
+				}
+			});
+			const data = (await res.json()) as TafsirIndonesiaIndexResponse;
+			if (!res.ok || !data.ok) {
+				throw new Error(data.error || 'Daftar tafsir Indonesia belum bisa dimuat.');
+			}
+			tafsirIndexItems = data.items ?? [];
+		} catch (err: any) {
+			tafsirIndexError = err?.message || 'Gagal memuat daftar tafsir Indonesia.';
+		} finally {
+			tafsirIndexLoading = false;
 		}
 	};
 
@@ -1487,6 +1542,49 @@
 						{/if}
 					</div>
 
+					<div class="rounded-lg border border-emerald-100 bg-emerald-50 p-3">
+						<div class="flex items-center justify-between gap-3">
+							<div>
+								<p class="text-sm font-semibold text-emerald-950">Indeks Tafsir Indonesia</p>
+								<p class="text-xs leading-5 text-emerald-900/80">
+									Daftar ayat yang punya tafsir published di database.
+								</p>
+							</div>
+							<button
+								type="button"
+								class="btn btn-xs btn-outline"
+								on:click={() => loadTafsirIndonesiaIndex(true)}
+								disabled={tafsirIndexLoading}
+							>
+								{tafsirIndexLoading ? 'Memuat' : tafsirIndexItems.length ? 'Refresh' : 'Muat'}
+							</button>
+						</div>
+						{#if tafsirIndexError}
+							<p class="mt-2 text-xs leading-5 text-emerald-700">{tafsirIndexError}</p>
+						{:else if tafsirIndexItems.length}
+							<div class="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
+								{#each tafsirIndexItems as item}
+									<button
+										type="button"
+										class="w-full rounded-lg border border-emerald-200 bg-white/80 px-3 py-2 text-left text-xs transition hover:border-emerald-300 hover:bg-white"
+										on:click={() => openVerseReference(item.surah_number, item.ayah_number)}
+									>
+										<span class="block font-semibold text-emerald-950">{tafsirIndexLabel(item)}</span>
+										<span class="mt-1 block leading-5 text-slate-700">{item.title || 'Tafsir Indonesia'}</span>
+										<span class="mt-1 block leading-5 text-slate-500">{item.source_title}</span>
+										{#if item.page_ref}
+											<span class="mt-1 block leading-5 text-slate-500">{item.page_ref}</span>
+										{/if}
+									</button>
+								{/each}
+							</div>
+						{:else}
+							<p class="mt-2 text-xs leading-5 text-emerald-900/80">
+								Belum ada daftar termuat. Klik Muat untuk melihat data tafsir yang sudah published.
+							</p>
+						{/if}
+					</div>
+
 					<div class="rounded-lg border border-amber-100 bg-amber-50 p-3">
 						<div class="flex items-center justify-between gap-3">
 							<div>
@@ -1495,7 +1593,12 @@
 									Daftar ayat yang punya data asbab published di database.
 								</p>
 							</div>
-							<button class="btn btn-xs btn-outline" on:click={() => loadAsbabIndex(true)} disabled={asbabIndexLoading}>
+							<button
+								type="button"
+								class="btn btn-xs btn-outline"
+								on:click={() => loadAsbabIndex(true)}
+								disabled={asbabIndexLoading}
+							>
 								{asbabIndexLoading ? 'Memuat' : asbabIndexItems.length ? 'Refresh' : 'Muat'}
 							</button>
 						</div>
@@ -1778,9 +1881,19 @@
 													{:else if selectedTafsirIndonesiaError}
 														<p class="mt-2 text-sm leading-7 text-amber-700">{selectedTafsirIndonesiaError}</p>
 													{:else}
-														<p class="mt-2 whitespace-pre-line text-sm leading-7 text-slate-700">
-															{selectedTafsirIndonesiaMessage}
-														</p>
+														<div class="mt-3 rounded-lg border border-emerald-200 bg-white/70 p-3">
+															<p class="whitespace-pre-line text-sm leading-7 text-slate-700">
+																{selectedTafsirIndonesiaMessage}
+															</p>
+															<button
+																type="button"
+																class="btn btn-sm btn-outline mt-3"
+																on:click={() => loadTafsirIndonesiaForVerse(selectedVerse, true)}
+																disabled={selectedTafsirIndonesiaLoading}
+															>
+																{selectedTafsirIndonesiaLoading ? 'Memuat...' : 'Muat ulang tafsir'}
+															</button>
+														</div>
 													{/if}
 												</section>
 												<section class="rounded-lg border border-amber-100 bg-amber-50 p-4">

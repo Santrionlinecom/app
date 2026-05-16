@@ -33,12 +33,14 @@ export type QuranTafsirEntry = {
 	verified_by: string | null;
 };
 
+export type QuranTafsirIndexEntry = Omit<QuranTafsirEntry, 'content' | 'verified_by'>;
+
 type GetTafsirOptions = {
 	includeDraft?: boolean;
 };
 
 export const TAFSIR_INDONESIA_EMPTY_MESSAGE =
-	'Tafsir Indonesia belum tersedia untuk ayat ini. SantriOnline sedang menyiapkan data tafsir dari sumber tervalidasi.';
+	'Data tafsir ayat ini masih perlu dimuat. Tunggu sebentar, lalu coba muat ulang atau pilih ayat lain yang sudah tersedia.';
 export const TAFSIR_INDONESIA_PREVIEW_LIMIT = 520;
 
 export const buildTafsirIndonesiaPreview = (
@@ -146,6 +148,45 @@ export async function getTafsirIndonesiaForSurah(
 			)
 			.bind(surahNumber)
 			.all<QuranTafsirEntry>();
+
+		return results ?? [];
+	} catch (err) {
+		if (isMissingTableError(err)) return [];
+		throw err;
+	}
+}
+
+export async function getPublishedTafsirIndonesiaIndex(
+	db: D1Database,
+	limit = 500
+): Promise<QuranTafsirIndexEntry[]> {
+	const safeLimit = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 2000) : 500;
+
+	try {
+		const { results } = await db
+			.prepare(
+				`SELECT
+					e.id,
+					e.source_key,
+					s.title AS source_title,
+					s.author AS source_author,
+					s.publisher AS source_publisher,
+					COALESCE(s.priority, 100) AS source_priority,
+					e.surah_number,
+					e.ayah_number,
+					e.title,
+					e.summary,
+					e.page_ref,
+					e.status
+				FROM quran_tafsir_entries e
+				JOIN quran_tafsir_sources s ON s.source_key = e.source_key
+				WHERE e.status = 'published'
+					AND s.is_active = 1
+				ORDER BY e.surah_number ASC, e.ayah_number ASC, COALESCE(s.priority, 100) ASC, e.id ASC
+				LIMIT ?`
+			)
+			.bind(safeLimit)
+			.all<QuranTafsirIndexEntry>();
 
 		return results ?? [];
 	} catch (err) {
