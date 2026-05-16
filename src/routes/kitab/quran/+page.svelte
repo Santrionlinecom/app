@@ -271,6 +271,22 @@
 		'Belum ditemukan riwayat asbabun nuzul khusus untuk ayat ini. Namun ayat ini dapat berkaitan dengan konteks ayat sebelum/sesudahnya.';
 	const EMPTY_TAFSIR_INDONESIA_MESSAGE =
 		'Data tafsir ayat ini masih perlu dimuat. Tunggu sebentar, lalu coba muat ulang atau pilih ayat lain yang sudah tersedia.';
+	const safeStorageGet = (key: string) => {
+		if (typeof window === 'undefined') return null;
+		try {
+			return window.localStorage.getItem(key);
+		} catch {
+			return null;
+		}
+	};
+	const safeStorageSet = (key: string, value: string) => {
+		if (typeof window === 'undefined') return;
+		try {
+			window.localStorage.setItem(key, value);
+		} catch {
+			// Storage bisa diblokir browser; reader tetap harus bisa memuat data.
+		}
+	};
 	const QURAN_HISTORY_FACTS: QuranHistoryFact[] = [
 		{
 			value: '23 tahun',
@@ -402,7 +418,7 @@
 	let selectedJuzNumber = 1;
 	let verses: Verse[] = [];
 	let pages: PageGroup[] = [];
-	let loading = false;
+	let loading = true;
 	let error = '';
 	let pageWarning = '';
 	let navigationMessage = '';
@@ -631,9 +647,8 @@
 	};
 
 	const readGuestLastReadTarget = () => {
-		if (typeof localStorage === 'undefined') return null;
 		try {
-			const parsed = JSON.parse(localStorage.getItem(LAST_READ_KEY) ?? 'null');
+			const parsed = JSON.parse(safeStorageGet(LAST_READ_KEY) ?? 'null');
 			return buildSmartAyahTarget(Number(parsed?.surahNumber), Number(parsed?.ayahNumber));
 		} catch {
 			return null;
@@ -690,7 +705,7 @@
 	const markCached = (juz: number) => {
 		if (!cachedJuz.includes(juz)) {
 			cachedJuz = [...cachedJuz, juz].sort((a, b) => a - b);
-			localStorage.setItem(CACHE_KEY, JSON.stringify(cachedJuz));
+			safeStorageSet(CACHE_KEY, JSON.stringify(cachedJuz));
 		}
 	};
 
@@ -744,7 +759,7 @@
 		const juz = Math.min(Math.max(value, 1), 30);
 		selectedJuz = String(juz);
 		selectedJuzNumber = juz;
-		localStorage.setItem(STORAGE_KEY, String(juz));
+		safeStorageSet(STORAGE_KEY, String(juz));
 
 		loading = true;
 		error = '';
@@ -757,8 +772,24 @@
 			if (!res.ok) {
 				throw new Error('Data juz tidak ditemukan');
 			}
-			const data = await res.json();
-			verses = (data.verses ?? []).map((verse: { verse_key: string; text: string; page_number: number }) => {
+			let data = await res.json();
+			let rawVerses = Array.isArray(data.verses) ? data.verses : [];
+
+			if (!rawVerses.length) {
+				const retryRes = await fetch(`/quran/juz-${padJuz(juz)}.json?v=${DATA_VERSION}&t=${Date.now()}`, {
+					cache: 'reload'
+				});
+				if (retryRes.ok) {
+					data = await retryRes.json();
+					rawVerses = Array.isArray(data.verses) ? data.verses : [];
+				}
+			}
+
+			if (!rawVerses.length) {
+				throw new Error('Data juz belum termuat. Muat ulang halaman dan coba lagi.');
+			}
+
+			verses = rawVerses.map((verse: { verse_key: string; text: string; page_number: number }) => {
 				const [surahNumber, ayahNumber] = verse.verse_key.split(':').map(Number);
 				return {
 					...verse,
@@ -773,7 +804,7 @@
 				pageWarning = 'Data lembaran belum terunduh. Coba muat ulang saat online agar halaman muncul.';
 				if (viewMode === 'lembaran') {
 					viewMode = 'teks';
-					localStorage.setItem(VIEW_KEY, 'teks');
+					safeStorageSet(VIEW_KEY, 'teks');
 				}
 				destroyFlipbook();
 			} else {
@@ -824,7 +855,7 @@
 		selectVerse(verse);
 		if (viewMode !== 'teks') {
 			viewMode = 'teks';
-			localStorage.setItem(VIEW_KEY, 'teks');
+			safeStorageSet(VIEW_KEY, 'teks');
 			destroyFlipbook();
 		}
 
@@ -947,7 +978,7 @@
 
 	const handleViewChange = (mode: 'lembaran' | 'teks') => {
 		viewMode = mode;
-		localStorage.setItem(VIEW_KEY, mode);
+		safeStorageSet(VIEW_KEY, mode);
 		if (mode === 'lembaran') {
 			void initFlipbook();
 		} else {
@@ -1124,7 +1155,7 @@
 			juzNumber: findJuzForVerse(verse.surahNumber, verse.ayahNumber),
 			updatedAt: new Date().toISOString()
 		};
-		localStorage.setItem(LAST_READ_KEY, JSON.stringify(payload));
+		safeStorageSet(LAST_READ_KEY, JSON.stringify(payload));
 		if (!isLoggedIn) return;
 
 		try {
@@ -1195,7 +1226,7 @@
 
 		if (viewMode !== 'teks') {
 			viewMode = 'teks';
-			localStorage.setItem(VIEW_KEY, 'teks');
+			safeStorageSet(VIEW_KEY, 'teks');
 			destroyFlipbook();
 		}
 
@@ -1268,12 +1299,12 @@
 		window.addEventListener('online', handleOnline);
 		window.addEventListener('offline', handleOffline);
 
-		const saved = localStorage.getItem(STORAGE_KEY);
+		const saved = safeStorageGet(STORAGE_KEY);
 		if (saved && !Number.isNaN(Number(saved))) {
 			selectedJuz = saved;
 			selectedJuzNumber = Number(saved);
 		}
-		const cached = localStorage.getItem(CACHE_KEY);
+		const cached = safeStorageGet(CACHE_KEY);
 		if (cached) {
 			try {
 				const parsed = JSON.parse(cached);
@@ -1284,26 +1315,31 @@
 				cachedJuz = [];
 			}
 		}
-		const savedView = localStorage.getItem(VIEW_KEY);
+		const savedView = safeStorageGet(VIEW_KEY);
 		if (savedView === 'lembaran' || savedView === 'teks') {
 			viewMode = savedView;
 		}
 
 		void (async () => {
-			const initialTarget =
-				readInitialVerseTarget() ??
-				(isLoggedIn ? await loadAccountLastReadTarget() : readGuestLastReadTarget());
+			try {
+				const initialTarget =
+					readInitialVerseTarget() ??
+					(isLoggedIn ? await loadAccountLastReadTarget() : readGuestLastReadTarget());
 
-			if (initialTarget?.kind === 'ayah') {
-				selectedJuz = String(initialTarget.juz);
-				selectedJuzNumber = initialTarget.juz;
-				selectedSurah = String(initialTarget.surahNumber);
-				selectedAyah = String(initialTarget.ayahNumber);
-			}
+				if (initialTarget?.kind === 'ayah') {
+					selectedJuz = String(initialTarget.juz);
+					selectedJuzNumber = initialTarget.juz;
+					selectedSurah = String(initialTarget.surahNumber);
+					selectedAyah = String(initialTarget.ayahNumber);
+				}
 
-			await loadJuz(selectedJuzNumber);
-			if (initialTarget?.kind === 'ayah') {
-				await openVerseReference(initialTarget.surahNumber, initialTarget.ayahNumber);
+				await loadJuz(selectedJuzNumber);
+				if (initialTarget?.kind === 'ayah') {
+					await openVerseReference(initialTarget.surahNumber, initialTarget.ayahNumber);
+				}
+			} catch (err: any) {
+				error = err?.message || 'Gagal menyiapkan data mushaf.';
+				loading = false;
 			}
 		})();
 
@@ -1690,9 +1726,9 @@
 
 				<div class="quran-reader-main">
 					<div class="flex flex-wrap items-center gap-2 text-xs">
-						<span class="badge badge-outline">Total ayat: {verses.length}</span>
-						<span class="badge badge-outline">Halaman: {totalPages || '-'}</span>
-						<span class="badge badge-outline">Terfilter: {filteredVerses.length}</span>
+						<span class="badge badge-outline">Total ayat: {loading ? 'Memuat' : verses.length}</span>
+						<span class="badge badge-outline">Halaman: {loading ? 'Memuat' : totalPages || '-'}</span>
+						<span class="badge badge-outline">Terfilter: {loading ? 'Memuat' : filteredVerses.length}</span>
 						{#if cachedJuz.includes(selectedJuzNumber)}
 							<span class="badge badge-success">Tersimpan offline</span>
 						{/if}
