@@ -236,7 +236,7 @@
 			</div>
 		{/if}
 
-		<form method="POST" class="mt-5 grid gap-4 lg:grid-cols-2">
+		<form method="POST" action="?/create" class="mt-5 grid gap-4 lg:grid-cols-2">
 			<div>
 				<label for="slug" class="block text-sm font-semibold text-slate-700">Slug</label>
 				<input

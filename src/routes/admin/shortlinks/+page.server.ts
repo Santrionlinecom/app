@@ -387,7 +387,7 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
-	default: async (event) => {
+	create: async (event) => {
 		const user = requireAdmin(event);
 		const db = requireD1(event);
 		const values = await readCreateForm(event.request);
@@ -422,7 +422,7 @@ export const actions: Actions = {
 					values.category,
 					values.notes || null,
 					values.isActive ? 1 : 0,
-					user.id
+					user.id ?? null
 				)
 				.run();
 		} catch (err) {
@@ -509,7 +509,7 @@ export const actions: Actions = {
 						item.category,
 						item.notes,
 						item.isActive ? 1 : 0,
-						user.id
+						user.id ?? null
 					)
 			);
 
