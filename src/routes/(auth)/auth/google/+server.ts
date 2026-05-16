@@ -12,8 +12,9 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 	const orgSlug = url.searchParams.get('orgSlug');
 	const role = url.searchParams.get('role');
 	const redirectTo = url.searchParams.get('redirect');
-	if (mode === 'member' && orgType && orgSlug) {
-		const context = JSON.stringify({ mode, orgType, orgSlug, role, redirect: redirectTo });
+	const safeRedirect = redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : null;
+	if ((mode === 'member' && orgType && orgSlug) || safeRedirect) {
+		const context = JSON.stringify({ mode, orgType, orgSlug, role, redirect: safeRedirect });
 		cookies.set('google_oauth_context', context, {
 			path: '/',
 			httpOnly: true,

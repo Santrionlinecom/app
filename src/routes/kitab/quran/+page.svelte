@@ -1,7 +1,11 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import { onMount, tick } from 'svelte';
 	import { SURAH_DATA } from '$lib/surah-data';
+	import Bookmark from '@lucide/svelte/icons/bookmark';
+	import BookmarkCheck from '@lucide/svelte/icons/bookmark-check';
 	import BookOpenText from '@lucide/svelte/icons/book-open-text';
+	import LinkIcon from '@lucide/svelte/icons/link';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import Search from '@lucide/svelte/icons/search';
 	import ScrollText from '@lucide/svelte/icons/scroll-text';
@@ -106,11 +110,14 @@
 		content: string;
 		summary: string | null;
 		page_ref: string | null;
+		is_truncated?: boolean;
+		requires_login?: boolean;
 	};
 
 	type TafsirIndonesiaResponse = {
 		ok: boolean;
 		source_origin: 'd1';
+		is_authenticated?: boolean;
 		surah: number;
 		ayah: number;
 		items: TafsirIndonesiaItem[];
@@ -145,6 +152,48 @@
 				juz: number;
 				label: string;
 		  };
+
+	type QuranHistoryTimelineItem = {
+		period: string;
+		title: string;
+		detail: string;
+		points: string[];
+	};
+
+	type QuranHistoryFact = {
+		value: string;
+		label: string;
+		detail: string;
+	};
+
+	type QuranBookmark = {
+		id: string;
+		userId: string;
+		surahNumber: number;
+		ayahNumber: number;
+		note: string | null;
+		tags: string | null;
+		createdAt: string;
+		updatedAt: string;
+	};
+
+	type QuranBookmarkResponse = {
+		ok: boolean;
+		surah: number;
+		ayah: number;
+		bookmark: QuranBookmark | null;
+		error?: string;
+	};
+
+	type QuranProgressResponse = {
+		ok: boolean;
+		lastRead?: {
+			surahNumber: number;
+			ayahNumber: number;
+			juzNumber: number | null;
+		} | null;
+		error?: string;
+	};
 
 	const JUZ_RANGES: JuzRange[] = [
 		{ juz: 1, start: { surahNumber: 1, ayahNumber: 1 }, end: { surahNumber: 2, ayahNumber: 141 } },
@@ -182,6 +231,7 @@
 	const STORAGE_KEY = 'quran.juz.selected';
 	const CACHE_KEY = `quran.juz.cached.v${DATA_VERSION}`;
 	const VIEW_KEY = 'quran.view.mode';
+	const LAST_READ_KEY = 'quran.last-read';
 	const SEARCH_SCOPES: Array<{ value: SearchScope; label: string }> = [
 		{ value: 'semua', label: 'Semua' },
 		{ value: 'arab', label: 'Arab' },
@@ -200,9 +250,133 @@
 		'Belum ditemukan riwayat asbabun nuzul khusus untuk ayat ini. Namun ayat ini dapat berkaitan dengan konteks ayat sebelum/sesudahnya.';
 	const EMPTY_TAFSIR_INDONESIA_MESSAGE =
 		'Tafsir Indonesia belum tersedia untuk ayat ini. SantriOnline sedang menyiapkan data tafsir dari sumber tervalidasi.';
+	const QURAN_HISTORY_FACTS: QuranHistoryFact[] = [
+		{
+			value: '23 tahun',
+			label: 'Masa turunnya wahyu',
+			detail: 'Sekitar 13 tahun fase Makkah dan 10 tahun fase Madinah.'
+		},
+		{
+			value: '114 surah',
+			label: 'Susunan mushaf',
+			detail: 'Urutan bacaan mushaf tidak disusun sebagai kronologi turunnya wahyu.'
+		},
+		{
+			value: '30 juz',
+			label: 'Pembagian tilawah',
+			detail: 'Pembagian praktis untuk wirid, khataman, dan pendidikan.'
+		}
+	];
+	const QURAN_REVELATION_TIMELINE: QuranHistoryTimelineItem[] = [
+		{
+			period: '610 M / 13 sebelum Hijrah',
+			title: 'Wahyu pertama di Gua Hira',
+			detail:
+				'Nabi Muhammad menerima wahyu pertama ketika berusia sekitar 40 tahun. Lima ayat awal Surah al-Alaq menjadi pembuka misi kenabian dengan perintah membaca, belajar, dan mengenal Tuhan.',
+			points: ['QS. al-Alaq 1-5', 'Awal dakwah dan pendidikan tauhid', 'Hafalan dan talaqqi mulai menjadi inti penjagaan wahyu']
+		},
+		{
+			period: '610-622 M',
+			title: 'Fase Makkah',
+			detail:
+				'Wahyu Makkah membangun fondasi iman: tauhid, hari akhir, akhlak, kesabaran, serta keteguhan menghadapi tekanan sosial.',
+			points: ['Dakwah berlangsung bertahap', 'Ayat banyak meneguhkan akidah', 'Para sahabat menghafal dan menyampaikan bacaan secara langsung']
+		},
+		{
+			period: '622-632 M / 1-10 H',
+			title: 'Fase Madinah',
+			detail:
+				'Setelah hijrah, wahyu banyak mengatur kehidupan umat: ibadah, keluarga, muamalah, hukum sosial, perang dan damai, serta hubungan dengan komunitas lain.',
+			points: ['Penulisan wahyu makin teratur', 'Rasulullah menunjukkan letak ayat dalam surah', 'Masjid Nabawi menjadi pusat tilawah, pengajaran, dan keputusan hukum']
+		},
+		{
+			period: '632 M / 11 H',
+			title: 'Akhir masa kenabian',
+			detail:
+				'Ketika Rasulullah wafat, Al-Qur\'an telah terjaga melalui hafalan para sahabat dan catatan wahyu. Namun lembaran itu belum dihimpun menjadi satu mushaf resmi publik.',
+			points: ['Bacaan dijaga melalui sanad hidup', 'Catatan wahyu tersebar pada para penulis', 'Kebutuhan kodifikasi muncul setelah masa Nabi']
+		}
+	];
+	const QURAN_CODIFICATION_STEPS: QuranHistoryTimelineItem[] = [
+		{
+			period: 'Masa Nabi',
+			title: 'Hafalan dan penulisan wahyu',
+			detail:
+				'Setiap wahyu diterima, Rasulullah membacakannya kepada sahabat, mengajarkan maknanya, dan memerintahkan penulis wahyu mencatatnya.',
+			points: ['Media tulis mencakup kulit, pelepah kurma, tulang pipih, dan lembaran', 'Di antara penulis wahyu: Zaid bin Tsabit, Ubay bin Kaab, Ali bin Abi Talib', 'Bacaan diverifikasi lewat talaqqi, bukan teks saja']
+		},
+		{
+			period: '632-634 M / 11-13 H',
+			title: 'Pengumpulan masa Abu Bakar',
+			detail:
+				'Setelah Perang Yamamah, Umar mengusulkan penghimpunan mushaf karena banyak penghafal Al-Qur\'an gugur. Abu Bakar menugaskan Zaid bin Tsabit memimpin pengumpulan catatan wahyu.',
+			points: ['Naskah dikumpulkan dengan kehati-hatian', 'Mushaf disimpan oleh Abu Bakar, lalu Umar, lalu Hafsah', 'Tujuannya menjaga seluruh wahyu dalam satu himpunan']
+		},
+		{
+			period: '644-656 M / 24-35 H',
+			title: 'Standarisasi masa Utsman',
+			detail:
+				'Ketika wilayah Islam meluas, perbedaan cara baca di daerah-daerah mulai memicu perselisihan. Utsman membentuk tim untuk menyalin mushaf induk dan mengirim salinan resmi ke pusat-pusat wilayah.',
+			points: ['Rasm Utsmani menjadi acuan penulisan', 'Standarisasi mencegah konflik bacaan', 'Yang dijaga adalah teks wahyu dan cara baca bersanad']
+		},
+		{
+			period: 'Generasi setelah sahabat',
+			title: 'Tanda baca dan ilmu qiraat',
+			detail:
+				'Titik huruf, harakat, tanda waqaf, dan disiplin qiraat berkembang untuk membantu pembaca non-Arab dan menjaga cara baca yang sahih.',
+			points: ['Tanda baca adalah alat bantu baca', 'Qiraat diterima melalui sanad', 'Perkembangan ilmu tidak mengubah teks wahyu']
+		}
+	];
+	const QURAN_HISTORY_CLARIFICATIONS = [
+		'Al-Qur\'an tidak disusun menurut tanggal turun ayat, tetapi menurut tertib tilawah yang diajarkan dan diterima umat.',
+		'Mushaf Utsmani bukan membuat wahyu baru; ia menstandarkan penyalinan agar umat tidak berselisih dalam rasm dan bacaan.',
+		'Harakat, titik huruf, nomor ayat, tanda waqaf, juz, dan hizb adalah perangkat bantu baca yang hadir kemudian.',
+		'Sanad bacaan tetap penting karena mushaf tertulis dan talaqqi lisan saling menguatkan.'
+	];
+	const QURAN_NUSANTARA_MILESTONES: QuranHistoryTimelineItem[] = [
+		{
+			period: 'Abad 13 M dan sesudahnya',
+			title: 'Pengajaran Al-Qur\'an mengakar di komunitas Muslim Nusantara',
+			detail:
+				'Bacaan Al-Qur\'an diajarkan di rumah guru, surau, meunasah, langgar, masjid, dan kemudian pesantren. Polanya menekankan talaqqi, setoran, dan pengulangan.',
+			points: ['Guru membetulkan makhraj dan tajwid secara langsung', 'Khataman menjadi tradisi sosial-keagamaan', 'Aksara Arab-Melayu/Jawi membantu literasi keislaman']
+		},
+		{
+			period: 'Abad 17 M',
+			title: 'Tafsir Melayu/Jawi memperluas akses makna',
+			detail:
+				'Ulama Nusantara mulai menulis dan mengajarkan tafsir dalam bahasa setempat. Tradisi ini menjembatani kajian Arab klasik dengan pemahaman masyarakat lokal.',
+			points: ['Majelis tafsir tumbuh di pusat pendidikan Islam', 'Bahasa lokal dipakai tanpa memutus rujukan Arab', 'Pesantren menjaga hubungan antara tilawah, tafsir, dan fikih']
+		},
+		{
+			period: '5 Februari 1957',
+			title: 'Lajnah Pentashihan Mushaf Al-Qur\'an dibentuk',
+			detail:
+				'Kementerian Agama membentuk lembaga pentashihan untuk mengawasi, memeriksa, dan menjaga mushaf yang dicetak serta beredar di Indonesia.',
+			points: ['Pentashihan melibatkan penghafal, peneliti, dan pakar ilmu Al-Qur\'an', 'Setiap mushaf cetak perlu melalui pemeriksaan', 'Fungsi ini menjadi dasar otoritas mushaf di Indonesia modern']
+		},
+		{
+			period: '1974-1983',
+			title: 'Musyawarah Kerja Ulama Al-Qur\'an merumuskan Mushaf Standar Indonesia',
+			detail:
+				'Serangkaian musyawarah ulama membahas rasm, tanda baca, tanda waqaf, mushaf awas, dan mushaf Braille hingga lahir standar yang dipakai dalam penerbitan mushaf Indonesia.',
+			points: ['Mushaf Standar Usmani', 'Mushaf Standar Bahriyah', 'Mushaf Standar Braille']
+		}
+	];
+	const QURAN_HISTORY_REFERENCES = [
+		{
+			label: 'LPMQ - Dinamika Penetapan Mushaf Standar Indonesia',
+			href: 'https://web.lpmqkemenag.id/berita-dan-artikel/artikel/dinamika-musyawarah-kerja-ulama-al-qur-an-i-x-dalam-penetapan-mushaf-standar-indonesia.html'
+		},
+		{
+			label: 'Qur\'an Kemenag - Mushaf Standar Indonesia versi digital',
+			href: 'https://lajnah.kemenag.go.id/info-lpmq/berita-dan-artikel/artikel/qur-an-kemenag-mushaf-standar-indonesia-versi-digital.html'
+		}
+	];
 
 	let activeTab: 'mushaf' | 'sejarah' = 'mushaf';
 	let viewMode: 'lembaran' | 'teks' = 'lembaran';
+	let isLoggedIn = false;
 	let selectedJuz = '1';
 	let selectedJuzNumber = 1;
 	let verses: Verse[] = [];
@@ -241,6 +415,12 @@
 	let asbabIndexItems: AsbabIndexItem[] = [];
 	let asbabIndexLoading = false;
 	let asbabIndexError = '';
+	let bookmarkCache: Record<string, QuranBookmarkResponse> = {};
+	let bookmarkLoadingKey = '';
+	let bookmarkSavingKey = '';
+	let bookmarkErrorKey = '';
+	let bookmarkError = '';
+	let lastReadSyncedKey = '';
 
 	const surahLookup = new Map(SURAH_DATA.map((surah) => [surah.number, surah.name]));
 	const surahMetaLookup = new Map(SURAH_DATA.map((surah) => [surah.number, surah]));
@@ -408,6 +588,46 @@
 			label: verseRefLabel(surahNumber, ayahNumber),
 			verseKey: verseKeyFor(surahNumber, ayahNumber)
 		};
+	};
+
+	const verseSharePath = (verse: Verse | { surahNumber: number; ayahNumber: number }) =>
+		`/kitab/quran/${verse.surahNumber}/${verse.ayahNumber}`;
+
+	const loginHrefForVerse = (verse: Verse | { surahNumber: number; ayahNumber: number } | null | undefined) =>
+		`/auth?redirect=${encodeURIComponent(verse ? verseSharePath(verse) : '/kitab/quran')}`;
+
+	const readInitialVerseTarget = () => {
+		if (typeof window === 'undefined') return null;
+		const params = new URLSearchParams(window.location.search);
+		const surah = Number(params.get('surah'));
+		const ayah = Number(params.get('ayah'));
+		return buildSmartAyahTarget(surah, ayah);
+	};
+
+	const readGuestLastReadTarget = () => {
+		if (typeof localStorage === 'undefined') return null;
+		try {
+			const parsed = JSON.parse(localStorage.getItem(LAST_READ_KEY) ?? 'null');
+			return buildSmartAyahTarget(Number(parsed?.surahNumber), Number(parsed?.ayahNumber));
+		} catch {
+			return null;
+		}
+	};
+
+	const loadAccountLastReadTarget = async () => {
+		try {
+			const res = await fetch('/api/quran/progress', {
+				headers: {
+					accept: 'application/json'
+				}
+			});
+			if (!res.ok) return null;
+			const data = (await res.json()) as QuranProgressResponse;
+			if (!data.ok || !data.lastRead) return null;
+			return buildSmartAyahTarget(Number(data.lastRead.surahNumber), Number(data.lastRead.ayahNumber));
+		} catch {
+			return null;
+		}
 	};
 
 	const syncNavigationFromVerse = (verse: Verse | null | undefined) => {
@@ -747,6 +967,129 @@
 		}
 	};
 
+	const loadBookmarkForVerse = async (verse: Verse | null | undefined) => {
+		if (!verse || !isLoggedIn) return;
+		const cacheKey = tafsirIndonesiaCacheKey(verse);
+		if (bookmarkCache[cacheKey] || bookmarkLoadingKey === cacheKey) return;
+
+		bookmarkLoadingKey = cacheKey;
+		bookmarkErrorKey = '';
+		bookmarkError = '';
+
+		try {
+			const params = new URLSearchParams({
+				surah: String(verse.surahNumber),
+				ayah: String(verse.ayahNumber)
+			});
+			const res = await fetch(`/api/quran/bookmark?${params.toString()}`, {
+				headers: {
+					accept: 'application/json'
+				}
+			});
+			const data = (await res.json()) as QuranBookmarkResponse;
+			if (!res.ok || !data.ok) {
+				throw new Error(data.error || 'Status bookmark belum bisa dimuat.');
+			}
+			bookmarkCache = {
+				...bookmarkCache,
+				[cacheKey]: {
+					...data,
+					bookmark: data.bookmark ?? null
+				}
+			};
+		} catch (err: any) {
+			bookmarkErrorKey = cacheKey;
+			bookmarkError = err?.message || 'Gagal memuat bookmark ayat.';
+		} finally {
+			if (bookmarkLoadingKey === cacheKey) {
+				bookmarkLoadingKey = '';
+			}
+		}
+	};
+
+	const toggleBookmarkForVerse = async (verse: Verse | null | undefined) => {
+		if (!verse) return;
+		if (!isLoggedIn) {
+			window.location.href = loginHrefForVerse(verse);
+			return;
+		}
+
+		const cacheKey = tafsirIndonesiaCacheKey(verse);
+		if (bookmarkSavingKey === cacheKey) return;
+		const existing = bookmarkCache[cacheKey]?.bookmark ?? null;
+
+		bookmarkSavingKey = cacheKey;
+		bookmarkErrorKey = '';
+		bookmarkError = '';
+
+		try {
+			const res = await fetch('/api/quran/bookmark', {
+				method: existing ? 'DELETE' : 'POST',
+				headers: {
+					accept: 'application/json',
+					'content-type': 'application/json'
+				},
+				body: JSON.stringify({
+					surah: verse.surahNumber,
+					ayah: verse.ayahNumber
+				})
+			});
+			const data = (await res.json()) as QuranBookmarkResponse & { removed?: boolean };
+			if (!res.ok || !data.ok) {
+				throw new Error(data.error || 'Bookmark belum bisa diperbarui.');
+			}
+			bookmarkCache = {
+				...bookmarkCache,
+				[cacheKey]: {
+					ok: true,
+					surah: verse.surahNumber,
+					ayah: verse.ayahNumber,
+					bookmark: existing ? null : data.bookmark ?? null
+				}
+			};
+		} catch (err: any) {
+			bookmarkErrorKey = cacheKey;
+			bookmarkError = err?.message || 'Gagal memperbarui bookmark ayat.';
+		} finally {
+			if (bookmarkSavingKey === cacheKey) {
+				bookmarkSavingKey = '';
+			}
+		}
+	};
+
+	const saveLastReadForVerse = async (verse: Verse | null | undefined) => {
+		if (!verse) return;
+		const cacheKey = tafsirIndonesiaCacheKey(verse);
+		if (lastReadSyncedKey === cacheKey) return;
+		lastReadSyncedKey = cacheKey;
+
+		const payload = {
+			surahNumber: verse.surahNumber,
+			ayahNumber: verse.ayahNumber,
+			juzNumber: findJuzForVerse(verse.surahNumber, verse.ayahNumber),
+			updatedAt: new Date().toISOString()
+		};
+		localStorage.setItem(LAST_READ_KEY, JSON.stringify(payload));
+		if (!isLoggedIn) return;
+
+		try {
+			await fetch('/api/quran/progress', {
+				method: 'POST',
+				headers: {
+					accept: 'application/json',
+					'content-type': 'application/json'
+				},
+				body: JSON.stringify({
+					surah: verse.surahNumber,
+					ayah: verse.ayahNumber,
+					juz: payload.juzNumber
+				})
+			});
+		} catch {
+			// Progress baca tidak boleh mengganggu pengalaman membaca.
+		}
+	};
+
 	const loadAsbabIndex = async (force = false) => {
 		if (asbabIndexLoading || (!force && asbabIndexItems.length > 0)) return;
 
@@ -891,7 +1234,23 @@
 			viewMode = savedView;
 		}
 
-		void loadJuz(selectedJuzNumber);
+		void (async () => {
+			const initialTarget =
+				readInitialVerseTarget() ??
+				(isLoggedIn ? await loadAccountLastReadTarget() : readGuestLastReadTarget());
+
+			if (initialTarget?.kind === 'ayah') {
+				selectedJuz = String(initialTarget.juz);
+				selectedJuzNumber = initialTarget.juz;
+				selectedSurah = String(initialTarget.surahNumber);
+				selectedAyah = String(initialTarget.ayahNumber);
+			}
+
+			await loadJuz(selectedJuzNumber);
+			if (initialTarget?.kind === 'ayah') {
+				await openVerseReference(initialTarget.surahNumber, initialTarget.ayahNumber);
+			}
+		})();
 
 		return () => {
 			window.removeEventListener('online', handleOnline);
@@ -900,6 +1259,7 @@
 		};
 	});
 
+	$: isLoggedIn = Boolean($page.data?.user);
 	$: selectedJuzNumber = Number(selectedJuz) || 1;
 	$: normalizedQuery = normalizeSearchText(query);
 	$: smartSearchTarget = parseSmartSearchTarget(query);
@@ -930,6 +1290,16 @@
 		selectedTafsirIndonesiaKey && tafsirIndonesiaErrorKey === selectedTafsirIndonesiaKey
 			? tafsirIndonesiaError
 			: '';
+	$: selectedBookmarkResponse = selectedTafsirIndonesiaKey ? bookmarkCache[selectedTafsirIndonesiaKey] : null;
+	$: selectedBookmark = selectedBookmarkResponse?.bookmark ?? null;
+	$: selectedBookmarkLoading = Boolean(
+		selectedTafsirIndonesiaKey && bookmarkLoadingKey === selectedTafsirIndonesiaKey
+	);
+	$: selectedBookmarkSaving = Boolean(
+		selectedTafsirIndonesiaKey && bookmarkSavingKey === selectedTafsirIndonesiaKey
+	);
+	$: selectedBookmarkError =
+		selectedTafsirIndonesiaKey && bookmarkErrorKey === selectedTafsirIndonesiaKey ? bookmarkError : '';
 	$: selectedAsbabKey = selectedVerse ? asbabCacheKey(selectedVerse) : '';
 	$: selectedAsbab = selectedAsbabKey ? asbabCache[selectedAsbabKey] : null;
 	$: selectedAsbabItems = selectedAsbab?.items ?? [];
@@ -950,6 +1320,8 @@
 		void loadTafsirIndonesiaForVerse(selectedVerse);
 		void loadClassicalTafsir(selectedVerse, selectedTafsirSource);
 		void loadAsbabForVerse(selectedVerse);
+		void loadBookmarkForVerse(selectedVerse);
+		void saveLastReadForVerse(selectedVerse);
 	}
 </script>
 
@@ -1309,11 +1681,41 @@
 												<BookOpenText class="h-4 w-4" />
 												Tafsir & Asbab
 											</button>
+											<a class="btn btn-sm btn-outline" href={verseSharePath(verse)}>
+												<LinkIcon class="h-4 w-4" />
+												Link ayat
+											</a>
+											{#if selectedVerseKey === verse.verse_key}
+												{#if isLoggedIn}
+													<button
+														type="button"
+														class={`btn btn-sm ${selectedBookmark ? 'btn-success' : 'btn-outline'}`}
+														on:click={() => toggleBookmarkForVerse(verse)}
+														disabled={selectedBookmarkLoading || selectedBookmarkSaving}
+													>
+														{#if selectedBookmark}
+															<BookmarkCheck class="h-4 w-4" />
+															Tersimpan
+														{:else}
+															<Bookmark class="h-4 w-4" />
+															Simpan
+														{/if}
+													</button>
+												{:else}
+													<a class="btn btn-sm btn-outline" href={loginHrefForVerse(verse)}>
+														<Bookmark class="h-4 w-4" />
+														Simpan
+													</a>
+												{/if}
+											{/if}
 											{#if selectedVerseKey === verse.verse_key && selectedAsbabItems.length}
 												<span class="badge badge-warning badge-outline">Asbab tersedia</span>
 											{/if}
 											{#if insight?.tafsir || (selectedVerseKey === verse.verse_key && selectedTafsirIndonesiaItems.length)}
 												<span class="badge badge-success badge-outline">Tafsir tersedia</span>
+											{/if}
+											{#if selectedVerseKey === verse.verse_key && selectedBookmarkError}
+												<span class="text-xs text-amber-700">{selectedBookmarkError}</span>
 											{/if}
 										</div>
 
@@ -1348,6 +1750,16 @@
 																		<p class="mt-3 text-sm leading-7 text-slate-700">{item.summary}</p>
 																	{/if}
 																	<p class="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">{item.content}</p>
+																	{#if item.is_truncated || item.requires_login}
+																		<div class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+																			<p class="text-sm leading-6 text-emerald-950">
+																				Masuk untuk membaca tafsir lengkap, menyimpan ayat, dan melanjutkan bacaan dari perangkat mana pun.
+																			</p>
+																			<a class="btn btn-sm btn-primary mt-3" href={loginHrefForVerse(selectedVerse)}>
+																				Masuk / Daftar
+																			</a>
+																		</div>
+																	{/if}
 																</article>
 															{/each}
 														</div>
@@ -1480,34 +1892,116 @@
 			Setelah juz dibuka sekali, data akan tersimpan otomatis dan bisa diakses tanpa internet.
 		</p>
 	{:else}
-		<section class="rounded-2xl border bg-white p-6 shadow-sm space-y-6">
-			<section class="space-y-3">
-				<h2 class="text-2xl font-semibold text-slate-800">Garis Besar Wahyu</h2>
-				<ul class="list-disc pl-5 space-y-2 text-slate-700">
-					<li>Dimulai dengan wahyu pertama di Gua Hira, Surah al-Alaq ayat 1-5, ketika Malaikat Jibril menyampaikan perintah "Iqra".</li>
-					<li>Wahyu berlanjut selama 23 tahun: 13 tahun di Makkah (ayat Makkiyah) dan 10 tahun di Madinah (ayat Madaniyah).</li>
-					<li>Rasulullah ﷺ menerima, menghafal, menjelaskan makna, dan memerintahkan penulisan wahyu kepada para katib (penulis) seperti Zaid bin Tsabit.</li>
-					<li>Para sahabat utama seperti Abu Bakar, Umar, Utsman, Ali, Ibn Mas'ud, dan Ubay bin Ka'ab menjadi mata rantai sanad bacaan dan hafalan.</li>
-				</ul>
-			</section>
+		<section class="rounded-2xl border bg-white p-5 shadow-sm md:p-6">
+			<div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+				<div class="space-y-6">
+					<section class="space-y-3">
+						<p class="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-600">Sejarah Turunnya Wahyu</p>
+						<h2 class="text-2xl font-semibold text-slate-900">Dari Gua Hira sampai mushaf yang dibaca hari ini</h2>
+						<p class="max-w-3xl text-sm leading-7 text-slate-600">
+							Sejarah Al-Qur'an bergerak melalui tiga penjagaan yang saling menguatkan: hafalan,
+							penulisan, dan talaqqi langsung dari guru ke murid. Karena itu mushaf bukan sekadar
+							dokumen tertulis, tetapi teks yang terus dibaca, didengar, dikoreksi, dan diajarkan.
+						</p>
+					</section>
 
-			<section class="space-y-3">
-				<h2 class="text-2xl font-semibold text-slate-800">Kodifikasi Mushaf</h2>
-				<ul class="list-disc pl-5 space-y-2 text-slate-700">
-					<li>Masa Abu Bakar ash-Shiddiq: pengumpulan lembaran wahyu setelah Perang Yamamah dipimpin Zaid bin Tsabit.</li>
-					<li>Masa Utsman bin Affan: penyeragaman rasm (penulisan) dan pengiriman mushaf resmi ke berbagai wilayah untuk menjaga kesatuan qira'ah.</li>
-					<li>Tradisi talaqqi (belajar langsung) diteruskan hingga para imam qira'ah dan para ulama di Nusantara yang mengajarkannya di pesantren.</li>
-				</ul>
-			</section>
+					<section class="grid gap-3 md:grid-cols-3">
+						{#each QURAN_HISTORY_FACTS as fact}
+							<div class="rounded-lg border border-emerald-100 bg-emerald-50 p-4">
+								<p class="text-2xl font-bold text-emerald-950">{fact.value}</p>
+								<p class="mt-1 text-sm font-semibold text-emerald-900">{fact.label}</p>
+								<p class="mt-2 text-xs leading-5 text-slate-600">{fact.detail}</p>
+							</div>
+						{/each}
+					</section>
 
-			<section class="space-y-3">
-				<h2 class="text-2xl font-semibold text-slate-800">Jejak di Nusantara</h2>
-				<ul class="list-disc pl-5 space-y-2 text-slate-700">
-					<li>Datang bersama para wali dan ulama yang membawa sanad bacaan dan tafsir, mengajarkannya di surau, langgar, dan pesantren.</li>
-					<li>Hafidz dan qori lokal meneruskan tradisi tahfidz, qira'ah, dan tafsir, menjadi bekal dakwah dan pendidikan generasi berikutnya.</li>
-					<li>Pesantren modern menjaga metode talaqqi, muraja'ah, dan khataman agar sanad bacaan Al-Qur'an tetap bersambung hingga Rasulullah ﷺ.</li>
-				</ul>
-			</section>
+					<section class="space-y-4">
+						<h3 class="text-lg font-semibold text-slate-900">Timeline Wahyu</h3>
+						<div class="space-y-4 border-l border-emerald-200 pl-4">
+							{#each QURAN_REVELATION_TIMELINE as item}
+								<article class="relative">
+									<span class="absolute -left-[1.35rem] top-1 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span>
+									<p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">{item.period}</p>
+									<h4 class="mt-1 text-base font-semibold text-slate-900">{item.title}</h4>
+									<p class="mt-2 text-sm leading-7 text-slate-700">{item.detail}</p>
+									<ul class="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600">
+										{#each item.points as point}
+											<li>{point}</li>
+										{/each}
+									</ul>
+								</article>
+							{/each}
+						</div>
+					</section>
+
+					<section class="space-y-4">
+						<h3 class="text-lg font-semibold text-slate-900">Kodifikasi dan Standarisasi Mushaf</h3>
+						<div class="overflow-hidden rounded-lg border border-slate-200">
+							{#each QURAN_CODIFICATION_STEPS as item, index}
+								<article class={`grid gap-3 p-4 md:grid-cols-[170px_minmax(0,1fr)] ${index > 0 ? 'border-t border-slate-200' : ''}`}>
+									<div>
+										<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{item.period}</p>
+										<h4 class="mt-1 text-sm font-semibold text-slate-950">{item.title}</h4>
+									</div>
+									<div>
+										<p class="text-sm leading-7 text-slate-700">{item.detail}</p>
+										<ul class="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600">
+											{#each item.points as point}
+												<li>{point}</li>
+											{/each}
+										</ul>
+									</div>
+								</article>
+							{/each}
+						</div>
+					</section>
+
+					<section class="space-y-4">
+						<h3 class="text-lg font-semibold text-slate-900">Jejak di Nusantara dan Indonesia</h3>
+						<div class="grid gap-3 md:grid-cols-2">
+							{#each QURAN_NUSANTARA_MILESTONES as item}
+								<article class="rounded-lg border border-slate-200 p-4">
+									<p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">{item.period}</p>
+									<h4 class="mt-1 text-sm font-semibold text-slate-950">{item.title}</h4>
+									<p class="mt-2 text-sm leading-7 text-slate-700">{item.detail}</p>
+									<ul class="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600">
+										{#each item.points as point}
+											<li>{point}</li>
+										{/each}
+									</ul>
+								</article>
+							{/each}
+						</div>
+					</section>
+				</div>
+
+				<aside class="space-y-4">
+					<section class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+						<h3 class="text-sm font-semibold text-amber-950">Yang Sering Disalahpahami</h3>
+						<ul class="mt-3 space-y-3 text-sm leading-6 text-amber-950/85">
+							{#each QURAN_HISTORY_CLARIFICATIONS as item}
+								<li class="border-t border-amber-200 pt-3 first:border-t-0 first:pt-0">{item}</li>
+							{/each}
+						</ul>
+					</section>
+
+					<section class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+						<h3 class="text-sm font-semibold text-slate-950">Rujukan Ringkas</h3>
+						<div class="mt-3 space-y-2">
+							{#each QURAN_HISTORY_REFERENCES as item}
+								<a
+									class="block rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-6 text-emerald-800 transition hover:border-emerald-200 hover:bg-emerald-50"
+									href={item.href}
+									target="_blank"
+									rel="noreferrer"
+								>
+									{item.label}
+								</a>
+							{/each}
+						</div>
+					</section>
+				</aside>
+			</div>
 		</section>
 
 		<p class="text-center text-sm text-slate-500">

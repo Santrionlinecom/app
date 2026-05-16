@@ -81,6 +81,12 @@ const buildRedirectForRole = (role?: string | null) => {
 	return '/akun';
 };
 
+const safeRedirectPath = (value?: string | null) => {
+	if (!value) return null;
+	if (!value.startsWith('/') || value.startsWith('//')) return null;
+	return value;
+};
+
 const resolveMemberContext = async (
 	db: D1Database,
 	oauthContext: GoogleOAuthContext | null
@@ -315,10 +321,9 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 		});
 		clearOauthCookies();
 
-		redirectTo = buildRedirectForRole(finalRole);
+		redirectTo = safeRedirectPath(oauthContext?.redirect) ?? buildRedirectForRole(finalRole);
 		if (memberContext) {
-			const requested = oauthContext?.redirect;
-			redirectTo = requested && requested.startsWith('/') ? requested : '/menunggu';
+			redirectTo = safeRedirectPath(oauthContext?.redirect) ?? '/menunggu';
 		}
 	} catch (err) {
 		console.error('Google login error', err);

@@ -2,7 +2,10 @@ import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { SURAH_DATA } from '$lib/surah-data';
 import { requireD1 } from '$lib/server/cloudflare';
-import { getTafsirIndonesiaForSurah } from '$lib/server/quran-tafsir-indonesia';
+import {
+	buildTafsirIndonesiaPreview,
+	getTafsirIndonesiaForSurah
+} from '$lib/server/quran-tafsir-indonesia';
 import type { D1Database } from '@cloudflare/workers-types';
 
 type MuslimAyah = {
@@ -55,12 +58,18 @@ const loadAsbabMap = async (fetcher: typeof fetch) => {
 	}
 };
 
-const loadTafsirMap = async (db: D1Database, surahNumbers: number[]) => {
+const loadTafsirMap = async (db: D1Database, surahNumbers: number[], isAuthenticated: boolean) => {
 	const entries = await Promise.all(
 		surahNumbers.map(async (surahNumber) => {
 			try {
 				const tafsirItems = await getTafsirIndonesiaForSurah(db, surahNumber);
-				return tafsirItems.map((item) => [`${surahNumber}:${item.ayah_number}`, item.content] as const);
+				return tafsirItems.map((item) => {
+					const preview = buildTafsirIndonesiaPreview(item.content);
+					return [
+						`${surahNumber}:${item.ayah_number}`,
+						isAuthenticated ? item.content : preview.content
+					] as const;
+				});
 			} catch {
 				return [] as Array<readonly [string, string]>;
 			}
@@ -94,10 +103,11 @@ export const GET: RequestHandler = async (event) => {
 		)
 	];
 	const db = requireD1(event);
+	const isAuthenticated = Boolean(event.locals.user);
 
 	const [asbabById, tafsirByVerse] = await Promise.all([
 		loadAsbabMap(fetch),
-		loadTafsirMap(db, surahNumbers)
+		loadTafsirMap(db, surahNumbers, isAuthenticated)
 	]);
 
 	const verses = ayahRows
@@ -126,11 +136,13 @@ export const GET: RequestHandler = async (event) => {
 		.filter(Boolean);
 
 	setHeaders({
-		'cache-control': 'public, max-age=86400, s-maxage=86400'
+		'cache-control': 'private, no-store',
+		vary: 'Cookie'
 	});
 
 	return json({
 		juz,
+		isAuthenticated,
 		verses
 	});
 };

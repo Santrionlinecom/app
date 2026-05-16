@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { requireD1 } from '$lib/server/cloudflare';
 import {
 	TAFSIR_INDONESIA_EMPTY_MESSAGE,
+	buildTafsirIndonesiaPreview,
 	getTafsirIndonesiaForAyah
 } from '$lib/server/quran-tafsir-indonesia';
 
@@ -21,29 +22,39 @@ export const GET: RequestHandler = async (event) => {
 
 	const db = requireD1(event);
 	const items = await getTafsirIndonesiaForAyah(db, surah, ayah);
+	const isAuthenticated = Boolean(event.locals.user);
 
 	setHeaders({
-		'cache-control': 'public, max-age=86400, s-maxage=86400'
+		'cache-control': 'private, no-store',
+		vary: 'Cookie'
 	});
 
 	return json({
 		ok: true,
 		source_origin: 'd1',
+		is_authenticated: isAuthenticated,
 		surah,
 		ayah,
-		items: items.map((item) => ({
-			id: item.id,
-			source_key: item.source_key,
-			source_title: item.source_title,
-			source_author: item.source_author,
-			source_publisher: item.source_publisher,
-			surah_number: item.surah_number,
-			ayah_number: item.ayah_number,
-			title: item.title,
-			content: item.content,
-			summary: item.summary,
-			page_ref: item.page_ref
-		})),
+		items: items.map((item) => {
+			const preview = buildTafsirIndonesiaPreview(item.content);
+			const shouldTruncate = !isAuthenticated && preview.is_truncated;
+
+			return {
+				id: item.id,
+				source_key: item.source_key,
+				source_title: item.source_title,
+				source_author: item.source_author,
+				source_publisher: item.source_publisher,
+				surah_number: item.surah_number,
+				ayah_number: item.ayah_number,
+				title: item.title,
+				content: shouldTruncate ? preview.content : item.content,
+				summary: item.summary,
+				page_ref: item.page_ref,
+				is_truncated: shouldTruncate,
+				requires_login: shouldTruncate
+			};
+		}),
 		...(items.length === 0 ? { message: TAFSIR_INDONESIA_EMPTY_MESSAGE } : {})
 	});
 };

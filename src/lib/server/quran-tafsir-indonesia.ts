@@ -39,6 +39,28 @@ type GetTafsirOptions = {
 
 export const TAFSIR_INDONESIA_EMPTY_MESSAGE =
 	'Tafsir Indonesia belum tersedia untuk ayat ini. SantriOnline sedang menyiapkan data tafsir dari sumber tervalidasi.';
+export const TAFSIR_INDONESIA_PREVIEW_LIMIT = 520;
+
+export const buildTafsirIndonesiaPreview = (
+	content: string,
+	limit = TAFSIR_INDONESIA_PREVIEW_LIMIT
+) => {
+	const text = `${content ?? ''}`.replace(/\s+/g, ' ').trim();
+	if (text.length <= limit) {
+		return {
+			content: text,
+			is_truncated: false
+		};
+	}
+
+	const slice = text.slice(0, limit);
+	const lastSpace = slice.lastIndexOf(' ');
+	const preview = `${slice.slice(0, lastSpace > 300 ? lastSpace : limit).trim()}...`;
+	return {
+		content: preview,
+		is_truncated: true
+	};
+};
 
 const isMissingTableError = (err: unknown) =>
 	`${(err as Error)?.message ?? err}`.toLowerCase().includes('no such table');

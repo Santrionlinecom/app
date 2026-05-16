@@ -6,6 +6,9 @@
     export let form;
 
     let showPassword = false;
+    $: googleHref = data.redirectPath
+        ? `/auth/google?redirect=${encodeURIComponent(data.redirectPath)}`
+        : '/auth/google';
 </script>
 
 <div class="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
@@ -106,7 +109,7 @@
             </div>
 
             <div>
-                <a href="/auth/google" class="btn btn-outline w-full border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 hover:text-slate-900 normal-case text-base font-medium h-12 rounded-xl flex items-center justify-center gap-3 transition-all">
+                <a href={googleHref} class="btn btn-outline w-full border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 hover:text-slate-900 normal-case text-base font-medium h-12 rounded-xl flex items-center justify-center gap-3 transition-all">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 0 1-2.2 3.33v2.77h3.56c2.08-1.92 3.28-4.74 3.28-8.11Z" />
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.64l-3.56-2.77c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.85A11 11 0 0 0 12 23Z" />

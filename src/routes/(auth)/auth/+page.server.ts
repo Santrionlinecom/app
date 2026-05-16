@@ -8,17 +8,23 @@ import { isSuperAdminUser } from '$lib/auth/session-user';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 import type { Actions, PageServerLoad } from './$types';
 
+const safeRedirectPath = (value?: string | null) =>
+	value && value.startsWith('/') && !value.startsWith('//') ? value : null;
+
 // Jika user sudah login, lempar ke dashboard
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
+	const redirectPath = safeRedirectPath(url.searchParams.get('redirect'));
 	if (locals.user) {
-		const target = isSuperAdminUser(locals.user) ? '/admin/super/overview' : '/dashboard';
+		const target = redirectPath ?? (isSuperAdminUser(locals.user) ? '/admin/super/overview' : '/dashboard');
 		throw redirect(302, target);
 	}
-	return {};
+	return {
+		redirectPath
+	};
 };
 
 export const actions: Actions = {
-		default: async ({ request, platform, locals, cookies }) => {
+		default: async ({ request, platform, locals, cookies, url }) => {
 			const formData = await request.formData();
 			const ip = getRequestIp(request) ?? undefined;
 			const turnstile = await verifyTurnstileFormData(formData, ip);
@@ -98,7 +104,9 @@ export const actions: Actions = {
 
 			// 6. Lempar ke Dashboard
 			const role = user?.role ?? '';
-			const target = isSuperAdminRole(role) ? '/admin/super/overview' : '/dashboard';
+			const target =
+				safeRedirectPath(url.searchParams.get('redirect')) ??
+				(isSuperAdminRole(role) ? '/admin/super/overview' : '/dashboard');
 			throw redirect(302, target);
 		}
 	};
