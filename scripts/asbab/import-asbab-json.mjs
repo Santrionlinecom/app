@@ -6,7 +6,8 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 
 const DEFAULT_DATABASE = 'DB';
-const DEFAULT_BATCH_SIZE = 50;
+const DEFAULT_LOCAL_BATCH_SIZE = 50;
+const DEFAULT_REMOTE_BATCH_SIZE = 25;
 const ALLOWED_STATUSES = new Set(['draft', 'review', 'published']);
 
 const usage = `SantriOnline Asbabun Nuzul JSON importer
@@ -19,7 +20,7 @@ Options:
   --database, --db  D1 binding/database name. Default: DB
   --remote          Import to remote Cloudflare D1.
   --local           Import to local D1. Default.
-  --batch-size      Statements per D1 execute batch. Default: 50
+  --batch-size      Statements per D1 execute batch. Default: 50 local, 25 remote
   --dry-run         Validate and print SQL without executing wrangler.
   --help, -h        Show this help.
 
@@ -192,6 +193,15 @@ const chunk = (items, size) => {
 	return chunks;
 };
 
+const resolveBatchSize = (args) => {
+	const defaultSize = args.remote ? DEFAULT_REMOTE_BATCH_SIZE : DEFAULT_LOCAL_BATCH_SIZE;
+	const requested = args['batch-size'] === undefined ? defaultSize : Number(args['batch-size']);
+	if (!Number.isFinite(requested) || requested < 1) {
+		throw new Error('--batch-size harus berupa angka positif.');
+	}
+	return Math.floor(requested);
+};
+
 const runCommand = (command, args) =>
 	new Promise((resolve, reject) => {
 		const child = spawn(command, args, {
@@ -219,7 +229,7 @@ const main = async () => {
 
 	const inputPath = resolvePath(args.input);
 	const database = args.database ?? DEFAULT_DATABASE;
-	const batchSize = Math.max(1, Number(args['batch-size'] ?? DEFAULT_BATCH_SIZE));
+	const batchSize = resolveBatchSize(args);
 	const raw = await readFile(inputPath, 'utf8');
 	const payload = JSON.parse(raw);
 	const rows = Array.isArray(payload) ? payload : payload.entries;
@@ -244,7 +254,7 @@ const main = async () => {
 	}
 
 	const batches = chunk(validEntries, batchSize);
-	const sqlBatches = batches.map((batch) => `BEGIN TRANSACTION;\n${batch.map(entryToInsertSql).join('\n')}\nCOMMIT;\n`);
+	const sqlBatches = batches.map((batch) => `${batch.map(entryToInsertSql).join('\n')}\n`);
 
 	if (args['dry-run']) {
 		console.log(sqlBatches.join('\n'));
