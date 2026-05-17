@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "@lucia-auth/adapter-sqlite": "^3.0.2",
+    "@sentry/sveltekit": "^10.53.1",
     "@tiptap/core": "^3.13.0",
     "@tiptap/extension-image": "^3.13.0",
     "@tiptap/extension-link": "^3.13.0",

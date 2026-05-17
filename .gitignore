@@ -23,6 +23,7 @@ Thumbs.db
 
 # Env
 .env
+.env.local
 .env.*
 !.env.example
 !.env.test
@@ -35,12 +36,9 @@ vite.config.ts.timestamp-*
 data/asbab/raw/
 data/asbab/processed/
 data/asbab/asbab-lpmq-draft.json
-<<<<<<< HEAD
-=======
 
 # Tafsir raw/processed data
 data/tafsir/raw/
 data/tafsir/processed/
 data/tafsir/tafsir-kemenag-draft.json
 data/tafsir/tafsir-ringkas-draft.json
->>>>>>> f35a39d (feat: add quran asbabun nuzul and d1 tafsir support)

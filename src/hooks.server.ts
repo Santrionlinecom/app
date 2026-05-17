@@ -1,6 +1,8 @@
 // src/hooks.server.ts
+import { handleErrorWithSentry, initCloudflareSentryHandle, sentryHandle } from '@sentry/sveltekit';
 import { initializeLucia } from '$lib/server/lucia';
 import type { Handle } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
 import type { D1Database } from '@cloudflare/workers-types';
 import { isSuperAdminUser } from '$lib/auth/session-user';
 import {
@@ -8,6 +10,7 @@ import {
 	clearImpersonatedOrgId,
 	getImpersonatedOrgId
 } from '$lib/server/auth/impersonation';
+import { sentryServerConfig } from '../sentry.server.config';
 
 const TPQ_ONLY_BLOCKED_PREFIXES = ['/pondok', '/masjid', '/musholla', '/rumah-tahfidz', '/keuangan', '/org'];
 
@@ -16,7 +19,7 @@ const isTpqOnlyBlockedRoute = (pathname: string) =>
 		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
 	);
 
-export const handle: Handle = async ({ event, resolve }) => {
+const authHandle: Handle = async ({ event, resolve }) => {
 	if (isTpqOnlyBlockedRoute(event.url.pathname)) {
 		return Response.redirect(new URL('/tpq', event.url), 302);
 	}
@@ -73,3 +76,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	return resolve(event);
 };
+
+export const handleError = handleErrorWithSentry();
+
+export const handle: Handle = sequence(
+	initCloudflareSentryHandle(sentryServerConfig),
+	sentryHandle(),
+	authHandle
+);

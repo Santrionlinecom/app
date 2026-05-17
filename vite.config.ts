@@ -1,6 +1,7 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
+import { sentrySvelteKit } from '@sentry/sveltekit';
 
 const includePrerendered = process.env.PWA_INCLUDE_PRERENDERED === 'true';
 const pwaGlobPatterns = [
@@ -10,8 +11,16 @@ if (includePrerendered) {
 	pwaGlobPatterns.push('prerendered/**/*.{html,json}');
 }
 
-export default defineConfig({
+export default defineConfig(async () => ({
 	plugins: [
+		await sentrySvelteKit({
+			org: 'santri-online',
+			project: 'javascript-sveltekit',
+			authToken: process.env.SENTRY_AUTH_TOKEN,
+			telemetry: false,
+			adapter: 'cloudflare',
+			autoUploadSourceMaps: Boolean(process.env.SENTRY_AUTH_TOKEN)
+		}),
 		sveltekit(),
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
@@ -132,4 +141,4 @@ export default defineConfig({
 			}
 		})
 	]
-});
+}));
