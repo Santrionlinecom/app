@@ -13,7 +13,17 @@ PUBLIC_UMAMI_SCRIPT_URL = "https://cloud.umami.is/script.js"
 PUBLIC_UMAMI_WEBSITE_ID = "4367f37b-32a2-4732-bbce-71192ac5fa17"
 GOOGLE_CLIENT_ID = "511759368556-iu4bj02gusic1e0tqindpi5lriis9lkv.apps.googleusercontent.com"
 
+# --- Sentry ---
+# Set these in Cloudflare Pages Dashboard > Settings > Variables and Secrets:
+# PUBLIC_SENTRY_DSN -> Secret or plaintext, used by SvelteKit at build/runtime.
+# SENTRY_AUTH_TOKEN -> Secret, used by @sentry/vite-plugin for source map upload.
+# Do not add PUBLIC_SENTRY_DSN as an active [vars] entry here when it already
+# exists in the Dashboard, otherwise Cloudflare Pages will reject the deploy as
+# a duplicate binding.
+
 # Secrets are not stored in wrangler.toml.
+# PUBLIC_SENTRY_DSN -> set in Cloudflare Pages Dashboard
+# SENTRY_AUTH_TOKEN -> set in Cloudflare Pages Dashboard
 # GOOGLE_CLIENT_SECRET -> wrangler secret put GOOGLE_CLIENT_SECRET
 # LICENSE_SIGNING_SECRET -> wrangler secret put LICENSE_SIGNING_SECRET
 # GROQ_API_KEY -> wrangler secret put GROQ_API_KEY
