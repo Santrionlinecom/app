@@ -6,7 +6,6 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
 
 [vars]
 PUBLIC_BASE_URL = "https://app.santrionline.com"
-PUBLIC_SENTRY_DSN = ""
 R2_PUBLIC_BASE_URL = "https://files.santrionline.com"
 TURNSTILE_SITE_KEY = "0x4AAAAAADFy-tk3UwwNRRLK"
 PUBLIC_CLARITY_PROJECT_ID = "wjd6jb7tnb"
