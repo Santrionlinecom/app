@@ -1050,14 +1050,12 @@ $: if (pathname !== previousPathname) {
 				<div class="rounded-[1.8rem] border border-white/70 bg-white/90 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
 					<div class="flex items-start justify-between gap-3">
 						<a href="/" class="flex min-w-0 items-center gap-3">
-								<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 p-2 shadow-lg shadow-emerald-500/20">
-									<img
-										src="https://files.santrionline.com/ICON%20SANTRI%20ONLINE%20COM%20kecil%20(1).png"
-										alt="Santri Online"
-										class="h-8 w-auto"
-										loading="lazy"
-									/>
-								</div>
+							<img
+								src="https://files.santrionline.com/ICON%20SANTRI%20ONLINE%20COM%20kecil%20(1).png"
+								alt="Santri Online"
+								class="h-12 w-12 shrink-0 object-contain"
+								loading="lazy"
+							/>
 							<div class="min-w-0">
 								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Santri Online</p>
 								<p class="truncate text-sm font-semibold text-slate-950">{mobileContext.label}</p>
