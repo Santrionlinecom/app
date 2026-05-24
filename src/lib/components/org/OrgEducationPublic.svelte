@@ -42,7 +42,7 @@
 			{ icon: 'SAN', title: 'Kelola Santri', desc: 'Tambah, verifikasi, dan kelola santri.', href: '/dashboard/kelola-santri' },
 			{ icon: 'DIN', title: 'Materi Diniyah', desc: 'Jadwal materi harian dan kitab rujukan.', href: '/dashboard/diniyah' },
 			{ icon: 'HAL', title: 'Halaqoh Hafalan', desc: 'Kelompok setoran dan pembinaan hafalan.', href: '/dashboard/halaqoh' },
-			{ icon: 'SET', title: 'Setoran Harian', desc: 'Pantau setoran dan progres hafalan.', href: '/dashboard/setoran-hari-ini' }
+			{ icon: 'SET', title: 'Setoran Harian', desc: 'Pantau setoran dan progres hafalan.', href: '/tpq/akademik/setoran' }
 		],
 		steps: [
 			{ title: 'Pendaftaran Santri', desc: 'Data santri dan wali tersimpan rapi sejak awal.' },
@@ -101,7 +101,7 @@
 			modules: [
 				{ icon: 'SAN', title: 'Kelola Santri', desc: 'Data santri TPQ dan wali.', href: '/dashboard/kelola-santri' },
 				{ icon: 'DIN', title: 'Materi Diniyah', desc: 'Jadwal materi mingguan untuk TPQ.', href: '/dashboard/diniyah' },
-				{ icon: 'SET', title: 'Setoran Harian', desc: 'Monitoring bacaan dan hafalan juz amma.', href: '/dashboard/setoran-hari-ini' },
+				{ icon: 'SET', title: 'Setoran Harian', desc: 'Monitoring bacaan dan hafalan juz amma.', href: '/tpq/akademik/setoran' },
 				{ icon: 'CAP', title: 'Pencapaian Hafalan', desc: 'Rekap hafalan santri lebih jelas.', href: '/dashboard/pencapaian-hafalan' }
 			],
 			steps: [
@@ -129,7 +129,7 @@
 			],
 			modules: [
 				{ icon: 'HAL', title: 'Halaqoh Tahfidz', desc: 'Pembagian halaqoh dan setoran harian.', href: '/dashboard/halaqoh' },
-				{ icon: 'SET', title: 'Setoran Harian', desc: 'Input setoran dan koreksi bacaan.', href: '/dashboard/setoran-hari-ini' },
+				{ icon: 'SET', title: 'Setoran Harian', desc: 'Input setoran dan koreksi bacaan.', href: '/tpq/akademik/setoran' },
 				{ icon: 'CAP', title: 'Pencapaian Hafalan', desc: 'Grafik progres hafalan santri.', href: '/dashboard/pencapaian-hafalan' },
 				{ icon: 'UJI', title: 'Ujian Tahfidz', desc: 'Rekap hasil ujian dan kualitas hafalan.', href: '/dashboard/ujian-tahfidz' }
 			],

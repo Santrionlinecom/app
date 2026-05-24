@@ -1,10 +1,13 @@
 import { json } from '@sveltejs/kit';
 import { canManageCms } from '$lib/server/auth/cms-access';
+import { enforceAdminAiRateLimit } from '$lib/server/admin-ai-rate-limit';
 import { buildR2PublicUrl, getD1, requireR2Bucket } from '$lib/server/cloudflare';
 import type { RequestHandler } from './$types';
 
 const MAX_TTS_CHARS = 1400;
 const CHUNK_CHARS = 180;
+const RATE_LIMIT_MAX = 12;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 
 type GenerateIndonesianTtsBody = {
 	teks?: unknown;
@@ -61,6 +64,16 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json({ success: false, error: 'Tidak diizinkan.' }, { status: 403 });
 	}
 
+	const db = getD1({ locals, platform });
+	const rateLimited = await enforceAdminAiRateLimit({
+		db,
+		user: locals.user,
+		scope: 'admin:generate-tts-id',
+		limit: RATE_LIMIT_MAX,
+		windowMs: RATE_LIMIT_WINDOW_MS
+	});
+	if (rateLimited) return rateLimited;
+
 	const body = (await request.json().catch(() => ({}))) as GenerateIndonesianTtsBody;
 	const plainText = stripHtml(readString(body.teks, 6000));
 	if (!plainText) {
@@ -100,7 +113,6 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			}
 		});
 		const publicUrl = buildR2PublicUrl(filename, platform);
-		const db = getD1({ locals, platform });
 		if (db) {
 			try {
 				await db

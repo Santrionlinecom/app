@@ -56,7 +56,7 @@ const FEATURE_DETAILS: Record<string, FeatureDetail> = {
 		access: [
 			{ label: 'Mushaf Al-Qur\'an 30 Juz', desc: 'Baca per-juz dengan tampilan yang nyaman.', href: '/kitab/quran' },
 			{ label: 'Pencapaian Hafalan', desc: 'Lihat grafik progres hafalan santri.', href: '/dashboard/pencapaian-hafalan' },
-			{ label: 'Setoran Hari Ini', desc: 'Kelola setoran harian dalam satu daftar.', href: '/dashboard/setoran-hari-ini' }
+			{ label: 'Setoran Hari Ini', desc: 'Kelola setoran harian dalam satu daftar.', href: '/tpq/akademik/setoran' }
 		],
 		theme: {
 			hero: 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600',

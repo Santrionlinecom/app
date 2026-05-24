@@ -1,5 +1,15 @@
 # 📝 Changes
 
+## Roadmap Pondasi dan Security Hardening
+- Endpoint maintenance `/api/admin/migrate` dan `/api/seed-admin` dikunci menjadi superadmin-only, membutuhkan secret di production, dan mencatat aktivitas ke `system_logs`.
+- Endpoint `tanya kitab` kini role-bound, membatasi panjang pertanyaan, memakai rate limit per user, dan mencatat audit tanpa menyimpan isi pertanyaan.
+- Generator AI admin yang mahal (`generate-thumbnail`, `generate-tts-id`, `generate-tts-ar`) memakai helper rate limit reusable.
+- Shortlink redirect tetap berjalan normal, tetapi pencatatan analytics berlebih kini dibatasi per slug+IP hash.
+- Akses CMS factory dipersempit ke admin/superadmin.
+- Placeholder `/kitab/coming-soon` diarahkan ke katalog `/kitab`.
+- Link publik ke setoran diarahkan ke route kanonis `/tpq/akademik/setoran`, bukan alias dashboard lama.
+- README, route map, feature matrix, audit sistem, dan roadmap reformasi disinkronkan dengan kondisi kode terbaru.
+
 ## Deprecation: Kanban & Request Asisten
 - Seluruh referensi fitur Kanban dan request-asisten dibersihkan dari UI dan dokumentasi.
 - Role `asisten` tidak lagi diekspos di dashboard maupun halaman kelola role.

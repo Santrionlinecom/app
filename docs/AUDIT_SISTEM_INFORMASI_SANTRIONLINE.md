@@ -19,12 +19,12 @@ SantriOnline saat ini bukan satu aplikasi tunggal yang rapi, melainkan kumpulan 
 |---|---|---|
 | Auth dan RBAC | LIVE | Lucia + session, role lembaga, super admin, dan feature gating sudah jelas. |
 | TPQ akademik | LIVE | Alur setoran, review, riwayat, rapor, sertifikat, dan dashboard sudah terhubung. |
-| Shortlink | LIVE | Redirect publik + analytics + admin CRUD + kategori sudah lengkap. |
+| Shortlink | HARDENED | Redirect publik + analytics + admin CRUD + kategori sudah lengkap; click-log punya throttle untuk mengurangi abuse tulis analytics. |
 | Kitab digital dan RAG | LIVE / PARTIAL | Catalog, reader, import, dan tanya kitab ada, tapi biaya AI perlu kontrol. |
 | Buku digital, coin, DRM | LIVE / PARTIAL | Jalur monetisasi sudah ada, namun sebagian masih manual-operasional. |
 | CMS dan AI konten | LIVE | Post management dan generator konten berjalan, namun harus diawasi biaya dan akses. |
 | Surfaces legacy komunitas | UNUSED | Masjid/musholla/pondok/rumah tahfidz masih ada di kode, tetapi diblok konfigurasi. |
-| Admin utilitas | NEEDS SECURITY REVIEW | `migrate`, `seed-admin`, dan sebagian generator AI terlalu sensitif bila dibiarkan longgar. |
+| Admin utilitas | HARDENED | `migrate` dan `seed-admin` sudah superadmin-only, secret wajib di production, dan logged; generator AI mahal sudah rate-limited. |
 
 ## Fitur Yang Ditemukan
 
@@ -90,20 +90,20 @@ Beberapa tabel penting dibuat lewat helper server, bukan hanya migration, teruta
 
 ## Status Tiap Kategori
 
-- **LIVE**: TPQ akademik, shortlink analytics, kitab catalog, buku digital, digital store, auth/RBAC, media upload, reports, logs, traffic.
+- **LIVE/HARDENED**: TPQ akademik, shortlink analytics, kitab catalog, buku digital, digital store, auth/RBAC, media upload, reports, logs, traffic.
 - **PARTIAL**: OpenITI import, RAG tanya kitab, coin topup flow, AI content factory, beberapa jalur export/report yang masih bergantung data runtime.
-- **DUPLICATE**: `/akademik`, `/hafalan-mandiri`, `/setoran-hari-ini`, serta beberapa alias navigasi dashboard yang hanya memindahkan user ke jalur canonical.
+- **DUPLICATE**: `/akademik`, `/hafalan-mandiri`, `/setoran-hari-ini`, `/review-setoran`, serta beberapa alias navigasi dashboard yang hanya memindahkan user ke jalur canonical.
 - **UNUSED**: surface komunitas non-TPQ yang masih ada di kode tetapi diblok config dan cleanup migration.
 - **NEEDS MIGRATION**: tabel yang lahir dari helper runtime tapi belum terlihat jelas di migration historis repo ini.
-- **NEEDS SECURITY REVIEW**: endpoint migrasi/admin seed, import kitab, AI generation, public shortlink redirect, dan upload/checkout yang menerima file atau traffic publik.
+- **NEEDS SECURITY REVIEW**: import kitab dan upload/checkout yang menerima file atau traffic publik. Endpoint migrasi/admin seed, generator AI mahal, dan shortlink click-log sudah masuk status hardened, tetapi tetap perlu dipantau sebagai surface berisiko tinggi.
 - **NEEDS UI POLISH**: homepage yang terlalu luas secara narasi produk, dashboard yang masih memuat banyak fungsi legacy, serta beberapa jalur monetisasi yang belum dipisah jelas antara free dan paid.
 
 ## Risiko Keamanan
 
-1. `api/admin/migrate` adalah utilitas yang sangat sensitif karena menginisialisasi banyak tabel dari HTTP surface.
-2. `api/seed-admin` juga sensitif; walau ada secret, endpoint seperti ini harus dianggap internal.
-3. `api/kitab/upload` dan `api/kitab/tanya` bisa mahal di AI/vectorize bila disalahgunakan.
-4. `r/[slug]` adalah endpoint publik yang bisa dipukul berulang untuk menulis analytics click-stream.
+1. `api/admin/migrate` adalah utilitas yang sangat sensitif karena menginisialisasi banyak tabel dari HTTP surface. Endpoint ini sudah superadmin-only dan membutuhkan secret di production.
+2. `api/seed-admin` juga sensitif; endpoint ini sudah superadmin-only, membutuhkan secret di production, dan tetap harus dianggap internal.
+3. `api/kitab/upload` dan `api/kitab/tanya` bisa mahal di AI/vectorize bila disalahgunakan. `tanya kitab` sudah dibatasi role, panjang input, rate limit, dan audit log.
+4. `r/[slug]` adalah endpoint publik yang bisa dipukul berulang; click-log sekarang punya throttle per slug+IP hash agar analytics write tidak bebas tanpa batas.
 5. `calendar_notes` dan `api/calendar` memegang data pribadi dan agenda; batasan role dan scope perlu dijaga.
 6. Upload endpoint dan R2 object harus terus diproteksi oleh signature/size/type validation.
 7. Sistem lisensi dan DRM menggunakan banyak endpoint publik; pembatasan rate limit dan audit log perlu dipelihara.
@@ -130,8 +130,8 @@ Peluang uang yang paling realistis dari state repo saat ini:
 
 ## Sinkronisasi Dokumentasi
 
-- `README.md` menyebut TPQ-only mode, tetapi kode masih memuat legacy surface komunitas, buku, lisensi, digital store, dan AI.
-- `CHANGES.md` cukup cocok untuk TPQ akademik v1, namun tidak cukup menggambarkan seluruh surface monetisasi dan admin internal yang sudah ada.
+- `README.md` sudah menyebut TPQ-only mode sekaligus lapisan monetisasi, Kitab AI/RAG, dan batasan endpoint maintenance.
+- `CHANGES.md` sudah menambahkan catatan hardening roadmap pondasi.
 - `FITUR_BARU_SUMMARY.md` tampak lebih tua dan tidak lagi sinkron dengan struktur runtime saat ini.
 - `scripts/openiti/README.md` relatif masih akurat untuk pipeline import OpenITI, terutama bahwa produksi harus lewat jalur super admin.
 

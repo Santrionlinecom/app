@@ -37,7 +37,7 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 | `/robots.txt` | LIVE | Robots policy. |
 | `/sitemap.xml` | LIVE | Sitemap. |
 | `/u/[id]` | LIVE | Public user profile page. |
-| `/r/[slug]` | LIVE | Public shortlink redirect + analytics. |
+| `/r/[slug]` | HARDENED | Public shortlink redirect + analytics dengan click-log throttle per slug+IP hash. |
 | `/tpq` | LIVE | Landing TPQ. |
 | `/tpq/[slug]` | LIVE | Detail TPQ. |
 | `/tpq/daftar` | LIVE | Register TPQ. |
@@ -62,7 +62,7 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 | `/kitab/[slug]` | LIVE | Detail kitab, fallback ke curated series. |
 | `/kitab/[slug]/bab/[module]` | LIVE | Reader modul curated. |
 | `/kitab/quran` | LIVE | Landing mushaf. |
-| `/kitab/coming-soon` | LIVE | Placeholder. |
+| `/kitab/coming-soon` | ALIAS | Redirect ke `/kitab`; placeholder dikunci agar tidak menjadi surface kosong. |
 | `/buku` | LIVE | Katalog buku digital. |
 | `/buku/[slug]` | LIVE | Detail buku. |
 | `/buku/[slug]/bab/[chapter]` | LIVE | Chapter reader. |
@@ -103,7 +103,7 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 | `/(app)/dashboard/hafalan-belum-lancar` | LIVE | Weak memorization report. |
 | `/(app)/dashboard/pencapaian-hafalan` | LIVE | Achievement summary. |
 | `/(app)/dashboard/rapor-hafalan` | LIVE | Rapor view. |
-| `/(app)/dashboard/review-setoran` | LIVE | Review queue. |
+| `/(app)/dashboard/review-setoran` | DUPLICATE | Redirect role-aware ke TPQ academic review/riwayat. |
 | `/(app)/dashboard/sertifikat` | LIVE | Certificate view. |
 | `/(app)/dashboard/setoran-hari-ini` | DUPLICATE | Redirect ke TPQ academic canonical route. |
 | `/(app)/dashboard/ujian-tahfidz` | LIVE | Tahfidz exam page. |
@@ -159,13 +159,13 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 | `/api/admin/licenses/[key]` | LIVE | Legacy license detail. |
 | `/api/admin/licenses/[key]/devices` | LIVE | Legacy device list. |
 | `/api/admin/licenses/[key]/reset-devices` | LIVE | Reset devices. |
-| `/api/admin/migrate` | NEEDS SECURITY REVIEW | HTTP migration utility, sangat sensitif. |
+| `/api/admin/migrate` | HARDENED | HTTP migration utility; superadmin-only, secret wajib di production, dan aktivitas dicatat. |
 | `/api/admin/posts/ai-generate` | LIVE | Draft generation untuk CMS. |
 | `/api/admin/streamer-licenses` | LIVE | Streamer license CRUD. |
 | `/api/admin/streamer-licenses/[id]` | LIVE | Streamer license detail. |
 | `/api/admin/trigger-news` | LIVE | News worker trigger. |
 | `/api/admin/users` | LIVE | User management. |
-| `/api/seed-admin` | NEEDS SECURITY REVIEW | Seed demo users, sebaiknya internal. |
+| `/api/seed-admin` | HARDENED | Seed demo users; superadmin-only, secret wajib di production, dan aktivitas dicatat. |
 
 ### TPQ, Kalender, Reports, dan Media
 
@@ -198,7 +198,7 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 
 | Path | Status | Catatan |
 |---|---|---|
-| `/api/kitab/tanya` | PARTIAL | Login-only, biaya AI/vectorize perlu kontrol. |
+| `/api/kitab/tanya` | HARDENED / PARTIAL | Login-only, role-bound, rate-limited, panjang input dibatasi, dan query dicatat tanpa menyimpan isi pertanyaan. |
 | `/api/kitab/upload` | PARTIAL | Upload text/PDF/Drive untuk RAG. |
 | `/api/quran/juz-insights/[juz]` | LIVE | Enrichment data quran. |
 | `/api/quran/tafsir-ulama/[source]/[surah]/[ayah]` | LIVE | Tafsir ulama dari upstream API. |
@@ -227,6 +227,7 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 |---|---|---|
 | `/akademik` | DUPLICATE | Alias ke TPQ academic hub. |
 | `/hafalan-mandiri` | DUPLICATE | Alias ke dashboard hafalan mandiri. |
+| `/dashboard/review-setoran` | DUPLICATE | Alias role-aware ke TPQ academic review/riwayat. |
 | `/dashboard/setoran-hari-ini` | DUPLICATE | Alias ke TPQ academic route canonical. |
 | `/pondok/*` | UNUSED | Legacy shell, disabled by config. |
 | `/masjid/*` | UNUSED | Legacy shell, disabled by config. |
@@ -237,6 +238,6 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 
 ## Catatan Navigasi
 
-- Jalur canonical TPQ akademik sekarang ada di `/tpq/akademik/*`, bukan `/akademik` atau `/dashboard/setoran-hari-ini`.
+- Jalur canonical TPQ akademik sekarang ada di `/tpq/akademik/*`, bukan `/akademik`, `/dashboard/setoran-hari-ini`, atau `/dashboard/review-setoran`.
 - `admin/super` adalah pusat operasi super admin. `admin/shortlinks` adalah surface monetisasi yang paling siap.
 - Route non-TPQ masih terlihat di tree, tetapi banyak yang diblok oleh `src/lib/config/institutions.ts` dan `src/lib/server/institution-guards.ts`.

@@ -9,12 +9,16 @@ import {
 	incrementDailyStats,
 	sanitizeSlug
 } from '$lib/server/shortlink';
+import { consumeApiRateLimit } from '$lib/server/rate-limit';
 
 type RequestCf = {
 	country?: string;
 	city?: string;
 	colo?: string;
 };
+
+const CLICK_ANALYTICS_LIMIT = 120;
+const CLICK_ANALYTICS_WINDOW_MS = 10 * 60 * 1000;
 
 const getParam = (url: URL, name: string) => {
 	const value = url.searchParams.get(name)?.trim();
@@ -65,6 +69,21 @@ export const GET: RequestHandler = async ({ params, url, locals, platform, reque
 
 	const analyticsTask = (async () => {
 		const ipHash = await hashIp(ip, platform?.env?.SHORTLINK_SECRET);
+		if (ipHash) {
+			try {
+				const rateLimit = await consumeApiRateLimit({
+					db,
+					scope: 'shortlink:click',
+					key: `${slug}:${ipHash}`,
+					limit: CLICK_ANALYTICS_LIMIT,
+					windowMs: CLICK_ANALYTICS_WINDOW_MS
+				});
+				if (!rateLimit.allowed) return;
+			} catch (err) {
+				console.error('shortlink:rate-limit', err);
+			}
+		}
+
 		const uniqueClick = ipHash ? !(await hasSeenIpHashToday(db, slug, dateKey, ipHash)) : false;
 		await createShortLinkClick(db, {
 			link_id: activeLink.id,

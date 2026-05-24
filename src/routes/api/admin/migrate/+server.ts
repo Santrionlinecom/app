@@ -25,17 +25,9 @@ import { ensureBukuLibrarySchema } from '$lib/server/buku-library';
 import { ensureBukuWalletSchema } from '$lib/server/buku-wallet';
 import { ensureDrmSchema } from '$lib/server/drm';
 import { ensureHafalanRaporSchema } from '$lib/server/db-hafalan';
-import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import { ensureKitabReferenceSchema } from '$lib/server/rag';
-
-const assertAuthorized = (locals: App.Locals, secret: string | undefined, token: string | null) => {
-	if (!locals.user || (locals.user.role !== 'admin' && !isSuperAdminRole(locals.user.role))) {
-		throw error(403, 'Forbidden');
-	}
-	if (secret && token !== secret) {
-		throw error(403, 'Akses pemeliharaan tidak valid');
-	}
-};
+import { requireMaintenanceAccess } from '$lib/server/admin-maintenance';
+import { getRequestIp, logActivity } from '$lib/server/logger';
 
 export const POST: RequestHandler = async ({ locals, platform, request, url }) => {
 	const db = locals.db ?? platform?.env.DB;
@@ -43,7 +35,12 @@ export const POST: RequestHandler = async ({ locals, platform, request, url }) =
 
 	const secret = platform?.env?.MIGRATE_SECRET as string | undefined;
 	const token = request.headers.get('x-migrate-secret') ?? url.searchParams.get('token');
-	assertAuthorized(locals, secret, token);
+	const { user } = requireMaintenanceAccess({
+		locals: { ...locals, db },
+		secret,
+		token,
+		secretName: 'MIGRATE_SECRET'
+	});
 
 	const startedAt = Date.now();
 	await ensureOrgSchema(db);
@@ -74,6 +71,16 @@ export const POST: RequestHandler = async ({ locals, platform, request, url }) =
 	await ensureDrmSchema(db);
 	await ensureHafalanRaporSchema(db);
 	await ensureKitabReferenceSchema(db);
+
+	logActivity(db, 'ADMIN_MIGRATE_SCHEMA', {
+		userId: user.id,
+		userEmail: user.email,
+		ipAddress: getRequestIp(request),
+		metadata: {
+			durationMs: Date.now() - startedAt
+		},
+		waitUntil: platform?.context?.waitUntil
+	});
 
 	return json({
 		ok: true,

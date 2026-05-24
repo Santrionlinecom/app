@@ -1,10 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { Ai } from '@cloudflare/workers-types';
 import { canManageCms } from '$lib/server/auth/cms-access';
+import { enforceAdminAiRateLimit } from '$lib/server/admin-ai-rate-limit';
 import { buildR2PublicUrl, getD1, requireR2Bucket } from '$lib/server/cloudflare';
 import type { RequestHandler } from './$types';
 
 const IMAGE_MODEL = '@cf/bytedance/stable-diffusion-xl-lightning';
+const RATE_LIMIT_MAX = 8;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 
 type GenerateThumbnailBody = {
 	image_prompt?: unknown;
@@ -32,6 +35,16 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	if (!ai) {
 		return json({ success: false, error: 'Layanan gambar AI belum tersedia. Hubungi super admin.' }, { status: 500 });
 	}
+
+	const db = getD1({ locals, platform });
+	const rateLimited = await enforceAdminAiRateLimit({
+		db,
+		user: locals.user,
+		scope: 'admin:generate-thumbnail',
+		limit: RATE_LIMIT_MAX,
+		windowMs: RATE_LIMIT_WINDOW_MS
+	});
+	if (rateLimited) return rateLimited;
 
 	const body = (await request.json().catch(() => ({}))) as GenerateThumbnailBody;
 	const imagePrompt = readString(body.image_prompt, 260);
@@ -63,7 +76,6 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			}
 		});
 		const publicUrl = buildR2PublicUrl(filename, platform);
-		const db = getD1({ locals, platform });
 		if (db) {
 			try {
 				await db

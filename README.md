@@ -1,6 +1,6 @@
 # SantriOnline TPQ
 
-SantriOnline adalah aplikasi manajemen TPQ berbasis SvelteKit untuk mengelola santri, hafalan, setoran, halaqoh, sertifikat, dan konten pendukung. Repo ini masih menyimpan beberapa route legacy non-TPQ, tetapi arah pengembangan aktif sekarang berfokus pada **TPQ-only mode**.
+SantriOnline adalah aplikasi manajemen TPQ berbasis SvelteKit untuk mengelola santri, hafalan, setoran, halaqoh, sertifikat, dan konten pendukung. Repo ini juga memuat lapisan monetisasi seperti shortlink analytics, buku digital, coin wallet, DRM, digital store, CMS, dan Kitab AI/RAG. Arah pengembangan aktif tetap berfokus pada **TPQ-only mode**, sementara surface legacy non-TPQ dipetakan sebagai alias atau modul lama.
 
 ## Stack
 
@@ -25,6 +25,8 @@ Folder `src-tauri/` tersedia untuk companion desktop app, tetapi aplikasi web te
 - Penerbitan sertifikat PDF yang disimpan ke R2
 - Halaman publik TPQ dan alur pendaftaran lembaga
 - CMS/blog dan beberapa modul konten islami
+- Shortlink analytics, digital store, buku digital, coin wallet, DRM, dan license services
+- Kitab catalog, OpenITI/RAG import, dan Tanya Kitab dengan guardrail biaya
 
 ## Menjalankan Project
 
@@ -73,4 +75,6 @@ Endpoint pengecekan binding:
 - Route kanonis workflow TPQ adalah `/tpq/akademik/*`.
 - Route lama seperti `/dashboard/setoran-hari-ini` dan `/dashboard/review-setoran` hanya wrapper redirect.
 - Sertifikat disimpan di R2, metadata-nya ada di D1.
+- Endpoint utilitas seperti `/api/admin/migrate` dan `/api/seed-admin` hanya untuk maintenance: superadmin-only, secret wajib di production, dan aktivitasnya dicatat di `system_logs`.
+- Endpoint AI yang mahal harus memakai quota/rate limit dan tidak boleh menjadi surface publik bebas.
 - Jika menambah fitur baru, prioritaskan konteks TPQ dan hindari memperluas modul legacy non-TPQ.

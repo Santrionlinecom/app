@@ -1,30 +1,11 @@
 import { error, json } from '@sveltejs/kit';
 import { generateId } from 'lucia';
 import { Scrypt } from '$lib/server/password';
-import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
+import { requireMaintenanceAccess } from '$lib/server/admin-maintenance';
+import { getRequestIp, logActivity } from '$lib/server/logger';
 import type { RequestHandler } from './$types';
 
-const adminRoles = new Set(['admin', 'SUPER_ADMIN']);
 const defaultPassword = 'password123';
-
-const assertSeedAccess = (params: {
-	locals: App.Locals;
-	secret?: string;
-	token?: string | null;
-}) => {
-	const { locals, secret, token } = params;
-	const role = locals.user?.role ?? null;
-	if (!locals.user || (!adminRoles.has(role ?? '') && !isSuperAdminRole(role))) {
-		throw error(403, 'Forbidden');
-	}
-	if (secret && token !== secret) {
-		throw error(403, 'Akses seed tidak valid');
-	}
-	if (!locals.db) {
-		throw error(500, 'Layanan data tidak tersedia');
-	}
-	return locals.db;
-};
 
 const runSeed = async (db: NonNullable<App.Locals['db']>) => {
 	// Define demo users for each role
@@ -82,8 +63,25 @@ const runSeed = async (db: NonNullable<App.Locals['db']>) => {
 const handler: RequestHandler = async ({ locals, platform, request, url }) => {
 	const secret = platform?.env?.SEED_SECRET as string | undefined;
 	const token = request.headers.get('x-seed-secret') ?? url.searchParams.get('token');
-	const db = assertSeedAccess({ locals, secret, token });
-	return runSeed(db);
+	const db = locals.db ?? platform?.env.DB;
+	if (!db) throw error(500, 'Layanan data tidak tersedia');
+
+	const { user } = requireMaintenanceAccess({
+		locals: { ...locals, db },
+		secret,
+		token,
+		secretName: 'SEED_SECRET'
+	});
+
+	const response = await runSeed(db);
+	logActivity(db, 'ADMIN_SEED_DEMO_USERS', {
+		userId: user.id,
+		userEmail: user.email,
+		ipAddress: getRequestIp(request),
+		metadata: { emails: ['admin@santrionline.com', 'ustadz@santrionline.com', 'santri@santrionline.com'] },
+		waitUntil: platform?.context?.waitUntil
+	});
+	return response;
 };
 
 export const POST: RequestHandler = handler;

@@ -19,6 +19,16 @@ Roadmap ini disusun dari kondisi repo saat ini. Urutannya sengaja dimulai dari p
 | Docs sinkron | README, changelog, dan docs audit konsisten dengan kode | Salah tafsir tim / user baru |
 | Legacy alias | Catat dan kunci route alias yang hanya redirect | Duplikasi navigasi dan kebingungan |
 
+Status implementasi:
+
+- `api/admin/migrate` dan `api/seed-admin` sudah dikunci melalui helper maintenance: superadmin-only, secret wajib di production, dan masuk `system_logs`.
+- Endpoint `api/kitab/tanya` sudah punya role boundary, batas panjang pertanyaan, rate limit per user, dan audit log tanpa menyimpan isi pertanyaan.
+- Generator AI admin yang mahal (`generate-thumbnail`, `generate-tts-id`, `generate-tts-ar`) sudah memakai rate limit reusable.
+- Shortlink analytics memakai kategori aktif dan click-log throttle per slug+IP hash untuk mengurangi abuse tulis analytics.
+- Akses CMS factory dipersempit ke admin/superadmin.
+- Placeholder `/kitab/coming-soon` dikunci sebagai redirect ke katalog `/kitab`.
+- Link publik ke setoran sudah diarahkan ke jalur canonical `/tpq/akademik/*`; alias lama tetap redirect role-aware.
+
 Kriteria selesai fase ini:
 
 - Tidak ada lagi ambiguity besar antara schema runtime dan schema migration.
