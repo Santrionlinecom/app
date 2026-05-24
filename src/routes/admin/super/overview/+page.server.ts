@@ -316,6 +316,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		digitalCommerce.paymentMethods.find((payment) => payment.id === editingPaymentMethodId) ?? null;
 
 	return {
+		hideChrome: true,
 		stats: {
 			totalInstitutions,
 			totalUsers,

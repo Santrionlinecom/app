@@ -1493,7 +1493,7 @@ $: if (pathname !== previousPathname) {
 		</div>
 	{/if}
 
-	<main class={`container mx-auto max-w-6xl px-4 py-8 md:pb-10 ${hidePageChrome ? 'pb-8' : 'pb-24'}`}>
+	<main class={hidePageChrome ? 'min-h-screen' : 'container mx-auto max-w-6xl px-4 py-8 pb-24 md:pb-10'}>
 		<slot />
 	</main>
 
