@@ -1,30 +1,8 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
-	import DynastyMapLibre from '$lib/components/DynastyMapLibre.svelte';
+	import DynastyTerritoryMap from '$lib/components/DynastyTerritoryMap.svelte';
 	import { islamicDynasties } from '$lib/data/dinasti';
 
 	const orderedDynasties = [...islamicDynasties].sort((a, b) => a.startYearCE - b.startYearCE);
-
-	let activeDynastyKey: string | null = null;
-	let activeDynasty = null as (typeof orderedDynasties)[number] | null;
-	let activeDynastyLabel = 'Pilih wilayah di peta';
-
-	$: activeDynasty = orderedDynasties.find((dynasty) => dynasty.slug === activeDynastyKey) ?? null;
-	$: activeDynastyLabel =
-		activeDynasty?.name ??
-		(activeDynastyKey === 'khulafaur-rasyidin' ? 'Khulafaur Rasyidin' : 'Pilih wilayah di peta');
-
-	const selectDynasty = (key: string, scrollToCard = true) => {
-		activeDynastyKey = key;
-
-		if (!browser || !scrollToCard) return;
-
-		requestAnimationFrame(() => {
-			document.getElementById(key)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		});
-	};
-
-	const isDynastyActive = (slug: string) => activeDynastyKey === slug;
 </script>
 
 <svelte:head>
@@ -67,31 +45,6 @@
 		</div>
 	</section>
 
-	<section class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-		<div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Peta Interaktif</p>
-				<h2 class="mt-2 text-2xl font-semibold text-slate-900">Wilayah dinasti di atas tile historis</h2>
-				<p class="mt-2 max-w-3xl text-sm leading-7 text-slate-600">
-					Gunakan zoom, pan, dan klik wilayah untuk menyorot dinasti. Tile dasar memakai OpenHistoricalMap,
-					dengan polygon approximate untuk membaca wilayah inti secara cepat.
-				</p>
-			</div>
-			<div class="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-				<span class="font-semibold text-slate-900">Aktif:</span>
-				{activeDynastyLabel}
-			</div>
-		</div>
-
-		<div class="mt-5 h-[500px] w-full overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-950">
-			{#if browser}
-				<DynastyMapLibre {activeDynastyKey} onSelectDynasty={(key) => selectDynasty(key)} />
-			{:else}
-				<div class="grid h-full place-items-center text-sm font-semibold text-white/70">Memuat peta...</div>
-			{/if}
-		</div>
-	</section>
-
 	<section class="space-y-5">
 		<div>
 			<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Urutan Kronologis</p>
@@ -102,11 +55,7 @@
 			{#each orderedDynasties as dynasty}
 				<article
 					id={dynasty.slug}
-					class={`rounded-[1.75rem] border bg-white p-6 shadow-sm transition ${
-						isDynastyActive(dynasty.slug)
-							? 'border-amber-300 bg-amber-50/40 ring-2 ring-amber-200'
-							: 'border-slate-200'
-					}`}
+					class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm"
 				>
 					<div class="grid gap-5 lg:grid-cols-[0.22fr,0.78fr]">
 						<div class="rounded-3xl bg-slate-50 p-5 text-center">
@@ -125,18 +74,6 @@
 								<span class="rounded-full bg-sky-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700">
 									{dynasty.periodAH}
 								</span>
-								<button
-									type="button"
-									class={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] transition ${
-										isDynastyActive(dynasty.slug)
-											? 'bg-amber-500 text-white'
-											: 'bg-amber-100 text-amber-800 hover:bg-amber-200'
-									}`}
-									aria-pressed={isDynastyActive(dynasty.slug)}
-									on:click={() => selectDynasty(dynasty.slug, false)}
-								>
-									Sorot peta
-								</button>
 							</div>
 
 							<h3 class="mt-4 text-2xl font-semibold text-slate-900">{dynasty.name}</h3>
@@ -157,6 +94,7 @@
 								</div>
 							</div>
 
+							<DynastyTerritoryMap {dynasty} />
 						</div>
 					</div>
 				</article>
