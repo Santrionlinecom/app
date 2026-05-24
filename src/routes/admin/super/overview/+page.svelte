@@ -69,6 +69,9 @@
 		{ value: '30d', label: '30 Hari' }
 	];
 
+	const santriOnlineIconUrl =
+		'https://files.santrionline.com/ICON%20SANTRI%20ONLINE%20COM%20kecil%20(1).png';
+
 	const iconPaths = {
 		dashboard: 'M3 13h8V3H3v10Zm10 8h8V11h-8v10ZM3 21h8v-6H3v6Zm10-12h8V3h-8v6Z',
 		building:
@@ -663,7 +666,7 @@
 <div class="super-admin-shell min-h-screen bg-so-cream text-so-ink lg:grid lg:grid-cols-[276px_minmax(0,1fr)]">
 	<aside class="hidden min-h-screen bg-gradient-to-b from-so-green-3 via-so-green to-[#07351f] p-5 text-white lg:sticky lg:top-0 lg:flex lg:flex-col">
 		<a href="/admin/super/overview" class="flex items-center gap-3">
-			<img src="/logo-santri.png" alt="SantriOnline" class="h-11 w-11 rounded-xl bg-white/10 p-1.5" />
+			<img src={santriOnlineIconUrl} alt="SantriOnline" class="h-11 w-11 object-contain" />
 			<div>
 				<p class="font-display text-xl font-bold leading-none">SantriOnline</p>
 				<p class="text-xs font-semibold text-white/65">Super Admin</p>
@@ -724,7 +727,7 @@
 			<aside class="relative h-full w-[286px] bg-gradient-to-b from-so-green-3 via-so-green to-[#07351f] p-5 text-white shadow-2xl">
 				<div class="flex items-center justify-between">
 					<a href="/admin/super/overview" class="flex items-center gap-3" on:click={() => (mobileSidebarOpen = false)}>
-						<img src="/logo-santri.png" alt="SantriOnline" class="h-10 w-10 rounded-xl bg-white/10 p-1.5" />
+						<img src={santriOnlineIconUrl} alt="SantriOnline" class="h-10 w-10 object-contain" />
 						<div>
 							<p class="font-display text-lg font-bold leading-none">SantriOnline</p>
 							<p class="text-xs text-white/65">Super Admin</p>
