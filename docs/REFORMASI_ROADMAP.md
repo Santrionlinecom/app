@@ -45,6 +45,13 @@ Kriteria selesai fase ini:
 | Hafalan mandiri | Murojaah dan checklist surah dipisahkan dari jalur resmi | Data latihan tercampur dengan data resmi |
 | Kalender kegiatan | Agenda, catatan, dan reminder lebih rapi | Catatan pribadi vs lembaga kabur |
 
+Status implementasi:
+
+- Dashboard utama TPQ sudah menjadi satu pintu untuk setoran hari ini, perlu review, santri aktif, progres hafalan, rapor/sertifikat, dan agenda lembaga.
+- Ringkasan TPQ di dashboard membaca jalur canonical `tpq_setoran` dengan scope per `institution_id` dan filter role admin/koordinator/guru/santri.
+- Menu guru diarahkan ke input dan riwayat setoran; review hanya tampil untuk admin/koordinator.
+- Alias lama `/akademik`, `/dashboard/setoran-hari-ini`, dan `/dashboard/review-setoran` tinggal server-only redirect role-aware tanpa UI lama.
+
 Kriteria selesai fase ini:
 
 - TPQ menjadi surface paling jelas di aplikasi.

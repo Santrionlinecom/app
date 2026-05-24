@@ -91,7 +91,7 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 
 | Path | Status | Catatan |
 |---|---|---|
-| `/(app)/dashboard` | LIVE | Dashboard utama, role-aware. |
+| `/(app)/dashboard` | LIVE | Dashboard utama, role-aware; untuk TPQ menjadi satu pintu setoran, review, progres, rapor/sertifikat, dan agenda. |
 | `/(app)/dashboard/diniyah` | LIVE | Submenu dashboard. |
 | `/(app)/dashboard/halaqoh` | LIVE | Submenu dashboard. |
 | `/(app)/dashboard/jadwal` | LIVE | Jadwal kegiatan. |
@@ -103,11 +103,11 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 | `/(app)/dashboard/hafalan-belum-lancar` | LIVE | Weak memorization report. |
 | `/(app)/dashboard/pencapaian-hafalan` | LIVE | Achievement summary. |
 | `/(app)/dashboard/rapor-hafalan` | LIVE | Rapor view. |
-| `/(app)/dashboard/review-setoran` | DUPLICATE | Redirect role-aware ke TPQ academic review/riwayat. |
+| `/(app)/dashboard/review-setoran` | DUPLICATE | Server-only redirect role-aware ke TPQ academic review/riwayat. |
 | `/(app)/dashboard/sertifikat` | LIVE | Certificate view. |
-| `/(app)/dashboard/setoran-hari-ini` | DUPLICATE | Redirect ke TPQ academic canonical route. |
+| `/(app)/dashboard/setoran-hari-ini` | DUPLICATE | Server-only redirect role-aware ke TPQ academic canonical route. |
 | `/(app)/dashboard/ujian-tahfidz` | LIVE | Tahfidz exam page. |
-| `/(app)/akademik` | DUPLICATE | Alias redirect ke `tpq/akademik`. |
+| `/(app)/akademik` | DUPLICATE | Server-only alias redirect ke `tpq/akademik`. |
 | `/(app)/keuangan` | UNUSED | Legacy community finance surface. |
 | `/(app)/org/[slug]/ummah` | UNUSED | Legacy community finance/program hub. |
 | `/(app)/tpq/akademik` | LIVE | Canonical TPQ academic hub. |
@@ -225,10 +225,10 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 
 | Path | Status | Catatan |
 |---|---|---|
-| `/akademik` | DUPLICATE | Alias ke TPQ academic hub. |
+| `/akademik` | DUPLICATE | Server-only alias ke TPQ academic hub. |
 | `/hafalan-mandiri` | DUPLICATE | Alias ke dashboard hafalan mandiri. |
-| `/dashboard/review-setoran` | DUPLICATE | Alias role-aware ke TPQ academic review/riwayat. |
-| `/dashboard/setoran-hari-ini` | DUPLICATE | Alias ke TPQ academic route canonical. |
+| `/dashboard/review-setoran` | DUPLICATE | Server-only alias role-aware ke TPQ academic review/riwayat. |
+| `/dashboard/setoran-hari-ini` | DUPLICATE | Server-only alias role-aware ke TPQ academic route canonical. |
 | `/pondok/*` | UNUSED | Legacy shell, disabled by config. |
 | `/masjid/*` | UNUSED | Legacy shell, disabled by config. |
 | `/musholla/*` | UNUSED | Legacy shell, disabled by config. |

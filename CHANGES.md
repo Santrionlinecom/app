@@ -1,5 +1,11 @@
 # 📝 Changes
 
+## Fase 2 TPQ Akademik
+- Dashboard TPQ dirapikan menjadi satu pintu untuk setoran hari ini, perlu review, santri aktif, progres hafalan, rapor/sertifikat, dan agenda lembaga.
+- Ringkasan dashboard TPQ memakai data canonical `tpq_setoran` dengan scope per lembaga dan role pengguna.
+- Menu guru tidak lagi mengarah ke halaman review yang tidak boleh diakses; guru diarahkan ke input/riwayat setoran.
+- Alias lama `/akademik`, `/dashboard/setoran-hari-ini`, dan `/dashboard/review-setoran` tinggal server-only redirect role-aware tanpa UI halaman lama.
+
 ## Roadmap Pondasi dan Security Hardening
 - Endpoint maintenance `/api/admin/migrate` dan `/api/seed-admin` dikunci menjadi superadmin-only, membutuhkan secret di production, dan mencatat aktivitas ke `system_logs`.
 - Endpoint `tanya kitab` kini role-bound, membatasi panjang pertanyaan, memakai rate limit per user, dan mencatat audit tanpa menyimpan isi pertanyaan.

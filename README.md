@@ -21,6 +21,7 @@ Folder `src-tauri/` tersedia untuk companion desktop app, tetapi aplikasi web te
 - Dashboard role-based untuk `admin`, `koordinator`, `ustadz`, `ustadzah`, `santri`, dan `alumni`
 - Hafalan mandiri di `/dashboard/hafalan-mandiri`
 - Workflow TPQ akademik di `/tpq/akademik/setoran`, `/tpq/akademik/review`, dan `/tpq/akademik/riwayat`
+- Dashboard TPQ satu pintu untuk setoran hari ini, review, santri aktif, progres hafalan, rapor/sertifikat, dan agenda
 - Pencapaian hafalan dan statistik progres
 - Penerbitan sertifikat PDF yang disimpan ke R2
 - Halaman publik TPQ dan alur pendaftaran lembaga
@@ -73,7 +74,7 @@ Endpoint pengecekan binding:
 
 - Semua data tenant harus di-scope dengan `org_id` atau `institution_id`.
 - Route kanonis workflow TPQ adalah `/tpq/akademik/*`.
-- Route lama seperti `/dashboard/setoran-hari-ini` dan `/dashboard/review-setoran` hanya wrapper redirect.
+- Route lama seperti `/akademik`, `/dashboard/setoran-hari-ini`, dan `/dashboard/review-setoran` hanya server-only redirect role-aware.
 - Sertifikat disimpan di R2, metadata-nya ada di D1.
 - Endpoint utilitas seperti `/api/admin/migrate` dan `/api/seed-admin` hanya untuk maintenance: superadmin-only, secret wajib di production, dan aktivitasnya dicatat di `system_logs`.
 - Endpoint AI yang mahal harus memakai quota/rate limit dan tidak boleh menjadi surface publik bebas.

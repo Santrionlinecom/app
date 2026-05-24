@@ -11,6 +11,13 @@ import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logg
 import { assertLoggedIn, assertOrgMember, assertOrgRoleAllowed } from '$lib/server/auth/rbac';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import { listOrgAssets } from '$lib/server/org-assets';
+import {
+	canInputSetoran,
+	canReviewSetoran,
+	canViewSetoranHistory,
+	normalizeAppRole,
+	todayIsoDate
+} from '$lib/server/tpq-academic';
 import * as XLSX from 'xlsx';
 
 const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
@@ -122,6 +129,44 @@ type CommunityScheduleItem = {
 	createdAt: number;
 };
 
+type TpqRecentSetoranItem = {
+	id: string;
+	date: string;
+	status: string;
+	type: string;
+	surah: string;
+	ayatFrom: number;
+	ayatTo: number;
+	santriName: string | null;
+	ustadzName: string | null;
+};
+
+type TpqDashboardData = {
+	canonicalHref: string;
+	canInputSetoran: boolean;
+	canReviewSetoran: boolean;
+	canViewSetoranHistory: boolean;
+	today: {
+		total: number;
+		submitted: number;
+		approved: number;
+		rejected: number;
+	};
+	pendingReview: number;
+	activeSantri: number;
+	approvedAyah: number;
+	progressPercent: number;
+	certificateCount: number;
+	rapor: {
+		total: number;
+		lulus: number;
+		proses: number;
+		perluPerbaikan: number;
+	};
+	agenda: CommunityScheduleItem[];
+	recentSetoran: TpqRecentSetoranItem[];
+};
+
 const fetchCommunitySchedule = async (
 	db: D1Database,
 	user: { id: string; role: string },
@@ -158,6 +203,329 @@ const fetchCommunitySchedule = async (
 		.all<CommunityScheduleItem>();
 
 	return results ?? [];
+};
+
+const fetchTpqAgenda = async (
+	db: D1Database,
+	user: { id: string; role: string },
+	orgId: string,
+	role: string
+): Promise<CommunityScheduleItem[]> => {
+	const start = new Date();
+	const end = new Date();
+	end.setDate(end.getDate() + 14);
+	const startDate = toISODate(start);
+	const endDate = toISODate(end);
+
+	const conditions = ['cn.event_date BETWEEN ? AND ?', 'u.org_id = ?'];
+	const params: (string | number)[] = [startDate, endDate, orgId];
+
+	if (role === 'santri' || role === 'alumni') {
+		conditions.push("(u.role IN ('admin', 'koordinator', 'ustadz', 'ustadzah') OR cn.user_id = ?)");
+		params.push(user.id);
+	}
+
+	try {
+		const { results } = await db
+			.prepare(
+				`SELECT cn.id,
+				        cn.title,
+				        cn.content,
+				        cn.event_date as eventDate,
+				        cn.created_at as createdAt
+				 FROM calendar_notes cn
+				 JOIN users u ON u.id = cn.user_id
+				 WHERE ${conditions.join(' AND ')}
+				 ORDER BY cn.event_date ASC, cn.created_at ASC
+				 LIMIT 5`
+			)
+			.bind(...params)
+			.all<CommunityScheduleItem>();
+
+		return results ?? [];
+	} catch (err) {
+		if (!isMissingTableError(err)) {
+			console.error('dashboard tpq agenda error', err);
+		}
+		return [];
+	}
+};
+
+const buildTpqSetoranScope = (params: {
+	role: string;
+	userId: string;
+	orgId: string;
+	alias?: string;
+}) => {
+	const alias = params.alias ? `${params.alias}.` : '';
+	const conditions = [`${alias}institution_id = ?`];
+	const values: (string | number)[] = [params.orgId];
+
+	if (params.role === 'ustadz' || params.role === 'ustadzah') {
+		conditions.push(
+			`EXISTS (
+				SELECT 1
+				FROM santri_ustadz su
+				WHERE su.santri_id = ${alias}santri_user_id
+				  AND su.ustadz_id = ?
+				  AND su.org_id = ${alias}institution_id
+			)`
+		);
+		values.push(params.userId);
+	} else if (params.role === 'santri' || params.role === 'alumni') {
+		conditions.push(`${alias}santri_user_id = ?`);
+		values.push(params.userId);
+	} else if (params.role !== 'admin' && params.role !== 'koordinator') {
+		conditions.push('1 = 0');
+	}
+
+	return { conditions, values };
+};
+
+const buildTpqSantriScope = (params: {
+	role: string;
+	userId: string;
+	orgId: string;
+	alias?: string;
+}) => {
+	const alias = params.alias ? `${params.alias}.` : '';
+	const conditions = [`${alias}org_id = ?`, `${alias}role IN ('santri', 'alumni')`, `(${alias}org_status IS NULL OR ${alias}org_status = 'active')`];
+	const values: (string | number)[] = [params.orgId];
+	const joins: string[] = [];
+
+	if (params.role === 'ustadz' || params.role === 'ustadzah') {
+		joins.push(`JOIN santri_ustadz su ON su.santri_id = ${alias}id`);
+		conditions.push('su.ustadz_id = ?', 'su.org_id = ?');
+		values.push(params.userId, params.orgId);
+	} else if (params.role === 'santri' || params.role === 'alumni') {
+		conditions.push(`${alias}id = ?`);
+		values.push(params.userId);
+	} else if (params.role !== 'admin' && params.role !== 'koordinator') {
+		conditions.push('1 = 0');
+	}
+
+	return { joins, conditions, values };
+};
+
+const countTpqActiveSantri = async (db: D1Database, params: { role: string; userId: string; orgId: string }) => {
+	try {
+		const scope = buildTpqSantriScope({ ...params, alias: 'u' });
+		const row = await db
+			.prepare(
+				`SELECT COUNT(DISTINCT u.id) as total
+				 FROM users u
+				 ${scope.joins.join('\n')}
+				 WHERE ${scope.conditions.join(' AND ')}`
+			)
+			.bind(...scope.values)
+			.first<{ total: number | null }>();
+		return row?.total ?? 0;
+	} catch (err) {
+		if (!isMissingTableError(err)) console.error('dashboard tpq active santri error', err);
+		return 0;
+	}
+};
+
+const countTpqApprovedAyah = async (db: D1Database, params: { role: string; userId: string; orgId: string }) => {
+	try {
+		const santriScope = buildTpqSantriScope({ ...params, alias: 'u' });
+		const row = await db
+			.prepare(
+				`SELECT COUNT(hp.id) as total
+				 FROM hafalan_progress hp
+				 JOIN users u ON u.id = hp.user_id
+				 ${santriScope.joins.join('\n')}
+				 WHERE hp.status = 'disetujui'
+				   AND ${santriScope.conditions.join(' AND ')}`
+			)
+			.bind(...santriScope.values)
+			.first<{ total: number | null }>();
+		return row?.total ?? 0;
+	} catch (err) {
+		if (!isMissingTableError(err)) console.error('dashboard tpq approved ayah error', err);
+		return 0;
+	}
+};
+
+const loadTpqRaporSummary = async (db: D1Database, params: { role: string; userId: string; orgId: string }) => {
+	try {
+		const santriScope = buildTpqSantriScope({ ...params, alias: 'u' });
+		const row = await db
+			.prepare(
+				`SELECT
+					COUNT(p.id) as total,
+					SUM(CASE WHEN p.status = 'lulus' THEN 1 ELSE 0 END) as lulus,
+					SUM(CASE WHEN p.status = 'proses' THEN 1 ELSE 0 END) as proses,
+					SUM(CASE WHEN p.status = 'perlu_perbaikan' THEN 1 ELSE 0 END) as perluPerbaikan
+				 FROM hafalan_pencapaian p
+				 JOIN hafalan_item i ON i.id = p.item_id
+				 JOIN hafalan_kategori k ON k.id = i.kategori_id
+				 JOIN users u ON u.id = p.santri_id
+				 ${santriScope.joins.join('\n')}
+				 WHERE k.org_id = ?
+				   AND ${santriScope.conditions.join(' AND ')}`
+			)
+			.bind(params.orgId, ...santriScope.values)
+			.first<{
+				total: number | null;
+				lulus: number | null;
+				proses: number | null;
+				perluPerbaikan: number | null;
+			}>();
+
+		return {
+			total: row?.total ?? 0,
+			lulus: row?.lulus ?? 0,
+			proses: row?.proses ?? 0,
+			perluPerbaikan: row?.perluPerbaikan ?? 0
+		};
+	} catch (err) {
+		if (!isMissingTableError(err)) console.error('dashboard tpq rapor summary error', err);
+		return { total: 0, lulus: 0, proses: 0, perluPerbaikan: 0 };
+	}
+};
+
+const countTpqCertificates = async (db: D1Database, params: { role: string; userId: string; orgId: string }) => {
+	try {
+		const santriScope = buildTpqSantriScope({ ...params, alias: 'u' });
+		const row = await db
+			.prepare(
+				`SELECT COUNT(c.id) as total
+				 FROM certificates c
+				 JOIN users u ON u.id = c.santri_id
+				 ${santriScope.joins.join('\n')}
+				 WHERE ${santriScope.conditions.join(' AND ')}`
+			)
+			.bind(...santriScope.values)
+			.first<{ total: number | null }>();
+		return row?.total ?? 0;
+	} catch (err) {
+		if (!isMissingTableError(err)) console.error('dashboard tpq certificates error', err);
+		return 0;
+	}
+};
+
+const loadTpqDashboardData = async (
+	db: D1Database,
+	params: { orgId: string; user: { id: string; role: string } }
+): Promise<TpqDashboardData> => {
+	const role = normalizeAppRole(params.user.role);
+	const today = todayIsoDate();
+	const canInput = canInputSetoran(role);
+	const canReview = canReviewSetoran(role);
+	const canViewHistory = canViewSetoranHistory(role);
+	const canonicalHref = canInput ? '/tpq/akademik/setoran' : canReview ? '/tpq/akademik/review' : '/tpq/akademik/riwayat';
+
+	const empty: TpqDashboardData = {
+		canonicalHref,
+		canInputSetoran: canInput,
+		canReviewSetoran: canReview,
+		canViewSetoranHistory: canViewHistory,
+		today: { total: 0, submitted: 0, approved: 0, rejected: 0 },
+		pendingReview: 0,
+		activeSantri: 0,
+		approvedAyah: 0,
+		progressPercent: 0,
+		certificateCount: 0,
+		rapor: { total: 0, lulus: 0, proses: 0, perluPerbaikan: 0 },
+		agenda: [],
+		recentSetoran: []
+	};
+
+	try {
+		const setoranScope = buildTpqSetoranScope({
+			role,
+			userId: params.user.id,
+			orgId: params.orgId
+		});
+		const todayScope = {
+			conditions: [...setoranScope.conditions, 'date = ?'],
+			values: [...setoranScope.values, today]
+		};
+		const todaySummary =
+			(await db
+				.prepare(
+					`SELECT
+						COUNT(*) as total,
+						SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted,
+						SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+						SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
+					 FROM tpq_setoran
+					 WHERE ${todayScope.conditions.join(' AND ')}`
+				)
+				.bind(...todayScope.values)
+				.first<{
+					total: number | null;
+					submitted: number | null;
+					approved: number | null;
+					rejected: number | null;
+				}>()) ?? empty.today;
+		const pendingReview =
+			(await db
+				.prepare(
+					`SELECT COUNT(*) as total
+					 FROM tpq_setoran
+					 WHERE ${setoranScope.conditions.join(' AND ')}
+					   AND status = 'submitted'`
+				)
+				.bind(...setoranScope.values)
+				.first<{ total: number | null }>())?.total ?? 0;
+		const recentSetoranScope = buildTpqSetoranScope({
+			role,
+			userId: params.user.id,
+			orgId: params.orgId,
+			alias: 's'
+		});
+		const { results: recentSetoran } = await db
+			.prepare(
+				`SELECT s.id,
+				        s.date,
+				        s.status,
+				        s.type,
+				        s.surah,
+				        s.ayat_from as ayatFrom,
+				        s.ayat_to as ayatTo,
+				        COALESCE(us.username, us.email) as santriName,
+				        COALESCE(ut.username, ut.email) as ustadzName
+				 FROM tpq_setoran s
+				 LEFT JOIN users us ON us.id = s.santri_user_id
+				 LEFT JOIN users ut ON ut.id = s.ustadz_user_id
+				 WHERE ${recentSetoranScope.conditions.join(' AND ')}
+				 ORDER BY s.date DESC, s.created_at DESC
+				 LIMIT 5`
+			)
+			.bind(...recentSetoranScope.values)
+			.all<TpqRecentSetoranItem>();
+		const [activeSantri, approvedAyah, certificateCount, rapor, agenda] = await Promise.all([
+			countTpqActiveSantri(db, { role, userId: params.user.id, orgId: params.orgId }),
+			countTpqApprovedAyah(db, { role, userId: params.user.id, orgId: params.orgId }),
+			countTpqCertificates(db, { role, userId: params.user.id, orgId: params.orgId }),
+			loadTpqRaporSummary(db, { role, userId: params.user.id, orgId: params.orgId }),
+			fetchTpqAgenda(db, params.user, params.orgId, role)
+		]);
+		const totalAyahTarget = Math.max(1, activeSantri * 6236);
+
+		return {
+			...empty,
+			today: {
+				total: todaySummary.total ?? 0,
+				submitted: todaySummary.submitted ?? 0,
+				approved: todaySummary.approved ?? 0,
+				rejected: todaySummary.rejected ?? 0
+			},
+			pendingReview,
+			activeSantri,
+			approvedAyah,
+			progressPercent: activeSantri ? Math.round((approvedAyah / totalAyahTarget) * 10000) / 100 : 0,
+			certificateCount,
+			rapor,
+			agenda,
+			recentSetoran: recentSetoran ?? []
+		};
+	} catch (err) {
+		if (!isMissingTableError(err)) console.error('dashboard tpq summary error', err);
+		return empty;
+	}
 };
 
 const requireCommunityContext = async (locals: App.Locals) => {
@@ -214,6 +582,13 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 	const orgType = orgProfile?.type ?? null;
 	const isEducationalOrg = isEducationalOrgType(orgType);
 	const isCommunityOrg = isCommunityOrgType(orgType);
+	const tpqDashboard =
+		orgType === 'tpq' && orgId
+			? await loadTpqDashboardData(db, {
+					orgId,
+					user: { id: user.id, role: user.role ?? '' }
+				})
+			: null;
 	const isCommunityMember = isCommunityOrg || role === 'jamaah';
 	const canManageCommunity = isCommunityOrg && allowedRoles.has(role);
 	const communityManagerData =
@@ -239,8 +614,8 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 	};
 
 	// Load data based on user role
-	if (role === 'admin' || isSuperAdminRole(role)) {
-		// Admin: list all users + santri & surah options
+	if (role === 'admin' || role === 'koordinator' || isSuperAdminRole(role)) {
+		// Admin/koordinator: list scoped users + santri & surah options
 		const baseQuery = 'SELECT id, username, email, role, created_at FROM users';
 		const { results } = await (scopedOrgId
 			? db.prepare(`${baseQuery} WHERE org_id = ? ORDER BY created_at DESC`).bind(scopedOrgId)
@@ -272,6 +647,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			org: orgProfile,
 			isEducationalOrg,
 			isCommunityOrg,
+			tpqDashboard,
 			users: (results ?? []) as {
 				id: string;
 				username: string | null;
@@ -312,6 +688,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 				org: orgProfile,
 				isEducationalOrg,
 				isCommunityOrg,
+				tpqDashboard,
 				canManageCommunity,
 				...communityWidgets,
 				...communityManagerData
@@ -325,6 +702,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			org: orgProfile,
 			isEducationalOrg,
 			isCommunityOrg,
+			tpqDashboard,
 			canManageCommunity,
 			...communityManagerData,
 			pending: await getPendingSubmissions(db, { orgId: scopedOrgId, ustadzId: locals.user.id }),
@@ -350,6 +728,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			org: orgProfile,
 			isEducationalOrg,
 			isCommunityOrg,
+			tpqDashboard,
 			canManageCommunity,
 			...communityManagerData,
 			checklist,
@@ -371,6 +750,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 		org: orgProfile,
 		isEducationalOrg,
 		isCommunityOrg,
+		tpqDashboard,
 		canManageCommunity,
 		...communityManagerData,
 		checklist: [],

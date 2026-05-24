@@ -18,7 +18,7 @@ SantriOnline saat ini bukan satu aplikasi tunggal yang rapi, melainkan kumpulan 
 | Area | Status audit | Catatan singkat |
 |---|---|---|
 | Auth dan RBAC | LIVE | Lucia + session, role lembaga, super admin, dan feature gating sudah jelas. |
-| TPQ akademik | LIVE | Alur setoran, review, riwayat, rapor, sertifikat, dan dashboard sudah terhubung. |
+| TPQ akademik | LIVE | Alur setoran, review, riwayat, rapor, sertifikat, agenda, dan dashboard satu pintu sudah terhubung. |
 | Shortlink | HARDENED | Redirect publik + analytics + admin CRUD + kategori sudah lengkap; click-log punya throttle untuk mengurangi abuse tulis analytics. |
 | Kitab digital dan RAG | LIVE / PARTIAL | Catalog, reader, import, dan tanya kitab ada, tapi biaya AI perlu kontrol. |
 | Buku digital, coin, DRM | LIVE / PARTIAL | Jalur monetisasi sudah ada, namun sebagian masih manual-operasional. |
@@ -92,7 +92,7 @@ Beberapa tabel penting dibuat lewat helper server, bukan hanya migration, teruta
 
 - **LIVE/HARDENED**: TPQ akademik, shortlink analytics, kitab catalog, buku digital, digital store, auth/RBAC, media upload, reports, logs, traffic.
 - **PARTIAL**: OpenITI import, RAG tanya kitab, coin topup flow, AI content factory, beberapa jalur export/report yang masih bergantung data runtime.
-- **DUPLICATE**: `/akademik`, `/hafalan-mandiri`, `/setoran-hari-ini`, `/review-setoran`, serta beberapa alias navigasi dashboard yang hanya memindahkan user ke jalur canonical.
+- **DUPLICATE**: `/akademik`, `/hafalan-mandiri`, `/setoran-hari-ini`, `/review-setoran`, serta beberapa alias navigasi dashboard yang hanya memindahkan user ke jalur canonical. Alias akademik lama sudah server-only redirect tanpa UI halaman lama.
 - **UNUSED**: surface komunitas non-TPQ yang masih ada di kode tetapi diblok config dan cleanup migration.
 - **NEEDS MIGRATION**: tabel yang lahir dari helper runtime tapi belum terlihat jelas di migration historis repo ini.
 - **NEEDS SECURITY REVIEW**: import kitab dan upload/checkout yang menerima file atau traffic publik. Endpoint migrasi/admin seed, generator AI mahal, dan shortlink click-log sudah masuk status hardened, tetapi tetap perlu dipantau sebagai surface berisiko tinggi.

@@ -25,6 +25,7 @@
 
 	let role = '';
 	let isAdmin = false;
+	let isCoordinator = false;
 	let isUstadz = false;
 	let isStaff = false;
 	let isStudent = false;
@@ -44,6 +45,12 @@
 	let canManageCommunity = false;
 	let isCommunityManager = false;
 	let assets: AssetRow[] = [];
+	let tpqDashboard: any = null;
+	let tpqCards: TpqSummaryCard[] = [];
+	let tpqRecentSetoran: any[] = [];
+	let tpqPendingSetoran: any[] = [];
+	let tpqAgenda: any[] = [];
+	let academicPrimaryHref = '/tpq/akademik/riwayat';
 
 	let assetId = '';
 	let assetName = '';
@@ -58,6 +65,7 @@
 
 	type QuickLink = { label: string; desc: string; href: string; tone: string };
 	type StatHighlight = { label: string; value: string; href: string };
+	type TpqSummaryCard = { label: string; value: string; desc: string; href: string; tone: string };
 	type AssetRow = {
 		id: string;
 		name: string;
@@ -74,15 +82,15 @@
 
 	let surahLookup = new Map<number, string>();
 	let studentHighlights: any[] = [];
-	let pendingHighlights: any[] = [];
 	let seriesBars: { label: string; value: number; height: number }[] = [];
 	let topChecklist: any[] = [];
 
 	$: {
 		role = data?.role ?? '';
 		isAdmin = role === 'admin' || role.replace('-', '_').toUpperCase() === 'SUPER_ADMIN';
+		isCoordinator = role === 'koordinator';
 		isUstadz = role === 'ustadz' || role === 'ustadzah';
-		isStaff = isAdmin || isUstadz;
+		isStaff = isAdmin || isCoordinator || isUstadz;
 		isStudent = role === 'santri' || role === 'alumni';
 		isEducationalOrg = Boolean(data?.isEducationalOrg);
 		isCommunityOrg = Boolean(data?.isCommunityOrg);
@@ -100,6 +108,11 @@
 			canManageCommunity = Boolean(data?.canManageCommunity);
 			isCommunityManager = canManageCommunity;
 			assets = (data?.assets ?? []) as AssetRow[];
+			tpqDashboard = data?.tpqDashboard ?? null;
+			tpqRecentSetoran = tpqDashboard?.recentSetoran ?? [];
+			tpqPendingSetoran = tpqRecentSetoran.filter((item: any) => item.status === 'submitted');
+			tpqAgenda = tpqDashboard?.agenda ?? [];
+			academicPrimaryHref = tpqDashboard?.canonicalHref ?? '/tpq/akademik/riwayat';
 
 		const surahSource = data?.surahs?.length ? data.surahs : SURAH_DATA;
 		surahLookup = new Map(surahSource.map((s: any) => [s.number, s.name]));
@@ -107,7 +120,6 @@
 		studentHighlights = [...students]
 			.sort((a: any, b: any) => (b.approvedAyah ?? 0) - (a.approvedAyah ?? 0))
 			.slice(0, 6);
-		pendingHighlights = pending.slice(0, 6);
 
 		const seriesMax = Math.max(1, ...series.map((item: any) => item.approved ?? 0));
 		seriesBars = series.map((item: any) => ({
@@ -120,6 +132,57 @@
 			.filter((row: any) => (row.disetujui ?? 0) > 0)
 			.sort((a: any, b: any) => (b.disetujui ?? 0) - (a.disetujui ?? 0))
 			.slice(0, 6);
+
+		if (tpqDashboard) {
+			const canInput = Boolean(tpqDashboard.canInputSetoran);
+			const canReview = Boolean(tpqDashboard.canReviewSetoran);
+			tpqCards = [
+				{
+					label: 'Setoran hari ini',
+					value: String(tpqDashboard.today?.total ?? 0),
+					desc: `${tpqDashboard.today?.approved ?? 0} disetujui, ${tpqDashboard.today?.submitted ?? 0} menunggu`,
+					href: canInput ? '/tpq/akademik/setoran' : '/tpq/akademik/riwayat',
+					tone: 'from-emerald-50 to-teal-100 text-emerald-900'
+				},
+				{
+					label: 'Perlu review',
+					value: String(tpqDashboard.pendingReview ?? 0),
+					desc: canReview ? 'Menunggu keputusan koordinator/admin' : 'Menunggu review koordinator/admin',
+					href: canReview ? '/tpq/akademik/review' : '/tpq/akademik/riwayat',
+					tone: 'from-amber-50 to-orange-100 text-amber-900'
+				},
+				{
+					label: 'Santri aktif',
+					value: String(tpqDashboard.activeSantri ?? 0),
+					desc: isUstadz ? 'Santri dalam bimbingan Anda' : 'Santri aktif dalam lembaga',
+					href: '/dashboard/kelola-santri',
+					tone: 'from-sky-50 to-cyan-100 text-sky-900'
+				},
+				{
+					label: 'Progres hafalan',
+					value: `${tpqDashboard.progressPercent ?? 0}%`,
+					desc: `${tpqDashboard.approvedAyah ?? 0} ayat disetujui`,
+					href: '/dashboard/pencapaian-hafalan',
+					tone: 'from-lime-50 to-emerald-100 text-lime-900'
+				},
+				{
+					label: 'Rapor / sertifikat',
+					value: `${tpqDashboard.rapor?.lulus ?? 0} lulus`,
+					desc: `${tpqDashboard.certificateCount ?? 0} sertifikat tersimpan`,
+					href: isStudent ? '/dashboard/rapor-hafalan' : '/tpq/hafalan-rapor',
+					tone: 'from-violet-50 to-indigo-100 text-indigo-900'
+				},
+				{
+					label: 'Agenda',
+					value: String(tpqAgenda.length),
+					desc: 'Agenda lembaga 14 hari ke depan',
+					href: '/kalender',
+					tone: 'from-rose-50 to-pink-100 text-rose-900'
+				}
+			];
+		} else {
+			tpqCards = [];
+		}
 
 			if (isCommunityOrg) {
 				if (isCommunityManager) {
@@ -201,24 +264,24 @@
 						}
 					];
 				}
-			} else if (isStudent) {
+		} else if (isStudent) {
 			quickLinks = [
+				{
+					label: 'Riwayat Setoran',
+					desc: 'Lihat status setoran resmi',
+					href: '/tpq/akademik/riwayat',
+					tone: 'from-emerald-50 to-teal-100 text-emerald-800'
+				},
 				{
 					label: 'Pencapaian Hafalan',
 					desc: 'Lihat rekap setoran resmi',
 					href: '/dashboard/pencapaian-hafalan',
-					tone: 'from-emerald-50 to-teal-100 text-emerald-800'
+					tone: 'from-sky-50 to-indigo-100 text-indigo-800'
 				},
 				{
 					label: "Muroja'ah Mandiri",
 					desc: 'Catat latihan mandiri',
 					href: '/dashboard/hafalan-mandiri',
-					tone: 'from-sky-50 to-indigo-100 text-indigo-800'
-				},
-				{
-					label: 'Hafalan Belum Lancar',
-					desc: 'Daftar ayat yang perlu perhatian',
-					href: '/dashboard/hafalan-belum-lancar',
 					tone: 'from-amber-50 to-orange-100 text-amber-800'
 				}
 			];
@@ -241,13 +304,33 @@
 				}
 			];
 		} else if (isStaff) {
-			quickLinks = [
-				{
+			const staffAcademicLinks: QuickLink[] = [];
+			if (tpqDashboard?.canInputSetoran) {
+				staffAcademicLinks.push({
+					label: 'Input Setoran',
+					desc: 'Catat setoran resmi hari ini',
+					href: '/tpq/akademik/setoran',
+					tone: 'from-emerald-50 to-teal-100 text-emerald-800'
+				});
+			}
+			if (tpqDashboard?.canReviewSetoran) {
+				staffAcademicLinks.push({
 					label: 'Review Setoran',
 					desc: 'Validasi setoran santri',
 					href: '/tpq/akademik/review',
 					tone: 'from-amber-50 to-orange-100 text-amber-800'
-				},
+				});
+			} else {
+				staffAcademicLinks.push({
+					label: 'Riwayat Setoran',
+					desc: 'Pantau setoran bimbingan',
+					href: '/tpq/akademik/riwayat',
+					tone: 'from-amber-50 to-orange-100 text-amber-800'
+				});
+			}
+
+			quickLinks = [
+				...staffAcademicLinks.slice(0, 2),
 				{
 					label: 'Kelola Santri',
 					desc: 'Data santri dan status',
@@ -270,17 +353,17 @@
 			statHighlights = [
 				{
 					label: 'Setoran Menunggu',
-					value: String(pending.length),
-					href: '/tpq/akademik/review'
+					value: String(tpqDashboard?.pendingReview ?? pending.length),
+					href: tpqDashboard?.canReviewSetoran ? '/tpq/akademik/review' : '/tpq/akademik/riwayat'
 				},
 				{
 					label: 'Santri Aktif',
-					value: String(students.length),
+					value: String(tpqDashboard?.activeSantri ?? students.length),
 					href: '/dashboard/kelola-santri'
 				},
 				{
 					label: 'Total Ayat Disetujui',
-					value: String(approvedTotal),
+					value: String(tpqDashboard?.approvedAyah ?? approvedTotal),
 					href: '/dashboard/pencapaian-hafalan'
 				}
 			];
@@ -296,6 +379,18 @@
 			statHighlights = [];
 		}
 	}
+
+	const getSetoranStatusLabel = (status: string) => {
+		if (status === 'approved') return 'Disetujui';
+		if (status === 'rejected') return 'Perbaikan';
+		return 'Menunggu';
+	};
+
+	const getSetoranStatusClass = (status: string) => {
+		if (status === 'approved') return 'bg-emerald-100 text-emerald-700';
+		if (status === 'rejected') return 'bg-rose-100 text-rose-700';
+		return 'bg-amber-100 text-amber-700';
+	};
 
 	const getSurahName = (num: number) => surahLookup.get(num) ?? `Surah ${num}`;
 
@@ -386,13 +481,13 @@
 					<div class="flex-1 rounded-2xl bg-amber-50 px-4 py-3">
 						<p class="text-xs text-amber-700">Setoran menunggu</p>
 						<p class="text-2xl font-semibold text-amber-900 tabular-nums tracking-tight leading-tight">
-							{pending.length}
+							{tpqDashboard?.pendingReview ?? pending.length}
 						</p>
 					</div>
 					<div class="flex-1 rounded-2xl bg-teal-50 px-4 py-3">
 						<p class="text-xs text-teal-700">Santri aktif</p>
 						<p class="text-2xl font-semibold text-teal-900 tabular-nums tracking-tight leading-tight">
-							{students.length}
+							{tpqDashboard?.activeSantri ?? students.length}
 						</p>
 					</div>
 				{/if}
@@ -437,6 +532,94 @@
 			</div>
 		</div>
 	</section>
+
+	{#if isEducationalOrg && tpqDashboard}
+		<section class="fade-in rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur" style="animation-delay: 100ms;">
+			<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+				<div>
+					<p class="text-xs uppercase tracking-[0.3em] text-emerald-700">TPQ Akademik</p>
+					<h3 class="app-title mt-2 text-2xl font-semibold text-slate-900">Pusat Operasional TPQ</h3>
+					<p class="mt-2 max-w-2xl text-sm text-slate-600">
+						Satu pintu untuk setoran resmi, review, riwayat, rapor, sertifikat, dan agenda lembaga.
+					</p>
+				</div>
+				<div class="flex flex-wrap gap-2">
+					<a href={academicPrimaryHref} class="btn btn-sm btn-primary">Buka akademik</a>
+					<a href="/tpq/akademik/riwayat" class="btn btn-sm btn-outline">Riwayat</a>
+					<a href="/kalender" class="btn btn-sm btn-ghost">Agenda</a>
+				</div>
+			</div>
+
+			<div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+				{#each tpqCards as card}
+					<a
+						href={card.href}
+						class={`rounded-2xl border border-white/70 bg-gradient-to-br ${card.tone} p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
+					>
+						<p class="text-xs font-semibold uppercase tracking-wide opacity-75">{card.label}</p>
+						<p class="mt-2 text-2xl font-semibold tabular-nums tracking-tight">{card.value}</p>
+						<p class="mt-1 text-xs leading-5 text-slate-600">{card.desc}</p>
+					</a>
+				{/each}
+			</div>
+
+			<div class="mt-6 grid gap-4 xl:grid-cols-2">
+				<div class="rounded-2xl border border-slate-100 bg-white/70 p-4">
+					<div class="flex items-center justify-between">
+						<h4 class="text-sm font-semibold text-slate-900">Setoran terbaru</h4>
+						<a class="text-xs font-semibold text-emerald-700 hover:text-emerald-800" href="/tpq/akademik/riwayat">
+							Lihat riwayat
+						</a>
+					</div>
+					{#if tpqRecentSetoran.length}
+						<div class="mt-4 space-y-3">
+							{#each tpqRecentSetoran as item}
+								<div class="flex flex-col gap-2 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+									<div>
+										<p class="font-semibold text-slate-900">
+											{item.santriName || 'Santri'} · {getSurahName(Number(item.surah))} {item.ayatFrom}-{item.ayatTo}
+										</p>
+										<p class="mt-1 text-xs text-slate-500">
+											{formatDate(item.date)} · {item.type === 'murojaah' ? "Muroja'ah" : 'Hafalan'} · {item.ustadzName || 'Pengampu'}
+										</p>
+									</div>
+									<span class={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${getSetoranStatusClass(item.status)}`}>
+										{getSetoranStatusLabel(item.status)}
+									</span>
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<p class="mt-4 text-sm text-slate-500">Belum ada setoran dalam scope Anda.</p>
+					{/if}
+				</div>
+
+				<div class="rounded-2xl border border-slate-100 bg-white/70 p-4">
+					<div class="flex items-center justify-between">
+						<h4 class="text-sm font-semibold text-slate-900">Agenda TPQ</h4>
+						<a class="text-xs font-semibold text-emerald-700 hover:text-emerald-800" href="/kalender">
+							Buka kalender
+						</a>
+					</div>
+					{#if tpqAgenda.length}
+						<div class="mt-4 space-y-3">
+							{#each tpqAgenda as item}
+								<div class="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 text-sm">
+									<p class="font-semibold text-slate-900">{item.title}</p>
+									<p class="mt-1 text-xs text-slate-500">{formatDate(item.eventDate)}</p>
+									{#if item.content}
+										<p class="mt-2 text-xs leading-5 text-slate-500">{item.content}</p>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<p class="mt-4 text-sm text-slate-500">Belum ada agenda lembaga 14 hari ke depan.</p>
+					{/if}
+				</div>
+			</div>
+		</section>
+	{/if}
 
 	{#if isCommunityOrg}
 		<section class="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -806,21 +989,25 @@
 			<div class="fade-in rounded-3xl border border-white/80 bg-white/80 p-6 shadow-xl backdrop-blur" style="animation-delay: 200ms;">
 				<div class="flex items-center justify-between">
 					<h3 class="app-title text-xl font-semibold text-slate-900">Setoran Menunggu</h3>
-					<a class="text-xs font-semibold text-emerald-700 hover:text-emerald-800" href="/tpq/akademik/review">
+					<a class="text-xs font-semibold text-emerald-700 hover:text-emerald-800" href={tpqDashboard?.canReviewSetoran ? '/tpq/akademik/review' : '/tpq/akademik/riwayat'}>
 						Lihat semua
 					</a>
 				</div>
-				{#if pendingHighlights.length}
+				{#if tpqPendingSetoran.length}
 					<div class="mt-5 space-y-3">
-						{#each pendingHighlights as item}
+						{#each tpqPendingSetoran as item}
 							<div class="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 text-sm">
 								<div>
 									<p class="font-semibold text-slate-900">
-										{getSurahName(item.surahNumber)} · Ayat {item.ayahNumber}
+										{item.santriName || 'Santri'} · {getSurahName(Number(item.surah))} {item.ayatFrom}-{item.ayatTo}
 									</p>
-									<p class="text-xs text-slate-500">{item.email}</p>
+									<p class="text-xs text-slate-500">
+										{formatDate(item.date)} · {item.type === 'murojaah' ? "Muroja'ah" : 'Hafalan'}
+									</p>
 								</div>
-								<span class="text-xs text-slate-500">{formatDate(item.tanggalSetor)}</span>
+								<span class={`rounded-full px-3 py-1 text-xs font-semibold ${getSetoranStatusClass(item.status)}`}>
+									{getSetoranStatusLabel(item.status)}
+								</span>
 							</div>
 						{/each}
 					</div>

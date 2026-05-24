@@ -105,9 +105,9 @@
 			feature: 'setoran'
 		},
 		{
-			label: 'Review Setoran',
-			href: '/tpq/akademik/review',
-			icon: 'M5 12l5 5L20 7',
+			label: 'Riwayat Setoran',
+			href: '/tpq/akademik/riwayat',
+			icon: 'M4 6h16M4 12h16M4 18h10',
 			feature: 'setoran'
 		},
 		{
