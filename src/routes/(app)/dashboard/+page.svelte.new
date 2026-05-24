@@ -1,0 +1,133 @@
+<script>
+	import { AppShell, Badge, Button, ProgressRing, SectionCard, StatCard } from '$lib/components';
+
+	const stats = [
+		{
+			label: 'Santri Aktif',
+			value: '248',
+			helper: '12 halaqoh berjalan',
+			icon: '👥',
+			tone: 'green',
+			trend: '+8%'
+		},
+		{
+			label: 'Setoran Hari Ini',
+			value: '86',
+			helper: '64 sudah direview',
+			icon: '📖',
+			tone: 'gold',
+			trend: '+14'
+		},
+		{
+			label: 'Hafalan Lancar',
+			value: '73%',
+			helper: 'Rata-rata 30 hari',
+			icon: '▣',
+			tone: 'cream',
+			trend: '+5%'
+		},
+		{ label: 'Saldo Kas', value: 'Rp18,4jt', helper: 'Update pekan ini', icon: '▰', tone: 'green' }
+	];
+
+	const activities = [
+		{
+			name: 'Ahmad Zaky',
+			detail: 'Setoran Al-Baqarah 21-25',
+			status: 'Menunggu review',
+			tone: 'gold'
+		},
+		{ name: 'Fatimah Azzahra', detail: 'Murajaah Juz 30', status: 'Disetujui', tone: 'green' },
+		{ name: 'Muhammad Rafi', detail: 'Ujian Tahfidz juz 1', status: 'Dijadwalkan', tone: 'gray' }
+	];
+
+	const schedule = [
+		{ time: '07.30', title: 'Halaqoh pagi', meta: 'Kelas Utsman' },
+		{ time: '10.00', title: 'Review setoran', meta: '12 santri' },
+		{ time: '15.45', title: 'Ujian tahfidz', meta: 'Juz 29' }
+	];
+</script>
+
+<AppShell title="Dashboard" subtitle="Ringkasan aktivitas lembaga hari ini">
+	<section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+		{#each stats as item}
+			<StatCard {...item} />
+		{/each}
+	</section>
+
+	<section class="mt-6 grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
+		<SectionCard title="Perkembangan Hafalan" subtitle="Snapshot capaian dan setoran santri">
+			<div slot="action">
+				<Button href="/dashboard/pencapaian-hafalan" variant="soft" size="sm">Lihat detail</Button>
+			</div>
+
+			<div class="grid gap-6 lg:grid-cols-[160px_1fr]">
+				<div class="grid place-items-center rounded-so bg-so-cream p-4">
+					<ProgressRing value={73} label="Lancar" />
+				</div>
+
+				<div class="space-y-4">
+					{#each ['Juz 30', 'Juz 29', 'Juz 1'] as label, index}
+						<div>
+							<div class="mb-2 flex items-center justify-between text-sm">
+								<span class="font-bold text-so-ink">{label}</span>
+								<span class="text-so-muted">{[88, 64, 42][index]}%</span>
+							</div>
+							<div class="h-3 overflow-hidden rounded-full bg-stone-100">
+								<div
+									class="h-full rounded-full bg-gradient-to-r from-so-gold to-so-green"
+									style={`width:${[88, 64, 42][index]}%`}
+								></div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			</div>
+		</SectionCard>
+
+		<SectionCard title="Agenda Hari Ini" subtitle="Jadwal yang perlu dipantau">
+			<div class="space-y-3">
+				{#each schedule as item}
+					<a
+						href="/dashboard/jadwal"
+						class="flex items-center gap-3 rounded-xl border border-so-border bg-white/70 p-3 transition hover:border-so-green"
+					>
+						<div
+							class="grid h-12 w-12 place-items-center rounded-xl bg-so-green text-sm font-bold text-white"
+						>
+							{item.time}
+						</div>
+						<div>
+							<p class="font-bold text-so-ink">{item.title}</p>
+							<p class="text-sm text-so-muted">{item.meta}</p>
+						</div>
+					</a>
+				{/each}
+			</div>
+		</SectionCard>
+	</section>
+
+	<section class="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+		<SectionCard title="Aksi Cepat">
+			<div class="grid gap-3 sm:grid-cols-2">
+				<Button href="/tpq/akademik/setoran" variant="primary" full>Input setoran</Button>
+				<Button href="/dashboard/kelola-santri" variant="outline" full>Kelola santri</Button>
+				<Button href="/tpq/akademik/review" variant="soft" full>Review hafalan</Button>
+				<Button href="/keuangan" variant="outline" full>Buka kas</Button>
+			</div>
+		</SectionCard>
+
+		<SectionCard title="Aktivitas Terbaru" subtitle="Data contoh untuk referensi visual">
+			<div class="divide-y divide-so-border">
+				{#each activities as item}
+					<div class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+						<div>
+							<p class="font-bold text-so-ink">{item.name}</p>
+							<p class="text-sm text-so-muted">{item.detail}</p>
+						</div>
+						<Badge tone={item.tone}>{item.status}</Badge>
+					</div>
+				{/each}
+			</div>
+		</SectionCard>
+	</section>
+</AppShell>

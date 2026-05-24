@@ -2,275 +2,398 @@
 @tailwind components;
 @tailwind utilities;
 
+/* === SantriOnline Design Tokens === */
+@theme {
+	--font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Fraunces', ui-serif, Georgia, serif;
+	--font-arabic: 'Amiri', 'Scheherazade New', serif;
+
+	--color-so-green: #1b4332;
+	--color-so-green-2: #2d6a4f;
+	--color-so-green-3: #0f2f24;
+	--color-so-gold: #c9a84c;
+	--color-so-gold-2: #e8c97a;
+	--color-so-cream: #faf8f3;
+	--color-so-surface: #ffffff;
+	--color-so-border: #e8e4dc;
+	--color-so-muted: #6b7280;
+	--color-so-ink: #1a1a1a;
+
+	--radius-so: 12px;
+	--radius-so-lg: 20px;
+	--shadow-soft: 0 18px 60px rgb(27 67 50 / 0.1);
+	--shadow-card: 0 12px 34px rgb(27 67 50 / 0.08);
+}
+
+:root {
+	--font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Fraunces', ui-serif, Georgia, serif;
+	--font-arabic: 'Amiri', 'Scheherazade New', serif;
+	--color-so-green: #1b4332;
+	--color-so-green-2: #2d6a4f;
+	--color-so-green-3: #0f2f24;
+	--color-so-gold: #c9a84c;
+	--color-so-gold-2: #e8c97a;
+	--color-so-cream: #faf8f3;
+	--color-so-surface: #ffffff;
+	--color-so-border: #e8e4dc;
+	--color-so-muted: #6b7280;
+	--color-so-ink: #1a1a1a;
+	--radius-so: 12px;
+	--radius-so-lg: 20px;
+	--shadow-soft: 0 18px 60px rgb(27 67 50 / 0.1);
+	--shadow-card: 0 12px 34px rgb(27 67 50 / 0.08);
+}
+
 @font-face {
-  font-family: "Amiri Quran";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/AmiriQuran.ttf") format("truetype");
+	font-family: 'Amiri Quran';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/AmiriQuran.ttf') format('truetype');
 }
 
 @layer base {
-  * {
-    @apply border-base-300;
-  }
-  body {
-    @apply bg-base-100 text-base-content;
-  }
+	* {
+		@apply border-base-300;
+	}
+	body {
+		@apply bg-base-100 text-base-content;
+	}
+}
+
+@layer components {
+	.so-card {
+		border: 1px solid rgb(232 228 220 / 0.95);
+		background: rgb(255 255 255 / 0.86);
+		box-shadow: var(--shadow-card);
+		backdrop-filter: blur(18px);
+	}
+
+	.so-glass {
+		border: 1px solid rgb(255 255 255 / 0.18);
+		background: linear-gradient(145deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.04));
+		backdrop-filter: blur(16px);
+	}
+
+	.so-pattern {
+		background-image:
+			linear-gradient(
+				30deg,
+				rgb(201 168 76 / 0.08) 12%,
+				transparent 12.5%,
+				transparent 87%,
+				rgb(201 168 76 / 0.08) 87.5%
+			),
+			linear-gradient(
+				150deg,
+				rgb(201 168 76 / 0.08) 12%,
+				transparent 12.5%,
+				transparent 87%,
+				rgb(201 168 76 / 0.08) 87.5%
+			);
+		background-size: 36px 64px;
+	}
+
+	.so-focus {
+		@apply outline-none ring-0 transition;
+	}
+	.so-focus:focus {
+		box-shadow: 0 0 0 4px rgb(201 168 76 / 0.22);
+		border-color: rgb(201 168 76 / 0.82);
+	}
+
+	.scrollbar-soft::-webkit-scrollbar {
+		width: 8px;
+		height: 8px;
+	}
+	.scrollbar-soft::-webkit-scrollbar-thumb {
+		background: rgb(27 67 50 / 0.18);
+		border-radius: 999px;
+	}
 }
 
 @media (max-width: 767px) {
-  html:has(.mushaf-book),
-  body:has(.mushaf-book) {
-    height: 100dvh;
-    overflow: hidden;
-    overscroll-behavior: none;
-    background: #052e2b;
-  }
+	html:has(.mushaf-book),
+	body:has(.mushaf-book) {
+		height: 100dvh;
+		overflow: hidden;
+		overscroll-behavior: none;
+		background: #052e2b;
+	}
 
-  body:has(.mushaf-book) main:has(.mushaf-book) {
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 100dvh;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
+	body:has(.mushaf-book) main:has(.mushaf-book) {
+		width: 100% !important;
+		max-width: none !important;
+		min-height: 100dvh;
+		margin: 0 !important;
+		padding: 0 !important;
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) {
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    display: flex;
-    width: 100%;
-    max-width: none !important;
-    height: 100dvh;
-    margin: 0 !important;
-    flex-direction: column;
-    gap: 0.45rem;
-    overflow: hidden;
-    padding:
-      max(0.5rem, env(safe-area-inset-top)) 0.55rem
-      max(0.65rem, env(safe-area-inset-bottom)) !important;
-    background:
-      radial-gradient(circle at 50% -10%, rgba(251, 191, 36, 0.22), transparent 36%),
-      linear-gradient(180deg, #063a35 0%, #052e2b 48%, #031f1d 100%);
-  }
+	body:has(.mushaf-book) main > section:has(.mushaf-book) {
+		position: fixed;
+		inset: 0;
+		z-index: 60;
+		display: flex;
+		width: 100%;
+		max-width: none !important;
+		height: 100dvh;
+		margin: 0 !important;
+		flex-direction: column;
+		gap: 0.45rem;
+		overflow: hidden;
+		padding: max(0.5rem, env(safe-area-inset-top)) 0.55rem max(0.65rem, env(safe-area-inset-bottom)) !important;
+		background:
+			radial-gradient(circle at 50% -10%, rgba(251, 191, 36, 0.22), transparent 36%),
+			linear-gradient(180deg, #063a35 0%, #052e2b 48%, #031f1d 100%);
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) > :not([hidden]) ~ :not([hidden]),
-  body:has(.mushaf-book) main > section:has(.mushaf-book) > div:has(.quran-reader-grid) > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0 !important;
-  }
+	body:has(.mushaf-book) main > section:has(.mushaf-book) > :not([hidden]) ~ :not([hidden]),
+	body:has(.mushaf-book)
+		main
+		> section:has(.mushaf-book)
+		> div:has(.quran-reader-grid)
+		> :not([hidden])
+		~ :not([hidden]) {
+		margin-top: 0 !important;
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) > header {
-    flex: 0 0 auto;
-    padding: 0 0.25rem;
-    color: #fefce8;
-  }
+	body:has(.mushaf-book) main > section:has(.mushaf-book) > header {
+		flex: 0 0 auto;
+		padding: 0 0.25rem;
+		color: #fefce8;
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) > header p,
-  body:has(.mushaf-book) main > section:has(.mushaf-book) > .tabs,
-  body:has(.mushaf-book) main > section:has(.mushaf-book) > p:last-child {
-    display: none !important;
-  }
+	body:has(.mushaf-book) main > section:has(.mushaf-book) > header p,
+	body:has(.mushaf-book) main > section:has(.mushaf-book) > .tabs,
+	body:has(.mushaf-book) main > section:has(.mushaf-book) > p:last-child {
+		display: none !important;
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) > header h1 {
-    font-size: 1rem !important;
-    line-height: 1.2 !important;
-    color: #fefce8 !important;
-  }
+	body:has(.mushaf-book) main > section:has(.mushaf-book) > header h1 {
+		font-size: 1rem !important;
+		line-height: 1.2 !important;
+		color: #fefce8 !important;
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) > div:has(.quran-reader-grid) {
-    display: flex !important;
-    min-height: 0;
-    flex: 1 1 auto;
-    flex-direction: column;
-    gap: 0.5rem !important;
-    overflow: hidden;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-  }
+	body:has(.mushaf-book) main > section:has(.mushaf-book) > div:has(.quran-reader-grid) {
+		display: flex !important;
+		min-height: 0;
+		flex: 1 1 auto;
+		flex-direction: column;
+		gap: 0.5rem !important;
+		overflow: hidden;
+		border: 0 !important;
+		border-radius: 0 !important;
+		background: transparent !important;
+		padding: 0 !important;
+		box-shadow: none !important;
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) > div:has(.quran-reader-grid) > div:first-child {
-    flex: 0 0 auto;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 0.5rem !important;
-    border: 1px solid rgba(250, 204, 21, 0.28);
-    border-radius: 1rem;
-    background: rgba(255, 253, 246, 0.95);
-    padding: 0.5rem;
-    box-shadow: 0 16px 40px rgba(2, 6, 23, 0.22);
-  }
+	body:has(.mushaf-book)
+		main
+		> section:has(.mushaf-book)
+		> div:has(.quran-reader-grid)
+		> div:first-child {
+		flex: 0 0 auto;
+		flex-direction: row !important;
+		align-items: center !important;
+		justify-content: space-between !important;
+		gap: 0.5rem !important;
+		border: 1px solid rgba(250, 204, 21, 0.28);
+		border-radius: 1rem;
+		background: rgba(255, 253, 246, 0.95);
+		padding: 0.5rem;
+		box-shadow: 0 16px 40px rgba(2, 6, 23, 0.22);
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) > div:has(.quran-reader-grid) > div:first-child > div:first-child {
-    width: 100%;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 0.5rem !important;
-  }
+	body:has(.mushaf-book)
+		main
+		> section:has(.mushaf-book)
+		> div:has(.quran-reader-grid)
+		> div:first-child
+		> div:first-child {
+		width: 100%;
+		flex-direction: row !important;
+		align-items: center !important;
+		justify-content: space-between !important;
+		gap: 0.5rem !important;
+	}
 
-  body:has(.mushaf-book) .form-control:has(select[name="juz"]),
-  body:has(.mushaf-book) main > section:has(.mushaf-book) label.form-control {
-    width: 6.5rem !important;
-    min-width: 6.5rem !important;
-  }
+	body:has(.mushaf-book) .form-control:has(select[name='juz']),
+	body:has(.mushaf-book) main > section:has(.mushaf-book) label.form-control {
+		width: 6.5rem !important;
+		min-width: 6.5rem !important;
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) .label,
-  body:has(.mushaf-book) main > section:has(.mushaf-book) > div:has(.quran-reader-grid) > div:first-child > div:last-child,
-  body:has(.mushaf-book) .quran-search-panel,
-  body:has(.mushaf-book) .quran-reader-main > div:first-child:has(.badge) {
-    display: none !important;
-  }
+	body:has(.mushaf-book) main > section:has(.mushaf-book) .label,
+	body:has(.mushaf-book)
+		main
+		> section:has(.mushaf-book)
+		> div:has(.quran-reader-grid)
+		> div:first-child
+		> div:last-child,
+	body:has(.mushaf-book) .quran-search-panel,
+	body:has(.mushaf-book) .quran-reader-main > div:first-child:has(.badge) {
+		display: none !important;
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) select {
-    height: 2.25rem !important;
-    min-height: 2.25rem !important;
-    border-color: rgba(15, 118, 110, 0.3) !important;
-    background: #ffffff !important;
-    font-size: 0.85rem !important;
-  }
+	body:has(.mushaf-book) main > section:has(.mushaf-book) select {
+		height: 2.25rem !important;
+		min-height: 2.25rem !important;
+		border-color: rgba(15, 118, 110, 0.3) !important;
+		background: #ffffff !important;
+		font-size: 0.85rem !important;
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) .join {
-    flex: 1 1 auto;
-    justify-content: flex-end;
-  }
+	body:has(.mushaf-book) main > section:has(.mushaf-book) .join {
+		flex: 1 1 auto;
+		justify-content: flex-end;
+	}
 
-  body:has(.mushaf-book) main > section:has(.mushaf-book) .join .btn {
-    height: 2.25rem !important;
-    min-height: 2.25rem !important;
-    padding-inline: 0.75rem !important;
-    font-size: 0.78rem !important;
-  }
+	body:has(.mushaf-book) main > section:has(.mushaf-book) .join .btn {
+		height: 2.25rem !important;
+		min-height: 2.25rem !important;
+		padding-inline: 0.75rem !important;
+		font-size: 0.78rem !important;
+	}
 
-  body:has(.mushaf-book) .quran-reader-grid {
-    display: flex !important;
-    min-height: 0;
-    flex: 1 1 auto;
-    gap: 0 !important;
-  }
+	body:has(.mushaf-book) .quran-reader-grid {
+		display: flex !important;
+		min-height: 0;
+		flex: 1 1 auto;
+		gap: 0 !important;
+	}
 
-  body:has(.mushaf-book) .quran-reader-main {
-    min-height: 0;
-    flex: 1 1 auto;
-    gap: 0.45rem !important;
-  }
+	body:has(.mushaf-book) .quran-reader-main {
+		min-height: 0;
+		flex: 1 1 auto;
+		gap: 0.45rem !important;
+	}
 
-  body:has(.mushaf-book) .mushaf-toolbar {
-    flex: 0 0 auto;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 999px;
-    background: rgba(2, 44, 34, 0.58);
-    padding: 0.35rem 0.45rem 0.35rem 0.8rem !important;
-    color: #fef3c7;
-    backdrop-filter: blur(12px);
-  }
+	body:has(.mushaf-book) .mushaf-toolbar {
+		flex: 0 0 auto;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 999px;
+		background: rgba(2, 44, 34, 0.58);
+		padding: 0.35rem 0.45rem 0.35rem 0.8rem !important;
+		color: #fef3c7;
+		backdrop-filter: blur(12px);
+	}
 
-  body:has(.mushaf-book) .mushaf-toolbar > div:first-child {
-    color: #fef3c7 !important;
-  }
+	body:has(.mushaf-book) .mushaf-toolbar > div:first-child {
+		color: #fef3c7 !important;
+	}
 
-  body:has(.mushaf-book) .mushaf-toolbar .btn {
-    width: 2.25rem;
-    min-height: 2.25rem !important;
-    border: 1px solid rgba(254, 243, 199, 0.22);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #fef3c7;
-    padding: 0 !important;
-  }
+	body:has(.mushaf-book) .mushaf-toolbar .btn {
+		width: 2.25rem;
+		min-height: 2.25rem !important;
+		border: 1px solid rgba(254, 243, 199, 0.22);
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.1);
+		color: #fef3c7;
+		padding: 0 !important;
+	}
 
-  body:has(.mushaf-book) .mushaf-shell {
-    min-height: 0;
-    flex: 1 1 auto;
-    align-items: center;
-    overflow: hidden;
-    border-radius: 1.35rem;
-    background:
-      linear-gradient(90deg, rgba(2, 6, 23, 0.38), transparent 13%, transparent 87%, rgba(2, 6, 23, 0.35)),
-      radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.16), transparent 52%);
-    padding: 0.55rem 0.2rem !important;
-    perspective: 1800px;
-    touch-action: none;
-  }
+	body:has(.mushaf-book) .mushaf-shell {
+		min-height: 0;
+		flex: 1 1 auto;
+		align-items: center;
+		overflow: hidden;
+		border-radius: 1.35rem;
+		background:
+			linear-gradient(
+				90deg,
+				rgba(2, 6, 23, 0.38),
+				transparent 13%,
+				transparent 87%,
+				rgba(2, 6, 23, 0.35)
+			),
+			radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.16), transparent 52%);
+		padding: 0.55rem 0.2rem !important;
+		perspective: 1800px;
+		touch-action: none;
+	}
 
-  body:has(.mushaf-book) .mushaf-book {
-    width: 100% !important;
-    max-width: 26.5rem;
-    height: 100% !important;
-    touch-action: none;
-  }
+	body:has(.mushaf-book) .mushaf-book {
+		width: 100% !important;
+		max-width: 26.5rem;
+		height: 100% !important;
+		touch-action: none;
+	}
 
-  body:has(.mushaf-book) .stf__parent {
-    margin-inline: auto !important;
-  }
+	body:has(.mushaf-book) .stf__parent {
+		margin-inline: auto !important;
+	}
 
-  body:has(.mushaf-book) .mushaf-page {
-    position: relative !important;
-    overflow: hidden !important;
-    border-radius: 12px !important;
-    padding: 8px !important;
-    box-shadow:
-      0 18px 34px rgba(2, 6, 23, 0.3),
-      inset 0 0 0 1px rgba(120, 53, 15, 0.08) !important;
-  }
+	body:has(.mushaf-book) .mushaf-page {
+		position: relative !important;
+		overflow: hidden !important;
+		border-radius: 12px !important;
+		padding: 8px !important;
+		box-shadow:
+			0 18px 34px rgba(2, 6, 23, 0.3),
+			inset 0 0 0 1px rgba(120, 53, 15, 0.08) !important;
+	}
 
-  body:has(.mushaf-book) .mushaf-page::before {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    content: "";
-    background:
-      radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.7), transparent 16%),
-      linear-gradient(90deg, rgba(120, 53, 15, 0.08), transparent 12%, transparent 88%, rgba(120, 53, 15, 0.06)),
-      repeating-linear-gradient(0deg, rgba(15, 23, 42, 0.025) 0 1px, transparent 1px 7px);
-    mix-blend-mode: multiply;
-  }
+	body:has(.mushaf-book) .mushaf-page::before {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		content: '';
+		background:
+			radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.7), transparent 16%),
+			linear-gradient(
+				90deg,
+				rgba(120, 53, 15, 0.08),
+				transparent 12%,
+				transparent 88%,
+				rgba(120, 53, 15, 0.06)
+			),
+			repeating-linear-gradient(0deg, rgba(15, 23, 42, 0.025) 0 1px, transparent 1px 7px);
+		mix-blend-mode: multiply;
+	}
 
-  body:has(.mushaf-book) .mushaf-frame {
-    position: relative;
-    z-index: 1;
-    border-width: 1.5px !important;
-    border-radius: 10px !important;
-    padding: 8px 9px !important;
-  }
+	body:has(.mushaf-book) .mushaf-frame {
+		position: relative;
+		z-index: 1;
+		border-width: 1.5px !important;
+		border-radius: 10px !important;
+		padding: 8px 9px !important;
+	}
 
-  body:has(.mushaf-book) .mushaf-header {
-    margin-bottom: 4px !important;
-    font-size: 0.55rem !important;
-    letter-spacing: 0.12em !important;
-  }
+	body:has(.mushaf-book) .mushaf-header {
+		margin-bottom: 4px !important;
+		font-size: 0.55rem !important;
+		letter-spacing: 0.12em !important;
+	}
 
-  body:has(.mushaf-book) .surah-banner {
-    margin-bottom: 4px !important;
-    padding: 4px 8px !important;
-    font-size: 0.72rem !important;
-  }
+	body:has(.mushaf-book) .surah-banner {
+		margin-bottom: 4px !important;
+		padding: 4px 8px !important;
+		font-size: 0.72rem !important;
+	}
 
-  body:has(.mushaf-book) .quran-text {
-    font-size: clamp(0.92rem, 3.75vw, 1.12rem) !important;
-    line-height: 2.02 !important;
-  }
+	body:has(.mushaf-book) .quran-text {
+		font-size: clamp(0.92rem, 3.75vw, 1.12rem) !important;
+		line-height: 2.02 !important;
+	}
 
-  body:has(.mushaf-book) .mushaf-text {
-    overflow: hidden;
-    text-align: justify !important;
-    text-align-last: right;
-  }
+	body:has(.mushaf-book) .mushaf-text {
+		overflow: hidden;
+		text-align: justify !important;
+		text-align-last: right;
+	}
 
-  body:has(.mushaf-book) .ayah-number {
-    width: 1.05rem !important;
-    height: 1.05rem !important;
-    margin: 0 0.18rem 0 0.25rem !important;
-    font-size: 0.56rem !important;
-  }
+	body:has(.mushaf-book) .ayah-number {
+		width: 1.05rem !important;
+		height: 1.05rem !important;
+		margin: 0 0.18rem 0 0.25rem !important;
+		font-size: 0.56rem !important;
+	}
 
-  body:has(.mushaf-book) .mushaf-footer {
-    margin-top: 4px !important;
-    font-size: 0.62rem !important;
-  }
+	body:has(.mushaf-book) .mushaf-footer {
+		margin-top: 4px !important;
+		font-size: 0.62rem !important;
+	}
 }
