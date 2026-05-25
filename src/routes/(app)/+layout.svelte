@@ -363,6 +363,11 @@
 						label: 'Lembaga',
 						href: '/lembaga',
 						icon: 'M4 10.5L12 6l8 4.5v8.5a1 1 0 01-1 1H5a1 1 0 01-1-1v-8.5zM8 20v-6h8v6'
+					},
+					{
+						label: 'Addon',
+						href: '/addon',
+						icon: 'M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9L12 3z'
 					}
 		];
 		const utilityItems = isSuperAdmin ? superAdminItems : [];
