@@ -12,6 +12,7 @@ PUBLIC_CLARITY_PROJECT_ID = "wjd6jb7tnb"
 PUBLIC_UMAMI_SCRIPT_URL = "https://cloud.umami.is/script.js"
 PUBLIC_UMAMI_WEBSITE_ID = "4367f37b-32a2-4732-bbce-71192ac5fa17"
 GOOGLE_CLIENT_ID = "511759368556-iu4bj02gusic1e0tqindpi5lriis9lkv.apps.googleusercontent.com"
+MIDTRANS_IS_PRODUCTION = "true"
 
 # --- Sentry ---
 # Set these in Cloudflare Pages Dashboard > Settings > Variables and Secrets:
@@ -29,6 +30,8 @@ GOOGLE_CLIENT_ID = "511759368556-iu4bj02gusic1e0tqindpi5lriis9lkv.apps.googleuse
 # GROQ_API_KEY -> wrangler secret put GROQ_API_KEY
 # NEWS_FETCH_SECRET -> set as the same value used by the news fetcher Worker
 # NEWS_FETCHER_URL -> set after deploying santrionline-news-fetcher
+# MIDTRANS_SERVER_KEY -> wrangler pages secret put
+# MIDTRANS_CLIENT_KEY -> wrangler pages secret put
 # TURNSTILE_SECRET_KEY -> wrangler secret put TURNSTILE_SECRET_KEY
 
 # --- Konfigurasi Database D1 ---

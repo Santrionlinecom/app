@@ -1,11 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { Monitor, Smartphone } from 'lucide-svelte';
 	import { isSuperAdminUser } from '$lib/auth/session-user';
 
 	export let data: PageData;
-
-	let uiPreviewMode: 'desktop' | 'mobile' = 'desktop';
 
 	const dashboardRoles = new Set([
 		'admin',
@@ -126,13 +123,9 @@
 	/>
 </svelte:head>
 
-<div
-	class="home-root min-h-screen bg-so-cream text-so-ink"
-	class:ui-preview-desktop={uiPreviewMode === 'desktop'}
-	class:ui-preview-mobile={uiPreviewMode === 'mobile'}
->
-	<section class="home-header border-b border-so-border bg-white">
-		<div class="home-header-inner mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+<div class="home-root min-h-screen bg-so-cream text-so-ink">
+	<section class="border-b border-so-border bg-white">
+		<div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
 			<a href="/" class="flex min-w-0 items-center gap-3">
 				<img src={logoUrl} alt="SantriOnline" class="h-10 w-10 rounded-xl object-cover" />
 				<div class="min-w-0">
@@ -140,7 +133,7 @@
 					<p class="truncate text-xs font-bold text-so-muted">Manajemen lembaga Islam</p>
 				</div>
 			</a>
-			<nav class="home-nav-links hidden items-center gap-2 md:flex">
+			<nav class="hidden items-center gap-2 md:flex">
 				<a class="top-link" href="#platform">Platform</a>
 				<a class="top-link" href="#addon">Addon</a>
 				<a class="top-link" href="#publik">Publik</a>
@@ -151,7 +144,7 @@
 
 	<section class="relative overflow-hidden">
 		<div class="hero-bg"></div>
-		<div class="hero-layout mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[1fr_0.92fr] lg:px-8">
+		<div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[1fr_0.92fr] lg:px-8">
 			<div class="relative z-10 flex min-h-[520px] flex-col justify-center">
 				<div class="flex flex-wrap gap-2">
 					<span class="chip chip-primary">Multi-Lembaga</span>
@@ -169,7 +162,7 @@
 					<a class="btn-primary h-12 px-5" href={primaryAction.href}>{primaryAction.label}</a>
 					<a class="btn-secondary h-12 px-5" href={secondaryAction.href}>{secondaryAction.label}</a>
 				</div>
-				<div class="metric-grid mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
+				<div class="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
 					<div class="metric">
 						<p>1</p>
 						<span>TPQ gratis</span>
@@ -194,7 +187,7 @@
 						</div>
 						<span class="rounded-full bg-so-green px-3 py-1 text-xs font-black text-white">Aktif</span>
 					</div>
-					<div class="snapshot-grid mt-5 grid gap-3 sm:grid-cols-3">
+					<div class="mt-5 grid gap-3 sm:grid-cols-3">
 						<div class="snapshot-stat">
 							<span>Santri</span>
 							<strong>28</strong>
@@ -246,7 +239,7 @@
 				halaman masing-masing agar tidak saling menyalin.
 			</p>
 		</div>
-		<div class="admin-modules-grid mt-6 grid gap-4 lg:grid-cols-3">
+		<div class="mt-6 grid gap-4 lg:grid-cols-3">
 			{#each adminModules as item}
 				<article class="info-card">
 					<h3>{item.title}</h3>
@@ -268,7 +261,7 @@
 				<h2>Satu akun admin dapat mengelola beberapa lembaga.</h2>
 				<p>Setiap tipe lembaga diberi ruang fitur sendiri supaya menu tetap relevan.</p>
 			</div>
-			<div class="institution-grid mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+			<div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
 				{#each institutionTypes as item}
 					<article class="type-card">
 						<div class="flex items-center justify-between gap-3">
@@ -284,7 +277,7 @@
 	</section>
 
 	<section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-		<div class="flow-grid grid gap-5 lg:grid-cols-3">
+		<div class="grid gap-5 lg:grid-cols-3">
 			{#each operatingFlow as item}
 				<article class="flow-card">
 					<span>{item.step}</span>
@@ -296,7 +289,7 @@
 	</section>
 
 	<section id="addon" class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-		<div class="addon-grid grid gap-5 rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6 lg:grid-cols-[0.8fr_1.2fr]">
+		<div class="grid gap-5 rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6 lg:grid-cols-[0.8fr_1.2fr]">
 			<div>
 				<p class="eyebrow">Addon</p>
 				<h2 class="mt-2 text-2xl font-black text-so-green md:text-3xl">Bayar hanya untuk fitur yang dibutuhkan.</h2>
@@ -306,7 +299,7 @@
 				</p>
 				<a class="btn-primary mt-5 h-11 px-4" href="/addon">Lihat Katalog Addon</a>
 			</div>
-			<div class="addon-list grid gap-3 sm:grid-cols-2">
+			<div class="grid gap-3 sm:grid-cols-2">
 				{#each addonPlans as plan}
 					<div class="addon-row">
 						<p>{plan[0]}</p>
@@ -318,7 +311,7 @@
 	</section>
 
 	<section id="publik" class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-		<div class="public-grid grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+		<div class="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
 			<div class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
 				<p class="eyebrow">Akses Publik</p>
 				<h2 class="mt-2 text-2xl font-black text-so-green md:text-3xl">Tetap ada ruang belajar dan konten terbuka.</h2>
@@ -339,7 +332,7 @@
 					Struktur baru sudah mengarah ke multi-lembaga dan addon. Bagian pembayaran akan dibuka bertahap
 					melalui Midtrans, BSI, dan Coin SantriOnline.
 				</p>
-				<div class="cta-actions mt-6 flex flex-col gap-3 sm:flex-row">
+				<div class="mt-6 flex flex-col gap-3 sm:flex-row">
 					<a class="inline-flex h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-black text-so-green" href={primaryAction.href}>
 						{primaryAction.label}
 					</a>
@@ -351,51 +344,12 @@
 		</div>
 	</section>
 
-	<aside class="ui-mode-popup" aria-label="Mode tampilan UI">
-		<button
-			type="button"
-			class:active={uiPreviewMode === 'desktop'}
-			aria-label="Mode desktop"
-			aria-pressed={uiPreviewMode === 'desktop'}
-			on:click={() => (uiPreviewMode = 'desktop')}
-		>
-			<Monitor class="h-5 w-5" aria-hidden="true" />
-		</button>
-		<button
-			type="button"
-			class:active={uiPreviewMode === 'mobile'}
-			aria-label="Mode mobile"
-			aria-pressed={uiPreviewMode === 'mobile'}
-			on:click={() => (uiPreviewMode = 'mobile')}
-		>
-			<Smartphone class="h-5 w-5" aria-hidden="true" />
-		</button>
-	</aside>
 </div>
 
 <style>
 	.home-root {
 		--hero-overlay: linear-gradient(135deg, rgba(250, 248, 243, 0.95), rgba(255, 255, 255, 0.86));
 		font-family: var(--font-sans, 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif);
-		transition:
-			max-width 220ms ease,
-			width 220ms ease,
-			box-shadow 220ms ease;
-	}
-
-	.home-root.ui-preview-desktop {
-		width: 100%;
-		max-width: none;
-	}
-
-	.home-root.ui-preview-mobile {
-		width: min(430px, 100vw);
-		max-width: 430px;
-		margin-inline: auto;
-		overflow: hidden;
-		box-shadow:
-			0 0 0 1px rgb(27 67 50 / 0.08),
-			0 24px 80px rgb(15 23 42 / 0.18);
 	}
 
 	.hero-bg {
@@ -634,132 +588,5 @@
 	.public-link {
 		border: 1px solid var(--color-so-border);
 		background: var(--color-so-cream);
-	}
-
-	.home-root.ui-preview-mobile .home-header-inner {
-		padding-inline: 1rem;
-	}
-
-	.home-root.ui-preview-mobile .home-nav-links {
-		display: none;
-	}
-
-	.home-root.ui-preview-mobile .home-header .btn-primary {
-		height: 2.5rem;
-		padding-inline: 0.8rem;
-		font-size: 0.74rem;
-		white-space: nowrap;
-	}
-
-	.home-root.ui-preview-mobile .hero-layout,
-	.home-root.ui-preview-mobile .admin-modules-grid,
-	.home-root.ui-preview-mobile .institution-grid,
-	.home-root.ui-preview-mobile .flow-grid,
-	.home-root.ui-preview-mobile .addon-grid,
-	.home-root.ui-preview-mobile .public-grid {
-		grid-template-columns: minmax(0, 1fr) !important;
-	}
-
-	.home-root.ui-preview-mobile .hero-layout {
-		gap: 1.35rem;
-		padding: 2rem 1rem;
-	}
-
-	.home-root.ui-preview-mobile .hero-layout > div:first-child {
-		min-height: auto;
-	}
-
-	.home-root.ui-preview-mobile h1 {
-		font-size: 2.1rem;
-		line-height: 1.12;
-	}
-
-	.home-root.ui-preview-mobile .metric-grid,
-	.home-root.ui-preview-mobile .snapshot-grid,
-	.home-root.ui-preview-mobile .addon-list {
-		grid-template-columns: minmax(0, 1fr) !important;
-	}
-
-	.home-root.ui-preview-mobile .product-frame {
-		border-radius: 1rem;
-		padding: 0.85rem;
-	}
-
-	.home-root.ui-preview-mobile .product-topbar {
-		align-items: flex-start;
-	}
-
-	.home-root.ui-preview-mobile section {
-		padding-inline: 1rem;
-	}
-
-	.home-root.ui-preview-mobile .section-head h2 {
-		font-size: 1.55rem;
-		line-height: 1.2;
-	}
-
-	.home-root.ui-preview-mobile .section-head p:not(.eyebrow) {
-		font-size: 0.9rem;
-	}
-
-	.home-root.ui-preview-mobile .addon-row {
-		align-items: flex-start;
-		flex-direction: column;
-	}
-
-	.home-root.ui-preview-mobile .cta-actions {
-		flex-direction: column !important;
-	}
-
-	.ui-mode-popup {
-		position: fixed;
-		right: 1rem;
-		top: 50%;
-		z-index: 35;
-		transform: translateY(-50%);
-		border: 1px solid rgb(255 255 255 / 0.7);
-		border-radius: 999px;
-		background: rgb(255 255 255 / 0.68);
-		box-shadow: 0 18px 54px rgb(27 67 50 / 0.14);
-		backdrop-filter: blur(18px);
-		display: flex;
-		gap: 0.45rem;
-		padding: 0.45rem;
-	}
-
-	.ui-mode-popup button {
-		display: inline-flex;
-		height: 2.45rem;
-		width: 2.45rem;
-		align-items: center;
-		justify-content: center;
-		border-radius: 999px;
-		border: 1px solid var(--color-so-border);
-		background: rgb(255 255 255 / 0.72);
-		color: var(--color-so-green);
-		transition:
-			background-color 160ms ease,
-			border-color 160ms ease,
-			color 160ms ease;
-	}
-
-	.ui-mode-popup button.active {
-		border-color: rgb(27 67 50 / 0.2);
-		background: rgb(27 67 50 / 0.92);
-		color: #fff;
-	}
-
-	@media (max-width: 767px) {
-		.home-root.ui-preview-desktop {
-			width: 1180px;
-			max-width: none;
-		}
-
-		.ui-mode-popup {
-			right: 0.75rem;
-			bottom: 5.6rem;
-			top: auto;
-			transform: none;
-		}
 	}
 </style>

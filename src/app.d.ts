@@ -39,6 +39,9 @@ declare global {
                 NEWS_FETCH_SECRET?: string;
                 NEWS_FETCHER_URL?: string;
                 SHORTLINK_SECRET?: string;
+                MIDTRANS_SERVER_KEY?: string;
+                MIDTRANS_CLIENT_KEY?: string;
+                MIDTRANS_IS_PRODUCTION?: string;
                 TURNSTILE_SITE_KEY?: string;
                 TURNSTILE_SECRET_KEY?: string;
                 R2_PUBLIC_BASE_URL?: string;
