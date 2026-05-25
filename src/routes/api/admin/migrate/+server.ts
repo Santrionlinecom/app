@@ -25,6 +25,7 @@ import { ensureBukuLibrarySchema } from '$lib/server/buku-library';
 import { ensureBukuWalletSchema } from '$lib/server/buku-wallet';
 import { ensureDrmSchema } from '$lib/server/drm';
 import { ensureHafalanRaporSchema } from '$lib/server/db-hafalan';
+import { ensurePaymentOrdersSchema } from '$lib/server/payments/midtrans';
 import { ensureKitabReferenceSchema } from '$lib/server/rag';
 import { requireMaintenanceAccess } from '$lib/server/admin-maintenance';
 import { getRequestIp, logActivity } from '$lib/server/logger';
@@ -70,6 +71,7 @@ export const POST: RequestHandler = async ({ locals, platform, request, url }) =
 	await ensureBukuWalletSchema(db);
 	await ensureDrmSchema(db);
 	await ensureHafalanRaporSchema(db);
+	await ensurePaymentOrdersSchema(db);
 	await ensureKitabReferenceSchema(db);
 
 	logActivity(db, 'ADMIN_MIGRATE_SCHEMA', {

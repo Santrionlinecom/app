@@ -1,5 +1,6 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { generateId } from 'lucia';
+import { ensurePaymentOrdersSchema } from '$lib/server/payments/midtrans';
 
 const ADDON_TYPES = [
 	'lembaga_tambahan',
@@ -18,6 +19,15 @@ type MidtransWebhookPayload = {
 	gross_amount?: unknown;
 	signature_key?: unknown;
 	transaction_status?: unknown;
+};
+
+type PaymentOrderRow = {
+	id: string;
+	userId: string | null;
+	lembagaId: string | null;
+	productSlug: string;
+	packageName: string | null;
+	grossAmount: number;
 };
 
 const nanoid = () => generateId(15);
@@ -46,24 +56,8 @@ const timingSafeEqual = (left: string, right: string) => {
 	return diff === 0;
 };
 
-const parseAddonOrderId = (orderId: string): { lembagaId: string; addonTipe: AddonTipe } | null => {
-	if (!orderId.startsWith('addon-')) return null;
-
-	const rest = orderId.slice('addon-'.length);
-	for (const addonTipe of ADDON_TYPES) {
-		const marker = `-${addonTipe}-`;
-		const markerIndex = rest.lastIndexOf(marker);
-		if (markerIndex <= 0) continue;
-
-		const lembagaId = rest.slice(0, markerIndex);
-		const timestamp = rest.slice(markerIndex + marker.length);
-		if (!lembagaId || !/^\d+$/.test(timestamp)) continue;
-
-		return { lembagaId, addonTipe };
-	}
-
-	return null;
-};
+const isAddonTipe = (value: string): value is AddonTipe =>
+	(ADDON_TYPES as readonly string[]).includes(value);
 
 export const POST: RequestHandler = async ({ locals, platform, request }) => {
 	const db = locals.db ?? platform?.env?.DB;
@@ -75,6 +69,8 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 	if (!serverKey) {
 		return json({ ok: false, message: 'Konfigurasi Midtrans belum tersedia' }, { status: 500 });
 	}
+
+	await ensurePaymentOrdersSchema(db);
 
 	let body: MidtransWebhookPayload;
 	try {
@@ -98,17 +94,49 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 		return json({ ok: false, message: 'Signature tidak valid' }, { status: 403 });
 	}
 
-	if (transactionStatus === 'settlement' || transactionStatus === 'capture') {
-		const parsedOrder = parseAddonOrderId(orderId);
-		if (!parsedOrder) {
-			return json({ ok: false, message: 'Order ID addon tidak valid' }, { status: 400 });
-		}
+	const paymentOrder = await db
+		.prepare(
+			`SELECT
+				id,
+				user_id AS userId,
+				lembaga_id AS lembagaId,
+				product_slug AS productSlug,
+				package_name AS packageName,
+				gross_amount AS grossAmount
+			 FROM payment_orders
+			 WHERE id = ?
+			   AND provider = 'midtrans'
+			   AND purpose = 'addon'`
+		)
+		.bind(orderId)
+		.first<PaymentOrderRow>();
 
+	if (!paymentOrder || !paymentOrder.lembagaId || !isAddonTipe(paymentOrder.productSlug)) {
+		return json({ ok: false, message: 'Order pembayaran addon tidak ditemukan' }, { status: 404 });
+	}
+
+	const webhookGrossAmount = Number(grossAmount);
+	if (!Number.isFinite(webhookGrossAmount) || webhookGrossAmount !== Number(paymentOrder.grossAmount)) {
+		return json({ ok: false, message: 'Nominal pembayaran tidak sesuai' }, { status: 400 });
+	}
+
+	console.info('midtrans_webhook_addon', {
+		order_id: orderId,
+		gross_amount: paymentOrder.grossAmount,
+		product_slug: paymentOrder.productSlug
+	});
+
+	if (transactionStatus === 'settlement' || transactionStatus === 'capture') {
 		const now = Date.now();
 		const berlakuHingga = Math.floor(now / 1000) + 2592000;
 
 		await db.batch([
 			db.prepare("UPDATE billing SET status = 'sukses' WHERE id = ?").bind(orderId),
+			db
+				.prepare(
+					"UPDATE payment_orders SET status = 'sukses', provider_status = ?, updated_at = ? WHERE id = ?"
+				)
+				.bind(transactionStatus, now, orderId),
 			db
 				.prepare(
 					`INSERT INTO addon_lembaga (
@@ -125,8 +153,13 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 						berlaku_hingga = excluded.berlaku_hingga,
 						created_at = excluded.created_at`
 				)
-				.bind(nanoid(), parsedOrder.lembagaId, parsedOrder.addonTipe, berlakuHingga, now)
+				.bind(nanoid(), paymentOrder.lembagaId, paymentOrder.productSlug, berlakuHingga, now)
 		]);
+	} else {
+		await db
+			.prepare('UPDATE payment_orders SET provider_status = ?, updated_at = ? WHERE id = ?')
+			.bind(transactionStatus, Date.now(), orderId)
+			.run();
 	}
 
 	return json({ ok: true }, { status: 200 });
