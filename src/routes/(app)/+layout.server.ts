@@ -92,6 +92,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	}
 
 	const isDashboardRoute = url.pathname === '/dashboard' || url.pathname.startsWith('/dashboard/');
+	const isLembagaRoute = url.pathname === '/lembaga' || url.pathname.startsWith('/lembaga/');
 	const orgId = user.orgId ?? null;
 	let org = null;
 
@@ -100,12 +101,12 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		if (!org && !isDashboardRoute) {
 			throw error(404, 'Lembaga tidak ditemukan');
 		}
-	} else if (!isDashboardRoute) {
+	} else if (!isDashboardRoute && !isLembagaRoute) {
 		throw error(403, 'Akun belum terhubung ke lembaga.');
 	}
 
 	if (org) {
-		if (org.type !== 'tpq') {
+		if (org.type !== 'tpq' && !isLembagaRoute) {
 			throw redirect(302, '/tpq');
 		}
 

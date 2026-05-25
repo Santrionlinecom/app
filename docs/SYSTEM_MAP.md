@@ -378,8 +378,8 @@ availableMenus: MenuItem[]    // derived dari lembagaAktif.tipe + addonStatus
 ### Phase 2 - Q3 2026 (Multi-Lembaga)
 
 - [x] Skema D1 multi-lembaga (migration awal `0037_multi_lembaga.sql`)
-- [ ] LembagaSwitcher UI
-- [ ] Halaman manajemen lembaga
+- [x] LembagaSwitcher UI
+- [x] Halaman manajemen lembaga (`/lembaga`)
 - [ ] AddonGate component
 - [ ] Register wizard 3 step
 

@@ -358,6 +358,11 @@
 						label: isSuperAdmin ? 'Super Admin' : 'Dashboard',
 						href: isSuperAdmin ? '/admin/super/overview' : '/dashboard',
 						icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z'
+					},
+					{
+						label: 'Lembaga',
+						href: '/lembaga',
+						icon: 'M4 10.5L12 6l8 4.5v8.5a1 1 0 01-1 1H5a1 1 0 01-1-1v-8.5zM8 20v-6h8v6'
 					}
 		];
 		const utilityItems = isSuperAdmin ? superAdminItems : [];
