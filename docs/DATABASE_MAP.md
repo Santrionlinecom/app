@@ -5,6 +5,7 @@ Catatan penting:
 - Banyak tabel inti dibuat lewat helper runtime di `src/lib/server/*`, bukan hanya lewat file migration.
 - `migrations/0004_update_schema_baru.sql` di repo ini praktis kosong, jadi sumber skema awal lebih banyak harus dibaca dari helper dan adapter Lucia.
 - Kolom tambahan di `users` dan beberapa tabel lain juga dimatangkan lewat `ALTER TABLE` runtime.
+- `migrations/0037_multi_lembaga.sql` mulai memindahkan arsitektur v2 ke model multi-lembaga dengan tetap memakai `users` dan `organizations`.
 
 ## Auth, Organisasi, Log, dan Infrastruktur
 
@@ -12,7 +13,8 @@ Catatan penting:
 |---|---|---|---|---|
 | `users` | Akun pengguna, role, org binding, profil dasar | `sessions.user_id`, banyak FK logika ke org dan fitur | Base schema Lucia, lalu runtime `ensureUserOptionalColumns` | Auth, dashboard, TPQ, admin, laporan, lisensi, buku |
 | `sessions` | Session Lucia | `sessions.user_id -> users.id` | Base schema Lucia | Auth |
-| `organizations` | Master lembaga | `users.org_id -> organizations.id`, banyak tabel org-scoped FK | Runtime `ensureOrgSchema` | TPQ, komunitas, admin, public institution pages |
+| `organizations` | Master lembaga | `users.org_id -> organizations.id`, banyak tabel org-scoped FK, `organizations.akun_admin_id -> users.id` | Runtime `ensureOrgSchema`, kolom v2 dari `0037_multi_lembaga.sql` | TPQ, komunitas, admin, public institution pages |
+| `addon_lembaga` | Status addon aktif per lembaga | `lembaga_id -> organizations.id` | `0037_multi_lembaga.sql` | V2 addon gate dan billing |
 | `api_rate_limits` | Penyimpan limiter untuk endpoint API | Tidak banyak FK, keyed by `scope + limiter_key` | Runtime `ensureApiRateLimitTable` | Hampir semua endpoint sensitif / berbiaya |
 | `chat_messages` | Log chat sederhana | `sender_id -> users.id` | Runtime `ensureChatTable` | Chat internal / helper masa depan |
 | `activity_logs` | Log aktivitas user | `user_id -> users.id` | `0008_activity_logs.sql` | Audit aktivitas |
@@ -31,6 +33,7 @@ Catatan penting:
 |---|---|---|---|---|
 | `tpq_halaqoh` | Halaqoh/kelas TPQ | `institution_id -> organizations.id`, `ustadz_user_id -> users.id` | `0016_tpq_academic_workflow.sql` + runtime ensure | `/tpq/akademik`, dashboard TPQ |
 | `tpq_setoran` | Setoran harian | `institution_id -> organizations.id`, `santri_user_id`, `ustadz_user_id`, `halaqoh_id` | `0016_tpq_academic_workflow.sql` + runtime ensure | Setoran/review/riwayat, rapor |
+| `santri` | Data santri v2 yang terpisah dari akun login | `lembaga_id -> organizations.id`, `user_id -> users.id` | `0037_multi_lembaga.sql` | V2 manajemen santri dan limit santri |
 | `hafalan_progress` | Progres hafalan inti | `user_id -> users.id` | Base schema lama + `0006_add_indexes.sql` + runtime ensure | Dashboard hafalan, rapor, sertifikat, report |
 | `hafalan_surah_checks` | Checklist surah per user | `user_id -> users.id` | Runtime `ensureHafalanSurahChecksTable` | Hafalan mandiri |
 | `hafalan_kategori` | Kategori rapor hafalan | `organization_id -> organizations.id` | `0026_rapor_hafalan_kategori.sql` + runtime ensure | Rapor hafalan |
@@ -67,6 +70,7 @@ Catatan penting:
 | `coin_wallets` | Wallet coin user | `user_id -> users.id` | `0023_buku_novel_coin.sql` + runtime ensure | `/coins` |
 | `coin_transactions` | Mutasi coin | `user_id -> users.id` | `0023_buku_novel_coin.sql` + runtime ensure | `/coins`, topup, unlock |
 | `coin_topup_requests` | Request topup coin | `user_id -> users.id` | `0023_buku_novel_coin.sql` + runtime ensure | `/coins/topup`, admin moderation |
+| `billing` | Tagihan addon lembaga | `akun_admin_id -> users.id`, `lembaga_id -> organizations.id` | `0037_multi_lembaga.sql` | V2 pembayaran addon |
 | `buku_author_wallets` | Wallet royalti author | `author_id -> users.id` | `0024_buku_author_royalties.sql` + runtime ensure | `/buku/studio/earnings`, admin royalties |
 | `buku_author_royalty_ledger` | Ledger royalti author | `author_id`, `book_id`, `chapter_id`, `reader_id` | `0024_buku_author_royalties.sql` + runtime ensure | Royalti buku |
 | `buku_reading_progress` | Progress baca | `user_id`, `book_id` | `0025_buku_reading_progress.sql` + runtime ensure | `/buku/saya`, reader |
@@ -88,6 +92,7 @@ Catatan penting:
 | Tabel | Fungsi tabel | Relasi perkiraan | Migration asal | Dipakai oleh |
 |---|---|---|---|---|
 | `program_amal` | Master program amal | `organization_id -> organizations.id` | Runtime `ensureUmmahTables` | `/keuangan`, `/org/[slug]/ummah` |
+| `jamaah` | Data jamaah v2 untuk masjid/musholla | `lembaga_id -> organizations.id` | `0037_multi_lembaga.sql` | V2 modul masjid/musholla |
 | `transaksi_zakat` | Transaksi zakat | `program_id -> program_amal.id` | Runtime `ensureUmmahTables` | Report keuangan, ummah |
 | `data_qurban` | Data qurban | `program_id -> program_amal.id` | Runtime `ensureUmmahTables` | Report keuangan, ummah |
 | `kas_masjid` | Buku kas masjid/musholla | `organization_id -> organizations.id` | Runtime `ensureUmmahTables` | `/keuangan`, dashboard legacy |
