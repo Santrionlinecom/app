@@ -126,7 +126,7 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 |---|---|---|
 | `/admin/super/overview` | LIVE | Super admin overview. |
 | `/admin/super/overview/live` | LIVE | Live overview endpoint. |
-| `/admin/super/cms-hub` | LIVE | CMS hub. |
+| `/admin/super/cms-hub` | LIVE | CMS hub superadmin. |
 | `/admin/super/buku` | LIVE | Super admin buku index. |
 | `/admin/super/buku/[id]` | LIVE | Detail buku admin. |
 | `/admin/super/buku/royalties` | LIVE | Royalty overview. |
@@ -138,9 +138,9 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 | `/admin/shortlinks/new` | LIVE | Create shortlink. |
 | `/admin/shortlinks/[id]` | LIVE | Detail shortlink. |
 | `/admin/shortlinks/[id]/edit` | LIVE | Edit shortlink. |
-| `/(cms)/admin/posts` | LIVE | Post list. |
-| `/(cms)/admin/posts/new` | LIVE | Create post. |
-| `/(cms)/admin/posts/[id]/edit` | LIVE | Edit post. |
+| `/(cms)/admin/posts` | LIVE | Post list superadmin. |
+| `/(cms)/admin/posts/new` | LIVE | Create post superadmin. |
+| `/(cms)/admin/posts/[id]/edit` | LIVE | Edit post superadmin. |
 
 ## API Routes
 
