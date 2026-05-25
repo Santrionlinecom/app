@@ -4,14 +4,145 @@ import {
 	createOrganization,
 	ensureUniqueSlug,
 	getOrganizationById,
-	slugify
+	slugify,
+	type OrgType
 } from '$lib/server/organizations';
 import { listOrgMedia } from '$lib/server/org-media';
 import { seedHafalanDefault } from '$lib/server/db-hafalan';
 import { SEED_HAFALAN_DEFAULT } from '$lib/server/seed-hafalan-default';
 import type { Actions, PageServerLoad } from './$types';
 
-const allowedOrgTypes = ['tpq'] as const;
+const allowedOrgTypes = ['tpq', 'pondok', 'masjid', 'musholla', 'rumah-tahfidz'] as const;
+
+type ManagedLembagaRow = {
+	id: string;
+	name: string;
+	type: string;
+	slug: string | null;
+	status: string | null;
+	address: string | null;
+	city: string | null;
+	logoUrl: string | null;
+	isAktif: number | null;
+	createdAt: number | null;
+	activeAddonCount: number | null;
+};
+
+type AddonRow = {
+	id: string;
+	tipeAddon: string;
+	status: string;
+	berlakuHingga: number | null;
+};
+
+const isMissingMultiLembagaSchema = (err: unknown) => {
+	const message = `${(err as Error)?.message ?? err}`.toLowerCase();
+	return (
+		message.includes('no such table: addon_lembaga') ||
+		(message.includes('no such column') &&
+			(message.includes('akun_admin_id') || message.includes('logo_url') || message.includes('is_aktif')))
+	);
+};
+
+const listManagedLembaga = async (db: App.Locals['db'], userId: string, fallbackOrgId?: string | null) => {
+	if (!db) return [];
+
+	const nowMs = Date.now();
+	const nowSeconds = Math.floor(nowMs / 1000);
+
+	try {
+		const { results } = await db
+			.prepare(
+				`SELECT
+					o.id,
+					o.name,
+					o.type,
+					o.slug,
+					o.status,
+					o.address,
+					o.city,
+					o.logo_url AS logoUrl,
+					o.is_aktif AS isAktif,
+					o.created_at AS createdAt,
+					COUNT(a.id) AS activeAddonCount
+				 FROM organizations o
+				 LEFT JOIN addon_lembaga a
+				   ON a.lembaga_id = o.id
+				  AND a.status = 'aktif'
+				  AND (
+					a.berlaku_hingga IS NULL
+					OR a.berlaku_hingga > ?
+					OR (a.berlaku_hingga < 100000000000 AND a.berlaku_hingga > ?)
+				  )
+				 WHERE o.akun_admin_id = ?
+				 GROUP BY
+					o.id,
+					o.name,
+					o.type,
+					o.slug,
+					o.status,
+					o.address,
+					o.city,
+					o.logo_url,
+					o.is_aktif,
+					o.created_at
+				 ORDER BY COALESCE(o.is_aktif, 0) DESC, o.created_at DESC`
+			)
+			.bind(nowMs, nowSeconds, userId)
+			.all<ManagedLembagaRow>();
+
+		return results ?? [];
+	} catch (err) {
+		if (!isMissingMultiLembagaSchema(err)) throw err;
+		if (!fallbackOrgId) return [];
+
+		const org = await getOrganizationById(db, fallbackOrgId);
+		return org
+			? [
+					{
+						...org,
+						logoUrl: null,
+						isAktif: org.status === 'active' ? 1 : 0,
+						activeAddonCount: 0
+					}
+				]
+			: [];
+	}
+};
+
+const listActiveAddons = async (db: App.Locals['db'], lembagaId?: string | null) => {
+	if (!db || !lembagaId) return [];
+
+	const nowMs = Date.now();
+	const nowSeconds = Math.floor(nowMs / 1000);
+
+	try {
+		const { results } = await db
+			.prepare(
+				`SELECT
+					id,
+					tipe_addon AS tipeAddon,
+					status,
+					berlaku_hingga AS berlakuHingga
+				 FROM addon_lembaga
+				 WHERE lembaga_id = ?
+				   AND status = 'aktif'
+				   AND (
+					berlaku_hingga IS NULL
+					OR berlaku_hingga > ?
+					OR (berlaku_hingga < 100000000000 AND berlaku_hingga > ?)
+				   )
+				 ORDER BY created_at DESC`
+			)
+			.bind(lembagaId, nowMs, nowSeconds)
+			.all<AddonRow>();
+
+		return results ?? [];
+	} catch (err) {
+		if (isMissingMultiLembagaSchema(err)) return [];
+		throw err;
+	}
+};
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -43,12 +174,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 		?? null;
 
 	const org = profile?.orgId ? await getOrganizationById(db, profile.orgId) : null;
-	const orgMedia = org ? await listOrgMedia(db, org.id) : [];
+	const [orgMedia, managedLembaga, addonAktif] = await Promise.all([
+		org ? listOrgMedia(db, org.id) : [],
+		listManagedLembaga(db, user.id, profile?.orgId),
+		listActiveAddons(db, profile?.orgId)
+	]);
 
 	return {
 		profile,
 		org,
-		orgMedia
+		orgMedia,
+		managedLembaga,
+		addonAktif
 	};
 };
 
@@ -197,15 +334,25 @@ export const actions: Actions = {
 			return fail(400, { message: 'Slug tidak valid.', type: 'org' });
 		}
 
-		const uniqueSlug = await ensureUniqueSlug(db, orgType as typeof allowedOrgTypes[number], baseSlug);
+		const typedOrgType = orgType as OrgType;
+		const uniqueSlug = await ensureUniqueSlug(db, typedOrgType, baseSlug);
 		const orgId = await createOrganization(db, {
-			type: orgType as typeof allowedOrgTypes[number],
+			type: typedOrgType,
 			name: orgName.trim(),
 			slug: uniqueSlug,
 			address: typeof orgAddress === 'string' ? orgAddress.trim() : '',
 			city: typeof orgCity === 'string' ? orgCity.trim() : '',
 			contactPhone: typeof orgPhone === 'string' ? orgPhone.trim() : ''
 		});
+
+		try {
+			await db
+				.prepare('UPDATE organizations SET akun_admin_id = ?, is_aktif = ? WHERE id = ?')
+				.bind(locals.user.id, 1, orgId)
+				.run();
+		} catch (err) {
+			if (!isMissingMultiLembagaSchema(err)) throw err;
+		}
 		await seedHafalanDefault(db, orgId, SEED_HAFALAN_DEFAULT);
 
 		await db
