@@ -1,8 +1,11 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { Monitor, Smartphone } from 'lucide-svelte';
 	import { isSuperAdminUser } from '$lib/auth/session-user';
 
 	export let data: PageData;
+
+	let uiPreviewMode: 'desktop' | 'mobile' = 'desktop';
 
 	const dashboardRoles = new Set([
 		'admin',
@@ -344,16 +347,25 @@
 		</div>
 	</section>
 
-	<aside class="floating-popup" aria-label="Akses cepat SantriOnline">
-		<div>
-			<p class="floating-popup-kicker">Mode baru</p>
-			<strong>Multi-lembaga siap dikelola</strong>
-			<span>Pilih lembaga, cek addon, lalu lanjutkan kerja admin tanpa pindah domain.</span>
-		</div>
-		<div class="floating-popup-actions">
-			<a href="/lembaga">Lembaga</a>
-			<a href="/addon">Addon</a>
-		</div>
+	<aside class="ui-mode-popup" aria-label="Mode tampilan UI">
+		<button
+			type="button"
+			class:active={uiPreviewMode === 'desktop'}
+			aria-label="Mode desktop"
+			aria-pressed={uiPreviewMode === 'desktop'}
+			on:click={() => (uiPreviewMode = 'desktop')}
+		>
+			<Monitor class="h-5 w-5" aria-hidden="true" />
+		</button>
+		<button
+			type="button"
+			class:active={uiPreviewMode === 'mobile'}
+			aria-label="Mode mobile"
+			aria-pressed={uiPreviewMode === 'mobile'}
+			on:click={() => (uiPreviewMode = 'mobile')}
+		>
+			<Smartphone class="h-5 w-5" aria-hidden="true" />
+		</button>
 	</aside>
 </div>
 
@@ -601,83 +613,50 @@
 		background: var(--color-so-cream);
 	}
 
-	.floating-popup {
+	.ui-mode-popup {
 		position: fixed;
 		right: 1rem;
 		top: 50%;
 		z-index: 35;
-		width: min(18rem, calc(100vw - 2rem));
 		transform: translateY(-50%);
 		border: 1px solid rgb(255 255 255 / 0.7);
-		border-radius: 1.1rem;
-		background: rgb(255 255 255 / 0.72);
+		border-radius: 999px;
+		background: rgb(255 255 255 / 0.68);
 		box-shadow: 0 18px 54px rgb(27 67 50 / 0.14);
 		backdrop-filter: blur(18px);
-		padding: 1rem;
+		display: flex;
+		gap: 0.45rem;
+		padding: 0.45rem;
 	}
 
-	.floating-popup-kicker {
-		font-size: 0.72rem;
-		font-weight: 900;
-		text-transform: uppercase;
-		color: var(--color-so-gold);
-	}
-
-	.floating-popup strong,
-	.floating-popup span {
-		display: block;
-	}
-
-	.floating-popup strong {
-		margin-top: 0.35rem;
-		font-size: 0.95rem;
-		line-height: 1.35;
-		color: var(--color-so-green);
-	}
-
-	.floating-popup span {
-		margin-top: 0.45rem;
-		font-size: 0.78rem;
-		line-height: 1.55;
-		color: var(--color-so-muted);
-	}
-
-	.floating-popup-actions {
-		margin-top: 0.85rem;
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.5rem;
-	}
-
-	.floating-popup-actions a {
+	.ui-mode-popup button {
 		display: inline-flex;
-		min-height: 2.35rem;
+		height: 2.45rem;
+		width: 2.45rem;
 		align-items: center;
 		justify-content: center;
-		border-radius: 0.75rem;
-		background: rgb(27 67 50 / 0.9);
-		font-size: 0.78rem;
-		font-weight: 900;
+		border-radius: 999px;
+		border: 1px solid var(--color-so-border);
+		background: rgb(255 255 255 / 0.72);
+		color: var(--color-so-green);
+		transition:
+			background-color 160ms ease,
+			border-color 160ms ease,
+			color 160ms ease;
+	}
+
+	.ui-mode-popup button.active {
+		border-color: rgb(27 67 50 / 0.2);
+		background: rgb(27 67 50 / 0.92);
 		color: #fff;
 	}
 
-	.floating-popup-actions a + a {
-		background: rgb(201 168 76 / 0.9);
-		color: var(--color-so-green);
-	}
-
 	@media (max-width: 767px) {
-		.floating-popup {
+		.ui-mode-popup {
 			right: 0.75rem;
 			bottom: 5.6rem;
 			top: auto;
-			width: min(20rem, calc(100vw - 1.5rem));
 			transform: none;
-			padding: 0.85rem;
-		}
-
-		.floating-popup span {
-			display: none;
 		}
 	}
 </style>
