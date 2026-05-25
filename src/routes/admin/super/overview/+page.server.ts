@@ -40,6 +40,25 @@ const safeLogQuery = async <T>(fn: () => Promise<T>, fallback: T): Promise<T> =>
 	}
 };
 
+const hasTableColumn = async (db: App.Locals['db'], table: string, column: string) => {
+	try {
+		const { results } = await db!
+			.prepare(`PRAGMA table_info(${table})`)
+			.all<{ name: string }>();
+		return (results ?? []).some((row) => row.name === column);
+	} catch {
+		return false;
+	}
+};
+
+const setOrganizationOwner = async (db: App.Locals['db'], orgId: string, userId: string) => {
+	if (!(await hasTableColumn(db, 'organizations', 'akun_admin_id'))) return;
+	await db!
+		.prepare('UPDATE organizations SET akun_admin_id = ? WHERE id = ?')
+		.bind(userId, orgId)
+		.run();
+};
+
 const normalizeText = (value: FormDataEntryValue | null) =>
 	typeof value === 'string' ? value.trim() : '';
 
@@ -77,11 +96,19 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		(await countTable(db, 'data_qurban')) +
 		(await countTable(db, 'kas_masjid'));
 
-	const { results: orgRows } = await db
+	const hasAkunAdminColumn = await hasTableColumn(db, 'organizations', 'akun_admin_id');
+	const { results: rawOrgRows } = await db
 		.prepare(
-			`SELECT o.id, o.name, o.type, o.slug, o.status, o.created_at as createdAt,
-				SUM(CASE WHEN u.role IN (${memberRoles.map(() => '?').join(',')}) THEN 1 ELSE 0 END) as totalMembers,
-				SUM(CASE WHEN u.role = 'admin' THEN 1 ELSE 0 END) as adminCount
+			`SELECT
+				o.id,
+				o.name,
+				o.type,
+				o.slug,
+				o.status,
+				o.created_at as createdAt,
+				${hasAkunAdminColumn ? 'o.akun_admin_id' : 'NULL'} as akunAdminId,
+				COUNT(DISTINCT CASE WHEN u.role IN (${memberRoles.map(() => '?').join(',')}) THEN u.id END) as totalMembers,
+				COUNT(DISTINCT CASE WHEN u.role = 'admin' THEN u.id END) as adminCount
 			 FROM organizations o
 			 LEFT JOIN users u ON u.org_id = o.id
 			 GROUP BY o.id
@@ -96,9 +123,93 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			slug: string;
 			status: string;
 			createdAt: number;
+			akunAdminId: string | null;
 			totalMembers: number | null;
 			adminCount: number | null;
 		}>();
+
+	const { results: adminRows } = await db
+		.prepare(
+			hasAkunAdminColumn
+				? `SELECT DISTINCT
+						o.id as orgId,
+						u.id,
+						u.username,
+						u.email,
+						u.role,
+						CASE WHEN u.id = o.akun_admin_id THEN 1 ELSE 0 END as isOwner,
+						CASE WHEN u.org_id = o.id AND u.role = 'admin' THEN 1 ELSE 0 END as isOrgAdmin
+					 FROM organizations o
+					 JOIN users u
+					   ON (
+						(u.org_id = o.id AND u.role = 'admin')
+						OR u.id = o.akun_admin_id
+					   )
+					 ORDER BY isOwner DESC, u.created_at ASC`
+				: `SELECT
+						u.org_id as orgId,
+						u.id,
+						u.username,
+						u.email,
+						u.role,
+						0 as isOwner,
+						1 as isOrgAdmin
+					 FROM users u
+					 WHERE u.org_id IS NOT NULL
+					   AND u.role = 'admin'
+					 ORDER BY u.created_at ASC`
+		)
+		.all<{
+			orgId: string | null;
+			id: string;
+			username: string | null;
+			email: string;
+			role: string;
+			isOwner: number | null;
+			isOrgAdmin: number | null;
+		}>();
+
+	const adminsByOrgId = new Map<
+		string,
+		Array<{
+			id: string;
+			username: string | null;
+			email: string;
+			role: string;
+			isOwner: boolean;
+			isOrgAdmin: boolean;
+		}>
+	>();
+
+	for (const row of adminRows ?? []) {
+		if (!row.orgId) continue;
+		const admins = adminsByOrgId.get(row.orgId) ?? [];
+		const existing = admins.find((admin) => admin.id === row.id);
+		if (existing) {
+			existing.isOwner = existing.isOwner || row.isOwner === 1;
+			existing.isOrgAdmin = existing.isOrgAdmin || row.isOrgAdmin === 1;
+		} else {
+			admins.push({
+				id: row.id,
+				username: row.username,
+				email: row.email,
+				role: row.role,
+				isOwner: row.isOwner === 1,
+				isOrgAdmin: row.isOrgAdmin === 1
+			});
+		}
+		adminsByOrgId.set(row.orgId, admins);
+	}
+
+	const orgRows = (rawOrgRows ?? []).map((org) => {
+		const admins = adminsByOrgId.get(org.id) ?? [];
+		return {
+			...org,
+			totalMembers: Number(org.totalMembers ?? 0),
+			adminCount: admins.length,
+			admins
+		};
+	});
 
 	const { results: typeSummaryRows } = await db
 		.prepare(
@@ -328,7 +439,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			trafficSources,
 			recentActivities
 		},
-		institutions: orgRows ?? [],
+		institutions: orgRows,
 		institutionSummary,
 		availableUsers: candidateUsers ?? [],
 		searchQuery,
@@ -351,8 +462,20 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 };
 
 const ensureOrgHasNoAdmin = async (db: App.Locals['db'], orgId: string) => {
+	const hasAkunAdminColumn = await hasTableColumn(db, 'organizations', 'akun_admin_id');
 	const row = await db!
-		.prepare("SELECT COUNT(1) as total FROM users WHERE org_id = ? AND role = 'admin'")
+		.prepare(
+			hasAkunAdminColumn
+				? `SELECT COUNT(DISTINCT u.id) as total
+					 FROM organizations o
+					 LEFT JOIN users u
+					   ON (
+						(u.org_id = o.id AND u.role = 'admin')
+						OR u.id = o.akun_admin_id
+					   )
+					 WHERE o.id = ?`
+				: "SELECT COUNT(1) as total FROM users WHERE org_id = ? AND role = 'admin'"
+		)
 		.bind(orgId)
 		.first<{ total: number | null }>();
 	if (Number(row?.total ?? 0) > 0) {
@@ -555,6 +678,7 @@ export const actions: Actions = {
 			.prepare("UPDATE users SET role = 'admin', org_id = ?, org_status = 'active' WHERE id = ?")
 			.bind(orgId, userId)
 			.run();
+		await setOrganizationOwner(db, orgId, userId);
 
 		return { success: true };
 	},
@@ -603,6 +727,7 @@ export const actions: Actions = {
 			)
 			.bind(userId, name.trim(), email.trim(), hashed, 'admin', orgId, 'active', Date.now())
 			.run();
+		await setOrganizationOwner(db, orgId, userId);
 
 		await logActivity(db!, {
 			userId,

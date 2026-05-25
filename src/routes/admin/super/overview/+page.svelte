@@ -7,6 +7,7 @@
 	export let form: ActionData | undefined;
 
 	type Institution = PageData['institutions'][number];
+	type InstitutionAdmin = Institution['admins'][number];
 	type AvailableUser = PageData['availableUsers'][number];
 	type ActivityRow = PageData['liveStats']['recentActivities'][number];
 	type LiveActivity = ActivityRow & { role?: string | null };
@@ -282,6 +283,12 @@
 	const orgLabel = (org: Institution) => `${org.name} (${orgTypeLabel[org.type] ?? org.type})`;
 	const orgsWithoutAdmin = (orgs: Institution[]) => orgs.filter((org) => !org.adminCount);
 	const hasOrgWithoutAdmin = (orgs: Institution[]) => orgs.some((org) => !org.adminCount);
+	const adminDisplayName = (admin: InstitutionAdmin) => admin.username || admin.email || admin.id;
+	const adminRoleLabel = (admin: InstitutionAdmin) => {
+		if (admin.isOwner && admin.isOrgAdmin) return 'Owner + Admin';
+		if (admin.isOwner) return 'Owner';
+		return 'Admin';
+	};
 	const userLabel = (user: AvailableUser) => {
 		const org = data.institutions?.find((item) => item.id === user.orgId);
 		const orgName = org ? org.name : null;
@@ -1125,7 +1132,7 @@
 				<div class="flex flex-col gap-2 border-b border-so-border px-5 py-4 md:flex-row md:items-center md:justify-between sm:px-6">
 					<div>
 						<h2 class="font-display text-xl font-bold text-so-green">Daftar Lembaga</h2>
-						<p class="mt-1 text-sm text-so-muted">Gunakan ghost login untuk masuk ke dashboard lembaga.</p>
+						<p class="mt-1 text-sm text-so-muted">Pantau siapa admin pengelola setiap lembaga dan gunakan ghost login jika perlu.</p>
 					</div>
 					<span class="rounded-full border border-so-border bg-white px-4 py-1 text-xs font-bold text-so-muted">{formatNumber(data.institutions.length)} lembaga</span>
 				</div>
@@ -1133,12 +1140,13 @@
 					<p class="p-5 text-sm text-so-muted sm:p-6">Belum ada lembaga terdaftar.</p>
 				{:else}
 					<div class="overflow-auto">
-						<table class="w-full min-w-[920px] text-sm">
+						<table class="w-full min-w-[1120px] text-sm">
 							<thead class="bg-so-cream text-left text-xs uppercase text-so-muted">
 								<tr>
 									<th class="px-5 py-3">Nama</th>
 									<th class="px-5 py-3">Tipe</th>
 									<th class="px-5 py-3">Status</th>
+									<th class="px-5 py-3">Admin Pengelola</th>
 									<th class="px-5 py-3 text-right">Anggota</th>
 									<th class="px-5 py-3">Dibuat</th>
 									<th class="px-5 py-3">Aksi</th>
@@ -1151,6 +1159,29 @@
 										<td class="px-5 py-3 text-so-muted">{orgTypeLabel[org.type] ?? org.type}</td>
 										<td class="px-5 py-3">
 											<span class={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold ${statusBadgeClass(org.status)}`}>{org.status}</span>
+										</td>
+										<td class="px-5 py-3">
+											{#if org.admins.length}
+												<div class="space-y-2">
+													{#each org.admins as admin (admin.id)}
+														<div class="rounded-xl border border-so-border bg-so-cream px-3 py-2">
+															<div class="flex items-start justify-between gap-3">
+																<div class="min-w-0">
+																	<p class="truncate text-sm font-bold text-so-ink">{adminDisplayName(admin)}</p>
+																	<p class="truncate text-xs text-so-muted">{admin.email}</p>
+																</div>
+																<span class="shrink-0 rounded-full bg-so-green/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-so-green">
+																	{adminRoleLabel(admin)}
+																</span>
+															</div>
+														</div>
+													{/each}
+												</div>
+											{:else}
+												<span class="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
+													Belum ada admin
+												</span>
+											{/if}
 										</td>
 										<td class="px-5 py-3 text-right font-bold text-so-ink">{formatNumber(org.totalMembers)}</td>
 										<td class="px-5 py-3 text-so-muted">{formatDate(org.createdAt)}</td>
