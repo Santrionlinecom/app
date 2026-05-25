@@ -8,6 +8,60 @@ import {
 } from '$lib/server/auth/rbac';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 
+type LembagaSwitcherItem = {
+	id: string;
+	name: string;
+	type: string;
+	slug: string | null;
+	status: string | null;
+	logoUrl: string | null;
+	isAktif: number | null;
+};
+
+const isMissingMultiLembagaColumn = (err: unknown) => {
+	const message = `${(err as Error)?.message ?? err}`.toLowerCase();
+	return (
+		message.includes('no such column') &&
+		(message.includes('akun_admin_id') || message.includes('logo_url') || message.includes('is_aktif'))
+	);
+};
+
+const listManagedLembaga = async (db: App.Locals['db'], userId?: string | null) => {
+	if (!db || !userId) return [];
+
+	try {
+		const { results } = await db
+			.prepare(
+				`SELECT
+					id,
+					name,
+					type,
+					slug,
+					status,
+					logo_url as logoUrl,
+					is_aktif as isAktif
+				 FROM organizations
+				 WHERE akun_admin_id = ?
+				 ORDER BY COALESCE(is_aktif, 0) DESC, name COLLATE NOCASE ASC`
+			)
+			.bind(userId)
+			.all<LembagaSwitcherItem>();
+
+		return (results ?? []).map((item) => ({
+			id: item.id,
+			name: item.name,
+			type: item.type,
+			slug: item.slug,
+			status: item.status,
+			logoUrl: item.logoUrl,
+			isAktif: item.isAktif
+		}));
+	} catch (err) {
+		if (isMissingMultiLembagaColumn(err)) return [];
+		throw err;
+	}
+};
+
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const user = assertLoggedIn({ locals });
 	const superAdmin = isSuperAdminRole(user.role);
@@ -23,6 +77,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		return {
 			user,
 			org: null,
+			lembagaList: await listManagedLembaga(locals.db, user.id),
 			featureAccess: {
 				hafalan: true,
 				setoran: true,
@@ -71,6 +126,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	return {
 		user,
 		org,
+		lembagaList: await listManagedLembaga(locals.db, user.id),
 		featureAccess
 	};
 };

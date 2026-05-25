@@ -1,0 +1,26 @@
+<script lang="ts">	import { dev } from '$app/environment';
+
+	function triggerError() {
+		throw new Error('Manual Sentry test error from /sentry-test');
+	}
+</script>
+
+<!-- Development-only page for manually checking the Sentry error path. -->
+{#if dev}
+	<main class="min-h-screen bg-slate-50 px-6 py-12 text-slate-900">
+		<section class="mx-auto max-w-xl space-y-6">
+			<div>
+				<p class="text-sm font-semibold uppercase tracking-wide text-emerald-700">Development</p>
+				<h1 class="mt-2 text-3xl font-bold">Sentry Test</h1>
+			</div>
+
+			<button
+				type="button"
+				class="rounded bg-red-600 px-4 py-2 font-semibold text-white shadow-sm transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+				on:click={triggerError}
+			>
+				Test Error
+			</button>
+		</section>
+	</main>
+{/if}

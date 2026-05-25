@@ -1,6 +1,18 @@
-<script>
+<script lang="ts">
+	import { page } from '$app/stores';
+	import LembagaSwitcher from './LembagaSwitcher.svelte';
+	import type { LembagaAktif } from '$lib/stores/lembagaAktif';
+
 	export let title = 'Dashboard';
 	export let subtitle = '';
+
+	type SwitcherPageData = {
+		lembagaList?: LembagaAktif[];
+		org?: LembagaAktif | null;
+		user?: { id?: string | null } | null;
+	};
+
+	$: switcherData = $page.data as SwitcherPageData;
 </script>
 
 <header
@@ -22,6 +34,11 @@
 			</div>
 		</div>
 		<div class="flex flex-wrap items-center gap-3">
+			<LembagaSwitcher
+				lembagaList={switcherData?.lembagaList ?? []}
+				fallbackLembaga={switcherData?.org ?? null}
+				currentUser={switcherData?.user ?? null}
+			/>
 			<label class="relative min-w-[240px] flex-1 sm:min-w-[320px] xl:w-[360px] xl:flex-none">
 				<span class="absolute left-3 top-1/2 -translate-y-1/2 text-so-muted">⌕</span>
 				<input

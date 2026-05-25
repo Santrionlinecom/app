@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
+	import LembagaSwitcher from '$lib/components/LembagaSwitcher.svelte';
 	import type { LayoutData } from './$types';
 
 	export let data: LayoutData;
@@ -455,6 +456,11 @@
 				</div>
 
 				<div class="flex items-center gap-3">
+					<LembagaSwitcher
+						lembagaList={data?.lembagaList ?? []}
+						fallbackLembaga={data?.org ?? null}
+						currentUser={data?.user ?? null}
+					/>
 					<div class="hidden rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-500 md:block">
 						{displayName}
 					</div>
