@@ -1,6 +1,20 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
-	import { Clock3, FileUp, Newspaper, RefreshCw } from 'lucide-svelte';
+	import {
+		ArrowLeft,
+		BarChart3,
+		BookOpen,
+		Clock3,
+		CreditCard,
+		FileText,
+		FileUp,
+		LayoutDashboard,
+		Menu,
+		Newspaper,
+		RefreshCw,
+		ShoppingBag,
+		X
+	} from 'lucide-svelte';
 	import {
 		KITAB_CATEGORY_OPTIONS,
 		getKitabCategoryLabel,
@@ -34,6 +48,45 @@
 		value
 			? new Date(value).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 			: '-';
+
+	const hubNavItems = [
+		{
+			href: '#ringkasan',
+			label: 'Ringkasan',
+			note: 'Status konten',
+			icon: LayoutDashboard
+		},
+		{
+			href: '#artikel-cms',
+			label: 'Artikel',
+			note: 'Blog dan berita',
+			icon: FileText
+		},
+		{
+			href: '#cms-digital',
+			label: 'Produk Digital',
+			note: 'Upload dan katalog',
+			icon: ShoppingBag
+		},
+		{
+			href: '#kitab-library',
+			label: 'Kitab',
+			note: 'PDF dan Drive',
+			icon: BookOpen
+		},
+		{
+			href: '#payment-methods',
+			label: 'Pembayaran',
+			note: 'Metode checkout',
+			icon: CreditCard
+		},
+		{
+			href: '#sales-chart',
+			label: 'Penjualan',
+			note: 'Verifikasi order',
+			icon: BarChart3
+		}
+	];
 
 	const plainText = (value: string | null | undefined) => (value ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 	const shortText = (value: string | null | undefined, length = 120) => {
@@ -209,6 +262,8 @@
 
 	let formError = '';
 	$: formError = form && 'error' in form ? form.error ?? '' : '';
+
+	let cmsSidebarOpen = false;
 
 	let isFetchingNews = false;
 	let fetchNewsMessage = '';
@@ -527,30 +582,153 @@
 	<title>Pusat Konten - Super Admin</title>
 </svelte:head>
 
-<div class="container mx-auto space-y-8 px-6 py-10">
-	<!-- Header -->
-	<div class="flex flex-col gap-3">
-		<div class="flex items-center gap-3">
-			<a href="/admin/super/overview" class="text-sm text-slate-500 hover:text-slate-700">← Kembali</a>
+<div class="super-admin-shell min-h-screen bg-[#f5f7f2] text-slate-900">
+	<div class="mx-auto max-w-[1540px] px-4 pb-24 pt-5 sm:px-6 lg:px-8 lg:py-8">
+		<div class="mb-4 flex items-center justify-between gap-3 xl:hidden">
+			<button
+				type="button"
+				class="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white/88 px-4 text-sm font-semibold text-slate-800 shadow-sm backdrop-blur"
+				on:click={() => (cmsSidebarOpen = true)}
+			>
+				<Menu class="h-4 w-4" aria-hidden="true" />
+				Menu CMS
+			</button>
+			<a
+				href="/admin/super/overview"
+				class="inline-flex h-11 items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-800"
+			>
+				<ArrowLeft class="h-4 w-4" aria-hidden="true" />
+				Overview
+			</a>
 		</div>
-		<h1 class="text-3xl font-bold text-slate-900">Pusat Konten</h1>
-		<p class="text-slate-600">Blog, Produk Digital, dan Perpustakaan Kitab dalam satu ruang super admin</p>
-	</div>
 
-	{#if formError}
-		<div class="rounded-[1.5rem] border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700 shadow-sm">
-			{formError}
-		</div>
-	{/if}
+		{#if cmsSidebarOpen}
+			<div class="fixed inset-0 z-50 xl:hidden" role="dialog" aria-modal="true" aria-label="Menu CMS Hub">
+				<button
+					type="button"
+					class="absolute inset-0 bg-slate-950/45"
+					aria-label="Tutup menu CMS"
+					on:click={() => (cmsSidebarOpen = false)}
+				></button>
+				<aside class="absolute left-0 top-0 h-full w-[min(88vw,23rem)] overflow-y-auto bg-white p-4 shadow-2xl">
+					<div class="flex items-center justify-between gap-3">
+						<div>
+							<p class="text-xs font-bold uppercase text-emerald-700">Super Admin</p>
+							<h2 class="text-lg font-bold text-slate-950">CMS Hub</h2>
+						</div>
+						<button
+							type="button"
+							class="grid h-10 w-10 place-items-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700"
+							aria-label="Tutup menu"
+							on:click={() => (cmsSidebarOpen = false)}
+						>
+							<X class="h-4 w-4" aria-hidden="true" />
+						</button>
+					</div>
+					<nav class="mt-5 space-y-2" aria-label="Navigasi CMS Hub mobile">
+						{#each hubNavItems as item}
+							{@const Icon = item.icon}
+							<a
+								href={item.href}
+								class="cms-nav-link"
+								on:click={() => (cmsSidebarOpen = false)}
+							>
+								<span class="cms-nav-icon">
+									<Icon class="h-4 w-4" aria-hidden="true" />
+								</span>
+								<span class="min-w-0">
+									<span class="block text-sm font-bold text-slate-900">{item.label}</span>
+									<span class="block text-xs text-slate-500">{item.note}</span>
+								</span>
+							</a>
+						{/each}
+					</nav>
+				</aside>
+			</div>
+		{/if}
+
+		<div class="grid gap-6 xl:grid-cols-[19rem_minmax(0,1fr)]">
+			<aside class="hidden xl:block">
+				<div class="sticky top-6 space-y-4">
+					<div class="rounded-[2rem] border border-white/70 bg-white/86 p-5 shadow-xl backdrop-blur">
+						<a
+							href="/admin/super/overview"
+							class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-emerald-800"
+						>
+							<ArrowLeft class="h-4 w-4" aria-hidden="true" />
+							Kembali ke overview
+						</a>
+						<div class="mt-5">
+							<p class="text-xs font-bold uppercase text-emerald-700">Pusat Kerja</p>
+							<h2 class="mt-2 text-2xl font-black text-slate-950">CMS Hub</h2>
+							<p class="mt-2 text-sm leading-6 text-slate-500">
+								Kelola artikel, produk digital, kitab publik, metode bayar, dan order dari satu panel.
+							</p>
+						</div>
+						<nav class="mt-5 space-y-2" aria-label="Navigasi CMS Hub">
+							{#each hubNavItems as item}
+								{@const Icon = item.icon}
+								<a href={item.href} class="cms-nav-link">
+									<span class="cms-nav-icon">
+										<Icon class="h-4 w-4" aria-hidden="true" />
+									</span>
+									<span class="min-w-0">
+										<span class="block text-sm font-bold text-slate-900">{item.label}</span>
+										<span class="block text-xs text-slate-500">{item.note}</span>
+									</span>
+								</a>
+							{/each}
+						</nav>
+					</div>
+
+					<div class="rounded-[2rem] border border-emerald-200 bg-emerald-50/92 p-5 shadow-sm">
+						<p class="text-sm font-bold text-emerald-900">Prioritas hari ini</p>
+						<p class="mt-2 text-sm leading-6 text-emerald-800/80">
+							{formatNumber(data.digitalCommerce.pendingSales.length)} order menunggu verifikasi dan
+							{formatNumber(data.cms.stats.draftPosts)} artikel masih draft.
+						</p>
+						<a
+							href="#sales-chart"
+							class="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-emerald-900 px-4 text-sm font-bold text-white"
+						>
+							Cek penjualan
+						</a>
+					</div>
+				</div>
+			</aside>
+
+			<main class="min-w-0 space-y-8">
+				<section id="ringkasan" class="cms-hero">
+					<div class="max-w-3xl">
+						<p class="text-sm font-bold uppercase text-emerald-700">Super Admin</p>
+						<h1 class="mt-3 text-3xl font-black leading-tight text-slate-950 md:text-5xl">
+							Pusat konten SantriOnline
+						</h1>
+						<p class="mt-4 text-base leading-8 text-slate-600">
+							Ruang kerja untuk menjaga artikel, produk digital, pembayaran, transaksi, dan perpustakaan kitab tetap rapi.
+						</p>
+					</div>
+					<div class="cms-hero-actions">
+						<a href="/admin/posts/new">Tulis Artikel</a>
+						<a href="#cms-digital">Tambah Produk</a>
+						<a href="#kitab-library">Kelola Kitab</a>
+					</div>
+				</section>
+
+				{#if formError}
+					<div class="rounded-[1.5rem] border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700 shadow-sm">
+						{formError}
+					</div>
+				{/if}
 
 	<!-- Ringkasan pusat konten -->
 	<section class="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-lg backdrop-blur">
 		<div class="grid gap-6 xl:grid-cols-[1.05fr,0.95fr]">
 			<!-- CMS Artikel Card -->
-			<div class="overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 p-6 text-white shadow-xl">
+			<div id="artikel-cms" class="overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 p-6 text-white shadow-xl">
 				<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
 					<div class="max-w-xl">
-						<p class="text-xs uppercase tracking-[0.32em] text-white/60">CMS Artikel</p>
+						<p class="text-xs uppercase text-white/60">CMS Artikel</p>
 						<h3 class="mt-2 text-2xl font-semibold">Akses blog tetap utuh untuk super admin</h3>
 						<p class="mt-2 text-sm text-white/70">
 							Anda sekarang bisa masuk ke daftar post, tambah artikel baru, dan edit konten tanpa perlu ghost login sebagai admin lembaga.
@@ -564,7 +742,7 @@
 				<div class="mt-6 grid gap-3 sm:grid-cols-3">
 					{#each cmsOverviewCards as card}
 						<div class="rounded-2xl border border-white/15 bg-white/10 px-4 py-4">
-							<p class="text-[11px] uppercase tracking-[0.24em] text-white/55">{card.label}</p>
+							<p class="text-[11px] uppercase text-white/55">{card.label}</p>
 							<p class="mt-3 text-3xl font-semibold">{formatNumber(card.value)}</p>
 							<p class="mt-1 text-xs text-white/70">{card.note}</p>
 						</div>
@@ -654,7 +832,7 @@
 			<div class="rounded-[1.75rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-xl">
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 					<div>
-						<p class="text-xs uppercase tracking-[0.32em] text-emerald-300/70">Digital Store</p>
+						<p class="text-xs uppercase text-emerald-300/70">Digital Store</p>
 						<h3 class="mt-2 text-2xl font-semibold">Studio produk dan perpustakaan kitab</h3>
 						<p class="mt-2 text-sm text-white/70">
 							Upload produk digital, atur metode bayar, sekaligus kelola kitab publik dari panel super admin yang sama.
@@ -673,7 +851,7 @@
 				<div class="mt-6 grid gap-3 sm:grid-cols-2">
 					{#each digitalCards as card}
 						<div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-							<p class="text-[11px] uppercase tracking-[0.24em] text-white/55">{card.label}</p>
+							<p class="text-[11px] uppercase text-white/55">{card.label}</p>
 							<p class="mt-3 text-2xl font-semibold">
 								{#if card.label === 'Omzet'}
 									{formatCurrency(card.value)}
@@ -696,7 +874,7 @@
 							<p class="mt-1 text-xs text-white/65">Nilai rata-rata tiap penjualan tercatat.</p>
 						</div>
 						<div class="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-right">
-							<p class="text-[11px] uppercase tracking-[0.24em] text-emerald-200/70">Ready</p>
+							<p class="text-[11px] uppercase text-emerald-200/70">Ready</p>
 							<p class="mt-1 text-sm font-semibold text-white">{formatNumber(data.digitalCommerce.stats.totalProducts)} produk</p>
 						</div>
 					</div>
@@ -723,7 +901,7 @@
 	<section id="cms-digital" class="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-lg backdrop-blur">
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
 			<div class="max-w-2xl">
-				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Produk Digital</p>
+				<p class="text-xs font-semibold uppercase text-slate-400">Produk Digital</p>
 				<h2 class="section-title mt-2 text-2xl font-semibold text-slate-900">Studio upload, metode bayar, dan penjualan</h2>
 				<p class="mt-2 text-sm text-slate-500">
 					Strukturnya sengaja dibuat seperti CMS: Anda punya editor produk, daftar konten, daftar metode pembayaran, dan area ringkasan penjualan.
@@ -763,7 +941,7 @@
 
 				<div class="mt-5 grid gap-4 md:grid-cols-2">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Nama Produk</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Nama Produk</span>
 						<input
 							name="title"
 							class="input input-bordered mt-2 w-full"
@@ -775,14 +953,14 @@
 						/>
 					</label>
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Harga (IDR)</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Harga (IDR)</span>
 						<input name="price" type="number" min="0" class="input input-bordered mt-2 w-full" bind:value={productPrice} />
 					</label>
 				</div>
 
 				<div class="mt-4 grid gap-4 md:grid-cols-[1.1fr,0.9fr]">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Ringkasan Singkat</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Ringkasan Singkat</span>
 						<input
 							name="summary"
 							class="input input-bordered mt-2 w-full"
@@ -791,7 +969,7 @@
 						/>
 					</label>
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Slug Produk</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Slug Produk</span>
 						<div class="mt-2 flex gap-2">
 							<input
 								name="slug"
@@ -808,7 +986,7 @@
 
 				<div class="mt-4 grid gap-4 md:grid-cols-[0.9fr,1.1fr]">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Status</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Status</span>
 						<select name="status" class="select select-bordered mt-2 w-full" bind:value={productStatus}>
 							<option value="draft">Draft</option>
 							<option value="published">Published</option>
@@ -831,7 +1009,7 @@
 
 				<div class="mt-4 grid gap-4 md:grid-cols-2">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Cover Produk</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Cover Produk</span>
 						<button
 							type="button"
 							class="btn btn-outline btn-sm mt-2 w-full"
@@ -852,7 +1030,7 @@
 						{/if}
 					</label>
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">File Digital</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">File Digital</span>
 						<button
 							type="button"
 							class="btn btn-outline btn-sm mt-2 w-full"
@@ -877,7 +1055,7 @@
 
 				<div class="mt-4">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Deskripsi Lengkap</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Deskripsi Lengkap</span>
 						<textarea
 							name="description"
 							class="textarea textarea-bordered mt-2 w-full"
@@ -888,7 +1066,7 @@
 				</div>
 
 				<div class="mt-4">
-					<p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Metode Pembayaran</p>
+					<p class="text-xs font-semibold uppercase text-slate-400">Metode Pembayaran</p>
 					{#if data.digitalCommerce.paymentMethods.length === 0}
 						<div class="mt-2 rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-500">
 							Tambahkan metode pembayaran terlebih dulu agar produk bisa dihubungkan ke checkout.
@@ -1008,7 +1186,7 @@
 								<div class="flex items-start justify-between gap-3">
 									<div class="min-w-0">
 										<p class="text-lg font-semibold text-slate-900">{product.title}</p>
-										<p class="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">/{product.slug}</p>
+										<p class="mt-1 text-xs uppercase text-slate-400">/{product.slug}</p>
 									</div>
 									<p class="shrink-0 text-sm font-semibold text-emerald-700">{formatCurrency(product.price)}</p>
 								</div>
@@ -1045,7 +1223,7 @@
 	<section id="kitab-library" class="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-lg backdrop-blur">
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
 			<div class="max-w-2xl">
-				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Perpustakaan Kitab</p>
+				<p class="text-xs font-semibold uppercase text-slate-400">Perpustakaan Kitab</p>
 				<h2 class="section-title mt-2 text-2xl font-semibold text-slate-900">Upload PDF atau hubungkan Google Drive untuk halaman /kitab</h2>
 				<p class="mt-2 text-sm text-slate-500">
 					Bagian ini mengelola katalog kitab publik. Kitab berstatus <strong>published</strong> akan langsung tampil di <code>/kitab</code>.
@@ -1093,7 +1271,7 @@
 		<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 			{#each kitabCards as card}
 				<div class="rounded-3xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-					<p class="text-[11px] uppercase tracking-[0.24em] text-slate-400">{card.label}</p>
+					<p class="text-[11px] uppercase text-slate-400">{card.label}</p>
 					<p class="mt-3 text-3xl font-semibold text-slate-900">{formatNumber(card.value)}</p>
 					<p class="mt-1 text-xs text-slate-500">{card.note}</p>
 				</div>
@@ -1133,7 +1311,7 @@
 
 				<div class="mt-5 grid gap-4 md:grid-cols-2">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Judul Kitab</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Judul Kitab</span>
 						<input
 							name="title"
 							class="input input-bordered mt-2 w-full"
@@ -1145,7 +1323,7 @@
 						/>
 					</label>
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Slug Kitab</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Slug Kitab</span>
 						<div class="mt-2 flex gap-2">
 							<input
 								name="slug"
@@ -1162,7 +1340,7 @@
 
 				<div class="mt-4 grid gap-4 md:grid-cols-[1.1fr,0.75fr,0.95fr]">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Ringkasan Singkat</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Ringkasan Singkat</span>
 						<input
 							name="summary"
 							class="input input-bordered mt-2 w-full"
@@ -1171,7 +1349,7 @@
 						/>
 					</label>
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Kategori Kitab</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Kategori Kitab</span>
 						<select name="category" class="select select-bordered mt-2 w-full" bind:value={kitabCategory}>
 							<option value="">Tanpa kategori</option>
 							{#each KITAB_CATEGORY_OPTIONS as option}
@@ -1180,7 +1358,7 @@
 						</select>
 					</label>
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Sumber Kitab</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Sumber Kitab</span>
 						<select name="sourceType" class="select select-bordered mt-2 w-full" bind:value={kitabSourceType}>
 							<option value="pdf">Upload PDF</option>
 							<option value="drive">Google Drive</option>
@@ -1190,7 +1368,7 @@
 
 				<div class="mt-4 grid gap-4 md:grid-cols-[0.9fr,1.1fr]">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Status</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Status</span>
 						<select name="status" class="select select-bordered mt-2 w-full" bind:value={kitabStatus}>
 							<option value="draft">Draft</option>
 							<option value="published">Published</option>
@@ -1213,7 +1391,7 @@
 
 				<div class="mt-4 grid gap-4 md:grid-cols-2">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Cover Kitab</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Cover Kitab</span>
 						<button
 							type="button"
 							class="btn btn-outline btn-sm mt-2 w-full"
@@ -1236,7 +1414,7 @@
 
 					{#if kitabSourceType === 'drive'}
 						<label class="block">
-							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Link Google Drive</span>
+							<span class="text-xs font-semibold uppercase text-slate-400">Link Google Drive</span>
 							<input
 								name="driveUrl"
 								type="url"
@@ -1248,7 +1426,7 @@
 						</label>
 					{:else}
 						<label class="block">
-							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">File PDF</span>
+							<span class="text-xs font-semibold uppercase text-slate-400">File PDF</span>
 							<input
 								name="pdfFile"
 								type="file"
@@ -1268,7 +1446,7 @@
 
 				<div class="mt-4">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Deskripsi Lengkap</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Deskripsi Lengkap</span>
 						<textarea
 							name="description"
 							class="textarea textarea-bordered mt-2 w-full"
@@ -1383,7 +1561,7 @@
 								<div class="flex items-start justify-between gap-3">
 									<div class="min-w-0">
 										<p class="text-lg font-semibold text-slate-900">{item.title}</p>
-										<p class="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">/{item.slug}</p>
+										<p class="mt-1 text-xs uppercase text-slate-400">/{item.slug}</p>
 									</div>
 									{#if item.featured}
 										<span class="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
@@ -1430,7 +1608,7 @@
 	<section id="payment-methods" class="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-lg backdrop-blur">
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
 			<div class="max-w-2xl">
-				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Metode Pembayaran</p>
+				<p class="text-xs font-semibold uppercase text-slate-400">Metode Pembayaran</p>
 				<h2 class="section-title mt-2 text-2xl font-semibold text-slate-900">Atur cara pembayaran produk digital</h2>
 				<p class="mt-2 text-sm text-slate-500">
 					Aktifkan berbagai metode pembayaran untuk memudahkan pelanggan. Produk akan menampilkan metode yang sudah diaktifkan, termasuk rekening dan e-wallet manual yang sudah Anda set.
@@ -1459,7 +1637,7 @@
 
 				<div class="mt-5 grid gap-4 md:grid-cols-2">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Tipe Pembayaran</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Tipe Pembayaran</span>
 						<select name="type" class="select select-bordered mt-2 w-full" bind:value={paymentMethodType}>
 							<option value="bank">Bank Transfer</option>
 							<option value="ewallet">E-Wallet</option>
@@ -1468,7 +1646,7 @@
 						</select>
 					</label>
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Nama Metode</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Nama Metode</span>
 						<input
 							name="name"
 							class="input input-bordered mt-2 w-full"
@@ -1480,7 +1658,7 @@
 
 				<div class="mt-4 grid gap-4 md:grid-cols-2">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Nama Pemilik Akun</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Nama Pemilik Akun</span>
 						<input
 							name="accountName"
 							class="input input-bordered mt-2 w-full"
@@ -1489,7 +1667,7 @@
 						/>
 					</label>
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Nomor Akun/Rekening</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Nomor Akun/Rekening</span>
 						<input
 							name="accountNumber"
 							class="input input-bordered mt-2 w-full"
@@ -1501,7 +1679,7 @@
 
 				<div class="mt-4">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">URL Aset Pembayaran</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">URL Aset Pembayaran</span>
 						<input
 							name="assetUrl"
 							class="input input-bordered mt-2 w-full"
@@ -1519,7 +1697,7 @@
 
 				<div class="mt-4 grid gap-4 md:grid-cols-[0.8fr,1.2fr]">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Urutan Tampil</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Urutan Tampil</span>
 						<input
 							name="displayOrder"
 							type="number"
@@ -1544,7 +1722,7 @@
 
 				<div class="mt-4">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Instruksi Pembayaran</span>
+						<span class="text-xs font-semibold uppercase text-slate-400">Instruksi Pembayaran</span>
 						<textarea
 							name="instructions"
 							class="textarea textarea-bordered mt-2 w-full"
@@ -1669,7 +1847,7 @@
 	<section id="sales-chart" class="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-lg backdrop-blur">
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
 			<div class="max-w-2xl">
-				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Grafik Penjualan</p>
+				<p class="text-xs font-semibold uppercase text-slate-400">Grafik Penjualan</p>
 				<h2 class="section-title mt-2 text-2xl font-semibold text-slate-900">Ringkasan penjualan 14 hari terakhir</h2>
 				<p class="mt-2 text-sm text-slate-500">
 					Visualisasi omzet harian, order yang menunggu verifikasi, dan transaksi terbaru untuk membantu Anda memantau performa penjualan.
@@ -1716,7 +1894,7 @@
 
 							{#if sale.proofUrl}
 								<div class="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
-									<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Bukti Bayar</p>
+									<p class="text-xs uppercase text-slate-400">Bukti Bayar</p>
 									{#if sale.proofUrl.endsWith('.pdf')}
 										<a href={sale.proofUrl} target="_blank" rel="noreferrer" class="mt-3 inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
 											Buka Bukti PDF
@@ -1732,7 +1910,7 @@
 							{/if}
 
 							<label class="mt-4 block">
-								<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Catatan Admin</span>
+								<span class="text-xs font-semibold uppercase text-slate-400">Catatan Admin</span>
 								<textarea
 									name="adminNotes"
 									class="textarea textarea-bordered mt-2 w-full"
@@ -1758,17 +1936,17 @@
 		<div class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
 			<div class="grid gap-4 md:grid-cols-3">
 				<div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
-					<p class="text-[11px] uppercase tracking-[0.24em] text-slate-400">Total Penjualan</p>
+					<p class="text-[11px] uppercase text-slate-400">Total Penjualan</p>
 					<p class="mt-3 text-3xl font-semibold text-emerald-700">{formatNumber(data.digitalCommerce.stats.totalSales)}</p>
 					<p class="mt-1 text-xs text-slate-600">Order tercatat</p>
 				</div>
 				<div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
-					<p class="text-[11px] uppercase tracking-[0.24em] text-slate-400">Total Omzet</p>
+					<p class="text-[11px] uppercase text-slate-400">Total Omzet</p>
 					<p class="mt-3 text-2xl font-semibold text-amber-700">{formatCurrency(data.digitalCommerce.stats.totalRevenue)}</p>
 					<p class="mt-1 text-xs text-slate-600">Dari semua penjualan</p>
 				</div>
 				<div class="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-4">
-					<p class="text-[11px] uppercase tracking-[0.24em] text-slate-400">Rata-rata Order</p>
+					<p class="text-[11px] uppercase text-slate-400">Rata-rata Order</p>
 					<p class="mt-3 text-2xl font-semibold text-sky-700">{formatCurrency(data.digitalCommerce.stats.averageOrderValue)}</p>
 					<p class="mt-1 text-xs text-slate-600">Nilai per transaksi</p>
 				</div>
@@ -1809,7 +1987,7 @@
 												{sale.status}
 											</span>
 										</div>
-										<p class="mt-2 text-xs uppercase tracking-[0.22em] text-slate-400">{sale.referenceCode}</p>
+										<p class="mt-2 text-xs uppercase text-slate-400">{sale.referenceCode}</p>
 										<p class="mt-2 text-sm text-slate-600">
 											{sale.buyerName || sale.buyerContact || 'Pembeli belum tercatat'}
 										</p>
@@ -1839,14 +2017,105 @@
 				</div>
 			{/if}
 		</div>
-	</section>
+				</section>
+			</main>
+		</div>
+	</div>
 </div>
 
 <style>
 	:global(.super-admin-shell) {
-		--tw-bg-opacity: 1;
-		background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+		background:
+			radial-gradient(circle at top left, rgb(201 168 76 / 0.16), transparent 28rem),
+			linear-gradient(135deg, #f8fafc 0%, #f5f7f2 48%, #e8f1ea 100%);
 		min-height: 100vh;
 		position: relative;
+	}
+
+	:global(.super-admin-shell section[id]),
+	:global(.super-admin-shell div[id]) {
+		scroll-margin-top: 1.5rem;
+	}
+
+	.cms-nav-link {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		border-radius: 1rem;
+		border: 1px solid transparent;
+		padding: 0.75rem;
+		transition:
+			background-color 160ms ease,
+			border-color 160ms ease,
+			transform 160ms ease;
+	}
+
+	.cms-nav-link:hover {
+		border-color: rgb(16 185 129 / 0.22);
+		background: rgb(236 253 245 / 0.85);
+		transform: translateX(2px);
+	}
+
+	.cms-nav-icon {
+		display: grid;
+		height: 2.35rem;
+		width: 2.35rem;
+		flex: none;
+		place-items: center;
+		border-radius: 0.85rem;
+		background: rgb(15 23 42 / 0.06);
+		color: #0f5132;
+	}
+
+	.cms-nav-link:hover .cms-nav-icon {
+		background: #1b4332;
+		color: #fff;
+	}
+
+	.cms-hero {
+		display: grid;
+		gap: 1.5rem;
+		border: 1px solid rgb(255 255 255 / 0.78);
+		border-radius: 2rem;
+		background:
+			linear-gradient(135deg, rgb(255 255 255 / 0.94), rgb(255 255 255 / 0.78)),
+			linear-gradient(135deg, rgb(27 67 50 / 0.12), rgb(201 168 76 / 0.16));
+		box-shadow: 0 20px 60px rgb(15 23 42 / 0.08);
+		padding: 1.5rem;
+		backdrop-filter: blur(18px);
+	}
+
+	.cms-hero-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+	}
+
+	.cms-hero-actions a {
+		display: inline-flex;
+		min-height: 2.75rem;
+		align-items: center;
+		justify-content: center;
+		border-radius: 0.9rem;
+		border: 1px solid rgb(27 67 50 / 0.14);
+		background: #fff;
+		padding: 0 1rem;
+		font-size: 0.875rem;
+		font-weight: 800;
+		color: #1b4332;
+		box-shadow: 0 8px 24px rgb(15 23 42 / 0.06);
+	}
+
+	.cms-hero-actions a:first-child {
+		background: #1b4332;
+		color: #fff;
+	}
+
+	@media (min-width: 768px) {
+		.cms-hero {
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: end;
+			padding: 2rem;
+		}
 	}
 </style>
