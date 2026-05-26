@@ -1,8 +1,10 @@
 import { error } from '@sveltejs/kit';
 import type { D1Database } from '@cloudflare/workers-types';
 import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import { ensureHafalanTable } from '$lib/server/hafalan';
 import { getOrganizationById } from '$lib/server/organizations';
 import { submitSurahForUser } from '$lib/server/progress';
+import { SURAH_DATA } from '$lib/surah-data';
 
 export const TPQ_SETORAN_TYPES = ['hafalan', 'murojaah'] as const;
 export const TPQ_SETORAN_QUALITIES = ['lancar', 'cukup', 'belum'] as const;
@@ -212,6 +214,10 @@ export const syncApprovedHafalanFromSetoran = async (
 	if (setoran.ayatFrom > setoran.ayatTo) {
 		throw new Error(`ayat_from > ayat_to (setoran ${setoran.id})`);
 	}
+	const surahMeta = SURAH_DATA.find((surah) => surah.number === surahNumber);
+	if (!surahMeta || setoran.ayatTo > surahMeta.totalAyah) {
+		throw new Error(`Rentang ayat melewati batas surah (setoran ${setoran.id})`);
+	}
 
 	const quality = (setoran.quality ?? '').trim().toLowerCase() as TpqSetoranQuality;
 	const qualityStatus = QUALITY_TO_HAFALAN[quality];
@@ -219,6 +225,7 @@ export const syncApprovedHafalanFromSetoran = async (
 		throw new Error(`Kualitas tidak valid untuk sinkronisasi hafalan (setoran ${setoran.id})`);
 	}
 
+	await ensureHafalanTable(db);
 	await submitSurahForUser(db, {
 		userId: setoran.santriUserId,
 		surahNumber,

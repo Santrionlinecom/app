@@ -242,7 +242,7 @@ export const actions: Actions = {
 		return {
 			reviewMessage:
 				decision === 'approved'
-					? 'Setoran berhasil di-approve.'
+					? 'Setoran berhasil di-approve. Progres hafalan Quran santri ikut disinkronkan.'
 					: 'Setoran ditandai rejected. Santri perlu perbaikan.'
 		};
 	}

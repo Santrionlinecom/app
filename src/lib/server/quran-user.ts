@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { ensureHafalanTable } from '$lib/server/hafalan';
 
 export type QuranBookmark = {
 	id: string;
@@ -20,6 +21,13 @@ export type QuranReadingProgress = {
 	lastReadAt: string;
 	createdAt: string;
 	updatedAt: string;
+};
+
+export type QuranMemorizedAyah = {
+	surahNumber: number;
+	ayahNumber: number;
+	qualityStatus: string | null;
+	approvedAt: string | null;
 };
 
 const BOOKMARK_SELECT = `
@@ -226,4 +234,27 @@ export async function getQuranReadingProgress(
 		.first<QuranReadingProgress>();
 
 	return row ?? null;
+}
+
+export async function getQuranMemorizedAyahs(
+	db: D1Database,
+	userId: string
+): Promise<QuranMemorizedAyah[]> {
+	await ensureHafalanTable(db);
+
+	const { results } = await db
+		.prepare(
+			`SELECT surah_number as surahNumber,
+			        ayah_number as ayahNumber,
+			        quality_status as qualityStatus,
+			        tanggal_approve as approvedAt
+			 FROM hafalan_progress
+			 WHERE user_id = ?
+			   AND status IN ('disetujui', 'approved')
+			 ORDER BY surah_number ASC, ayah_number ASC`
+		)
+		.bind(userId)
+		.all<QuranMemorizedAyah>();
+
+	return (results ?? []) as QuranMemorizedAyah[];
 }

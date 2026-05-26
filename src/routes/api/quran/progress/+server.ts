@@ -1,7 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireD1 } from '$lib/server/cloudflare';
-import { getQuranReadingProgress, saveQuranReadingProgress } from '$lib/server/quran-user';
+import {
+	getQuranMemorizedAyahs,
+	getQuranReadingProgress,
+	saveQuranReadingProgress
+} from '$lib/server/quran-user';
 
 const parseInteger = (value: unknown) => {
 	const parsed = typeof value === 'number' ? value : Number(`${value ?? ''}`.trim());
@@ -24,10 +28,12 @@ export const GET: RequestHandler = async (event) => {
 
 	const db = requireD1(event);
 	const lastRead = await getQuranReadingProgress(db, event.locals.user.id);
+	const memorizedAyahs = await getQuranMemorizedAyahs(db, event.locals.user.id);
 
 	return json({
 		ok: true,
-		lastRead
+		lastRead,
+		memorizedAyahs
 	});
 };
 

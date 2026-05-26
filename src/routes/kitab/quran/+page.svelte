@@ -5,6 +5,7 @@
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import BookmarkCheck from '@lucide/svelte/icons/bookmark-check';
 	import BookOpenText from '@lucide/svelte/icons/book-open-text';
+	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
 	import LinkIcon from '@lucide/svelte/icons/link';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import Search from '@lucide/svelte/icons/search';
@@ -186,6 +187,13 @@
 		error?: string;
 	};
 
+	type QuranMemorizedAyah = {
+		surahNumber: number;
+		ayahNumber: number;
+		qualityStatus: string | null;
+		approvedAt: string | null;
+	};
+
 	type TafsirIndonesiaIndexItem = Pick<
 		TafsirIndonesiaItem,
 		| 'id'
@@ -216,6 +224,7 @@
 			ayahNumber: number;
 			juzNumber: number | null;
 		} | null;
+		memorizedAyahs?: QuranMemorizedAyah[];
 		error?: string;
 	};
 
@@ -465,6 +474,10 @@
 	let bookmarkErrorKey = '';
 	let bookmarkError = '';
 	let lastReadSyncedKey = '';
+	let memorizedAyahs: QuranMemorizedAyah[] = [];
+	let memorizedVerseKeys = new Set<string>();
+	let memorizationLoading = false;
+	let memorizationError = '';
 
 	const surahLookup = new Map(SURAH_DATA.map((surah) => [surah.number, surah.name]));
 	const surahMetaLookup = new Map(SURAH_DATA.map((surah) => [surah.number, surah]));
@@ -534,6 +547,25 @@
 
 	const verseReference = (verse: Verse) =>
 		`${surahName(verse.surahNumber)} ${verse.ayahNumber} ${verse.verse_key}`;
+
+	const setMemorizedAyahs = (items: QuranMemorizedAyah[]) => {
+		const validItems = items.filter((item) => {
+			const surah = surahMetaLookup.get(Number(item.surahNumber));
+			return (
+				surah &&
+				Number.isInteger(Number(item.ayahNumber)) &&
+				Number(item.ayahNumber) >= 1 &&
+				Number(item.ayahNumber) <= surah.totalAyah
+			);
+		});
+		memorizedAyahs = validItems;
+		memorizedVerseKeys = new Set(
+			validItems.map((item) => verseKeyFor(Number(item.surahNumber), Number(item.ayahNumber)))
+		);
+	};
+
+	const isVerseMemorized = (verse: Verse | null | undefined) =>
+		Boolean(verse && memorizedVerseKeys.has(verse.verse_key));
 
 	const searchCorpusFor = (verse: Verse, scope: SearchScope) => {
 		const insight = insightFor(verse);
@@ -659,7 +691,9 @@
 		}
 	};
 
-	const loadAccountLastReadTarget = async () => {
+	const loadAccountQuranProgress = async () => {
+		memorizationLoading = true;
+		memorizationError = '';
 		try {
 			const res = await fetch('/api/quran/progress', {
 				headers: {
@@ -668,10 +702,17 @@
 			});
 			if (!res.ok) return null;
 			const data = (await res.json()) as QuranProgressResponse;
-			if (!data.ok || !data.lastRead) return null;
+			if (!data.ok) {
+				throw new Error(data.error || 'Progress Quran akun belum bisa dimuat.');
+			}
+			setMemorizedAyahs(data.memorizedAyahs ?? []);
+			if (!data.lastRead) return null;
 			return buildSmartAyahTarget(Number(data.lastRead.surahNumber), Number(data.lastRead.ayahNumber));
-		} catch {
+		} catch (err: any) {
+			memorizationError = err?.message || 'Progress hafalan akun belum bisa dimuat.';
 			return null;
+		} finally {
+			memorizationLoading = false;
 		}
 	};
 
@@ -1329,9 +1370,9 @@
 
 		void (async () => {
 			try {
-				const initialTarget =
-					readInitialVerseTarget() ??
-					(isLoggedIn ? await loadAccountLastReadTarget() : readGuestLastReadTarget());
+				const urlTarget = readInitialVerseTarget();
+				const accountTarget = isLoggedIn ? await loadAccountQuranProgress() : null;
+				const initialTarget = urlTarget ?? accountTarget ?? readGuestLastReadTarget();
 
 				if (initialTarget?.kind === 'ayah') {
 					selectedJuz = String(initialTarget.juz);
@@ -1369,6 +1410,8 @@
 	$: currentSpread = Math.floor(currentPageIndex / 2) + 1;
 	$: totalSpreads = Math.ceil(totalPages / 2);
 	$: selectedVerse = verses.find((verse) => verse.verse_key === selectedVerseKey) ?? verses[0] ?? null;
+	$: selectedVerseMemorized = isVerseMemorized(selectedVerse);
+	$: memorizedInCurrentJuz = verses.filter((verse) => isVerseMemorized(verse)).length;
 	$: selectedVerseJuz = selectedVerse
 		? findJuzForVerse(selectedVerse.surahNumber, selectedVerse.ayahNumber)
 		: selectedJuzNumber;
@@ -1531,6 +1574,16 @@
 				</p>
 				{#if navigationMessage}
 					<p class="font-medium text-emerald-700 md:col-span-2">{navigationMessage}</p>
+				{/if}
+				{#if isLoggedIn}
+					<p class="text-emerald-800 md:col-span-2">
+						{memorizationLoading
+							? 'Memuat progres hafalan akun...'
+							: `${memorizedAyahs.length} ayat hafalan tervalidasi di akun ini, ${memorizedInCurrentJuz} ayat ada di juz aktif.`}
+					</p>
+				{/if}
+				{#if memorizationError}
+					<p class="text-amber-700 md:col-span-2">{memorizationError}</p>
 				{/if}
 			</div>
 
@@ -1711,6 +1764,12 @@
 										<span class="font-semibold text-slate-900">
 											{surahName(verse.surahNumber)} {verse.ayahNumber}
 										</span>
+										{#if isVerseMemorized(verse)}
+											<span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
+												<CheckCircle2 class="h-3.5 w-3.5" />
+												Sudah hafal
+											</span>
+										{/if}
 										<span class="line-clamp-2 text-xs leading-5 text-slate-600">
 											{searchSnippet(verse)}
 										</span>
@@ -1727,6 +1786,12 @@
 							<p class="font-semibold text-emerald-900">
 								{surahName(selectedVerse.surahNumber)} {selectedVerse.ayahNumber}
 							</p>
+							{#if selectedVerseMemorized}
+								<p class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-emerald-800">
+									<CheckCircle2 class="h-3.5 w-3.5" />
+									Ayat ini sudah tercatat hafal.
+								</p>
+							{/if}
 							<p class="mt-1 text-xs leading-5 text-emerald-900/80">
 								{selectedInsight?.translation || 'Pilih ayat pada mode teks untuk membuka tafsir dan asbabun nuzul.'}
 							</p>
@@ -1739,6 +1804,11 @@
 						<span class="badge badge-outline">Total ayat: {loading ? 'Memuat' : verses.length}</span>
 						<span class="badge badge-outline">Halaman: {loading ? 'Memuat' : totalPages || '-'}</span>
 						<span class="badge badge-outline">Terfilter: {loading ? 'Memuat' : filteredVerses.length}</span>
+						{#if isLoggedIn}
+							<span class="badge badge-success badge-outline">
+								Hafal: {memorizationLoading ? 'Memuat' : `${memorizedInCurrentJuz}/${verses.length || 0}`}
+							</span>
+						{/if}
 						{#if cachedJuz.includes(selectedJuzNumber)}
 							<span class="badge badge-success">Tersimpan offline</span>
 						{/if}
@@ -1790,7 +1860,7 @@
 												{/if}
 												<div class="mushaf-text quran-text" dir="rtl">
 													{#each page.verses as verse}
-														<span class="verse">
+														<span class={`verse ${isVerseMemorized(verse) ? 'is-memorized' : ''}`}>
 															{verse.text}
 															<span class="ayah-number">{toArabicNumber(verse.ayahNumber)}</span>
 														</span>
@@ -1806,16 +1876,22 @@
 							<div class="space-y-4">
 								{#each filteredVerses as verse, i}
 									{@const insight = insightFor(verse)}
+									{@const memorized = isVerseMemorized(verse)}
 									{#if i === 0 || filteredVerses[i - 1].surahNumber !== verse.surahNumber}
 										<div class="divider text-sm text-slate-500">{surahName(verse.surahNumber)}</div>
 									{/if}
 									<article
 										id={verseDomId(verse)}
-										class={`rounded-xl border bg-base-100 p-3 shadow-sm transition md:p-4 ${selectedVerseKey === verse.verse_key ? 'border-emerald-300 ring-2 ring-emerald-100' : ''}`}
+										class={`rounded-xl border bg-base-100 p-3 shadow-sm transition md:p-4 ${memorized ? 'border-emerald-200 bg-emerald-50/40' : ''} ${selectedVerseKey === verse.verse_key ? 'border-emerald-300 ring-2 ring-emerald-100' : ''}`}
 									>
 										<div class="flex flex-wrap items-center justify-between gap-2 text-xs text-base-content/60 mb-2">
 											<span>Surah {surahName(verse.surahNumber)} • Ayat {verse.ayahNumber}</span>
-											<span class="badge badge-outline">Hal {verse.page_number}</span>
+											<div class="flex flex-wrap items-center gap-2">
+												{#if memorized}
+													<span class="badge badge-success badge-outline">Sudah hafal</span>
+												{/if}
+												<span class="badge badge-outline">Hal {verse.page_number}</span>
+											</div>
 										</div>
 										<p class="quran-text text-right" dir="rtl">{verse.text}</p>
 										{#if insight?.translation}
@@ -2293,6 +2369,13 @@
 
 	.verse {
 		display: inline;
+	}
+
+	.verse.is-memorized {
+		border-radius: 0.35rem;
+		background: rgba(16, 185, 129, 0.14);
+		box-decoration-break: clone;
+		-webkit-box-decoration-break: clone;
 	}
 
 	.ayah-number {

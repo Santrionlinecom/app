@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { ensureSantriUstadzSchema } from '$lib/server/santri-ustadz';
+import { SURAH_DATA } from '$lib/surah-data';
 import {
 	assertSafeScopedId,
 	assertTpqAcademicTables,
@@ -269,11 +270,17 @@ export const actions: Actions = {
 		if (!Number.isInteger(surahNumber) || surahNumber < 1 || surahNumber > 114) {
 			return fail(400, { createError: 'Surah wajib berupa angka 1-114.' });
 		}
+		const surahMeta = SURAH_DATA.find((item) => item.number === surahNumber);
 		if (!ayatFrom || !ayatTo) {
 			return fail(400, { createError: 'Rentang ayat wajib diisi.' });
 		}
 		if (ayatFrom > ayatTo) {
 			return fail(400, { createError: 'Ayat mulai tidak boleh lebih besar dari ayat akhir.' });
+		}
+		if (!surahMeta || ayatTo > surahMeta.totalAyah) {
+			return fail(400, {
+				createError: `Surah ${surahMeta?.name ?? surahNumber} hanya memiliki ${surahMeta?.totalAyah ?? 0} ayat.`
+			});
 		}
 		if (!SETORAN_QUALITY_SET.has(quality)) {
 			return fail(400, { createError: 'Kualitas tidak valid.' });
