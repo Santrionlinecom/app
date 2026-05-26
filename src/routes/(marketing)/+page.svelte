@@ -16,9 +16,6 @@
 		'jamaah'
 	]);
 
-	const logoUrl =
-		'https://files.santrionline.com/ICON%20SANTRI%20ONLINE%20COM%20kecil%20(1).png';
-
 	const institutionTypes = [
 		{
 			icon: '🕌',
@@ -123,35 +120,17 @@
 	/>
 </svelte:head>
 
-<div class="home-root min-h-screen bg-so-cream text-so-ink">
-	<section class="border-b border-so-border bg-white">
-		<div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-			<a href="/" class="flex min-w-0 items-center gap-3">
-				<img src={logoUrl} alt="SantriOnline" class="h-10 w-10 rounded-xl object-cover" />
-				<div class="min-w-0">
-					<p class="truncate text-sm font-black text-so-green">SantriOnline App</p>
-					<p class="truncate text-xs font-bold text-so-muted">Manajemen lembaga Islam</p>
-				</div>
-			</a>
-			<nav class="hidden items-center gap-2 md:flex">
-				<a class="top-link" href="#platform">Platform</a>
-				<a class="top-link" href="#addon">Addon</a>
-				<a class="top-link" href="#publik">Publik</a>
-			</nav>
-			<a class="btn-primary h-10 px-4" href={primaryAction.href}>{primaryAction.label}</a>
-		</div>
-	</section>
-
+<div class="home-root min-h-screen overflow-hidden rounded-[1.35rem] border border-so-border bg-so-cream text-so-ink shadow-card md:rounded-so-lg">
 	<section class="relative overflow-hidden">
 		<div class="hero-bg"></div>
-		<div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[1fr_0.92fr] lg:px-8">
-			<div class="relative z-10 flex min-h-[520px] flex-col justify-center">
+		<div class="mx-auto grid max-w-7xl gap-7 px-4 py-8 sm:px-6 md:py-12 lg:grid-cols-[1fr_0.92fr] lg:px-8">
+			<div class="relative z-10 flex flex-col justify-center py-4 md:min-h-[480px] lg:min-h-[520px]">
 				<div class="flex flex-wrap gap-2">
 					<span class="chip chip-primary">Multi-Lembaga</span>
 					<span class="chip">TPQ Prioritas</span>
 					<span class="chip">Addon Berbayar</span>
 				</div>
-				<h1 class="mt-6 max-w-4xl text-4xl font-black leading-tight text-so-green sm:text-5xl lg:text-6xl">
+				<h1 class="mt-6 max-w-4xl text-3xl font-black leading-tight text-so-green sm:text-5xl lg:text-6xl">
 					Satu ruang kerja untuk mengelola lembaga Islam dengan rapi.
 				</h1>
 				<p class="mt-5 max-w-2xl text-base leading-8 text-so-muted md:text-lg">
@@ -159,8 +138,8 @@
 					pondok, masjid, musholla, dan rumah tahfidz dengan data yang dipisahkan per lembaga.
 				</p>
 				<div class="mt-7 flex flex-col gap-3 sm:flex-row">
-					<a class="btn-primary h-12 px-5" href={primaryAction.href}>{primaryAction.label}</a>
-					<a class="btn-secondary h-12 px-5" href={secondaryAction.href}>{secondaryAction.label}</a>
+					<a class="btn-primary h-12 w-full px-5 sm:w-auto" href={primaryAction.href}>{primaryAction.label}</a>
+					<a class="btn-secondary h-12 w-full px-5 sm:w-auto" href={secondaryAction.href}>{secondaryAction.label}</a>
 				</div>
 				<div class="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
 					<div class="metric">
@@ -329,8 +308,8 @@
 				<p class="text-xs font-black uppercase text-so-gold-2">Siap dipakai</p>
 				<h2 class="mt-3 text-2xl font-black md:text-3xl">Mulai dari satu TPQ, lalu tambah lembaga saat diperlukan.</h2>
 				<p class="mt-4 text-sm leading-7 text-white/82">
-					Struktur baru sudah mengarah ke multi-lembaga dan addon. Bagian pembayaran akan dibuka bertahap
-					melalui Midtrans, BSI, dan Coin SantriOnline.
+					Struktur baru sudah mengarah ke multi-lembaga, addon, dan pembayaran Midtrans untuk aktivasi
+					fitur maupun top up coin.
 				</p>
 				<div class="mt-6 flex flex-col gap-3 sm:flex-row">
 					<a class="inline-flex h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-black text-so-green" href={primaryAction.href}>
@@ -362,7 +341,6 @@
 		background-size: cover;
 	}
 
-	.top-link,
 	.public-link {
 		border-radius: 0.75rem;
 		padding: 0.65rem 0.85rem;
@@ -371,7 +349,6 @@
 		color: var(--color-so-green);
 	}
 
-	.top-link:hover,
 	.public-link:hover {
 		background: rgb(27 67 50 / 0.07);
 	}

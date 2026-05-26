@@ -1,5 +1,6 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { generateId } from 'lucia';
+import { ensureBukuWalletSchema } from '$lib/server/buku-wallet';
 import { ensurePaymentOrdersSchema } from '$lib/server/payments/midtrans';
 
 const ADDON_TYPES = [
@@ -23,11 +24,26 @@ type MidtransWebhookPayload = {
 
 type PaymentOrderRow = {
 	id: string;
+	purpose: string;
 	userId: string | null;
 	lembagaId: string | null;
 	productSlug: string;
 	packageName: string | null;
 	grossAmount: number;
+	metadata: string | null;
+	status: string;
+};
+
+type CoinTopupRequestRow = {
+	id: string;
+	userId: string;
+	amountRupiah: number;
+	coinAmount: number;
+	status: string;
+};
+
+type CoinWalletRow = {
+	balance: number;
 };
 
 const nanoid = () => generateId(15);
@@ -58,6 +74,133 @@ const timingSafeEqual = (left: string, right: string) => {
 
 const isAddonTipe = (value: string): value is AddonTipe =>
 	(ADDON_TYPES as readonly string[]).includes(value);
+
+const mapPaymentStatus = (transactionStatus: string) => {
+	switch (transactionStatus) {
+		case 'settlement':
+		case 'capture':
+			return 'sukses';
+		case 'expire':
+			return 'expired';
+		case 'cancel':
+			return 'canceled';
+		case 'deny':
+			return 'denied';
+		case 'refund':
+		case 'partial_refund':
+			return 'refunded';
+		case 'failure':
+			return 'gagal';
+		default:
+			return 'pending';
+	}
+};
+
+const settleCoinTopup = async ({
+	db,
+	orderId,
+	transactionStatus
+}: {
+	db: App.Locals['db'];
+	orderId: string;
+	transactionStatus: string;
+}) => {
+	if (!db) return;
+
+	await ensureBukuWalletSchema(db);
+
+	const topup = await db
+		.prepare(
+			`SELECT
+				id,
+				user_id AS userId,
+				amount_rupiah AS amountRupiah,
+				coin_amount AS coinAmount,
+				status
+			 FROM coin_topup_requests
+			 WHERE id = ?`
+		)
+		.bind(orderId)
+		.first<CoinTopupRequestRow>();
+
+	if (!topup) {
+		throw new Error('Coin topup request tidak ditemukan');
+	}
+
+	const nowIso = new Date().toISOString();
+	const nowMs = Date.now();
+
+	if (transactionStatus === 'settlement' || transactionStatus === 'capture') {
+		if (topup.status === 'approved') {
+			await db
+				.prepare("UPDATE payment_orders SET status = 'sukses', provider_status = ?, updated_at = ? WHERE id = ?")
+				.bind(transactionStatus, nowMs, orderId)
+				.run();
+			return;
+		}
+
+		if (topup.status !== 'pending') {
+			await db
+				.prepare('UPDATE payment_orders SET provider_status = ?, updated_at = ? WHERE id = ?')
+				.bind(transactionStatus, nowMs, orderId)
+				.run();
+			return;
+		}
+
+		await db.prepare('INSERT OR IGNORE INTO coin_wallets (user_id) VALUES (?)').bind(topup.userId).run();
+		const wallet = await db
+			.prepare('SELECT balance FROM coin_wallets WHERE user_id = ?')
+			.bind(topup.userId)
+			.first<CoinWalletRow>();
+		const currentBalance = Number(wallet?.balance ?? 0);
+		const coinAmount = Number(topup.coinAmount ?? 0);
+		const newBalance = currentBalance + coinAmount;
+		const txId = generateId(15);
+
+		await db.batch([
+			db
+				.prepare('UPDATE coin_wallets SET balance = ?, updated_at = ? WHERE user_id = ?')
+				.bind(newBalance, nowIso, topup.userId),
+			db
+				.prepare(
+					`INSERT INTO coin_transactions
+					(id, user_id, type, amount, balance_after, description, reference_type, reference_id, created_at)
+					VALUES (?, ?, 'topup', ?, ?, 'Topup koin via Midtrans', 'coin_topup_requests', ?, ?)`
+				)
+				.bind(txId, topup.userId, coinAmount, newBalance, orderId, nowIso),
+			db
+				.prepare(
+					`UPDATE coin_topup_requests
+					SET status = 'approved', admin_note = ?, reviewed_at = ?, updated_at = ?
+					WHERE id = ?`
+				)
+				.bind('Paid via Midtrans', nowIso, nowIso, orderId),
+			db
+				.prepare("UPDATE payment_orders SET status = 'sukses', provider_status = ?, updated_at = ? WHERE id = ?")
+				.bind(transactionStatus, nowMs, orderId)
+		]);
+		return;
+	}
+
+	const paymentStatus = mapPaymentStatus(transactionStatus);
+	const shouldRejectTopup = ['gagal', 'expired', 'canceled', 'denied'].includes(paymentStatus);
+	await db.batch([
+		db
+			.prepare('UPDATE payment_orders SET status = ?, provider_status = ?, updated_at = ? WHERE id = ?')
+			.bind(paymentStatus, transactionStatus, nowMs, orderId),
+		...(shouldRejectTopup
+			? [
+					db
+						.prepare(
+							`UPDATE coin_topup_requests
+							SET status = 'rejected', admin_note = ?, updated_at = ?
+							WHERE id = ? AND status = 'pending'`
+						)
+						.bind(`Midtrans ${transactionStatus}`, nowIso, orderId)
+				]
+			: [])
+	]);
+};
 
 export const POST: RequestHandler = async ({ locals, platform, request }) => {
 	const db = locals.db ?? platform?.env?.DB;
@@ -98,21 +241,23 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 		.prepare(
 			`SELECT
 				id,
+				purpose,
 				user_id AS userId,
 				lembaga_id AS lembagaId,
 				product_slug AS productSlug,
 				package_name AS packageName,
-				gross_amount AS grossAmount
+				gross_amount AS grossAmount,
+				metadata,
+				status
 			 FROM payment_orders
 			 WHERE id = ?
-			   AND provider = 'midtrans'
-			   AND purpose = 'addon'`
+			   AND provider = 'midtrans'`
 		)
 		.bind(orderId)
 		.first<PaymentOrderRow>();
 
-	if (!paymentOrder || !paymentOrder.lembagaId || !isAddonTipe(paymentOrder.productSlug)) {
-		return json({ ok: false, message: 'Order pembayaran addon tidak ditemukan' }, { status: 404 });
+	if (!paymentOrder) {
+		return json({ ok: false, message: 'Order pembayaran tidak ditemukan' }, { status: 404 });
 	}
 
 	const webhookGrossAmount = Number(grossAmount);
@@ -120,11 +265,30 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 		return json({ ok: false, message: 'Nominal pembayaran tidak sesuai' }, { status: 400 });
 	}
 
-	console.info('midtrans_webhook_addon', {
+	console.info('midtrans_webhook_payment', {
 		order_id: orderId,
 		gross_amount: paymentOrder.grossAmount,
 		product_slug: paymentOrder.productSlug
 	});
+
+	if (paymentOrder.purpose === 'coin_topup') {
+		try {
+			await settleCoinTopup({ db, orderId, transactionStatus });
+			return json({ ok: true }, { status: 200 });
+		} catch (err) {
+			console.error('midtrans_webhook_coin_topup_failed', {
+				order_id: orderId,
+				gross_amount: paymentOrder.grossAmount,
+				product_slug: paymentOrder.productSlug,
+				message: err instanceof Error ? err.message : 'unknown'
+			});
+			return json({ ok: false, message: 'Gagal memproses topup coin' }, { status: 500 });
+		}
+	}
+
+	if (paymentOrder.purpose !== 'addon' || !paymentOrder.lembagaId || !isAddonTipe(paymentOrder.productSlug)) {
+		return json({ ok: false, message: 'Order pembayaran addon tidak valid' }, { status: 400 });
+	}
 
 	if (transactionStatus === 'settlement' || transactionStatus === 'capture') {
 		const now = Date.now();
@@ -157,8 +321,8 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 		]);
 	} else {
 		await db
-			.prepare('UPDATE payment_orders SET provider_status = ?, updated_at = ? WHERE id = ?')
-			.bind(transactionStatus, Date.now(), orderId)
+			.prepare('UPDATE payment_orders SET status = ?, provider_status = ?, updated_at = ? WHERE id = ?')
+			.bind(mapPaymentStatus(transactionStatus), transactionStatus, Date.now(), orderId)
 			.run();
 	}
 

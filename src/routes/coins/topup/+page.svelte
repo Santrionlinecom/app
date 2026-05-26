@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { deserialize } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import BadgeCheck from '@lucide/svelte/icons/badge-check';
@@ -7,11 +8,9 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Clock3 from '@lucide/svelte/icons/clock-3';
 	import CreditCard from '@lucide/svelte/icons/credit-card';
-	import FileCheck2 from '@lucide/svelte/icons/file-check-2';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import ReceiptText from '@lucide/svelte/icons/receipt-text';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import UploadCloud from '@lucide/svelte/icons/upload-cloud';
 	import WalletCards from '@lucide/svelte/icons/wallet-cards';
 	import type { PageData } from './$types';
 
@@ -20,13 +19,33 @@
 
 	let selectedPackageId = data.packages[0]?.id ?? '';
 	let userNote = '';
-	let proofUrl = '';
-	let isProofUploading = false;
-	let proofUploadError = '';
+	let isProcessing = false;
+	let toast: { kind: 'success' | 'pending' | 'error'; message: string } | null = null;
+	let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+	type SnapCallbacks = {
+		onSuccess?: (result: unknown) => void;
+		onPending?: (result: unknown) => void;
+		onError?: (result: unknown) => void;
+	};
+
+	type SnapWindow = Window &
+		typeof globalThis & {
+			snap?: {
+				pay: (token: string, callbacks?: SnapCallbacks) => void;
+			};
+		};
+
+	type SnapTokenPayload = {
+		type?: string;
+		snapToken?: string;
+		message?: string;
+	};
 
 	$: successMessage = $page.url.searchParams.get('success') ?? '';
 	$: packages = data.packages ?? [];
 	$: selectedPackage = packages.find((pkg) => pkg.id === selectedPackageId) ?? null;
+	$: midtransClientKey = data.midtransClientKey ?? '';
 
 	const formatRupiah = (value: number) =>
 		new Intl.NumberFormat('id-ID', {
@@ -35,54 +54,89 @@
 			minimumFractionDigits: 0
 		}).format(value);
 
-	async function uploadProof(event: Event) {
-		const input = event.currentTarget as HTMLInputElement;
-		const file = input.files?.[0];
-		proofUploadError = '';
-
-		if (!file) return;
-		if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-			proofUploadError = 'Format bukti transfer harus JPG, PNG, atau WebP.';
-			input.value = '';
-			return;
-		}
-		if (file.size > 2 * 1024 * 1024) {
-			proofUploadError = 'Ukuran bukti transfer maksimal 2MB.';
-			input.value = '';
-			return;
+	const showToast = (kind: 'success' | 'pending' | 'error', message: string) => {
+		if (toastTimer) {
+			clearTimeout(toastTimer);
 		}
 
-		isProofUploading = true;
+		toast = { kind, message };
+		toastTimer = setTimeout(() => {
+			toast = null;
+			toastTimer = null;
+		}, 4500);
+	};
+
+	const getMidtransSnap = () => (window as SnapWindow).snap;
+
+	async function startMidtransTopup(event: SubmitEvent) {
+		if (!selectedPackage) {
+			showToast('error', 'Pilih paket top up terlebih dahulu.');
+			return;
+		}
+
+		const snap = getMidtransSnap();
+		if (!midtransClientKey || !snap) {
+			showToast('error', 'Midtrans Snap belum siap. Muat ulang halaman lalu coba lagi.');
+			return;
+		}
+
+		isProcessing = true;
 		try {
-			const uploadForm = new FormData();
-			uploadForm.append('file', file);
+			const formData = new FormData(event.currentTarget as HTMLFormElement);
 
-			const response = await fetch('/api/upload/topup-proof', {
+			const response = await fetch('?/order', {
 				method: 'POST',
-				body: uploadForm
+				body: formData
 			});
-			const result = await response.json().catch(() => ({}));
+			const result = deserialize(await response.text());
 
-			if (!response.ok || typeof result.url !== 'string') {
-				throw new Error(result.error || 'Gagal upload bukti transfer.');
+			if (result.type === 'failure') {
+				const payload = result.data as SnapTokenPayload | undefined;
+				throw new Error(payload?.message ?? 'Gagal membuat order top up.');
 			}
 
-			proofUrl = result.url;
+			if (result.type === 'error') {
+				throw new Error(result.error?.message ?? 'Gagal membuat order top up.');
+			}
+
+			if (result.type === 'redirect') {
+				window.location.href = result.location;
+				return;
+			}
+
+			const payload = result.data as SnapTokenPayload | undefined;
+			if (result.type !== 'success' || payload?.type !== 'snapToken' || !payload.snapToken) {
+				throw new Error(payload?.message ?? 'Token pembayaran tidak tersedia.');
+			}
+
+			snap.pay(payload.snapToken, {
+				onSuccess: () => {
+					showToast('success', 'Pembayaran sukses. Saldo coin akan disinkronkan otomatis.');
+					void invalidateAll();
+				},
+				onPending: () => {
+					showToast('pending', 'Pembayaran masih pending. Selesaikan pembayaran di Midtrans.');
+					void invalidateAll();
+				},
+				onError: () => {
+					showToast('error', 'Pembayaran gagal diproses.');
+				}
+			});
 		} catch (err) {
-			proofUploadError = err instanceof Error ? err.message : 'Gagal upload bukti transfer.';
+			showToast('error', err instanceof Error ? err.message : 'Gagal memulai pembayaran top up.');
 		} finally {
-			isProofUploading = false;
-			input.value = '';
+			isProcessing = false;
 		}
 	}
 </script>
 
 <svelte:head>
 	<title>Top Up Koin - SantriOnline</title>
-	<meta name="description" content="Tambah saldo koin SantriOnline melalui transfer manual." />
+	<meta name="description" content="Tambah saldo koin SantriOnline melalui Midtrans." />
+	<script src="https://app.midtrans.com/snap/snap.js" data-client-key={midtransClientKey}></script>
 </svelte:head>
 
-<div class="space-y-6 pb-10">
+<div class="space-y-6 pb-24 md:pb-10">
 	<header class="border-b border-slate-200 pb-6">
 		<a href="/coins" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900">
 			<ArrowLeft class="h-4 w-4" />
@@ -96,15 +150,15 @@
 					Tambah Saldo Koin
 				</h1>
 				<p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-					Pilih nominal, unggah bukti transfer, lalu tunggu verifikasi admin. Saldo akan
-					ditambahkan setelah pembayaran terkonfirmasi.
+					Pilih nominal, bayar via Midtrans, lalu saldo akan disinkronkan setelah pembayaran
+					terkonfirmasi.
 				</p>
 			</div>
 
 			<div class="grid gap-2 text-sm text-slate-600">
 				<div class="flex items-center gap-2">
 					<ShieldCheck class="h-4 w-4 text-emerald-600" />
-					<span>Verifikasi manual oleh admin</span>
+					<span>Pembayaran aman via Midtrans Snap</span>
 				</div>
 				<div class="flex items-center gap-2">
 					<Clock3 class="h-4 w-4 text-amber-600" />
@@ -130,7 +184,7 @@
 		</div>
 	{/if}
 
-	<form method="POST" use:enhance class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+	<form method="POST" class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6" on:submit|preventDefault={startMidtransTopup}>
 		<div class="space-y-6">
 			<fieldset class="space-y-4">
 				<div class="flex items-start justify-between gap-4">
@@ -206,59 +260,16 @@
 				</div>
 			</fieldset>
 
-			<section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+			<section class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
 				<div class="flex items-start justify-between gap-4">
 					<div>
-						<h2 class="text-lg font-semibold text-slate-950">Bukti Transfer</h2>
+						<h2 class="text-lg font-semibold text-emerald-950">Pembayaran Midtrans</h2>
 						<p class="mt-1 text-sm text-slate-500">
-							Unggah JPG, PNG, atau WebP maksimal 2MB.
+							Order dibuat dengan ID pendek dan saldo akan masuk setelah notifikasi pembayaran
+							diterima.
 						</p>
 					</div>
-					<UploadCloud class="mt-1 h-5 w-5 shrink-0 text-slate-400" />
-				</div>
-
-				<div class="mt-4">
-					<label for="proof_upload" class="sr-only">Upload bukti transfer</label>
-					<input
-						id="proof_upload"
-						type="file"
-						accept="image/jpeg,image/png,image/webp"
-						disabled={isProofUploading}
-						class="file-input file-input-bordered w-full"
-						on:change={uploadProof}
-					/>
-					<input type="hidden" name="proof_url" value={proofUrl} />
-
-					{#if isProofUploading}
-						<p class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-amber-700">
-							<LoaderCircle class="h-4 w-4 animate-spin" />
-							Mengunggah bukti transfer...
-						</p>
-					{/if}
-					{#if proofUploadError}
-						<p class="mt-3 text-sm font-semibold text-red-600">{proofUploadError}</p>
-					{/if}
-					{#if proofUrl}
-						<div class="mt-4 border-t border-emerald-100 pt-4">
-							<div class="flex items-center gap-2 text-sm font-semibold text-emerald-700">
-								<FileCheck2 class="h-4 w-4" />
-								Bukti transfer terunggah
-							</div>
-							<a
-								href={proofUrl}
-								target="_blank"
-								rel="noreferrer"
-								class="mt-2 inline-flex break-all text-sm font-medium text-emerald-700 hover:text-emerald-800"
-							>
-								Lihat file bukti
-							</a>
-							<img
-								src={proofUrl}
-								alt="Preview bukti transfer"
-								class="mt-3 max-h-72 w-full rounded-lg border border-slate-200 bg-slate-50 object-contain"
-							/>
-						</div>
-					{/if}
+					<CreditCard class="mt-1 h-5 w-5 shrink-0 text-emerald-700" />
 				</div>
 			</section>
 
@@ -347,14 +358,14 @@
 				<button
 					type="submit"
 					class="btn btn-primary btn-lg w-full gap-2"
-					disabled={isProofUploading || !selectedPackage}
+					disabled={isProcessing || !selectedPackage}
 				>
-					{#if isProofUploading}
+					{#if isProcessing}
 						<LoaderCircle class="h-4 w-4 animate-spin" />
-						Menunggu Upload
+						Menyiapkan Snap
 					{:else}
 						<CreditCard class="h-4 w-4" />
-						Ajukan Top Up
+						Bayar via Midtrans
 					{/if}
 				</button>
 				<a href="/coins" class="btn btn-outline btn-lg w-full gap-2">
@@ -365,3 +376,17 @@
 		</aside>
 	</form>
 </div>
+
+{#if toast}
+	<div
+		class={`fixed bottom-24 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm rounded-xl border px-4 py-3 text-sm font-bold shadow-soft md:bottom-5 ${
+			toast.kind === 'success'
+				? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+				: toast.kind === 'pending'
+					? 'border-amber-200 bg-amber-50 text-amber-800'
+					: 'border-red-200 bg-red-50 text-red-800'
+		}`}
+	>
+		{toast.message}
+	</div>
+{/if}
