@@ -50,8 +50,6 @@ export const GET: RequestHandler = async ({ locals, params, setHeaders }) => {
 			pilihan_b: question.pilihanB ?? question.options[1] ?? '',
 			pilihan_c: question.pilihanC ?? question.options[2] ?? '',
 			pilihan_d: question.pilihanD ?? question.options[3] ?? '',
-			jawaban_benar: question.answerKey ?? question.jawabanBenar,
-			penjelasan: question.penjelasan,
 			urutan: question.urutan
 		}))
 	});
