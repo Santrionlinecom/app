@@ -31,7 +31,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			.prepare('SELECT org_id as orgId FROM users WHERE id = ?')
 			.bind(userId)
 			.first<{ orgId: string | null }>();
-		if (target?.orgId && target.orgId !== locals.user.orgId) {
+		if (!target?.orgId || target.orgId !== locals.user.orgId) {
 			throw error(403, 'Tidak boleh mengubah user lembaga lain');
 		}
 	}
