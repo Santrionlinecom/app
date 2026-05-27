@@ -8,7 +8,13 @@ import {
 } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
 
-export type LearnCategory = 'hijaiyah' | 'mufrodat' | 'nahwu' | 'shorof' | 'kitab';
+export type LearnCategory =
+	| 'hijaiyah'
+	| 'mufrodat'
+	| 'nahwu'
+	| 'shorof'
+	| 'kitab'
+	| 'percakapan';
 export type LearnQuestionType =
 	| 'pilihan_ganda'
 	| 'cocokkan'
@@ -39,10 +45,17 @@ export type LearnQuestion = {
 	tipe: LearnQuestionType;
 	pertanyaan: string;
 	pilihan: string | null;
+	pilihanA: string | null;
+	pilihanB: string | null;
+	pilihanC: string | null;
+	pilihanD: string | null;
 	jawabanBenar: string;
+	penjelasan: string | null;
 	audioUrl: string | null;
 	urutan: number;
 	options: string[];
+	answerKey: 'a' | 'b' | 'c' | 'd' | null;
+	correctAnswerText: string;
 };
 
 export type LearnSummary = {
@@ -68,7 +81,7 @@ export type LearnLeaderboardRow = {
 };
 
 type LearnModuleRow = Omit<LearnModule, 'locked'>;
-type LearnQuestionRow = Omit<LearnQuestion, 'options'>;
+type LearnQuestionRow = Omit<LearnQuestion, 'options' | 'answerKey' | 'correctAnswerText'>;
 type ProgressRow = {
 	id: string;
 	userId: string;
@@ -110,7 +123,7 @@ CREATE TABLE IF NOT EXISTS learn_modul (
   lembaga_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
   judul TEXT NOT NULL,
   deskripsi TEXT,
-  kategori TEXT NOT NULL CHECK(kategori IN ('hijaiyah','mufrodat','nahwu','shorof','kitab')),
+  kategori TEXT NOT NULL CHECK(kategori IN ('hijaiyah','mufrodat','nahwu','shorof','kitab','percakapan')),
   urutan INTEGER DEFAULT 0,
   is_aktif INTEGER DEFAULT 1,
   created_at INTEGER DEFAULT (CAST(strftime('%s','now') AS INTEGER)*1000)
@@ -122,7 +135,12 @@ CREATE TABLE IF NOT EXISTS learn_soal (
   tipe TEXT NOT NULL CHECK(tipe IN ('pilihan_ganda','cocokkan','isi_titik','susun_kata','dengar_pilih')),
   pertanyaan TEXT NOT NULL,
   pilihan TEXT,
+  pilihan_a TEXT,
+  pilihan_b TEXT,
+  pilihan_c TEXT,
+  pilihan_d TEXT,
   jawaban_benar TEXT NOT NULL,
+  penjelasan TEXT,
   audio_url TEXT,
   urutan INTEGER DEFAULT 0
 );
@@ -207,6 +225,27 @@ const parseOptions = (pilihan: string | null) => {
 	}
 };
 
+const answerKeys = ['a', 'b', 'c', 'd'] as const;
+type AnswerKey = (typeof answerKeys)[number];
+
+const isAnswerKey = (value: string): value is AnswerKey =>
+	answerKeys.includes(value.toLowerCase() as AnswerKey);
+
+const optionByKey = (question: Pick<LearnQuestion, 'pilihanA' | 'pilihanB' | 'pilihanC' | 'pilihanD'>, key: string) => {
+	switch (key.toLowerCase()) {
+		case 'a':
+			return question.pilihanA ?? '';
+		case 'b':
+			return question.pilihanB ?? '';
+		case 'c':
+			return question.pilihanC ?? '';
+		case 'd':
+			return question.pilihanD ?? '';
+		default:
+			return '';
+	}
+};
+
 const mapModule = (row: LearnModuleRow): LearnModule => ({
 	id: row.id,
 	lembagaId: row.lembagaId ?? null,
@@ -224,17 +263,37 @@ const mapModule = (row: LearnModuleRow): LearnModule => ({
 	locked: false
 });
 
-const mapQuestion = (row: LearnQuestionRow): LearnQuestion => ({
-	id: row.id,
-	modulId: row.modulId,
-	tipe: row.tipe,
-	pertanyaan: row.pertanyaan,
-	pilihan: row.pilihan ?? null,
-	jawabanBenar: row.jawabanBenar,
-	audioUrl: row.audioUrl ?? null,
-	urutan: readInt(row.urutan),
-	options: parseOptions(row.pilihan ?? null)
-});
+const mapQuestion = (row: LearnQuestionRow): LearnQuestion => {
+	const structuredOptions = [row.pilihanA, row.pilihanB, row.pilihanC, row.pilihanD].filter(
+		(option): option is string => Boolean(option)
+	);
+	const options = structuredOptions.length ? structuredOptions : parseOptions(row.pilihan ?? null);
+	const normalizedKey = row.jawabanBenar.toLowerCase();
+	const answerKey = isAnswerKey(normalizedKey) ? normalizedKey : null;
+	const question = {
+		id: row.id,
+		modulId: row.modulId,
+		tipe: row.tipe,
+		pertanyaan: row.pertanyaan,
+		pilihan: row.pilihan ?? null,
+		pilihanA: row.pilihanA ?? null,
+		pilihanB: row.pilihanB ?? null,
+		pilihanC: row.pilihanC ?? null,
+		pilihanD: row.pilihanD ?? null,
+		jawabanBenar: row.jawabanBenar,
+		penjelasan: row.penjelasan ?? null,
+		audioUrl: row.audioUrl ?? null,
+		urutan: readInt(row.urutan),
+		options,
+		answerKey,
+		correctAnswerText: row.jawabanBenar
+	};
+
+	return {
+		...question,
+		correctAnswerText: answerKey ? optionByKey(question, answerKey) : row.jawabanBenar
+	};
+};
 
 const normalizeAnswer = (value: string) =>
 	value
@@ -243,6 +302,28 @@ const normalizeAnswer = (value: string) =>
 		.replace(/[\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06ed]/g, '')
 		.replace(/\u0640/g, '')
 		.replace(/\s+/g, ' ');
+
+const resolveQuestionAnswer = (
+	question: Pick<LearnQuestion, 'jawabanBenar' | 'pilihanA' | 'pilihanB' | 'pilihanC' | 'pilihanD'>
+) => {
+	const key = question.jawabanBenar.toLowerCase();
+	const answerKey = isAnswerKey(key) ? key : null;
+	const keyedText = answerKey ? optionByKey(question, answerKey) : '';
+	return {
+		answerKey,
+		correctAnswerText: keyedText || question.jawabanBenar
+	};
+};
+
+const isCorrectQuestionAnswer = (
+	question: Pick<LearnQuestion, 'jawabanBenar' | 'pilihanA' | 'pilihanB' | 'pilihanC' | 'pilihanD'>,
+	answer: string
+) => {
+	const { answerKey, correctAnswerText } = resolveQuestionAnswer(question);
+	const normalizedAnswer = normalizeAnswer(answer);
+	if (answerKey && normalizedAnswer === answerKey) return true;
+	return normalizedAnswer === normalizeAnswer(correctAnswerText);
+};
 
 const jakartaDayNumber = (timestamp: number) => {
 	const parts = new Intl.DateTimeFormat('en-CA', {
@@ -435,7 +516,12 @@ export const listLearnQuestions = async (
 				tipe,
 				pertanyaan,
 				pilihan,
+				pilihan_a AS pilihanA,
+				pilihan_b AS pilihanB,
+				pilihan_c AS pilihanC,
+				pilihan_d AS pilihanD,
 				jawaban_benar AS jawabanBenar,
+				penjelasan,
 				audio_url AS audioUrl,
 				urutan
 			 FROM learn_soal
@@ -465,7 +551,12 @@ export const answerLearnQuestion = async (
 				s.tipe,
 				s.pertanyaan,
 				s.pilihan,
+				s.pilihan_a AS pilihanA,
+				s.pilihan_b AS pilihanB,
+				s.pilihan_c AS pilihanC,
+				s.pilihan_d AS pilihanD,
 				s.jawaban_benar AS jawabanBenar,
+				s.penjelasan,
 				s.audio_url AS audioUrl,
 				s.urutan,
 				m.kategori,
@@ -490,7 +581,7 @@ export const answerLearnQuestion = async (
 	}
 
 	const now = Date.now();
-	const isBenar = normalizeAnswer(params.jawaban) === normalizeAnswer(question.jawabanBenar);
+	const isBenar = isCorrectQuestionAnswer(question, params.jawaban);
 	const previousCorrect = await db
 		.prepare(
 			`SELECT id
@@ -635,6 +726,178 @@ export const answerLearnQuestion = async (
 		status,
 		modul_selesai: modulSelesai,
 		badge_baru: badgeBaru
+	};
+};
+
+export const saveLearnProgressAnswer = async (
+	db: D1Database,
+	params: {
+		userId: string;
+		lembagaId: string;
+		modulId: string;
+		soalId: string;
+		jawaban: string;
+	}
+) => {
+	const question = await db
+		.prepare(
+			`SELECT
+				s.id,
+				s.modul_id AS modulId,
+				s.tipe,
+				s.pertanyaan,
+				s.pilihan,
+				s.pilihan_a AS pilihanA,
+				s.pilihan_b AS pilihanB,
+				s.pilihan_c AS pilihanC,
+				s.pilihan_d AS pilihanD,
+				s.jawaban_benar AS jawabanBenar,
+				s.penjelasan,
+				s.audio_url AS audioUrl,
+				s.urutan,
+				m.kategori,
+				m.judul
+			 FROM learn_soal s
+			 JOIN learn_modul m ON m.id = s.modul_id
+			 WHERE s.id = ?
+			   AND s.modul_id = ?
+			   AND (m.lembaga_id IS NULL OR m.lembaga_id = ?)
+			   AND COALESCE(m.is_aktif, 1) = 1`
+		)
+		.bind(params.soalId, params.modulId, params.lembagaId)
+		.first<LearnQuestionRow & { kategori: LearnCategory; judul: string }>();
+
+	if (!question) {
+		throw error(404, 'Soal tidak ditemukan');
+	}
+
+	const modules = await listLearnModules(db, params.lembagaId, params.userId);
+	const moduleState = modules.find((module) => module.id === question.modulId);
+	if (!moduleState || moduleState.locked) {
+		throw error(403, 'Modul belajar masih terkunci.');
+	}
+
+	const now = Date.now();
+	const isBenar = isCorrectQuestionAnswer(question, params.jawaban);
+	const previousAnswer = await db
+		.prepare(
+			`SELECT id
+			 FROM learn_jawaban
+			 WHERE user_id = ? AND soal_id = ?
+			 LIMIT 1`
+		)
+		.bind(params.userId, params.soalId)
+		.first<{ id: string }>();
+	const progress =
+		(await db
+			.prepare(
+				`SELECT
+					id,
+					user_id AS userId,
+					modul_id AS modulId,
+					soal_selesai AS soalSelesai,
+					xp,
+					streak_hari AS streakHari,
+					last_belajar AS lastBelajar,
+					status
+				 FROM learn_progress
+				 WHERE user_id = ? AND modul_id = ?`
+			)
+			.bind(params.userId, question.modulId)
+			.first<ProgressRow>()) ?? {
+			id: crypto.randomUUID(),
+			userId: params.userId,
+			modulId: question.modulId,
+			soalSelesai: 0,
+			xp: 0,
+			streakHari: 0,
+			lastBelajar: null,
+			status: 'belum'
+		};
+	const userStreak = await db
+		.prepare(
+			`SELECT
+				COALESCE(streak_hari, 0) AS streakHari,
+				last_belajar AS lastBelajar
+			 FROM learn_progress
+			 WHERE user_id = ?
+			 ORDER BY COALESCE(last_belajar, 0) DESC
+			 LIMIT 1`
+		)
+		.bind(params.userId)
+		.first<{ streakHari: number; lastBelajar: number | null }>();
+
+	await db
+		.prepare(
+			`INSERT INTO learn_jawaban (id, user_id, soal_id, jawaban, is_benar, waktu_jawab)
+			 VALUES (?, ?, ?, ?, ?, ?)`
+		)
+		.bind(crypto.randomUUID(), params.userId, params.soalId, params.jawaban, isBenar ? 1 : 0, now)
+		.run();
+
+	const totalSoal = await db
+		.prepare('SELECT COUNT(*) AS total FROM learn_soal WHERE modul_id = ?')
+		.bind(question.modulId)
+		.first<{ total: number }>();
+	const answeredSoal = await db
+		.prepare(
+			`SELECT COUNT(DISTINCT lj.soal_id) AS total
+			 FROM learn_jawaban lj
+			 JOIN learn_soal s ON s.id = lj.soal_id
+			 WHERE lj.user_id = ? AND s.modul_id = ?`
+		)
+		.bind(params.userId, question.modulId)
+		.first<{ total: number }>();
+
+	const total = readInt(totalSoal?.total);
+	const soalSelesai = Math.min(readInt(answeredSoal?.total), total);
+	const modulSelesai = total > 0 && soalSelesai >= total;
+	const xpDidapat = previousAnswer ? 0 : isBenar ? 10 : 2;
+	const xpTotal = readInt(progress.xp) + xpDidapat;
+	const streakHari = nextStreak(
+		userStreak?.lastBelajar ? readInt(userStreak.lastBelajar) : null,
+		readInt(userStreak?.streakHari),
+		now
+	);
+	const status = modulSelesai ? 'selesai' : soalSelesai > 0 ? 'proses' : 'belum';
+
+	await db
+		.prepare(
+			`INSERT INTO learn_progress
+				(id, user_id, modul_id, soal_selesai, xp, streak_hari, last_belajar, status)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			 ON CONFLICT(user_id, modul_id) DO UPDATE SET
+				soal_selesai = excluded.soal_selesai,
+				xp = excluded.xp,
+				streak_hari = excluded.streak_hari,
+				last_belajar = excluded.last_belajar,
+				status = excluded.status`
+		)
+		.bind(
+			progress.id,
+			params.userId,
+			question.modulId,
+			soalSelesai,
+			xpTotal,
+			streakHari,
+			now,
+			status
+		)
+		.run();
+
+	const summary = await getLearnSummary(db, params.userId);
+
+	return {
+		is_benar: isBenar,
+		xp_didapat: xpDidapat,
+		xp_total: summary.totalXp,
+		soal_selesai: soalSelesai,
+		total_soal: total,
+		status,
+		modul_selesai: modulSelesai,
+		penjelasan: question.penjelasan ?? null,
+		jawaban_benar: question.jawabanBenar,
+		jawaban_teks: resolveQuestionAnswer(question).correctAnswerText
 	};
 };
 

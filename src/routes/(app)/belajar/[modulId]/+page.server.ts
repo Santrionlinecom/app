@@ -32,7 +32,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	}
 
 	const nextModule = modules[currentIndex + 1] ?? null;
-	const publicQuestions = questions.map(({ jawabanBenar: _jawabanBenar, ...question }) => question);
+	const publicQuestions = questions.map(
+		({ jawabanBenar: _jawabanBenar, answerKey: _answerKey, correctAnswerText: _correctAnswerText, ...question }) =>
+			question
+	);
 
 	return {
 		module: modules[currentIndex],
