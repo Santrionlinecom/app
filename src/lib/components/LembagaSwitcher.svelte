@@ -82,10 +82,10 @@
 </script>
 
 {#if active}
-	<div class="relative font-sans" bind:this={rootEl}>
+	<div class="relative min-w-0 font-sans" bind:this={rootEl}>
 		<button
 			type="button"
-			class="inline-flex max-w-[min(78vw,20rem)] items-center gap-2 rounded-xl border border-so-border bg-white px-3 py-2 text-left shadow-sm transition hover:border-so-green/60 hover:bg-so-cream/70 focus:outline-none focus:ring-4 focus:ring-so-gold/20"
+			class="inline-flex w-full min-w-0 max-w-[min(78vw,20rem)] items-center gap-2 rounded-xl border border-so-border bg-white px-3 py-2 text-left shadow-sm transition hover:border-so-green/60 hover:bg-so-cream/70 focus:outline-none focus:ring-4 focus:ring-so-gold/20"
 			class:cursor-default={!canSwitch}
 			on:click={toggle}
 			aria-haspopup="listbox"
@@ -180,7 +180,7 @@
 			</section>
 
 			<div
-				class="absolute right-0 top-[calc(100%+0.5rem)] z-50 hidden w-[22rem] rounded-so-lg border border-so-border bg-white p-3 shadow-soft md:block"
+				class="absolute right-0 top-[calc(100%+0.5rem)] z-50 hidden w-[min(22rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-so-lg border border-so-border bg-white p-3 shadow-soft md:block"
 				role="listbox"
 				aria-label="Daftar lembaga"
 			>

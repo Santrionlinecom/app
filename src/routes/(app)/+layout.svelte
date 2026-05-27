@@ -406,15 +406,15 @@
 	const displayName = data?.user?.username || data?.user?.email || 'Guest';
 </script>
 
-<div class="app-shell relative min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-amber-50 text-slate-900">
-	<div class="pointer-events-none absolute inset-0">
+<div class="app-shell relative min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-teal-50 to-amber-50 text-slate-900">
+	<div class="pointer-events-none absolute inset-0 overflow-hidden">
 		<div class="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-teal-200/40 blur-3xl"></div>
 		<div class="absolute -right-10 top-40 h-64 w-64 rounded-full bg-amber-200/50 blur-[90px]"></div>
 		<div class="absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-cyan-200/40 blur-[110px]"></div>
 	</div>
 
-	<div class="relative flex min-h-screen">
-		<aside class="hidden w-64 flex-col border-r border-white/70 bg-white/70 px-5 py-8 shadow-xl backdrop-blur xl:w-72 md:flex">
+	<div class="relative flex min-h-screen w-full max-w-full overflow-x-hidden">
+		<aside class="hidden w-64 shrink-0 flex-col border-r border-white/70 bg-white/70 px-5 py-8 shadow-xl backdrop-blur xl:w-72 md:flex">
 			<div class="flex items-center justify-between">
 				<div>
 					<p class="app-title text-xl font-semibold">SantriOnline</p>
@@ -429,15 +429,15 @@
 				{#each menuItems as item, idx}
 					<a
 						href={item.href}
-						class="fade-in flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-800"
+						class="fade-in flex min-w-0 items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-800"
 						class:bg-emerald-100={isActive(item)}
 						class:text-emerald-900={isActive(item)}
 						style={`animation-delay: ${idx * 60}ms;`}
 					>
-						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+						<svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
 							<path d={item.icon} />
 						</svg>
-						<span>{item.label}</span>
+						<span class="min-w-0 truncate">{item.label}</span>
 					</a>
 				{/each}
 			</nav>
@@ -457,9 +457,9 @@
 			</div>
 		</aside>
 
-		<div class="flex min-h-screen flex-1 flex-col">
-			<header class="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-white/70 bg-white/70 px-4 py-4 shadow-sm backdrop-blur md:px-8">
-				<div class="flex items-center gap-3">
+		<div class="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden">
+			<header class="sticky top-0 z-20 flex w-full max-w-full items-center justify-between gap-2 border-b border-white/70 bg-white/70 px-3 py-4 shadow-sm backdrop-blur sm:gap-4 sm:px-4 md:px-8">
+				<div class="flex min-w-0 items-center gap-3">
 					<button
 						class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm md:hidden"
 						on:click={() => (sidebarOpen = true)}
@@ -469,18 +469,20 @@
 							<path d="M4 6h16M4 12h16M4 18h10" />
 						</svg>
 					</button>
-					<div>
-						<p class="text-xs uppercase tracking-[0.3em] text-slate-400">Dashboard</p>
-						<h1 class="app-title text-2xl font-semibold text-slate-900">{headerTitle}</h1>
+					<div class="min-w-0">
+						<p class="truncate text-xs uppercase tracking-[0.3em] text-slate-400">Dashboard</p>
+						<h1 class="app-title truncate text-xl font-semibold text-slate-900 sm:text-2xl">{headerTitle}</h1>
 					</div>
 				</div>
 
-				<div class="flex items-center gap-3">
-					<LembagaSwitcher
-						lembagaList={data?.lembagaList ?? []}
-						fallbackLembaga={data?.org ?? null}
-						currentUser={data?.user ?? null}
-					/>
+				<div class="flex min-w-0 items-center gap-2 sm:gap-3">
+					<div class="min-w-0 max-w-[48vw] sm:max-w-[min(56vw,20rem)] md:max-w-none">
+						<LembagaSwitcher
+							lembagaList={data?.lembagaList ?? []}
+							fallbackLembaga={data?.org ?? null}
+							currentUser={data?.user ?? null}
+						/>
+					</div>
 					<div class="hidden rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-500 md:block">
 						{displayName}
 					</div>
@@ -495,12 +497,12 @@
 				</div>
 			</header>
 
-			<main class="flex-1 px-3 py-6 md:px-6 xl:px-8 2xl:px-10">
+			<main class="min-w-0 flex-1 overflow-x-hidden px-3 py-6 sm:px-4 md:px-6 xl:px-8 2xl:px-10">
 				{#if isImpersonating}
-					<div class="mb-5 flex flex-col gap-3 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900 shadow-sm md:flex-row md:items-center md:justify-between">
-						<div>
+					<div class="mb-5 flex min-w-0 flex-col gap-3 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900 shadow-sm md:flex-row md:items-center md:justify-between">
+						<div class="min-w-0">
 							<p class="font-semibold">Mode Admin Lembaga Aktif</p>
-							<p class="mt-1 text-amber-800/90">Akses dashboard organisasi sedang aktif, tetapi menu super admin dan license tetap tersedia.</p>
+							<p class="mt-1 break-words text-amber-800/90">Akses dashboard organisasi sedang aktif, tetapi menu super admin dan license tetap tersedia.</p>
 						</div>
 						<div class="flex flex-wrap gap-2">
 							<a href="/admin/super/overview" class="rounded-full border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-900 transition hover:bg-amber-100">
@@ -517,20 +519,20 @@
 		</div>
 	</div>
 
-	<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-white/70 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] md:hidden safe-area-bottom">
-		<div class="flex w-full items-center justify-between px-2 py-3 pb-safe">
+	<nav class="fixed inset-x-0 bottom-0 z-40 max-w-full overflow-hidden border-t border-white/70 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] md:hidden safe-area-bottom">
+		<div class="flex w-full min-w-0 items-center justify-between px-2 py-3 pb-safe">
 			{#each mobileQuickItems as item}
 				<a
 					href={item.href}
-					class="flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs text-slate-500 transition-colors"
+					class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-1 py-2 text-xs text-slate-500 transition-colors sm:px-2"
 					class:text-emerald-700={isActive(item)}
 					class:font-semibold={isActive(item)}
 					class:bg-emerald-50={isActive(item)}
 				>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8">
 						<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
 					</svg>
-					<span class="text-[10px]">{item.label}</span>
+					<span class="max-w-full truncate text-[10px]">{item.label}</span>
 				</a>
 			{/each}
 		</div>
@@ -548,7 +550,7 @@
 				}}
 				aria-label="Tutup navigasi"
 			></div>
-			<aside class="absolute left-0 top-0 h-full w-72 bg-white px-6 py-8 shadow-2xl">
+			<aside class="absolute left-0 top-0 h-full w-[min(18rem,100vw)] max-w-full overflow-y-auto bg-white px-6 py-8 shadow-2xl">
 				<div class="flex items-center justify-between">
 					<p class="app-title text-lg font-semibold">SantriOnline</p>
 					<button
@@ -566,15 +568,15 @@
 					{#each menuItems as item, idx}
 						<a
 							href={item.href}
-							class="fade-in flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-800"
+							class="fade-in flex min-w-0 items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-800"
 							class:bg-emerald-100={isActive(item)}
 							class:text-emerald-900={isActive(item)}
 							style={`animation-delay: ${idx * 60}ms;`}
 						>
-							<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+							<svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
 								<path d={item.icon} />
 							</svg>
-							<span>{item.label}</span>
+							<span class="min-w-0 truncate">{item.label}</span>
 						</a>
 					{/each}
 				</nav>
