@@ -1,6 +1,5 @@
 import type { PageServerLoad } from './$types';
 import {
-	ensureSantriLearnSchema,
 	getLearnLeaderboard,
 	getLearnSummary,
 	requireSantriLearnContext
@@ -8,7 +7,6 @@ import {
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const { db, user, lembagaId } = await requireSantriLearnContext(locals);
-	await ensureSantriLearnSchema(db);
 
 	const [leaderboard, summary] = await Promise.all([
 		getLearnLeaderboard(db, lembagaId, user.id),

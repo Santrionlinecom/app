@@ -2,7 +2,6 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import {
 	answerLearnQuestion,
-	ensureSantriLearnSchema,
 	getLearnModule,
 	getLearnSummary,
 	listLearnModules,
@@ -12,7 +11,6 @@ import {
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { db, user, lembagaId } = await requireSantriLearnContext(locals);
-	await ensureSantriLearnSchema(db);
 
 	const [modules, module, questions, summary] = await Promise.all([
 		listLearnModules(db, lembagaId, user.id),
@@ -48,7 +46,6 @@ export const actions: Actions = {
 	jawab: async ({ locals, request }) => {
 		try {
 			const { db, user, lembagaId } = await requireSantriLearnContext(locals);
-			await ensureSantriLearnSchema(db);
 
 			const formData = await request.formData();
 			const soalId = formData.get('soal_id');
