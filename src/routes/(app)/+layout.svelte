@@ -54,6 +54,12 @@
 		feature?: FeatureKey;
 	};
 
+	const learnItem: MenuItem = {
+		label: 'Belajar 📚',
+		href: '/belajar',
+		icon: 'M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM8 7h8M8 11h7M8 15h6'
+	};
+
 	const educationalAdminItems: MenuItem[] = [
 		{
 			label: 'Akademik',
@@ -61,6 +67,7 @@
 			icon: 'M3.5 7.5l8.5-4 8.5 4-8.5 4-8.5-4zm1.5 5.5l7 3.25 7-3.25v5.5l-7 3.25-7-3.25v-5.5z',
 			feature: 'setoran'
 		},
+		learnItem,
 		{
 			label: 'Kelola Santri',
 			href: '/dashboard/kelola-santri',
@@ -105,6 +112,7 @@
 			icon: 'M3.5 7.5l8.5-4 8.5 4-8.5 4-8.5-4zm1.5 5.5l7 3.25 7-3.25v5.5l-7 3.25-7-3.25v-5.5z',
 			feature: 'setoran'
 		},
+		learnItem,
 		{
 			label: 'Riwayat Setoran',
 			href: '/tpq/akademik/riwayat',
@@ -137,6 +145,7 @@
 	];
 
 	const educationalCoordinatorItems: MenuItem[] = [
+		learnItem,
 		{
 			label: 'Review Setoran',
 			href: '/tpq/akademik/review',
@@ -164,6 +173,7 @@
 	];
 
 	const educationalStudentItems: MenuItem[] = [
+		learnItem,
 		{
 			label: "Muroja'ah",
 			href: '/dashboard/hafalan-mandiri',
