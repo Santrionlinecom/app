@@ -46,7 +46,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		id,
 		user_id: context.user.id,
 		author_name: context.user.username || 'SantriOnline User',
-		author_avatar: null,
+		author_avatar: context.user.avatarUrl ?? null,
 		lembaga_id: context.user.orgId ?? null,
 		content,
 		image_url: null,

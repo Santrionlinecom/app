@@ -13,6 +13,7 @@ const addColumn = async (db: D1Database, name: string, type: string) => {
 export const ensureUserOptionalColumns = async (db: D1Database) => {
 	await addColumn(db, 'gender', 'TEXT');
 	await addColumn(db, 'whatsapp', 'TEXT');
+	await addColumn(db, 'avatar_url', 'TEXT');
 	await addColumn(
 		db,
 		'work_status',
