@@ -33,6 +33,7 @@
 	const roleLabel = roleLabelList.length ? roleLabelList.join(' & ') : 'Pengguna';
 	const orgLink = org?.slug && org?.type ? `/${org.type}/${org.slug}` : null;
 	const avatarEmoji = profile?.gender === 'wanita' ? '👩' : profile?.gender === 'pria' ? '👨' : '👤';
+	const avatarUrl = profile?.avatarUrl ?? '';
 
 	const pageTitle = `${displayName} - ${roleLabel} | SantriOnline`;
 	const description = org
@@ -49,9 +50,18 @@
 	<div class="mx-auto flex max-w-3xl flex-col gap-6 px-4">
 		<section class="rounded-3xl border border-slate-200/70 bg-white p-6 shadow-xl">
 			<div class="flex flex-wrap items-center gap-4">
-				<div class="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-3xl">
-					{avatarEmoji}
-				</div>
+				{#if avatarUrl}
+					<img
+						src={avatarUrl}
+						alt={`Foto profil ${displayName}`}
+						class="h-16 w-16 rounded-full object-cover"
+						loading="lazy"
+					/>
+				{:else}
+					<div class="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-3xl">
+						{avatarEmoji}
+					</div>
+				{/if}
 				<div class="space-y-1">
 					<h1 class="text-2xl font-bold text-slate-900">{displayName}</h1>
 					<div class="flex flex-wrap items-center gap-2 text-sm text-slate-600">

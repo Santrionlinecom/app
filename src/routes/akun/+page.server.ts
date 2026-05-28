@@ -10,9 +10,16 @@ import {
 import { listOrgMedia } from '$lib/server/org-media';
 import { seedHafalanDefault } from '$lib/server/db-hafalan';
 import { SEED_HAFALAN_DEFAULT } from '$lib/server/seed-hafalan-default';
+import { buildR2PublicUrl, requireR2Bucket } from '$lib/server/cloudflare';
 import type { Actions, PageServerLoad } from './$types';
 
 const allowedOrgTypes = ['tpq', 'pondok', 'masjid', 'musholla', 'rumah-tahfidz'] as const;
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+const avatarMimeToExt: Record<string, string> = {
+	'image/jpeg': 'jpg',
+	'image/png': 'png',
+	'image/webp': 'webp'
+};
 
 type ManagedLembagaRow = {
 	id: string;
@@ -157,7 +164,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const profile =
 		(await db
 			.prepare(
-				'SELECT id, email, username, role, gender, whatsapp, org_id as orgId, org_status as orgStatus, created_at as createdAt FROM users WHERE id = ?'
+				'SELECT id, email, username, role, gender, whatsapp, avatar_url as avatarUrl, org_id as orgId, org_status as orgStatus, created_at as createdAt FROM users WHERE id = ?'
 			)
 			.bind(user.id)
 			.first<{
@@ -167,6 +174,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				role: string;
 				gender: string | null;
 				whatsapp: string | null;
+				avatarUrl: string | null;
 				orgId: string | null;
 				orgStatus: string | null;
 				createdAt: number;
@@ -190,6 +198,61 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
+	updateAvatar: async ({ request, locals, platform }) => {
+		if (!locals.user) return fail(401, { message: 'Unauthenticated', type: 'avatar' });
+		if (!locals.db) return fail(500, { message: 'Layanan data tidak tersedia', type: 'avatar' });
+
+		const form = await request.formData();
+		const file = form.get('avatar');
+		if (!(file instanceof File)) {
+			return fail(400, { message: 'Pilih foto profil terlebih dahulu.', type: 'avatar' });
+		}
+		if (file.size <= 0) {
+			return fail(400, { message: 'File foto kosong.', type: 'avatar' });
+		}
+		if (file.size > MAX_AVATAR_BYTES) {
+			return fail(413, { message: 'Ukuran foto maksimal 2MB.', type: 'avatar' });
+		}
+		if (!(file.type in avatarMimeToExt)) {
+			return fail(415, { message: 'Gunakan gambar JPG, PNG, atau WebP.', type: 'avatar' });
+		}
+
+		const ext = avatarMimeToExt[file.type];
+		const key = `avatars/${locals.user.id}/${crypto.randomUUID()}.${ext}`;
+
+		try {
+			const bucket = requireR2Bucket(platform);
+			await bucket.put(key, await file.arrayBuffer(), {
+				httpMetadata: {
+					contentType: file.type,
+					cacheControl: 'public, max-age=31536000, immutable'
+				}
+			});
+
+			const avatarUrl = buildR2PublicUrl(key, platform);
+			await locals.db
+				.prepare('UPDATE users SET avatar_url = ? WHERE id = ?')
+				.bind(avatarUrl, locals.user.id)
+				.run();
+
+			locals.user = { ...locals.user, avatarUrl } as typeof locals.user;
+			return { success: true, message: 'Foto profil diperbarui', type: 'avatar' };
+		} catch (err) {
+			console.error('Update avatar error:', err);
+			return fail(500, { message: 'Gagal mengunggah foto profil.', type: 'avatar' });
+		}
+	},
+
+	removeAvatar: async ({ locals }) => {
+		if (!locals.user) return fail(401, { message: 'Unauthenticated', type: 'avatar' });
+		if (!locals.db) return fail(500, { message: 'Layanan data tidak tersedia', type: 'avatar' });
+
+		await locals.db.prepare('UPDATE users SET avatar_url = NULL WHERE id = ?').bind(locals.user.id).run();
+		locals.user = { ...locals.user, avatarUrl: null } as typeof locals.user;
+
+		return { success: true, message: 'Foto profil dihapus', type: 'avatar' };
+	},
+
 	updateProfile: async ({ request, locals }) => {
 		if (!locals.user) return fail(401, { message: 'Unauthenticated' });
 		const form = await request.formData();

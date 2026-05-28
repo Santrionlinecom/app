@@ -28,6 +28,7 @@ export const initializeLucia = (D1: D1Database) => {
                 username: attributes.username,
                 role: attributes.role,
                 email: attributes.email,
+                avatarUrl: attributes.avatar_url ?? null,
                 googleId: attributes.googleId,
                 gender: attributes.gender,
                 whatsapp: attributes.whatsapp,
@@ -64,6 +65,7 @@ interface DatabaseUserAttributes {
     username: string;
     role: string;
     email: string;
+    avatar_url?: string | null;
     googleId: string;
     gender?: string;
     whatsapp?: string;

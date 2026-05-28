@@ -4,8 +4,10 @@
 		ArrowRight,
 		BadgeCheck,
 		Building2,
+		Camera,
 		Copy,
 		ExternalLink,
+		ImageUp,
 		KeyRound,
 		LogOut,
 		Plus,
@@ -13,7 +15,8 @@
 		ShieldCheck,
 		Smartphone,
 		UserRound,
-		WalletCards
+		WalletCards,
+		X
 	} from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
@@ -92,6 +95,7 @@
 	$: orgMedia = (data.orgMedia ?? []) as OrgMediaItem[];
 	$: formState = (form ?? {}) as FormState;
 	$: displayName = profile?.username || profile?.email || 'Pengguna SantriOnline';
+	$: avatarUrl = profile?.avatarUrl ?? '';
 	$: bioLink = profile?.id ? `${baseUrl}/u/${profile.id}` : '';
 	$: activeOrgName = org?.name ?? managedLembaga[0]?.name ?? 'Belum memilih lembaga';
 	$: activeLembagaCount = managedLembaga.filter((item) => item.isAktif !== 0).length;
@@ -182,11 +186,20 @@
 		<section class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
 			<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
 				<div class="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-center">
-					<div
-						class="grid h-20 w-20 shrink-0 place-items-center rounded-xl bg-so-green text-2xl font-black text-white"
-					>
-						{getInitials(displayName)}
-					</div>
+					{#if avatarUrl}
+						<img
+							src={avatarUrl}
+							alt={`Foto profil ${displayName}`}
+							class="h-20 w-20 shrink-0 rounded-xl border border-so-border object-cover shadow-card"
+							loading="lazy"
+						/>
+					{:else}
+						<div
+							class="grid h-20 w-20 shrink-0 place-items-center rounded-xl bg-so-green text-2xl font-black text-white"
+						>
+							{getInitials(displayName)}
+						</div>
+					{/if}
 					<div class="min-w-0">
 						<p class="text-sm font-bold text-so-gold">Akun SantriOnline</p>
 						<h1 class="mt-1 break-words text-2xl font-black text-so-green md:text-3xl">
@@ -428,7 +441,64 @@
 			</p>
 		{/if}
 
-		<div class="grid gap-6 xl:grid-cols-3">
+		<div class="grid gap-6 xl:grid-cols-4">
+			<div class="settings-card">
+				<div class="flex items-start gap-3">
+					<span class="settings-icon"><Camera size={20} /></span>
+					<div>
+						<h2 class="text-lg font-black text-so-green">Foto Profil</h2>
+						<p class="mt-1 text-sm leading-6 text-so-muted">Foto ini tampil di profil dan sosial media.</p>
+					</div>
+				</div>
+
+				<div class="mt-5 space-y-4">
+					<div class="flex items-center gap-4">
+						{#if avatarUrl}
+							<img
+								src={avatarUrl}
+								alt={`Foto profil ${displayName}`}
+								class="h-20 w-20 rounded-2xl border border-so-border object-cover"
+								loading="lazy"
+							/>
+						{:else}
+							<div class="grid h-20 w-20 place-items-center rounded-2xl bg-so-green text-2xl font-black text-white">
+								{getInitials(displayName)}
+							</div>
+						{/if}
+						<div class="min-w-0 text-sm leading-6 text-so-muted">
+							<p>JPG, PNG, atau WebP.</p>
+							<p>Maksimal 2MB.</p>
+						</div>
+					</div>
+
+					<form method="POST" action="?/updateAvatar" enctype="multipart/form-data" class="space-y-3">
+						<label class="field">
+							<span>Upload foto</span>
+							<input class="input-so py-2" name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required />
+						</label>
+						<button class="btn-primary w-full" type="submit">
+							<ImageUp size={17} />
+							Upload / Ganti Foto
+						</button>
+					</form>
+
+					{#if avatarUrl}
+						<form method="POST" action="?/removeAvatar">
+							<button class="btn-secondary w-full text-red-700" type="submit">
+								<X size={17} />
+								Hapus Foto
+							</button>
+						</form>
+					{/if}
+
+					{#if formState.success && formState.type === 'avatar'}
+						<p class="success-box">{formState.message ?? 'Foto profil diperbarui.'}</p>
+					{:else if formState.message && formState.type === 'avatar'}
+						<p class="error-box">{formState.message}</p>
+					{/if}
+				</div>
+			</div>
+
 			<form method="POST" action="?/updateProfile" class="settings-card">
 				<div class="flex items-start gap-3">
 					<span class="settings-icon"><UserRound size={20} /></span>

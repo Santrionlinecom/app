@@ -8,6 +8,7 @@ type PublicProfile = {
 	username: string | null;
 	role: string | null;
 	gender: string | null;
+	avatarUrl: string | null;
 	orgId: string | null;
 	orgStatus: string | null;
 	createdAt: number | null;
@@ -30,6 +31,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				username,
 				role,
 				gender,
+				avatar_url as avatarUrl,
 				org_id as orgId,
 				org_status as orgStatus,
 				created_at as createdAt

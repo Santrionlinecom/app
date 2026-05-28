@@ -102,7 +102,7 @@ export const listSocialPosts = async (
 				sp.id,
 				sp.user_id,
 				COALESCE(NULLIF(TRIM(u.username), ''), 'SantriOnline User') as author_name,
-				NULL as author_avatar,
+				u.avatar_url as author_avatar,
 				sp.lembaga_id,
 				sp.content,
 				sp.image_url,
@@ -167,7 +167,7 @@ export const listSocialComments = async (db: D1Database, postId: string) => {
 				sc.post_id,
 				sc.user_id,
 				COALESCE(NULLIF(TRIM(u.username), ''), 'SantriOnline User') as author_name,
-				NULL as author_avatar,
+				u.avatar_url as author_avatar,
 				sc.content,
 				sc.created_at
 			 FROM social_comments sc

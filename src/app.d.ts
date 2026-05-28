@@ -12,6 +12,7 @@ declare global {
                         originalRole?: string | null;
                         actualRole?: string | null;
                         actualOrgId?: string | null;
+                        avatarUrl?: string | null;
                         isImpersonating?: boolean;
                         impersonatedOrgId?: string | null;
                   })
