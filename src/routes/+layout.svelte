@@ -21,6 +21,7 @@ import X from '@lucide/svelte/icons/x';
 import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
 import { islamicDynasties } from '$lib/data/dinasti';
 import { FEATURES } from '$lib/features';
+import { INSTITUTIONS, type InstitutionKey } from '$lib/config/institutions';
 
 export let data;
 export let hideChrome = false;
@@ -82,6 +83,16 @@ const isBookMenuActive = (path: string) =>
 	path.startsWith('/buku/') ||
 	path === '/coins' ||
 	path.startsWith('/coins/');
+const isRegisterMenuActive = (path: string) =>
+	path === '/register' ||
+	path.startsWith('/register/') ||
+	INSTITUTIONS.some(
+		(institution) =>
+			path === institution.registerRoute ||
+			path.startsWith(`${institution.registerRoute}/`) ||
+			path === institution.route ||
+			path.startsWith(`${institution.route}/`)
+	);
 const isLearningMenuActive = (path: string) =>
 	path === '/tpq' ||
 	path.startsWith('/tpq/') ||
@@ -295,6 +306,26 @@ const adminBookMenuItems: HeaderMenuItem[] = [
 		note: 'Akses license tetap tersedia'
 	}
 ];
+
+const memberRoleByInstitution: Record<InstitutionKey, string> = {
+	tpq: 'Santri TPQ',
+	pondok: 'Santri Pondok',
+	masjid: 'Jamaah Masjid',
+	musholla: 'Anggota Musholla',
+	'rumah-tahfidz': 'Santri Tahfidz'
+};
+
+const institutionRegisterMenuItems: HeaderMenuItem[] = INSTITUTIONS.map((institution) => ({
+	label: `Daftarkan ${institution.label}`,
+	href: institution.registerRoute,
+	note: institution.registerDescription
+}));
+
+const memberRegisterMenuItems: HeaderMenuItem[] = INSTITUTIONS.map((institution) => ({
+	label: `Daftar sebagai ${memberRoleByInstitution[institution.key]}`,
+	href: institution.route,
+	note: `Pilih ${institution.label} terdaftar, lalu gunakan tautan pendaftaran anggotanya.`
+}));
 
 const apkUrl = 'https://files.santrionline.com/Santrionline.apk';
 const installPromptDismissedKey = 'so_install_prompt_v2_dismissed';
@@ -874,13 +905,35 @@ $: accountMenuItems = data?.user
 				note: 'Masuk ke akun SantriOnline'
 			},
 			{
-				label: 'Daftar TPQ',
+				label: 'Daftar',
 				href: '/register',
-				note: 'Mulai onboarding lembaga'
+				note: 'Daftarkan lembaga atau gabung sebagai anggota'
 			}
 		];
 
 $: mobileTopMenus = [
+	{
+		id: 'daftar',
+		label: 'Daftar',
+		compact: false,
+		isActive: (path: string) => isRegisterMenuActive(path),
+		items: [
+			{
+				label: 'Daftarkan Lembaga',
+				href: '/register',
+				note: 'Pilih jenis lembaga dan buat ruang kerja pengelola.'
+			},
+			...institutionRegisterMenuItems,
+			{
+				label: 'Daftar sebagai Santri/Jamaah',
+				href: '/register',
+				note: 'Cari lembaga aktif, lalu daftar lewat halaman lembaga.'
+			},
+			...memberRegisterMenuItems
+		],
+		footerHref: '/register',
+		footerLabel: 'Buka halaman daftar'
+	},
 	{
 		id: 'buku',
 		label: 'Buku',
@@ -982,8 +1035,8 @@ $: mobileSecondaryAction = data?.user
 		}
 	: {
 			href: '/register',
-			label: 'Daftar TPQ',
-			note: 'Mulai onboarding lembaga'
+			label: 'Daftar',
+			note: 'Lembaga atau santri'
 		};
 $: mobileHeroActions = [
 	{
@@ -1018,7 +1071,7 @@ $: mobilePublicTabs = data?.user
 				label: 'Daftar',
 				href: '/register',
 				icon: 'M12 12a5 5 0 100-10 5 5 0 000 10zM4 20a8 8 0 0116 0M16 8h4m-2-2v4',
-				isActive: (path: string) => path === '/register'
+				isActive: (path: string) => isRegisterMenuActive(path)
 			}
 		];
 $: if (pathname !== previousPathname) {
@@ -1270,7 +1323,50 @@ $: if (pathname !== previousPathname) {
 							</div>
 						{:else}
 							<a href="/auth" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Login</a>
-							<a href="/register" class="btn btn-sm btn-primary">Daftar TPQ</a>
+							<div class="group relative">
+								<a
+									href="/register"
+									class="btn btn-sm btn-primary"
+									class:desktop-nav-link-active={isRegisterMenuActive(pathname)}
+								>
+									Daftar
+								</a>
+								<div class="desktop-dropdown right-0 w-[28rem]">
+									<div class="desktop-dropdown-panel">
+										<div class="grid gap-3 md:grid-cols-2">
+											<div class="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-3">
+												<p class="text-sm font-semibold text-emerald-950">Daftarkan Lembaga</p>
+												<p class="mt-1 text-xs leading-5 text-emerald-700">
+													Untuk admin TPQ, pondok, masjid, musholla, atau rumah tahfidz.
+												</p>
+												<div class="mt-2 grid gap-1">
+													{#each institutionRegisterMenuItems as item}
+														<a href={item.href} class="desktop-dropdown-item bg-white/90">
+															<span class="font-semibold text-slate-900">{item.label}</span>
+															<span class="mt-1 text-xs leading-5 text-slate-500">{item.note}</span>
+														</a>
+													{/each}
+												</div>
+											</div>
+
+											<div class="rounded-2xl border border-slate-200 bg-white p-3">
+												<p class="text-sm font-semibold text-slate-950">Daftar sebagai Santri/Jamaah</p>
+												<p class="mt-1 text-xs leading-5 text-slate-500">
+													Pilih lembaga aktif, lalu gunakan halaman pendaftaran anggotanya.
+												</p>
+												<div class="mt-2 grid gap-1">
+													{#each memberRegisterMenuItems as item}
+														<a href={item.href} class="desktop-dropdown-item">
+															<span class="font-semibold text-slate-900">{item.label}</span>
+															<span class="mt-1 text-xs leading-5 text-slate-500">{item.note}</span>
+														</a>
+													{/each}
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
 						{/if}
 					</div>
 				</div>
@@ -1484,7 +1580,10 @@ $: if (pathname !== previousPathname) {
 									Login
 								</a>
 								<a href="/register" class="rounded-[1.3rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm">
-									Daftarkan TPQ
+									Daftarkan Lembaga
+								</a>
+								<a href="/tpq" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+									Daftar sebagai Santri/Jamaah
 								</a>
 							{/if}
 						</div>
