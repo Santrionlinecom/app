@@ -1420,6 +1420,45 @@ $: if (pathname !== previousPathname) {
 				</div>
 
 				<div class="space-y-6 px-4 py-5">
+					{#if !data.user}
+						<section>
+							<div class="mb-3">
+								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Daftar</p>
+								<h3 class="mt-1 text-lg font-semibold text-slate-950">Pilih jalur pendaftaran</h3>
+							</div>
+
+							<div class="grid gap-3">
+								<div class="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/80 p-4">
+									<p class="text-sm font-semibold text-emerald-950">Daftarkan Lembaga</p>
+									<p class="mt-1 text-xs leading-5 text-emerald-700">
+										Untuk admin TPQ, pondok, masjid, musholla, dan rumah tahfidz.
+									</p>
+									<div class="mt-3 grid gap-2">
+										{#each institutionRegisterMenuItems as item}
+											<a href={item.href} class="rounded-2xl border border-white/80 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm">
+												{item.label}
+											</a>
+										{/each}
+									</div>
+								</div>
+
+								<div class="rounded-[1.5rem] border border-slate-200/80 bg-white p-4">
+									<p class="text-sm font-semibold text-slate-950">Daftar sebagai Santri/Jamaah</p>
+									<p class="mt-1 text-xs leading-5 text-slate-500">
+										Pilih direktori lembaga dulu, lalu gunakan tautan pendaftaran anggota.
+									</p>
+									<div class="mt-3 grid gap-2">
+										{#each memberRegisterMenuItems as item}
+											<a href={item.href} class="rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+												{item.label}
+											</a>
+										{/each}
+									</div>
+								</div>
+							</div>
+						</section>
+					{/if}
+
 					<section>
 						<div class="mb-3 flex items-center justify-between gap-3">
 							<div>
@@ -1892,12 +1931,25 @@ $: if (pathname !== previousPathname) {
 	}
 
 	.desktop-dropdown-panel {
+		max-height: min(72vh, 34rem);
+		overflow-y: auto;
+		overscroll-behavior: contain;
 		border-radius: 1.35rem;
 		border: 1px solid rgba(226, 232, 240, 0.9);
 		background: rgba(255, 255, 255, 0.98);
 		padding: 0.65rem;
 		box-shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
 		backdrop-filter: blur(18px);
+		scrollbar-gutter: stable;
+	}
+
+	.desktop-dropdown-panel::-webkit-scrollbar {
+		width: 0.45rem;
+	}
+
+	.desktop-dropdown-panel::-webkit-scrollbar-thumb {
+		border-radius: 999px;
+		background: rgba(148, 163, 184, 0.65);
 	}
 
 	.desktop-dropdown-item {
