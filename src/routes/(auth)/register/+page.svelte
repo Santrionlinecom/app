@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowRight, Building2, Clock3, GraduationCap, LogIn, Users } from 'lucide-svelte';
+	import { ArrowRight, Building2, GraduationCap, LogIn, Users } from 'lucide-svelte';
 	import { INSTITUTIONS, type InstitutionKey } from '$lib/config/institutions';
 
 	const institutionLabels: Record<InstitutionKey, string> = {
@@ -26,6 +26,14 @@
 			icon: Users
 		}
 	];
+
+	const featureByInstitution: Record<InstitutionKey, string[]> = {
+		tpq: ['Kelas & santri', 'Setoran hafalan', 'Rapor & sertifikat'],
+		pondok: ['Santri & ustadz', 'Diniyah', 'Tahfidz & ujian'],
+		masjid: ['Jamaah', 'Kas & zakat', 'Jadwal imam/khotib'],
+		musholla: ['Anggota warga', 'Kas transparan', 'Agenda kegiatan'],
+		'rumah-tahfidz': ['Halaqoh', 'Target hafalan', 'Evaluasi setoran']
+	};
 </script>
 
 <svelte:head>
@@ -60,51 +68,41 @@
 						<h2 class="mt-1 break-words text-xl font-black text-so-green">
 							Daftar sebagai Pengelola/Admin Lembaga
 						</h2>
-						<p class="mt-2 break-words text-sm leading-6 text-so-muted">
-							Buat ruang kerja lembaga, atur anggota, lalu aktifkan fitur sesuai jenis lembaga.
-						</p>
-					</div>
-				</div>
+				<p class="mt-2 break-words text-sm leading-6 text-so-muted">
+					Buat ruang kerja lembaga, atur anggota, dan langsung masuk ke fitur yang relevan untuk jenis lembaga.
+				</p>
+			</div>
+		</div>
 
 				<div class="mt-5 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
 					{#each INSTITUTIONS as option}
-						{#if option.enabled}
-							<a
-								href={option.registerRoute}
-								class="group min-w-0 rounded-xl border border-so-green/20 bg-so-green/5 p-4 transition hover:-translate-y-0.5 hover:border-so-green/40 hover:bg-so-green/8 hover:shadow-md"
-							>
-								<div class="flex min-w-0 items-center justify-between gap-2">
-									<p class="break-words text-base font-black text-so-green">
-										{institutionLabels[option.key]}
-									</p>
-									<span class="rounded-full bg-so-gold/20 px-2 py-1 text-[11px] font-bold text-so-green">
-										Aktif
-									</span>
-								</div>
-								<p class="mt-2 break-words text-sm leading-6 text-so-muted">
-									{option.registerDescription}
+						<a
+							href={option.registerRoute}
+							class="group min-w-0 rounded-xl border border-so-green/20 bg-so-green/5 p-4 transition hover:-translate-y-0.5 hover:border-so-green/40 hover:bg-so-green/8 hover:shadow-md"
+						>
+							<div class="flex min-w-0 items-center justify-between gap-2">
+								<p class="break-words text-base font-black text-so-green">
+									{institutionLabels[option.key]}
 								</p>
-								<span class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-so-green">
-									Mulai sekarang
-									<ArrowRight size={15} strokeWidth={2.4} class="transition group-hover:translate-x-0.5" />
+								<span class="rounded-full bg-so-gold/20 px-2 py-1 text-[11px] font-bold text-so-green">
+									Siap digunakan
 								</span>
-							</a>
-						{:else}
-							<div class="min-w-0 rounded-xl border border-so-border bg-so-cream/45 p-4 text-so-muted">
-								<div class="flex min-w-0 items-center justify-between gap-2">
-									<p class="break-words text-base font-black text-so-ink">
-										{institutionLabels[option.key]}
-									</p>
-									<span class="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[11px] font-bold text-so-muted">
-										<Clock3 size={12} strokeWidth={2.2} />
-										Segera
-									</span>
-								</div>
-								<p class="mt-2 break-words text-sm leading-6">
-									{option.registerDescription}
-								</p>
 							</div>
-						{/if}
+							<p class="mt-2 break-words text-sm leading-6 text-so-muted">
+								{option.registerDescription}
+							</p>
+							<div class="mt-3 flex flex-wrap gap-1.5">
+								{#each featureByInstitution[option.key] as feature}
+									<span class="rounded-full border border-so-green/15 bg-white px-2 py-1 text-[11px] font-bold text-so-green">
+										{feature}
+									</span>
+								{/each}
+							</div>
+							<span class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-so-green">
+								Mulai sekarang
+								<ArrowRight size={15} strokeWidth={2.4} class="transition group-hover:translate-x-0.5" />
+							</span>
+						</a>
 					{/each}
 				</div>
 			</article>

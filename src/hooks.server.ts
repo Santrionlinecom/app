@@ -12,18 +12,7 @@ import {
 } from '$lib/server/auth/impersonation';
 import { sentryServerConfig } from '../sentry.server.config';
 
-const TPQ_ONLY_BLOCKED_PREFIXES = ['/pondok', '/masjid', '/musholla', '/rumah-tahfidz', '/keuangan', '/org'];
-
-const isTpqOnlyBlockedRoute = (pathname: string) =>
-	TPQ_ONLY_BLOCKED_PREFIXES.some(
-		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-	);
-
 const authHandle: Handle = async ({ event, resolve }) => {
-	if (isTpqOnlyBlockedRoute(event.url.pathname)) {
-		return Response.redirect(new URL('/tpq', event.url), 302);
-	}
-	
 	const db = event.platform?.env.DB;
 
 	// simpan koneksi DB di locals untuk dipakai semua endpoint

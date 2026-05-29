@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { getOrganizationById } from '$lib/server/organizations';
 import {
@@ -65,9 +65,6 @@ const listManagedLembaga = async (db: App.Locals['db'], userId?: string | null) 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const user = assertLoggedIn({ locals });
 	const superAdmin = isSuperAdminRole(user.role);
-	if (!superAdmin && (user.role === 'jamaah' || user.role === 'tamir' || user.role === 'bendahara')) {
-		throw redirect(302, '/tpq');
-	}
 
 	if (!locals.db) {
 		throw error(500, 'Layanan data tidak tersedia');
@@ -106,10 +103,6 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	}
 
 	if (org) {
-		if (org.type !== 'tpq' && !isLembagaRoute) {
-			throw redirect(302, '/tpq');
-		}
-
 		assertOrgRoleAllowed(org.type, user.role);
 	}
 
