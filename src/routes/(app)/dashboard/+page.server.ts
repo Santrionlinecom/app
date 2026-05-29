@@ -577,6 +577,9 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 		waitUntil: platform?.context?.waitUntil
 	});
 	const { orgId, isSystemAdmin } = getOrgScope(user);
+	if (!isSystemAdmin && !orgId) {
+		throw redirect(302, '/lembaga');
+	}
 	const scopedOrgId = isSystemAdmin ? null : orgId;
 	const orgProfile = orgId ? await getOrganizationById(db, orgId) : null;
 	const orgType = orgProfile?.type ?? null;

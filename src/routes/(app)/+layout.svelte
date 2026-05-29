@@ -51,6 +51,7 @@
 		label: string;
 		href: string;
 		icon: string;
+		description?: string;
 		feature?: FeatureKey;
 	};
 
@@ -343,13 +344,20 @@
 		roleLabel = roleLabelMap[roleKey] ?? 'Pengguna';
 		headerTitle = isSuperAdmin && !isImpersonating
 			? 'Panel Super Admin'
-			: isCommunityOrg
-				? 'Dasbor Komunitas'
-				: role === 'santri' || role === 'alumni'
-					? 'Dasbor Santri'
-					: 'Dasbor Pengajar';
+			: orgType === 'tpq'
+				? 'Dashboard TPQ'
+				: orgType === 'pondok'
+					? 'Dashboard Pondok'
+					: orgType === 'masjid'
+						? 'Dashboard Masjid'
+						: orgType === 'musholla'
+							? 'Dashboard Musholla'
+							: orgType === 'rumah-tahfidz'
+								? 'Dashboard Rumah Tahfidz'
+								: 'Dashboard Lembaga';
 
 		roleItems = resolveRoleItems().filter(featureAllowed);
+		const configuredMenu = ((data?.appMenu ?? []) as MenuItem[]).filter(Boolean);
 		const primaryItems: MenuItem[] = isImpersonating
 			? [
 					{
@@ -381,16 +389,21 @@
 					}
 		];
 		const utilityItems = isSuperAdmin ? superAdminItems : [];
-		menuItems = isImpersonating
-			? [...primaryItems, ...bookAccessItems, ...utilityItems, ...roleItems, ...footerItems]
-			: [...primaryItems, ...bookAccessItems, ...(isSuperAdmin ? utilityItems : roleItems), ...footerItems];
+		menuItems = configuredMenu.length
+			? configuredMenu
+			: isImpersonating
+				? [...primaryItems, ...bookAccessItems, ...utilityItems, ...roleItems, ...footerItems]
+				: [...primaryItems, ...bookAccessItems, ...(isSuperAdmin ? utilityItems : roleItems), ...footerItems];
+		const dashboardItem = menuItems.find((item) => item.href === '/dashboard') ?? primaryItems[0];
+		const socialItem = menuItems.find((item) => item.href === '/sosial');
+		const lembagaItem = menuItems.find((item) => item.href === '/lembaga');
+		const accountItem = menuItems.find((item) => item.href === '/akun') ?? footerItems[0];
 		mobileQuickItems = [
-			{ ...primaryItems[0], label: isSuperAdmin ? 'Admin' : 'Dashboard' },
-			{ ...bookAccessItems[0], label: 'Buku' },
-			{ ...bookAccessItems[1], label: 'Studio' },
-			{ ...bookAccessItems[2], label: 'Coin' },
-			{ ...footerItems[0], label: 'Akun' }
-		];
+			{ ...dashboardItem, label: isSuperAdmin ? 'Admin' : 'Dashboard' },
+			...(lembagaItem ? [{ ...lembagaItem, label: 'Lembaga' }] : []),
+			...(socialItem ? [{ ...socialItem, label: 'Sosial' }] : []),
+			{ ...accountItem, label: 'Akun' }
+		].slice(0, 5);
 	}
 
 	let sidebarOpen = false;

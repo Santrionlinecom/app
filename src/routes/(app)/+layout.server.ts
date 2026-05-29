@@ -1,6 +1,7 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { getOrganizationById } from '$lib/server/organizations';
+import { getAppNavigation, SUPER_ADMIN_NAVIGATION } from '$lib/config/app-navigation';
 import {
 	assertLoggedIn,
 	assertOrgRoleAllowed,
@@ -75,6 +76,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 			user,
 			org: null,
 			lembagaList: await listManagedLembaga(locals.db, user.id),
+			appMenu: SUPER_ADMIN_NAVIGATION,
 			featureAccess: {
 				hafalan: true,
 				setoran: true,
@@ -98,6 +100,8 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		if (!org && !isDashboardRoute) {
 			throw error(404, 'Lembaga tidak ditemukan');
 		}
+	} else if (isDashboardRoute) {
+		throw redirect(302, '/lembaga');
 	} else if (!isDashboardRoute && !isLembagaRoute) {
 		throw error(403, 'Akun belum terhubung ke lembaga.');
 	}
@@ -121,6 +125,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		user,
 		org,
 		lembagaList: await listManagedLembaga(locals.db, user.id),
+		appMenu: getAppNavigation(org?.type ?? null, user.role),
 		featureAccess
 	};
 };

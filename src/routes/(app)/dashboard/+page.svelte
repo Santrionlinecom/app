@@ -33,6 +33,9 @@
 	let isCommunityOrg = false;
 	let displayName = 'Pengguna';
 	let orgName = 'Lembaga';
+	let orgType: string | null = null;
+	let dashboardTitle = 'Dashboard Lembaga';
+	let dashboardModeLabel = 'Institution Mode';
 
 	let pending: any[] = [];
 	let students: any[] = [];
@@ -66,6 +69,7 @@
 	type QuickLink = { label: string; desc: string; href: string; tone: string };
 	type StatHighlight = { label: string; value: string; href: string };
 	type TpqSummaryCard = { label: string; value: string; desc: string; href: string; tone: string };
+	type FeatureCard = { label: string; desc: string; href: string; tone: string };
 	type AssetRow = {
 		id: string;
 		name: string;
@@ -79,6 +83,7 @@
 
 	let quickLinks: QuickLink[] = [];
 	let statHighlights: StatHighlight[] = [];
+	let featureCards: FeatureCard[] = [];
 
 	let surahLookup = new Map<number, string>();
 	let studentHighlights: any[] = [];
@@ -96,6 +101,69 @@
 		isCommunityOrg = Boolean(data?.isCommunityOrg);
 		displayName = data?.currentUser?.username || data?.currentUser?.email || 'Pengguna';
 		orgName = data?.org?.name || 'Lembaga';
+		orgType = data?.org?.type ?? null;
+		dashboardTitle =
+			orgType === 'tpq'
+				? 'Dashboard TPQ'
+				: orgType === 'pondok'
+					? 'Dashboard Pondok'
+					: orgType === 'masjid'
+						? 'Dashboard Masjid'
+						: orgType === 'musholla'
+							? 'Dashboard Musholla'
+							: orgType === 'rumah-tahfidz'
+								? 'Dashboard Rumah Tahfidz'
+								: 'Dashboard Lembaga';
+		dashboardModeLabel =
+			orgType === 'masjid' || orgType === 'musholla'
+				? 'Community Mode'
+				: orgType === 'pondok' || orgType === 'tpq' || orgType === 'rumah-tahfidz'
+					? 'Education Mode'
+					: 'Institution Mode';
+		featureCards =
+			orgType === 'masjid'
+				? [
+						{ label: 'Data Jamaah', desc: 'Kelola anggota dan pengurus masjid.', href: '/dashboard/kelola-santri', tone: 'from-emerald-50 to-teal-100 text-emerald-900' },
+						{ label: 'Kas Masjid', desc: 'Pantau pemasukan dan pengeluaran kas.', href: '/keuangan', tone: 'from-amber-50 to-orange-100 text-amber-900' },
+						{ label: 'Jadwal Imam/Khotib', desc: 'Atur jadwal imam, tarawih, dan khotib.', href: '/dashboard/jadwal', tone: 'from-sky-50 to-cyan-100 text-sky-900' },
+						{ label: 'Qurban', desc: 'Pendataan program qurban lembaga.', href: '/fitur-belum-tersedia?fitur=Qurban', tone: 'from-rose-50 to-pink-100 text-rose-900' },
+						{ label: 'Pengumuman', desc: 'Informasi untuk jamaah masjid.', href: '/fitur-belum-tersedia?fitur=Pengumuman Masjid', tone: 'from-violet-50 to-indigo-100 text-indigo-900' },
+						{ label: 'Sosial Jamaah', desc: 'Feed internal jamaah dan pengurus.', href: '/sosial', tone: 'from-lime-50 to-emerald-100 text-lime-900' }
+					]
+				: orgType === 'musholla'
+					? [
+							{ label: 'Data Jamaah', desc: 'Kelola anggota dan pengurus musholla.', href: '/dashboard/kelola-santri', tone: 'from-emerald-50 to-teal-100 text-emerald-900' },
+							{ label: 'Kas Musholla', desc: 'Catat kas masuk dan keluar.', href: '/keuangan', tone: 'from-amber-50 to-orange-100 text-amber-900' },
+							{ label: 'Jadwal Imam', desc: 'Atur jadwal imam dan kegiatan ibadah.', href: '/dashboard/jadwal', tone: 'from-sky-50 to-cyan-100 text-sky-900' },
+							{ label: 'Pengumuman', desc: 'Informasi untuk warga sekitar.', href: '/fitur-belum-tersedia?fitur=Pengumuman Musholla', tone: 'from-violet-50 to-indigo-100 text-indigo-900' },
+							{ label: 'Sosial', desc: 'Feed internal jamaah musholla.', href: '/sosial', tone: 'from-lime-50 to-emerald-100 text-lime-900' }
+						]
+					: orgType === 'pondok'
+						? [
+								{ label: 'Data Santri', desc: 'Kelola santri dan pengajar pondok.', href: '/dashboard/kelola-santri', tone: 'from-emerald-50 to-teal-100 text-emerald-900' },
+								{ label: 'Asrama/Kamar', desc: 'Data kamar dan penempatan santri.', href: '/fitur-belum-tersedia?fitur=Asrama/Kamar', tone: 'from-amber-50 to-orange-100 text-amber-900' },
+								{ label: 'Diniyah', desc: 'Materi diniyah dan pembelajaran kitab.', href: '/dashboard/diniyah', tone: 'from-sky-50 to-cyan-100 text-sky-900' },
+								{ label: 'Hafalan', desc: 'Pantau progres hafalan santri.', href: '/dashboard/pencapaian-hafalan', tone: 'from-lime-50 to-emerald-100 text-lime-900' },
+								{ label: 'Keuangan', desc: 'Keuangan pondok sedang disiapkan.', href: '/fitur-belum-tersedia?fitur=Keuangan Pondok', tone: 'from-rose-50 to-pink-100 text-rose-900' },
+								{ label: 'Sosial', desc: 'Feed internal pondok.', href: '/sosial', tone: 'from-violet-50 to-indigo-100 text-indigo-900' }
+							]
+						: orgType === 'rumah-tahfidz'
+							? [
+									{ label: 'Data Santri', desc: 'Kelola santri rumah tahfidz.', href: '/dashboard/kelola-santri', tone: 'from-emerald-50 to-teal-100 text-emerald-900' },
+									{ label: 'Halaqoh', desc: 'Kelola kelompok hafalan.', href: '/dashboard/halaqoh', tone: 'from-amber-50 to-orange-100 text-amber-900' },
+									{ label: 'Setoran Hafalan', desc: 'Alur setoran khusus rumah tahfidz.', href: '/fitur-belum-tersedia?fitur=Setoran Hafalan Rumah Tahfidz', tone: 'from-sky-50 to-cyan-100 text-sky-900' },
+									{ label: 'Progress Hafalan', desc: 'Pantau capaian hafalan santri.', href: '/dashboard/pencapaian-hafalan', tone: 'from-lime-50 to-emerald-100 text-lime-900' },
+									{ label: 'Jadwal', desc: 'Agenda dan jadwal halaqoh.', href: '/kalender', tone: 'from-rose-50 to-pink-100 text-rose-900' },
+									{ label: 'Sosial', desc: 'Feed internal rumah tahfidz.', href: '/sosial', tone: 'from-violet-50 to-indigo-100 text-indigo-900' }
+								]
+							: [
+									{ label: 'Data Santri', desc: 'Kelola data santri TPQ.', href: '/dashboard/kelola-santri', tone: 'from-emerald-50 to-teal-100 text-emerald-900' },
+									{ label: 'Setoran Hari Ini', desc: 'Input dan pantau setoran hafalan.', href: '/tpq/akademik/setoran', tone: 'from-amber-50 to-orange-100 text-amber-900' },
+									{ label: 'Ujian Tahfidz', desc: 'Kelola ujian dan capaian.', href: '/dashboard/ujian-tahfidz', tone: 'from-sky-50 to-cyan-100 text-sky-900' },
+									{ label: 'Rapor Hafalan', desc: 'Lihat rapor dan sertifikat.', href: '/tpq/hafalan-rapor', tone: 'from-lime-50 to-emerald-100 text-lime-900' },
+									{ label: 'Akademik', desc: 'Pusat alur akademik TPQ.', href: '/tpq/akademik', tone: 'from-rose-50 to-pink-100 text-rose-900' },
+									{ label: 'Sosial Santri', desc: 'Feed internal santri dan pengajar.', href: '/sosial', tone: 'from-violet-50 to-indigo-100 text-indigo-900' }
+								];
 
 		pending = data?.pending ?? [];
 		students = data?.students ?? [];
@@ -429,16 +497,17 @@
 </script>
 
 <svelte:head>
-	<title>Dashboard | SantriOnline</title>
+	<title>{dashboardTitle} | SantriOnline</title>
 </svelte:head>
 
 <div class="w-full max-w-full space-y-4 overflow-x-hidden sm:space-y-6">
 	<section class="fade-in grid min-w-0 grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3" style="animation-delay: 40ms;">
 		<div class="min-w-0 overflow-hidden rounded-3xl border border-white/80 bg-white/80 p-4 shadow-xl backdrop-blur sm:p-6">
 			<p class="text-xs uppercase tracking-[0.3em] text-slate-400">
-				{isCommunityOrg ? 'Community Mode' : 'Education Mode'}
+				{dashboardModeLabel}
 			</p>
-			<h2 class="app-title mt-2 break-words text-2xl font-semibold text-slate-900">Halo, {displayName}</h2>
+			<h2 class="app-title mt-2 break-words text-2xl font-semibold text-slate-900">{dashboardTitle}</h2>
+			<p class="mt-1 break-words text-sm font-semibold text-emerald-800">Halo, {displayName}</p>
 			<p class="mt-2 break-words text-sm text-slate-600">
 				{#if isCommunityOrg}
 					Pantau aktivitas komunitas {orgName} dan tetap terhubung dengan agenda terbaru.
@@ -533,7 +602,31 @@
 		</div>
 	</section>
 
-	{#if isEducationalOrg && tpqDashboard}
+	<section class="fade-in min-w-0 overflow-hidden rounded-3xl border border-white/80 bg-white/80 p-4 shadow-xl backdrop-blur sm:p-6" style="animation-delay: 80ms;">
+		<div class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+			<div class="min-w-0">
+				<p class="text-xs uppercase tracking-[0.3em] text-emerald-700">Fitur Lembaga</p>
+				<h3 class="app-title mt-2 break-words text-2xl font-semibold text-slate-900">
+					{orgName}
+				</h3>
+			</div>
+			<p class="text-sm text-slate-500">Menu disesuaikan dengan tipe lembaga dan role akun.</p>
+		</div>
+
+		<div class="mt-5 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+			{#each featureCards as card}
+				<a
+					href={card.href}
+					class={`min-w-0 rounded-2xl border border-white/70 bg-gradient-to-br ${card.tone} p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
+				>
+					<p class="break-words text-sm font-semibold">{card.label}</p>
+					<p class="mt-2 break-words text-xs leading-5 text-slate-600">{card.desc}</p>
+				</a>
+			{/each}
+		</div>
+	</section>
+
+	{#if orgType === 'tpq' && tpqDashboard}
 		<section class="fade-in min-w-0 overflow-hidden rounded-3xl border border-white/80 bg-white/80 p-4 shadow-xl backdrop-blur sm:p-6" style="animation-delay: 100ms;">
 			<div class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 				<div class="min-w-0">
