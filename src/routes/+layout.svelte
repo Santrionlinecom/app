@@ -1716,16 +1716,16 @@ $: if (pathname !== previousPathname) {
 
 	{#if showInstallPopup}
 		<div
-			class="fixed inset-0 z-[60] flex items-end justify-center px-3 py-3 sm:items-center sm:px-6"
+			class="fixed inset-0 z-[60] flex items-end justify-center px-2 py-2 sm:items-center sm:px-4"
 		>
 			<button
 				type="button"
-				class="absolute inset-0 bg-slate-950/55 backdrop-blur-md"
+				class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
 				aria-label="Tutup popup instalasi"
 				on:click={() => dismissInstallPopup()}
 			></button>
 			<div
-				class="relative w-full max-w-[21rem] overflow-hidden rounded-2xl border border-white/80 bg-white shadow-[0_22px_60px_rgba(15,23,42,0.26)] sm:max-w-md"
+				class="relative w-full max-w-[18.5rem] overflow-hidden rounded-xl border border-white/80 bg-white shadow-[0_16px_42px_rgba(15,23,42,0.22)] sm:max-w-sm"
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby="install-dialog-title"
@@ -1734,132 +1734,132 @@ $: if (pathname !== previousPathname) {
 			>
 				<button
 					type="button"
-					class="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/35 bg-white/90 text-slate-700 shadow-sm transition hover:bg-white"
+					class="absolute right-2.5 top-2.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/35 bg-white/90 text-slate-700 shadow-sm transition hover:bg-white"
 					on:click={() => dismissInstallPopup()}
 					aria-label="Tutup"
 				>
-					<X class="h-3.5 w-3.5" />
+					<X class="h-3 w-3" />
 				</button>
-				<div class="bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.34),transparent_38%),linear-gradient(135deg,#052e16,#065f46_48%,#0f766e)] px-4 pb-4 pt-4 text-white sm:px-5">
-					<div class="flex items-start gap-3 pr-9">
-						<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/12 p-1.5 shadow-lg shadow-emerald-950/20">
-							<img src="/icons/icon-192.png" alt="" class="h-8 w-8 rounded-lg" loading="lazy" />
+				<div class="bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.34),transparent_38%),linear-gradient(135deg,#052e16,#065f46_48%,#0f766e)] px-3 pb-3 pt-3 text-white sm:px-4">
+					<div class="flex items-start gap-2.5 pr-8">
+						<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/12 p-1.5 shadow-md shadow-emerald-950/20">
+							<img src="/icons/icon-192.png" alt="" class="h-6 w-6 rounded-md" loading="lazy" />
 						</div>
 						<div class="min-w-0">
-							<p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-100">
+							<p class="text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-100">
 								{deferredInstallPrompt ? 'Siap diinstall' : installMode === 'ios' ? 'iOS dan iPadOS' : 'Android resmi'}
 							</p>
-							<h2 id="install-dialog-title" class="mt-1.5 text-lg font-semibold leading-tight sm:text-2xl">
+							<h2 id="install-dialog-title" class="mt-1 text-base font-semibold leading-tight sm:text-lg">
 								Pasang Santri Online di layar utama
 							</h2>
-							<p class="mt-2 text-xs leading-5 text-emerald-50/90 sm:text-sm">
+							<p class="mt-1.5 text-[11px] leading-4 text-emerald-50/90 sm:text-xs">
 								Akses hafalan, kitab, buku digital, kalender, dan dashboard lembaga dengan pengalaman yang terasa seperti aplikasi.
 							</p>
 						</div>
 					</div>
 
-					<div class="mt-3 flex flex-wrap gap-1.5 text-[11px] font-semibold text-emerald-950">
-						<span class="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1">
-							<BadgeCheck class="h-3 w-3" />
+					<div class="mt-2 flex flex-wrap gap-1 text-[10px] font-semibold text-emerald-950">
+						<span class="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5">
+							<BadgeCheck class="h-2.5 w-2.5" />
 							Resmi
 						</span>
-						<span class="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1">
-							<RefreshCw class="h-3 w-3" />
+						<span class="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5">
+							<RefreshCw class="h-2.5 w-2.5" />
 							Auto update
 						</span>
-						<span class="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1">
-							<Wifi class="h-3 w-3" />
+						<span class="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5">
+							<Wifi class="h-2.5 w-2.5" />
 							Cache ringan
 						</span>
 					</div>
 				</div>
 
-				<div class="max-h-[calc(100vh-13.5rem)] min-h-0 overflow-y-auto px-4 py-4 sm:max-h-[calc(100vh-8rem)] sm:px-5">
+				<div class="max-h-[calc(100vh-10rem)] min-h-0 overflow-y-auto px-3 py-3 sm:max-h-[calc(100vh-7rem)] sm:px-4">
 					<div class="grid gap-2 sm:grid-cols-3">
-						<div class="rounded-lg border border-emerald-100 bg-emerald-50 p-2.5">
-							<Smartphone class="h-4 w-4 text-emerald-700" />
-							<p class="mt-2 text-xs font-semibold text-slate-950">Shortcut app</p>
-							<p class="mt-1 text-[11px] leading-4 text-slate-600">Buka dari home screen.</p>
+						<div class="rounded-lg border border-emerald-100 bg-emerald-50 p-2">
+							<Smartphone class="h-3.5 w-3.5 text-emerald-700" />
+							<p class="mt-1.5 text-[11px] font-semibold text-slate-950">Shortcut app</p>
+							<p class="mt-0.5 text-[10px] leading-3.5 text-slate-600">Buka dari home screen.</p>
 						</div>
-						<div class="rounded-lg border border-sky-100 bg-sky-50 p-2.5">
-							<RefreshCw class="h-4 w-4 text-sky-700" />
-							<p class="mt-2 text-xs font-semibold text-slate-950">Versi terbaru</p>
-							<p class="mt-1 text-[11px] leading-4 text-slate-600">Update otomatis.</p>
+						<div class="rounded-lg border border-sky-100 bg-sky-50 p-2">
+							<RefreshCw class="h-3.5 w-3.5 text-sky-700" />
+							<p class="mt-1.5 text-[11px] font-semibold text-slate-950">Versi terbaru</p>
+							<p class="mt-0.5 text-[10px] leading-3.5 text-slate-600">Update otomatis.</p>
 						</div>
-						<div class="rounded-lg border border-amber-100 bg-amber-50 p-2.5">
-							<BadgeCheck class="h-4 w-4 text-amber-700" />
-							<p class="mt-2 text-xs font-semibold text-slate-950">Akses aman</p>
-							<p class="mt-1 text-[11px] leading-4 text-slate-600">Install resmi.</p>
+						<div class="rounded-lg border border-amber-100 bg-amber-50 p-2">
+							<BadgeCheck class="h-3.5 w-3.5 text-amber-700" />
+							<p class="mt-1.5 text-[11px] font-semibold text-slate-950">Akses aman</p>
+							<p class="mt-0.5 text-[10px] leading-3.5 text-slate-600">Install resmi.</p>
 						</div>
 					</div>
 
-					<div class="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+					<div class="mt-2.5 rounded-lg border border-slate-200 bg-slate-50 p-2.5">
 						{#if deferredInstallPrompt}
-							<p class="text-sm font-semibold text-slate-950">Install langsung dari browser</p>
-							<p class="mt-1 text-xs leading-5 text-slate-600 sm:text-sm">
+							<p class="text-xs font-semibold text-slate-950">Install langsung dari browser</p>
+							<p class="mt-1 text-[11px] leading-4 text-slate-600">
 								Klik tombol install, lalu konfirmasi pada prompt bawaan Chrome, Edge, atau browser Chromium lain.
 							</p>
 						{:else if installMode === 'ios'}
-							<div class="flex items-start gap-3">
-								<Share2 class="mt-0.5 h-5 w-5 shrink-0 text-slate-700" />
+							<div class="flex items-start gap-2.5">
+								<Share2 class="mt-0.5 h-4 w-4 shrink-0 text-slate-700" />
 								<div>
-									<p class="text-sm font-semibold text-slate-950">Untuk Safari iPhone atau iPad</p>
-									<p class="mt-1 text-xs leading-5 text-slate-600 sm:text-sm">
+									<p class="text-xs font-semibold text-slate-950">Untuk Safari iPhone atau iPad</p>
+									<p class="mt-1 text-[11px] leading-4 text-slate-600">
 										Buka menu Bagikan, pilih “Add to Home Screen”, lalu simpan Santri Online.
 									</p>
 								</div>
 							</div>
 						{:else}
-							<p class="text-sm font-semibold text-slate-950">Fallback Android tersedia</p>
-							<p class="mt-1 text-xs leading-5 text-slate-600 sm:text-sm">
+							<p class="text-xs font-semibold text-slate-950">Fallback Android tersedia</p>
+							<p class="mt-1 text-[11px] leading-4 text-slate-600">
 								Jika tombol install bawaan browser belum muncul, gunakan APK resmi Santri Online khusus Android.
 							</p>
 						{/if}
 					</div>
 
-					<div class="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+					<div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
 						{#if deferredInstallPrompt}
 							<button
 								type="button"
-								class="inline-flex h-14 flex-1 items-center justify-center gap-2.5 rounded-full bg-emerald-700 px-6 text-base font-bold text-white shadow-xl shadow-emerald-700/25 transition hover:bg-emerald-800 disabled:cursor-wait disabled:bg-emerald-700/70"
+								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-700 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 disabled:cursor-wait disabled:bg-emerald-700/70 sm:h-11"
 								on:click={handleNativeInstall}
 								disabled={installActionBusy}
 							>
-								<Download class="h-5 w-5" />
+								<Download class="h-4 w-4" />
 								{installActionBusy ? 'Membuka prompt...' : 'Install dari Browser'}
 							</button>
 						{:else if installMode === 'android'}
 							<a
 								href={apkUrl}
-								class="inline-flex h-16 flex-1 items-center justify-center gap-3 rounded-full bg-emerald-700 px-6 text-base font-bold text-white shadow-xl shadow-emerald-700/25 transition hover:bg-emerald-800 sm:h-14"
+								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-700 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 sm:h-11"
 								target="_blank"
 								rel="noopener"
 								on:click={() => dismissInstallPopup('dismiss')}
 							>
-								<Download class="h-5 w-5" />
+								<Download class="h-4 w-4" />
 								Unduh APK Android
 							</a>
 						{:else}
 							<button
 								type="button"
-								class="inline-flex h-14 flex-1 items-center justify-center gap-2.5 rounded-full bg-emerald-700 px-6 text-base font-bold text-white shadow-xl shadow-emerald-700/25 transition hover:bg-emerald-800"
+								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-700 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 sm:h-11"
 								on:click={() => dismissInstallPopup('dismiss')}
 							>
-								<Smartphone class="h-5 w-5" />
+								<Smartphone class="h-4 w-4" />
 								Saya mengerti
 							</button>
 						{/if}
 
 						<button
 							type="button"
-							class="inline-flex h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700 sm:h-11"
+							class="inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700"
 							on:click={() => dismissInstallPopup('snooze')}
 						>
 							Nanti saja
 						</button>
 					</div>
 
-					<p class="mt-3 text-[11px] leading-4 text-slate-500 sm:text-xs sm:leading-5">
+					<p class="mt-2.5 text-[10px] leading-4 text-slate-500">
 						Popup ini akan disembunyikan sementara setelah dipilih “Nanti saja”, dan tidak muncul lagi setelah aplikasi terpasang.
 					</p>
 				</div>
