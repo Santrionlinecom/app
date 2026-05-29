@@ -1,4 +1,6 @@
 ﻿<script lang="ts">
+    import GoogleAuthButton from '$lib/components/GoogleAuthButton.svelte';
+
     export let form: { message?: string } | null = null;
 </script>
 
@@ -37,9 +39,7 @@
 
     <div class="divider text-xs text-slate-400 my-6">ATAU</div>
 
-    <a href="/auth/google" class="btn btn-primary w-full bg-blue-600 border-none hover:bg-blue-700 normal-case text-lg font-normal h-12 rounded-xl">
-        Lanjutkan dengan Google
-    </a>
+    <GoogleAuthButton href="/auth/google" label="Masuk dengan Google" />
 
     <p class="text-center text-sm text-slate-600 mt-6">
         Belum punya akun? <a href="/register" class="text-slate-800 font-bold underline decoration-blue-600 underline-offset-2">Daftar</a>

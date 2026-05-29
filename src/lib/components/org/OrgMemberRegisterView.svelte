@@ -1,4 +1,5 @@
 <script lang="ts">
+	import GoogleAuthButton from '$lib/components/GoogleAuthButton.svelte';
 	import Turnstile from '$lib/components/Turnstile.svelte';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
@@ -97,7 +98,7 @@
 
 		{#if lockedRole && googleHref}
 			<div class="pt-4 text-center text-xs text-slate-500">atau</div>
-			<a href={googleHref} class="btn btn-outline w-full">Daftar dengan Google</a>
+			<GoogleAuthButton href={googleHref} label="Daftar dengan Google" />
 		{/if}
 	</form>
 </section>

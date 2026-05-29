@@ -1,4 +1,5 @@
 <script lang="ts">
+	import GoogleAuthButton from '$lib/components/GoogleAuthButton.svelte';
 	import Turnstile from '$lib/components/Turnstile.svelte';
 	import OrgLocationFields from '$lib/components/org/OrgLocationFields.svelte';
 	import { page } from '$app/stores';
@@ -132,12 +133,7 @@
 
 				<div class="rounded-2xl border bg-slate-50 p-4 text-sm text-slate-700">
 					<p class="font-semibold">Sudah punya akun? Login dulu agar data admin otomatis.</p>
-					<a
-						href="/auth/google"
-						class="btn btn-outline mt-3 w-full border-slate-300 text-slate-700 hover:bg-slate-100 normal-case"
-					>
-						Masuk dengan Google
-					</a>
+					<GoogleAuthButton href="/auth/google" label="Masuk dengan Google" className="mt-3" />
 				</div>
 			{/if}
 
