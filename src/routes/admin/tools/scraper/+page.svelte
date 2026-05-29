@@ -291,7 +291,7 @@
 					class="mt-2 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
 				/>
 				<p class="mt-2 text-xs leading-5 text-slate-500">
-					Domain yang diizinkan: shopee.co.id, tokopedia.com, dummyjson.com.
+					Domain yang diizinkan: shopee.co.id, tokopedia.com, dummyjson.com, skrinme.com.
 				</p>
 			{/if}
 

@@ -17,7 +17,7 @@ const scraperTargets = {
 	}
 } as const;
 
-const allowedDomains = ['shopee.co.id', 'tokopedia.com', 'dummyjson.com'];
+const allowedDomains = ['shopee.co.id', 'tokopedia.com', 'dummyjson.com', 'skrinme.com'];
 type ScraperTargetKey = keyof typeof scraperTargets;
 
 const isScraperTargetKey = (value: string): value is ScraperTargetKey => value in scraperTargets;
