@@ -1,5 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { isSuperAdminUser } from '$lib/auth/session-user';
 
 const scraperTargets = {
 	posts_demo: {
@@ -67,7 +68,7 @@ export const POST: RequestHandler = async ({ locals, request, fetch }) => {
 	// Proteksi API: endpoint ini tetap memverifikasi session walaupun UI sudah diproteksi.
 	// Request langsung dari Postman/curl tanpa session super_admin akan berhenti di sini.
 	// Logic session berasal dari hooks.server.ts agar mengikuti sistem auth lama proyek.
-	if (!locals.user || locals.user.role !== 'super_admin') {
+	if (!locals.user || !isSuperAdminUser(locals.user)) {
 		throw error(403, 'Forbidden');
 	}
 
@@ -130,7 +131,7 @@ export const POST: RequestHandler = async ({ locals, request, fetch }) => {
 };
 
 export const GET: RequestHandler = async ({ locals }) => {
-	if (!locals.user || locals.user.role !== 'super_admin') {
+	if (!locals.user || !isSuperAdminUser(locals.user)) {
 		throw error(403, 'Forbidden');
 	}
 
