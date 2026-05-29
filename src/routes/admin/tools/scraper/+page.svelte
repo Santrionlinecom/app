@@ -9,6 +9,7 @@
 		target: string;
 		label: string;
 		sourceUrl: string;
+		url_fetched: string;
 		fetchedBy: {
 			email: string;
 			role: string;
@@ -24,10 +25,12 @@
 	const targets = [
 		{ key: 'posts_demo', label: 'JSONPlaceholder Posts' },
 		{ key: 'users_demo', label: 'JSONPlaceholder Users' },
-		{ key: 'quran_surah_demo', label: 'Quran API Surah' }
+		{ key: 'quran_surah_demo', label: 'Quran API Surah' },
+		{ key: 'custom', label: 'Target Kustom (Paste Link)' }
 	];
 
 	let selectedTarget = targets[0].key;
+	let customUrl = '';
 	let limit = 10;
 	let loading = false;
 	let errorMessage = '';
@@ -46,6 +49,7 @@
 				},
 				body: JSON.stringify({
 					target: selectedTarget,
+					custom_url: selectedTarget === 'custom' ? customUrl : undefined,
 					limit
 				})
 			});
@@ -76,7 +80,7 @@
 					<p class="text-sm font-semibold uppercase tracking-wide text-emerald-700">Super Admin Tools</p>
 					<h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-950">Scraper Data Aggregator</h1>
 					<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-						Mengambil JSON mentah dari target yang sudah di-whitelist melalui backend SvelteKit di Cloudflare Workers.
+						Mengambil JSON mentah dari target bawaan atau URL kustom yang sudah melewati whitelist domain di backend.
 					</p>
 				</div>
 
@@ -109,6 +113,21 @@
 				{/each}
 			</select>
 
+			{#if selectedTarget === 'custom'}
+				<label class="mt-4 block text-sm font-medium text-slate-700" for="custom-url">URL API Kustom</label>
+				<input
+					id="custom-url"
+					type="url"
+					bind:value={customUrl}
+					placeholder="https://dummyjson.com/products"
+					required
+					class="mt-2 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+				/>
+				<p class="mt-2 text-xs leading-5 text-slate-500">
+					Domain yang diizinkan: shopee.co.id, tokopedia.com, dummyjson.com.
+				</p>
+			{/if}
+
 			<label class="mt-4 block text-sm font-medium text-slate-700" for="limit">Limit data</label>
 			<input
 				id="limit"
@@ -132,7 +151,6 @@
 					<span>Jalankan Scraper</span>
 				{/if}
 			</button>
-
 		</form>
 
 		<div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -143,7 +161,7 @@
 				</div>
 				{#if result}
 					<span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
-						{result.meta.status} · {result.meta.durationMs} ms
+						Latency {result.meta.durationMs} ms
 					</span>
 				{/if}
 			</div>
@@ -156,7 +174,9 @@
 				<div class="mt-5 grid gap-4">
 					<div class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
 						<p><span class="font-semibold">Target:</span> {result.label}</p>
-						<p class="mt-1 break-all"><span class="font-semibold">URL:</span> {result.sourceUrl}</p>
+						<p class="mt-1"><span class="font-semibold">Status:</span> {result.meta.status}</p>
+						<p class="mt-1"><span class="font-semibold">Latency:</span> {result.meta.durationMs} ms</p>
+						<p class="mt-1 break-all"><span class="font-semibold">URL dieksekusi:</span> {result.url_fetched ?? result.sourceUrl}</p>
 						<p class="mt-1"><span class="font-semibold">Waktu:</span> {new Date(result.meta.fetchedAt).toLocaleString('id-ID')}</p>
 					</div>
 					<pre class="max-h-[560px] overflow-auto rounded-md bg-slate-950 p-4 text-xs leading-5 text-slate-100">{JSON.stringify(result.data, null, 2)}</pre>

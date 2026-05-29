@@ -1,6 +1,5 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { isSuperAdminUser } from '$lib/auth/session-user';
 
 const scraperTargets = {
 	posts_demo: {
@@ -17,6 +16,7 @@ const scraperTargets = {
 	}
 } as const;
 
+const allowedDomains = ['shopee.co.id', 'tokopedia.com', 'dummyjson.com'];
 type ScraperTargetKey = keyof typeof scraperTargets;
 
 const isScraperTargetKey = (value: string): value is ScraperTargetKey => value in scraperTargets;
@@ -27,25 +27,69 @@ const normalizeLimit = (value: unknown) => {
 	return Math.min(Math.max(Math.floor(parsed), 1), 50);
 };
 
+const parseCustomUrl = (value: unknown) => {
+	if (typeof value !== 'string' || !value.trim()) {
+		throw error(400, 'custom_url wajib diisi untuk target custom');
+	}
+
+	let parsedUrl: URL;
+	try {
+		parsedUrl = new URL(value.trim());
+	} catch {
+		throw error(400, 'Format custom_url tidak valid');
+	}
+
+	// Dapur Teknis: batasi protokol agar URL seperti file://, ftp://, atau skema internal tidak bisa dipakai.
+	if (!['https:', 'http:'].includes(parsedUrl.protocol)) {
+		throw error(403, 'Akses ditolak: protokol URL tidak diizinkan');
+	}
+
+	// Dapur Teknis: tolak credential di URL untuk mencegah request seperti https://user:pass@domain.com.
+	if (parsedUrl.username || parsedUrl.password) {
+		throw error(403, 'Akses ditolak: URL dengan credential tidak diizinkan');
+	}
+
+	const hostname = parsedUrl.hostname.toLowerCase();
+	const isAllowedDomain = allowedDomains.some((domain) => {
+		const normalizedDomain = domain.toLowerCase();
+		return hostname === normalizedDomain || hostname.endsWith(`.${normalizedDomain}`);
+	});
+
+	// Dapur Teknis: whitelist domain mencegah SSRF ke localhost, metadata service, atau jaringan internal.
+	if (!isAllowedDomain) {
+		throw error(403, 'Akses ditolak: domain tidak masuk whitelist');
+	}
+
+	return parsedUrl.toString();
+};
+
 export const POST: RequestHandler = async ({ locals, request, fetch }) => {
 	// Proteksi API: endpoint ini tetap memverifikasi session walaupun UI sudah diproteksi.
 	// Request langsung dari Postman/curl tanpa session super_admin akan berhenti di sini.
 	// Logic session berasal dari hooks.server.ts agar mengikuti sistem auth lama proyek.
-	if (!locals.user || !isSuperAdminUser(locals.user)) {
+	if (!locals.user || locals.user.role !== 'super_admin') {
 		throw error(403, 'Forbidden');
 	}
 
 	const body = await request.json().catch(() => ({}));
 	const target = typeof body.target === 'string' ? body.target : '';
 	const limit = normalizeLimit(body.limit);
+	const customUrl = body.custom_url;
 
-	// Jangan menerima URL bebas dari client. Whitelist mencegah SSRF dan fetch ke jaringan internal.
-	if (!isScraperTargetKey(target)) {
+	let targetUrl = '';
+	let label = '';
+
+	if (target === 'custom') {
+		targetUrl = parseCustomUrl(customUrl);
+		label = 'Target Kustom';
+	} else if (isScraperTargetKey(target)) {
+		const selectedTarget = scraperTargets[target];
+		targetUrl = selectedTarget.buildUrl(limit);
+		label = selectedTarget.label;
+	} else {
 		throw error(400, 'Target scraper tidak valid');
 	}
 
-	const selectedTarget = scraperTargets[target];
-	const targetUrl = selectedTarget.buildUrl(limit);
 	const startedAt = Date.now();
 
 	const response = await fetch(targetUrl, {
@@ -68,8 +112,9 @@ export const POST: RequestHandler = async ({ locals, request, fetch }) => {
 	return json({
 		ok: true,
 		target,
-		label: selectedTarget.label,
+		label,
 		sourceUrl: targetUrl,
+		url_fetched: targetUrl,
 		fetchedBy: {
 			id: locals.user.id,
 			email: locals.user.email ?? 'super-admin@santrionline.local',
@@ -85,15 +130,19 @@ export const POST: RequestHandler = async ({ locals, request, fetch }) => {
 };
 
 export const GET: RequestHandler = async ({ locals }) => {
-	if (!locals.user || !isSuperAdminUser(locals.user)) {
+	if (!locals.user || locals.user.role !== 'super_admin') {
 		throw error(403, 'Forbidden');
 	}
 
 	return json({
 		ok: true,
-		targets: Object.entries(scraperTargets).map(([key, value]) => ({
-			key,
-			label: value.label
-		}))
+		targets: [
+			...Object.entries(scraperTargets).map(([key, value]) => ({
+				key,
+				label: value.label
+			})),
+			{ key: 'custom', label: 'Target Kustom (Paste Link)' }
+		],
+		allowedDomains
 	});
 };
