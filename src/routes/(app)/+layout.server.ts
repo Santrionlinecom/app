@@ -63,6 +63,15 @@ const listManagedLembaga = async (db: App.Locals['db'], userId?: string | null) 
 	}
 };
 
+const layoutPermissions = (locals: App.Locals) => ({
+	canPost: locals.can('social.post'),
+	canModerate: locals.can('social.moderate'),
+	canManageOrg: locals.can('org.manage'),
+	canWriteFinance: locals.can('finance.write'),
+	canReviewHafalan: locals.can('hafalan.review'),
+	canWriteAnnouncement: locals.can('announcement.write')
+});
+
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const user = assertLoggedIn({ locals });
 	const superAdmin = isSuperAdminRole(user.role);
@@ -86,7 +95,8 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 				zakat_infaq: true,
 				jadwal_kegiatan: true,
 				kalender: true
-			}
+			},
+			permissions: layoutPermissions(locals)
 		};
 	}
 
@@ -125,7 +135,8 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		user,
 		org,
 		lembagaList: await listManagedLembaga(locals.db, user.id),
-		appMenu: getAppNavigation(org?.type ?? null, user.role),
-		featureAccess
+		appMenu: getAppNavigation(org?.type ?? null, user.role, locals.can),
+		featureAccess,
+		permissions: layoutPermissions(locals)
 	};
 };

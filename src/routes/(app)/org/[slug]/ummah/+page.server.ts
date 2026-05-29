@@ -1,28 +1,19 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { getOrgScope, getOrganizationBySlug } from '$lib/server/organizations';
+import { getOrganizationBySlug } from '$lib/server/organizations';
 import { listTarawihSchedule, type TarawihScheduleRow } from '$lib/server/tarawih';
-import {
-	assertFeature,
-	assertLoggedIn,
-	assertOrgMember,
-	assertOrgRoleAllowed
-} from '$lib/server/auth/rbac';
-
-const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
+import { assertLoggedIn, assertOrgMember, assertOrgRoleAllowed } from '$lib/server/auth/rbac';
+import { requirePermission } from '$lib/rbac/helpers';
 
 const requireOrgContext = async (locals: App.Locals, slug: string) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) {
 		throw error(500, 'Layanan data tidak tersedia');
 	}
+	requirePermission(locals, 'finance.read');
 
 	const orgId = assertOrgMember(user);
-	const { isSystemAdmin } = getOrgScope(user);
 	const role = user.role ?? '';
-	if (!isSystemAdmin && !allowedRoles.has(role)) {
-		throw error(403, 'Tidak memiliki akses');
-	}
 
 	const org = await getOrganizationBySlug(locals.db, slug);
 	if (!org) {
@@ -33,7 +24,6 @@ const requireOrgContext = async (locals: App.Locals, slug: string) => {
 	}
 
 	assertOrgRoleAllowed(org.type, role);
-	assertFeature(org.type, role, 'kas_masjid');
 
 	return { db: locals.db, orgId, user, org };
 };
@@ -275,20 +265,16 @@ export const actions: Actions = {
 	createProgram: async ({ request, locals, params }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'zakat.manage');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationBySlug(locals.db, params.slug);
 		if (!org || org.id !== orgId) {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'zakat_infaq');
 
 		const data = await request.formData();
 		const namaProgram = `${data.get('namaProgram') ?? ''}`.trim();
@@ -317,20 +303,16 @@ export const actions: Actions = {
 	addZakat: async ({ request, locals, params }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'zakat.manage');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationBySlug(locals.db, params.slug);
 		if (!org || org.id !== orgId) {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'zakat_infaq');
 
 		const data = await request.formData();
 		const programId = `${data.get('programId') ?? ''}`.trim();
@@ -384,20 +366,16 @@ export const actions: Actions = {
 	addQurban: async ({ request, locals, params }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'zakat.manage');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationBySlug(locals.db, params.slug);
 		if (!org || org.id !== orgId) {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'zakat_infaq');
 
 		const data = await request.formData();
 		const programId = `${data.get('programId') ?? ''}`.trim();
@@ -440,20 +418,16 @@ export const actions: Actions = {
 	addKas: async ({ request, locals, params }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'finance.write');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationBySlug(locals.db, params.slug);
 		if (!org || org.id !== orgId) {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'kas_masjid');
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
 		}
@@ -505,20 +479,16 @@ export const actions: Actions = {
 	updateKas: async ({ request, locals, params }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'finance.write');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationBySlug(locals.db, params.slug);
 		if (!org || org.id !== orgId) {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'kas_masjid');
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
 		}
@@ -570,20 +540,16 @@ export const actions: Actions = {
 	deleteKas: async ({ request, locals, params }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'finance.write');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationBySlug(locals.db, params.slug);
 		if (!org || org.id !== orgId) {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'kas_masjid');
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
 		}
@@ -609,20 +575,16 @@ export const actions: Actions = {
 	addTarawih: async ({ request, locals, params }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'schedule.write');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationBySlug(locals.db, params.slug);
 		if (!org || org.id !== orgId) {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Jadwal tarawih hanya untuk masjid atau musholla' });
 		}
@@ -674,20 +636,16 @@ export const actions: Actions = {
 	updateTarawih: async ({ request, locals, params }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'schedule.write');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationBySlug(locals.db, params.slug);
 		if (!org || org.id !== orgId) {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Jadwal tarawih hanya untuk masjid atau musholla' });
 		}
@@ -739,20 +697,16 @@ export const actions: Actions = {
 	deleteTarawih: async ({ request, locals, params }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'schedule.write');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationBySlug(locals.db, params.slug);
 		if (!org || org.id !== orgId) {
 			return fail(403, { error: 'Akses organisasi tidak sesuai' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Jadwal tarawih hanya untuk masjid atau musholla' });
 		}

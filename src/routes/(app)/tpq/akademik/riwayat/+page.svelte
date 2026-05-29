@@ -36,10 +36,10 @@
 
 	<div class="rounded-2xl border bg-white p-4 shadow-sm">
 		<div class="flex flex-wrap gap-2 text-sm">
-			{#if data.role === 'admin' || data.role === 'ustadz' || data.role === 'ustadzah'}
+			{#if data.canInputSetoran}
 				<a class="btn btn-sm btn-outline" href="/tpq/akademik/setoran">Setoran</a>
 			{/if}
-			{#if data.role === 'admin' || data.role === 'koordinator'}
+			{#if data.canReviewSetoran}
 				<a class="btn btn-sm btn-outline" href="/tpq/akademik/review">Review</a>
 			{/if}
 			<a class="btn btn-sm btn-primary" href="/tpq/akademik/riwayat">Riwayat</a>

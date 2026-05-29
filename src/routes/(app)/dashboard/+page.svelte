@@ -128,7 +128,7 @@
 						{ label: 'Jadwal Imam/Khotib', desc: 'Atur jadwal imam, tarawih, dan khotib.', href: '/dashboard/jadwal', tone: 'from-sky-50 to-cyan-100 text-sky-900' },
 						{ label: 'Qurban', desc: 'Pendataan program qurban lembaga.', href: '/fitur-belum-tersedia?fitur=Qurban', tone: 'from-rose-50 to-pink-100 text-rose-900' },
 						{ label: 'Pengumuman', desc: 'Informasi untuk jamaah masjid.', href: '/fitur-belum-tersedia?fitur=Pengumuman Masjid', tone: 'from-violet-50 to-indigo-100 text-indigo-900' },
-						{ label: 'Sosial Jamaah', desc: 'Feed internal jamaah dan pengurus.', href: '/sosial', tone: 'from-lime-50 to-emerald-100 text-lime-900' }
+						{ label: 'Sosial Jamaah', desc: 'Feed internal jamaah dan pengurus.', href: '/beranda', tone: 'from-lime-50 to-emerald-100 text-lime-900' }
 					]
 				: orgType === 'musholla'
 					? [
@@ -136,7 +136,7 @@
 							{ label: 'Kas Musholla', desc: 'Catat kas masuk dan keluar.', href: '/keuangan', tone: 'from-amber-50 to-orange-100 text-amber-900' },
 							{ label: 'Jadwal Imam', desc: 'Atur jadwal imam dan kegiatan ibadah.', href: '/dashboard/jadwal', tone: 'from-sky-50 to-cyan-100 text-sky-900' },
 							{ label: 'Pengumuman', desc: 'Informasi untuk warga sekitar.', href: '/fitur-belum-tersedia?fitur=Pengumuman Musholla', tone: 'from-violet-50 to-indigo-100 text-indigo-900' },
-							{ label: 'Sosial', desc: 'Feed internal jamaah musholla.', href: '/sosial', tone: 'from-lime-50 to-emerald-100 text-lime-900' }
+							{ label: 'Sosial', desc: 'Feed internal jamaah musholla.', href: '/beranda', tone: 'from-lime-50 to-emerald-100 text-lime-900' }
 						]
 					: orgType === 'pondok'
 						? [
@@ -145,7 +145,7 @@
 								{ label: 'Diniyah', desc: 'Materi diniyah dan pembelajaran kitab.', href: '/dashboard/diniyah', tone: 'from-sky-50 to-cyan-100 text-sky-900' },
 								{ label: 'Hafalan', desc: 'Pantau progres hafalan santri.', href: '/dashboard/pencapaian-hafalan', tone: 'from-lime-50 to-emerald-100 text-lime-900' },
 								{ label: 'Keuangan', desc: 'Keuangan pondok sedang disiapkan.', href: '/fitur-belum-tersedia?fitur=Keuangan Pondok', tone: 'from-rose-50 to-pink-100 text-rose-900' },
-								{ label: 'Sosial', desc: 'Feed internal pondok.', href: '/sosial', tone: 'from-violet-50 to-indigo-100 text-indigo-900' }
+								{ label: 'Sosial', desc: 'Feed internal pondok.', href: '/beranda', tone: 'from-violet-50 to-indigo-100 text-indigo-900' }
 							]
 						: orgType === 'rumah-tahfidz'
 							? [
@@ -154,7 +154,7 @@
 									{ label: 'Setoran Hafalan', desc: 'Alur setoran khusus rumah tahfidz.', href: '/fitur-belum-tersedia?fitur=Setoran Hafalan Rumah Tahfidz', tone: 'from-sky-50 to-cyan-100 text-sky-900' },
 									{ label: 'Progress Hafalan', desc: 'Pantau capaian hafalan santri.', href: '/dashboard/pencapaian-hafalan', tone: 'from-lime-50 to-emerald-100 text-lime-900' },
 									{ label: 'Jadwal', desc: 'Agenda dan jadwal halaqoh.', href: '/kalender', tone: 'from-rose-50 to-pink-100 text-rose-900' },
-									{ label: 'Sosial', desc: 'Feed internal rumah tahfidz.', href: '/sosial', tone: 'from-violet-50 to-indigo-100 text-indigo-900' }
+									{ label: 'Sosial', desc: 'Feed internal rumah tahfidz.', href: '/beranda', tone: 'from-violet-50 to-indigo-100 text-indigo-900' }
 								]
 							: [
 									{ label: 'Data Santri', desc: 'Kelola data santri TPQ.', href: '/dashboard/kelola-santri', tone: 'from-emerald-50 to-teal-100 text-emerald-900' },
@@ -162,7 +162,7 @@
 									{ label: 'Ujian Tahfidz', desc: 'Kelola ujian dan capaian.', href: '/dashboard/ujian-tahfidz', tone: 'from-sky-50 to-cyan-100 text-sky-900' },
 									{ label: 'Rapor Hafalan', desc: 'Lihat rapor dan sertifikat.', href: '/tpq/hafalan-rapor', tone: 'from-lime-50 to-emerald-100 text-lime-900' },
 									{ label: 'Akademik', desc: 'Pusat alur akademik TPQ.', href: '/tpq/akademik', tone: 'from-rose-50 to-pink-100 text-rose-900' },
-									{ label: 'Sosial Santri', desc: 'Feed internal santri dan pengajar.', href: '/sosial', tone: 'from-violet-50 to-indigo-100 text-indigo-900' }
+									{ label: 'Sosial Santri', desc: 'Feed internal santri dan pengajar.', href: '/beranda', tone: 'from-violet-50 to-indigo-100 text-indigo-900' }
 								];
 
 		pending = data?.pending ?? [];

@@ -4,12 +4,13 @@ import {
     buildDownloadUrl,
     collectCertificateStats
 } from '$lib/server/certificates';
-import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import { assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
+import { requirePermission } from '$lib/rbac/helpers';
 
 export const load: PageServerLoad = async ({ locals }) => {
     const user = assertLoggedIn({ locals });
-    if (user.role !== 'admin' && user.role !== 'ustadz' && user.role !== 'ustadzah') {
+    if (!locals.can('raport.write')) {
         throw redirect(302, '/dashboard');
     }
     if (!locals.db) {
@@ -20,7 +21,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     if (!org) {
         throw error(404, 'Lembaga tidak ditemukan');
     }
-    assertFeature(org.type, user.role, 'raport');
+    requirePermission(locals, 'raport.read');
 
     const { results: santriRows } =
         (await locals.db!

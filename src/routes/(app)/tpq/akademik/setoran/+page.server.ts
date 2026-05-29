@@ -80,11 +80,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	await assertTpqAcademicTables(db);
 	await ensureSantriUstadzSchema(db);
+	const canManageSetoranScope = locals.can('hafalan.review');
 
 	const selectedDateRaw = (url.searchParams.get('date') ?? '').trim();
 	const selectedDate = selectedDateRaw && isValidIsoDate(selectedDateRaw) ? selectedDateRaw : todayIsoDate();
 
-	const { results: halaqohRaw } = await (role === 'admin'
+	const { results: halaqohRaw } = await (canManageSetoranScope
 		? db.prepare(
 				`SELECT h.id,
 				        h.name,
@@ -126,7 +127,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		.bind(institutionId)
 		.all<TeacherRow>();
 
-	const { results: santriRaw } = await (role === 'admin'
+	const { results: santriRaw } = await (canManageSetoranScope
 		? db.prepare(
 				`SELECT id, username, email
 				 FROM users
@@ -150,7 +151,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	const recentConditions = ['s.institution_id = ?', 's.date = ?'];
 	const recentParams: Array<string | number> = [institutionId, selectedDate];
-	if (role !== 'admin') {
+	if (!canManageSetoranScope) {
 		recentConditions.push('s.ustadz_user_id = ?');
 		recentParams.push(user.id);
 	}
@@ -183,7 +184,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	const summaryConditions = ['institution_id = ?', 'date = ?'];
 	const summaryParams: Array<string | number> = [institutionId, todayIsoDate()];
-	if (role !== 'admin') {
+	if (!canManageSetoranScope) {
 		summaryConditions.push('ustadz_user_id = ?');
 		summaryParams.push(user.id);
 	}
@@ -210,7 +211,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	return {
 		role,
 		selectedDate,
-		canChooseUstadz: role === 'admin',
+		canChooseUstadz: canManageSetoranScope,
 		teachers: (teachersRaw ?? []) as TeacherRow[],
 		santri: (santriRaw ?? []) as SantriRow[],
 		halaqoh: (halaqohRaw ?? []) as HalaqohRow[],
@@ -233,6 +234,7 @@ export const actions: Actions = {
 
 		await assertTpqAcademicTables(db);
 		await ensureSantriUstadzSchema(db);
+		const canManageSetoranScope = locals.can('hafalan.review');
 
 		const form = await request.formData();
 		const santriUserIdRaw = `${form.get('santri_user_id') ?? ''}`.trim();
@@ -301,7 +303,7 @@ export const actions: Actions = {
 		}
 
 		const santriInScope =
-			role === 'admin'
+			canManageSetoranScope
 				? await db
 						.prepare(
 							`SELECT id
@@ -332,9 +334,9 @@ export const actions: Actions = {
 			return fail(403, { createError: 'Santri tidak berada dalam scope pengajaran Anda.' });
 		}
 
-		let finalUstadzUserId = role === 'admin' ? requestedUstadzUserId || user.id : user.id;
+		let finalUstadzUserId = canManageSetoranScope ? requestedUstadzUserId || user.id : user.id;
 
-		if (role === 'admin') {
+		if (canManageSetoranScope) {
 			const validTeacher = await db
 				.prepare(
 					`SELECT id
@@ -366,11 +368,11 @@ export const actions: Actions = {
 				return fail(400, { createError: 'Halaqoh tidak ditemukan.' });
 			}
 
-			if (role !== 'admin' && halaqoh.ustadzUserId !== user.id) {
+			if (!canManageSetoranScope && halaqoh.ustadzUserId !== user.id) {
 				return fail(403, { createError: 'Anda tidak bisa input setoran untuk halaqoh ini.' });
 			}
 
-			if (role === 'admin') {
+			if (canManageSetoranScope) {
 				if (!requestedUstadzUserId) {
 					finalUstadzUserId = halaqoh.ustadzUserId;
 				} else if (requestedUstadzUserId !== halaqoh.ustadzUserId) {
@@ -449,6 +451,7 @@ export const actions: Actions = {
 		}
 
 		await assertTpqAcademicTables(db);
+		const canManageSetoranScope = locals.can('hafalan.review');
 
 		const form = await request.formData();
 		const name = sanitizePlainText(`${form.get('name') ?? ''}`, MAX_HALAQOH_NAME_LENGTH);
@@ -480,9 +483,9 @@ export const actions: Actions = {
 			}
 		}
 
-		let ustadzUserId = role === 'admin' ? requestedUstadzUserId || user.id : user.id;
+		let ustadzUserId = canManageSetoranScope ? requestedUstadzUserId || user.id : user.id;
 
-		if (role === 'admin') {
+		if (canManageSetoranScope) {
 			const validTeacher = await db
 				.prepare(
 					`SELECT id

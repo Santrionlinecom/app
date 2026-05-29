@@ -1,29 +1,25 @@
 import { json, error } from '@sveltejs/kit';
-import { assertFeature, assertLoggedIn, assertOrgMember, isSystemAdmin, type OrgRole } from '$lib/server/auth/rbac';
+import { assertLoggedIn, assertOrgMember, isSystemAdmin } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
+import { requirePermission } from '$lib/rbac/helpers';
 import type { RequestHandler } from './$types';
-
-type Role = Extract<OrgRole, 'admin' | 'ustadz' | 'ustadzah' | 'santri'>;
-
-const canSeeAll = (role: Role) => role === 'admin' || role === 'ustadz' || role === 'ustadzah';
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) throw error(500, 'DB not available');
+	requirePermission(locals, 'hafalan.read');
 
 	const orgId = assertOrgMember(user);
 	const org = await getOrganizationById(locals.db, orgId);
 	if (!org) throw error(404, 'Lembaga tidak ditemukan');
-	assertFeature(org.type, user.role, 'hafalan');
 
-	const reqRole = user.role as Role;
 	const defaultUserId = user.id;
 
 	const targetUserId = url.searchParams.get('userId');
 	const daysParam = url.searchParams.get('days');
 	const days = daysParam ? Math.max(1, Math.min(60, Number(daysParam))) : 30;
 
-	const userId = canSeeAll(reqRole) && targetUserId ? targetUserId : defaultUserId;
+	const userId = locals.can('hafalan.review') && targetUserId ? targetUserId : defaultUserId;
 	if (targetUserId && !isSystemAdmin(user.role)) {
 		const target = await locals.db!
 			.prepare('SELECT org_id as orgId FROM users WHERE id = ?')

@@ -49,7 +49,7 @@
 	<div class="rounded-2xl border bg-white p-4 shadow-sm">
 		<div class="flex flex-wrap gap-2 text-sm">
 			<a class="btn btn-sm btn-primary" href="/tpq/akademik/setoran">Setoran</a>
-			{#if data.role === 'admin'}
+			{#if data.canChooseUstadz}
 				<a class="btn btn-sm btn-outline" href="/tpq/akademik/review">Review</a>
 			{/if}
 			<a class="btn btn-sm btn-outline" href="/tpq/akademik/riwayat">Riwayat</a>

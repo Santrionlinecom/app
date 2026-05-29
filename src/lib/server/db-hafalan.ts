@@ -1,6 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { SeedHafalanDefault } from '$lib/server/seed-hafalan-default';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
+import { canAccessPermission } from '$lib/server/auth/rbac';
 import { isTeacherForSantri } from '$lib/server/santri-ustadz';
 
 export const HAFALAN_RAPOR_STATUSES = ['belum', 'proses', 'lulus', 'perlu_perbaikan'] as const;
@@ -279,8 +280,9 @@ export async function getDaftarSantriForRapor(
 ) {
 	await ensureHafalanRaporSchema(db);
 	const role = params.role ?? '';
-	const isTeacher = role === 'ustadz' || role === 'ustadzah';
-	const statement = isTeacher
+	const needsTeachingScope =
+		canAccessPermission(role, 'hafalan.input') && !canAccessPermission(role, 'hafalan.review');
+	const statement = needsTeachingScope
 		? db
 				.prepare(
 					`SELECT u.id, COALESCE(u.username, u.email) AS nama, u.email
@@ -318,7 +320,7 @@ export async function assertCanAccessRaporSantri(
 	if (params.user.id === params.santriId && !params.write) return;
 
 	const role = params.user.role ?? '';
-	if (role === 'admin' || role === 'koordinator') {
+	if (canAccessPermission(role, 'hafalan.review')) {
 		const target = await db
 			.prepare('SELECT org_id AS orgId FROM users WHERE id = ? AND role IN (\'santri\', \'alumni\')')
 			.bind(params.santriId)
@@ -329,7 +331,7 @@ export async function assertCanAccessRaporSantri(
 		return;
 	}
 
-	if (role === 'ustadz' || role === 'ustadzah') {
+	if (canAccessPermission(role, 'hafalan.input')) {
 		const allowed = await isTeacherForSantri(db, {
 			santriId: params.santriId,
 			ustadzId: params.user.id

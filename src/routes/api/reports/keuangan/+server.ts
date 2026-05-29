@@ -1,10 +1,9 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getOrganizationById } from '$lib/server/organizations';
-import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import { assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import { requireAnyPermission, requirePermission } from '$lib/rbac/helpers';
 import * as XLSX from 'xlsx';
-
-const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
 
 const ensureAuth = (locals: App.Locals) => {
 	const user = assertLoggedIn({ locals });
@@ -57,11 +56,6 @@ const parseSohibul = (value: string | null) => {
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = ensureAuth(locals);
-	const role = user.role ?? '';
-	if (!allowedRoles.has(role)) {
-		throw error(403, 'Tidak memiliki akses');
-	}
-
 	const orgId = assertOrgMember(user);
 
 	const type = `${url.searchParams.get('type') ?? ''}`.trim();
@@ -75,8 +69,11 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	if (!org) {
 		throw error(404, 'Lembaga tidak ditemukan');
 	}
-	const featureKey = type === 'kas' ? 'kas_masjid' : 'zakat_infaq';
-	assertFeature(org.type, user.role, featureKey);
+	if (type === 'kas') {
+		requirePermission(locals, 'finance.read');
+	} else {
+		requireAnyPermission(locals, ['zakat.manage', 'finance.read']);
+	}
 
 	const { startTs, endTs, startRaw, endRaw } = parseDateRange(url);
 	const params: Array<string | number> = [];

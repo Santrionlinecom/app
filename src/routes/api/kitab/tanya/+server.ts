@@ -1,31 +1,19 @@
 import { json, error } from '@sveltejs/kit';
 import { cariJawaban } from '$lib/server/rag';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
-import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import { getRequestIp, logActivity } from '$lib/server/logger';
+import { requirePermission } from '$lib/rbac/helpers';
 import type { RequestHandler } from './$types';
 
 const QUERY_MAX_LENGTH = 500;
 const QUERY_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
-const allowedRoles = new Set([
-	'admin',
-	'SUPER_ADMIN',
-	'ustadz',
-	'ustadzah',
-	'koordinator',
-	'santri',
-	'alumni'
-]);
 
 export const POST: RequestHandler = async ({ request, platform, locals }) => {
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
 	}
 
-	const role = locals.user.role ?? '';
-	if (!allowedRoles.has(role) && !isSuperAdminRole(role)) {
-		throw error(403, 'Fitur tanya kitab belum tersedia untuk role ini');
-	}
+	requirePermission(locals, 'announcement.read');
 
 	if (!platform?.env?.AI || !platform?.env?.VECTORIZE_INDEX) {
 		throw error(500, 'Layanan pencarian kitab belum tersedia');
@@ -44,7 +32,7 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 	try {
 		const db = locals.db ?? platform.env.DB;
 		if (db) {
-			const isElevated = role === 'admin' || isSuperAdminRole(role);
+			const isElevated = locals.can('announcement.write');
 			const rateLimit = await consumeApiRateLimit({
 				db,
 				scope: 'kitab:tanya',
@@ -72,7 +60,7 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 			userEmail: locals.user.email,
 			ipAddress: getRequestIp(request),
 			metadata: {
-				role,
+				role: locals.user.role ?? null,
 				queryLength: pertanyaan.length,
 				referenceCount: result.referensi.length
 			},

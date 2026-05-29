@@ -5,12 +5,14 @@ import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import type { D1Database } from '@cloudflare/workers-types';
 import { isSuperAdminUser } from '$lib/auth/session-user';
+import { hasPermission } from '$lib/rbac/permissions';
 import {
 	applySuperAdminImpersonation,
 	clearImpersonatedOrgId,
 	getImpersonatedOrgId
 } from '$lib/server/auth/impersonation';
 import { sentryServerConfig } from '../sentry.server.config';
+import type { OrgRole, OrgType, Permission } from '$lib/types/rbac';
 
 const authHandle: Handle = async ({ event, resolve }) => {
 	const db = event.platform?.env.DB;
@@ -21,6 +23,9 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	if (!db) {
 		event.locals.user = null;
 		event.locals.session = null;
+		event.locals.isSuperAdmin = false;
+		event.locals.orgType = null;
+		event.locals.can = () => false;
 		return resolve(event);
 	}
 
@@ -31,6 +36,9 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	if (!sessionId) {
 		event.locals.user = null;
 		event.locals.session = null;
+		event.locals.isSuperAdmin = false;
+		event.locals.orgType = null;
+		event.locals.can = () => false;
 		return resolve(event);
 	}
 
@@ -62,6 +70,22 @@ const authHandle: Handle = async ({ event, resolve }) => {
 
 	event.locals.user = resolvedUser;
 	event.locals.session = session;
+	event.locals.isSuperAdmin = isSuperAdminUser(resolvedUser);
+	event.locals.orgType = null;
+
+	if (resolvedUser?.orgId) {
+		const org = await db
+			.prepare('SELECT type FROM organizations WHERE id = ?')
+			.bind(resolvedUser.orgId)
+			.first<{ type: OrgType }>();
+		event.locals.orgType = org?.type ?? null;
+	}
+
+	event.locals.can = (permission: Permission) => {
+		if (event.locals.isSuperAdmin) return true;
+		const role = event.locals.user?.role as OrgRole | undefined;
+		return Boolean(role && hasPermission(role, permission));
+	};
 
 	return resolve(event);
 };

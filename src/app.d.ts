@@ -18,6 +18,9 @@ declare global {
                   })
                 | null;
             session: import('lucia').Session | null;
+            isSuperAdmin: boolean;
+            orgType: import('$lib/types/rbac').OrgType | null;
+            can: (permission: import('$lib/types/rbac').Permission) => boolean;
             // Saya beri tanda tanya (?) jaga-jaga jika di hooks belum di-set
             db?: D1Database; 
         }
@@ -46,9 +49,13 @@ declare global {
                 TURNSTILE_SITE_KEY?: string;
                 TURNSTILE_SECRET_KEY?: string;
                 R2_PUBLIC_BASE_URL?: string;
+                R2_PUBLIC_URL?: string;
+                MAX_PHOTO_SIZE_BYTES?: string;
+                MAX_STORAGE_PER_USER_BYTES?: string;
                 // Pastikan binding di wrangler.toml namanya "BUCKET"
                 // (Jika belum pakai R2, baris ini boleh dihapus atau biarkan saja)
-                BUCKET: R2Bucket; 
+                BUCKET: R2Bucket;
+                MEDIA_BUCKET?: R2Bucket;
             }
             context: {
                 waitUntil(promise: Promise<unknown>): void;

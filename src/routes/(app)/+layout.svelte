@@ -395,7 +395,7 @@
 				? [...primaryItems, ...bookAccessItems, ...utilityItems, ...roleItems, ...footerItems]
 				: [...primaryItems, ...bookAccessItems, ...(isSuperAdmin ? utilityItems : roleItems), ...footerItems];
 		const dashboardItem = menuItems.find((item) => item.href === '/dashboard') ?? primaryItems[0];
-		const socialItem = menuItems.find((item) => item.href === '/sosial');
+		const socialItem = menuItems.find((item) => item.href === '/beranda');
 		const lembagaItem = menuItems.find((item) => item.href === '/lembaga');
 		const accountItem = menuItems.find((item) => item.href === '/akun') ?? footerItems[0];
 		mobileQuickItems = [

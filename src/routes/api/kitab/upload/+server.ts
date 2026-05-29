@@ -4,13 +4,12 @@ import { ensureKitabReferenceSchema, insertDokumen } from '$lib/server/rag';
 import { getOrganizationById } from '$lib/server/organizations';
 import { isEducationalOrgType } from '$lib/server/utils';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
-import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
+import { requirePermission } from '$lib/rbac/helpers';
 import type { RequestHandler } from './$types';
 
 const MAX_PDF_BYTES = 20 * 1024 * 1024;
 const MAX_PDF_PAGES = 300;
 const MAX_TEXT_CHUNKS = 1200;
-const allowedRoles = new Set(['admin', 'ustadz', 'ustadzah', 'SUPER_ADMIN']);
 const JSON_UPLOAD_RATE_LIMIT = { scope: 'kitab:upload:text', limit: 30, windowMs: 10 * 60 * 1000 };
 const PDF_UPLOAD_RATE_LIMIT = { scope: 'kitab:upload:pdf', limit: 6, windowMs: 30 * 60 * 1000 };
 
@@ -18,11 +17,8 @@ const assertKitabAccess = async (locals: App.Locals) => {
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
 	}
-	const role = locals.user.role ?? '';
-	if (!allowedRoles.has(role) && !isSuperAdminRole(role)) {
-		throw error(403, 'Forbidden');
-	}
-	if (isSuperAdminRole(role)) {
+	requirePermission(locals, 'announcement.write');
+	if (locals.isSuperAdmin) {
 		return locals.user;
 	}
 	if (!locals.db) {

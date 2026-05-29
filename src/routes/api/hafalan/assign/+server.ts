@@ -1,8 +1,9 @@
 import { json, error } from '@sveltejs/kit';
 import { submitSurahForUser } from '$lib/server/progress';
 import { isTeacherForSantri } from '$lib/server/santri-ustadz';
-import { assertFeature, assertLoggedIn, assertOrgMember, isSystemAdmin } from '$lib/server/auth/rbac';
+import { assertLoggedIn, assertOrgMember, isSystemAdmin } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
+import { requirePermission } from '$lib/rbac/helpers';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ locals, request }) => {
@@ -10,15 +11,11 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!locals.db) {
 		throw error(500, 'DB not available');
 	}
+	requirePermission(locals, 'hafalan.input');
 	const orgId = assertOrgMember(user);
 	const org = await getOrganizationById(locals.db, orgId);
 	if (!org) {
 		throw error(404, 'Lembaga tidak ditemukan');
-	}
-	assertFeature(org.type, user.role, 'setoran');
-	// Hanya admin atau ustadz/ustadzah yang boleh assign setoran
-	if (user.role !== 'admin' && user.role !== 'ustadz' && user.role !== 'ustadzah') {
-		throw error(403, 'Forbidden');
 	}
 
 	const body = await request.json().catch(() => ({}));
@@ -34,7 +31,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!userId || typeof surahNumber !== 'number') {
 		throw error(400, 'userId dan surahNumber wajib diisi');
 	}
-	if (user.role === 'ustadz' || user.role === 'ustadzah') {
+	if (locals.can('hafalan.input') && !locals.can('hafalan.review')) {
 		const allowed = await isTeacherForSantri(locals.db!, {
 			santriId: userId,
 			ustadzId: user.id

@@ -1,18 +1,13 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import {
-	assertFeature,
-	assertLoggedIn,
-	assertOrgMember,
-	assertOrgRoleAllowed
-} from '$lib/server/auth/rbac';
-import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
+import { assertLoggedIn, assertOrgMember, assertOrgRoleAllowed } from '$lib/server/auth/rbac';
+import { getOrganizationById } from '$lib/server/organizations';
 import { listTarawihSchedule } from '$lib/server/tarawih';
 import { listImamSchedule } from '$lib/server/jadwal-imam';
 import { listKhotibSchedule } from '$lib/server/jadwal-khotib';
+import { requireAnyPermission, requirePermission } from '$lib/rbac/helpers';
 import * as XLSX from 'xlsx';
 
-const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
 const isMissingTableError = (err: unknown) =>
 	`${(err as Error)?.message ?? err}`.toLowerCase().includes('no such table');
 
@@ -85,11 +80,8 @@ const requireScheduleContext = async (locals: App.Locals) => {
 	}
 
 	const orgId = assertOrgMember(user);
-	const { isSystemAdmin } = getOrgScope(user);
 	const role = user.role ?? '';
-	if (!isSystemAdmin && !allowedRoles.has(role)) {
-		throw error(403, 'Tidak memiliki akses');
-	}
+	requirePermission(locals, 'schedule.read');
 
 	const org = await getOrganizationById(locals.db, orgId);
 	if (!org) {
@@ -101,6 +93,10 @@ const requireScheduleContext = async (locals: App.Locals) => {
 	}
 
 	return { db: locals.db, orgId, user, org, role };
+};
+
+const requireImamScheduleWrite = (locals: App.Locals) => {
+	requireAnyPermission(locals, ['imam.schedule', 'schedule.write']);
 };
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -124,14 +120,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 		imamSchedule,
 		khotibSchedule,
 		tarawihSchedule,
-		nextTarawihUrut
+		nextTarawihUrut,
+		ui: {
+			canWrite: locals.can('schedule.write'),
+			canSetImam: locals.can('imam.schedule')
+		}
 	};
 };
 
 export const actions: Actions = {
 	addImam: async ({ request, locals }) => {
-		const { db, orgId, role, org, user } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId, user } = await requireScheduleContext(locals);
+		requireImamScheduleWrite(locals);
 
 		const data = await request.formData();
 		const tanggalRaw = `${data.get('tanggal') ?? ''}`.trim();
@@ -183,8 +183,8 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	updateImam: async ({ request, locals }) => {
-		const { db, orgId, role, org } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId } = await requireScheduleContext(locals);
+		requireImamScheduleWrite(locals);
 
 		const data = await request.formData();
 		const id = `${data.get('id') ?? ''}`.trim();
@@ -234,8 +234,8 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	deleteImam: async ({ request, locals }) => {
-		const { db, orgId, role, org } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId } = await requireScheduleContext(locals);
+		requireImamScheduleWrite(locals);
 
 		const data = await request.formData();
 		const id = `${data.get('id') ?? ''}`.trim();
@@ -262,8 +262,8 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	importImam: async ({ request, locals }) => {
-		const { db, orgId, role, org, user } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId, user } = await requireScheduleContext(locals);
+		requireImamScheduleWrite(locals);
 
 		const data = await request.formData();
 		const file = data.get('file');
@@ -365,8 +365,8 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	importTarawih: async ({ request, locals }) => {
-		const { db, orgId, role, org, user } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId, user } = await requireScheduleContext(locals);
+		requirePermission(locals, 'schedule.write');
 
 		const data = await request.formData();
 		const file = data.get('file');
@@ -485,8 +485,8 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	addTarawih: async ({ request, locals }) => {
-		const { db, orgId, role, org, user } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId, user } = await requireScheduleContext(locals);
+		requirePermission(locals, 'schedule.write');
 
 		const data = await request.formData();
 		const urutRaw = `${data.get('urut') ?? ''}`.trim();
@@ -539,8 +539,8 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	updateTarawih: async ({ request, locals }) => {
-		const { db, orgId, role, org } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId } = await requireScheduleContext(locals);
+		requirePermission(locals, 'schedule.write');
 
 		const data = await request.formData();
 		const id = `${data.get('id') ?? ''}`.trim();
@@ -594,8 +594,8 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	deleteTarawih: async ({ request, locals }) => {
-		const { db, orgId, role, org } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId } = await requireScheduleContext(locals);
+		requirePermission(locals, 'schedule.write');
 
 		const data = await request.formData();
 		const id = `${data.get('id') ?? ''}`.trim();
@@ -622,8 +622,8 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	importKhotib: async ({ request, locals }) => {
-		const { db, orgId, role, org, user } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId, user } = await requireScheduleContext(locals);
+		requirePermission(locals, 'schedule.write');
 
 		const data = await request.formData();
 		const file = data.get('file');
@@ -728,8 +728,8 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	addKhotib: async ({ request, locals }) => {
-		const { db, orgId, role, org, user } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId, user } = await requireScheduleContext(locals);
+		requirePermission(locals, 'schedule.write');
 
 		const data = await request.formData();
 		const tanggalRaw = `${data.get('tanggal') ?? ''}`.trim();
@@ -779,8 +779,8 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	updateKhotib: async ({ request, locals }) => {
-		const { db, orgId, role, org } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId } = await requireScheduleContext(locals);
+		requirePermission(locals, 'schedule.write');
 
 		const data = await request.formData();
 		const id = `${data.get('id') ?? ''}`.trim();
@@ -829,8 +829,8 @@ export const actions: Actions = {
 		return { success: true };
 	},
 	deleteKhotib: async ({ request, locals }) => {
-		const { db, orgId, role, org } = await requireScheduleContext(locals);
-		assertFeature(org.type, role, 'jadwal_kegiatan');
+		const { db, orgId } = await requireScheduleContext(locals);
+		requirePermission(locals, 'schedule.write');
 
 		const data = await request.formData();
 		const id = `${data.get('id') ?? ''}`.trim();

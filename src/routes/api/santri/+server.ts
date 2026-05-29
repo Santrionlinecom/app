@@ -6,12 +6,9 @@ import type { OrgType } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
 import { logActivity } from '$lib/server/activity-logs';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
+import { requirePermission } from '$lib/rbac/helpers';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'admin'] as const;
-const managerRoles = new Set(['admin', 'SUPER_ADMIN', 'ustadz', 'ustadzah']);
-const hasManagerAccess = (role?: string | null) =>
-	managerRoles.has(role ?? '') || isSuperAdminRole(role);
-const isAdminRole = (role?: string | null) => role === 'admin' || isSuperAdminRole(role);
 
 const ensureAuth = (locals: App.Locals) => {
 	if (!locals.user) {
@@ -30,15 +27,13 @@ const normalizePagination = (page = 1, limit = 10) => {
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = ensureAuth(locals);
-	if (!hasManagerAccess(user.role)) {
-		throw error(403, 'Forbidden');
-	}
+	requirePermission(locals, 'student.read');
 	const db = locals.db!;
 	if (!db) throw error(500, 'Layanan data tidak tersedia');
 	const page = Number(url.searchParams.get('page') ?? '1');
 	const limit = Number(url.searchParams.get('limit') ?? '10');
 	const pagination = normalizePagination(page, limit);
-	const isAdmin = isAdminRole(user.role);
+	const isAdmin = locals.can('student.write') || isSuperAdminRole(user.role);
 	const { orgId, isSystemAdmin } = getOrgScope(user);
 	if (isAdmin && !isSystemAdmin && !orgId) {
 		throw error(403, 'Akun belum terhubung ke lembaga.');
@@ -131,13 +126,11 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = ensureAuth(locals);
-	if (!hasManagerAccess(user.role)) {
-		throw error(403, 'Forbidden');
-	}
+	requirePermission(locals, 'student.write');
 	const db = locals.db!;
 	if (!db) throw error(500, 'Layanan data tidak tersedia');
 	const body = await request.json().catch(() => ({}));
-	const isAdmin = isAdminRole(user.role);
+	const isAdmin = locals.can('student.write') || isSuperAdminRole(user.role);
 
 	const username = typeof body.username === 'string' ? body.username.trim() : '';
 	const email = typeof body.email === 'string' ? body.email.trim() : '';

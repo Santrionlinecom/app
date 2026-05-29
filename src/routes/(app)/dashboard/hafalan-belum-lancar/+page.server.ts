@@ -1,7 +1,8 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getOrganizationById } from '$lib/server/organizations';
-import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import { assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import { requirePermission } from '$lib/rbac/helpers';
 import {
 	assertTpqAcademicTables,
 	canInputSetoran,
@@ -35,23 +36,20 @@ type AlertRow = {
 	createdAt: number;
 };
 
-const STUDENT_ROLES = new Set(['santri', 'alumni']);
-const TEACHER_ROLES = new Set(['ustadz', 'ustadzah']);
-
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = assertLoggedIn({ locals });
 	if (!locals.db) throw error(500, 'Layanan data tidak tersedia');
+	requirePermission(locals, 'hafalan.read');
 
 	const orgId = assertOrgMember(user);
 	const org = await getOrganizationById(locals.db, orgId);
 	if (!org) throw error(404, 'Lembaga tidak ditemukan');
-	assertFeature(org.type, user.role, 'hafalan');
 
 	const db = locals.db!;
 	const role = normalizeAppRole(user.role);
-	const roleScope: RoleScope = STUDENT_ROLES.has(role)
+	const roleScope: RoleScope = !locals.can('hafalan.input')
 		? 'student'
-		: TEACHER_ROLES.has(role)
+		: !locals.can('hafalan.review')
 			? 'teacher'
 			: 'manager';
 

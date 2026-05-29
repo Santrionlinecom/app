@@ -1,11 +1,12 @@
 import { fail } from '@sveltejs/kit';
 import { assertLoggedIn } from '$lib/server/auth/rbac';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
+import { requirePermission } from '$lib/rbac/helpers';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const currentUser = locals.user ?? null;
-	const isAdmin = currentUser?.role === 'admin' || isSuperAdminRole(currentUser?.role);
+	const canWriteSchedule = locals.can('schedule.write');
 	let orgs: {
 		id: string;
 		type: string;
@@ -27,7 +28,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		notes: [],
 		tasks: [],
-		isAdmin: Boolean(isAdmin),
+		isAdmin: Boolean(canWriteSchedule),
 		currentUser,
 		orgs
 	};
@@ -37,6 +38,7 @@ export const actions: Actions = {
 	addNote: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'schedule.write');
 
 		const db = locals.db!;
 		const data = await request.formData();
@@ -68,6 +70,7 @@ export const actions: Actions = {
 	updateNote: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'schedule.write');
 		const db = locals.db!;
 		const data = await request.formData();
 		const id = data.get('id') as string;
@@ -80,10 +83,9 @@ export const actions: Actions = {
 		}
 
 		const isSuperAdmin = isSuperAdminRole(user.role);
-		const isAdmin = user.role === 'admin' || isSuperAdmin;
 		const condition = isSuperAdmin
 			? 'WHERE id = ?'
-			: user.role === 'admin'
+			: locals.can('schedule.write')
 				? user.orgId
 					? 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
 					: 'WHERE id = ? AND user_id = ?'
@@ -91,7 +93,7 @@ export const actions: Actions = {
 
 		const params = isSuperAdmin
 			? [title, content || '', eventDate, Date.now(), id]
-			: user.role === 'admin'
+			: locals.can('schedule.write')
 				? user.orgId
 					? [title, content || '', eventDate, Date.now(), id, user.orgId]
 					: [title, content || '', eventDate, Date.now(), id, user.id]
@@ -109,6 +111,7 @@ export const actions: Actions = {
 	deleteNote: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'schedule.write');
 		const db = locals.db!;
 		const data = await request.formData();
 		const id = data.get('id') as string;
@@ -116,7 +119,7 @@ export const actions: Actions = {
 		const isSuperAdmin = isSuperAdminRole(user.role);
 		const condition = isSuperAdmin
 			? 'WHERE id = ?'
-			: user.role === 'admin'
+			: locals.can('schedule.write')
 				? user.orgId
 					? 'WHERE id = ? AND user_id IN (SELECT id FROM users WHERE org_id = ?)'
 					: 'WHERE id = ? AND user_id = ?'
@@ -124,7 +127,7 @@ export const actions: Actions = {
 
 		const params = isSuperAdmin
 			? [id]
-			: user.role === 'admin'
+			: locals.can('schedule.write')
 				? user.orgId
 					? [id, user.orgId]
 					: [id, user.id]

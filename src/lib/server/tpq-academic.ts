@@ -1,6 +1,11 @@
 import { error } from '@sveltejs/kit';
 import type { D1Database } from '@cloudflare/workers-types';
-import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import {
+	assertFeature,
+	assertLoggedIn,
+	assertOrgMember,
+	canAccessPermission
+} from '$lib/server/auth/rbac';
 import { ensureHafalanTable } from '$lib/server/hafalan';
 import { getOrganizationById } from '$lib/server/organizations';
 import { submitSurahForUser } from '$lib/server/progress';
@@ -9,10 +14,6 @@ import { SURAH_DATA } from '$lib/surah-data';
 export const TPQ_SETORAN_TYPES = ['hafalan', 'murojaah'] as const;
 export const TPQ_SETORAN_QUALITIES = ['lancar', 'cukup', 'belum'] as const;
 export const TPQ_SETORAN_STATUSES = ['submitted', 'approved', 'rejected'] as const;
-
-const INPUT_ROLES = new Set(['admin', 'ustadz', 'ustadzah']);
-const REVIEW_ROLES = new Set(['admin', 'koordinator']);
-const HISTORY_ROLES = new Set(['admin', 'koordinator', 'ustadz', 'ustadzah', 'santri', 'alumni']);
 
 const QUALITY_TO_HAFALAN = {
 	lancar: 'hijau',
@@ -30,9 +31,9 @@ export type TpqSetoranStatus = (typeof TPQ_SETORAN_STATUSES)[number];
 
 export const normalizeAppRole = (role?: string | null) => (role ?? '').trim().toLowerCase();
 
-export const canInputSetoran = (role?: string | null) => INPUT_ROLES.has(normalizeAppRole(role));
-export const canReviewSetoran = (role?: string | null) => REVIEW_ROLES.has(normalizeAppRole(role));
-export const canViewSetoranHistory = (role?: string | null) => HISTORY_ROLES.has(normalizeAppRole(role));
+export const canInputSetoran = (role?: string | null) => canAccessPermission(role, 'hafalan.input');
+export const canReviewSetoran = (role?: string | null) => canAccessPermission(role, 'hafalan.review');
+export const canViewSetoranHistory = (role?: string | null) => canAccessPermission(role, 'hafalan.read');
 
 export const isValidIsoDate = (value: string) => {
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -101,7 +102,7 @@ export const requireTpqAcademicContext = async (locals: App.Locals) => {
 		throw error(403, 'Akun lembaga belum aktif.');
 	}
 
-	assertFeature(org.type, user.role, 'setoran');
+	assertFeature(org.type, user.role, 'hafalan');
 
 	return {
 		db: locals.db,

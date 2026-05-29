@@ -2,32 +2,19 @@ import { fail, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { SURAH_DATA } from '$lib/surah-data';
 import { ensureHafalanSurahChecksTable } from '$lib/server/hafalan';
-import { assertFeature, assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
+import { assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
+import { requirePermission } from '$lib/rbac/helpers';
 
-const allowedRoles = [
-	'admin',
-	'ustadz',
-	'ustadzah',
-	'alumni',
-	'SUPER_ADMIN',
-	'santri',
-	'jamaah',
-	'tamir',
-	'bendahara'
-];
 const TOTAL_AYAH = SURAH_DATA.reduce((sum, s) => sum + s.totalAyah, 0);
 
 const assertAllowed = async (locals: App.Locals) => {
 	const user = assertLoggedIn({ locals });
-	if (!allowedRoles.includes(user.role)) {
-		throw error(403, 'Fitur ini tersedia untuk semua akun.');
-	}
 	if (!locals.db) throw error(500, 'Layanan data tidak tersedia');
+	requirePermission(locals, 'hafalan.read');
 	const orgId = assertOrgMember(user);
 	const org = await getOrganizationById(locals.db, orgId);
 	if (!org) throw error(404, 'Lembaga tidak ditemukan');
-	assertFeature(org.type, user.role, 'hafalan');
 };
 
 export const load: PageServerLoad = async ({ locals }) => {

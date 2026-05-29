@@ -11,8 +11,9 @@ import {
     uploadCertificateToR2
 } from '$lib/server/certificates';
 import { generateId } from 'lucia';
-import { assertFeature, assertLoggedIn, assertOrgMember, isSystemAdmin } from '$lib/server/auth/rbac';
+import { assertLoggedIn, assertOrgMember, isSystemAdmin } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
+import { requirePermission } from '$lib/rbac/helpers';
 
 const ensureAuth = (locals: App.Locals) => {
     const user = assertLoggedIn({ locals });
@@ -24,14 +25,14 @@ const ensureAuth = (locals: App.Locals) => {
 
 export const GET: RequestHandler = async ({ locals, url }) => {
     const user = ensureAuth(locals);
+    requirePermission(locals, 'raport.read');
     const orgId = assertOrgMember(user);
     const org = await getOrganizationById(locals.db!, orgId);
     if (!org) {
         throw error(404, 'Lembaga tidak ditemukan');
     }
-    assertFeature(org.type, user.role, 'raport');
     const targetId =
-        user.role === 'santri' ? user.id : url.searchParams.get('userId') || user.id;
+        locals.can('raport.write') ? url.searchParams.get('userId') || user.id : user.id;
 
     const withStats = url.searchParams.get('withStats') === '1';
 
@@ -64,6 +65,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 export const POST: RequestHandler = async ({ locals, request, platform }) => {
     const user = ensureAuth(locals);
+    requirePermission(locals, 'raport.read');
     const bucket = platform?.env?.BUCKET;
     if (!bucket) {
         throw error(500, 'Layanan penyimpanan media tidak tersedia');
@@ -73,7 +75,6 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
     if (!org) {
         throw error(404, 'Lembaga tidak ditemukan');
     }
-    assertFeature(org.type, user.role, 'raport');
 
     const body = await request.json().catch(() => ({}));
 
@@ -82,9 +83,7 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
     const minAyat = typeof body.minAyat === 'number' ? body.minAyat : 30;
     const minSessions = typeof body.minSessions === 'number' ? body.minSessions : 8;
     const targetSantri =
-        user.role === 'santri'
-            ? user.id
-            : typeof body.userId === 'string'
+        locals.can('raport.write') && typeof body.userId === 'string'
               ? body.userId
               : user.id;
 
@@ -92,7 +91,7 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
         throw error(400, 'userId santri wajib diisi');
     }
 
-    if (user.role === 'santri' && targetSantri !== user.id) {
+    if (!locals.can('raport.write') && targetSantri !== user.id) {
         throw error(403, 'Santri hanya bisa membuat sertifikat untuk dirinya sendiri');
     }
     if (!isSystemAdmin(user.role)) {
@@ -126,14 +125,14 @@ export const POST: RequestHandler = async ({ locals, request, platform }) => {
 
     // Tentukan ustadz yang tercantum di sertifikat
     let ustadzId: string | null =
-        user.role === 'ustadz' || user.role === 'ustadzah' || user.role === 'admin'
+        locals.can('raport.write')
             ? user.id
             : null;
     if (!ustadzId && typeof body.ustadzId === 'string') {
         ustadzId = body.ustadzId;
     }
     let ustadzName =
-        user.role === 'ustadz' || user.role === 'ustadzah' || user.role === 'admin'
+        locals.can('raport.write')
             ? user.username || user.email
             : 'Ustadz Pembimbing';
     if (ustadzId && (!ustadzName || ustadzId !== user?.id)) {

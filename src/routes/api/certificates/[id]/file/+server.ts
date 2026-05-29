@@ -1,20 +1,21 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { buildStorageKey, getCertificateById } from '$lib/server/certificates';
-import { assertFeature, assertLoggedIn, assertOrgMember, isSystemAdmin } from '$lib/server/auth/rbac';
+import { assertLoggedIn, assertOrgMember, isSystemAdmin } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
+import { requirePermission } from '$lib/rbac/helpers';
 
 export const GET: RequestHandler = async ({ locals, params, platform }) => {
     const user = assertLoggedIn({ locals });
     if (!locals.db) {
         throw error(500, 'Layanan data tidak tersedia');
     }
+    requirePermission(locals, 'raport.read');
     const orgId = assertOrgMember(user);
     const org = await getOrganizationById(locals.db!, orgId);
     if (!org) {
         throw error(404, 'Lembaga tidak ditemukan');
     }
-    assertFeature(org.type, user.role, 'raport');
 
     const cert = await getCertificateById(locals.db!, params.id);
     if (!cert) {
@@ -22,7 +23,7 @@ export const GET: RequestHandler = async ({ locals, params, platform }) => {
     }
 
     const isOwner = cert.santri_id === user.id;
-    const isPrivileged = user.role === 'admin' || user.role === 'ustadz' || user.role === 'ustadzah';
+    const isPrivileged = locals.can('raport.write');
     if (!isOwner && !isPrivileged) {
         throw error(403, 'Tidak boleh mengunduh sertifikat ini');
     }

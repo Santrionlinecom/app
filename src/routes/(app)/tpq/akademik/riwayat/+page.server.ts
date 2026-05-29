@@ -14,9 +14,6 @@ import {
 
 const STATUS_FILTERS = new Set(['submitted', 'approved', 'rejected']);
 const TYPE_FILTERS = new Set(['hafalan', 'murojaah']);
-const ADMIN_HISTORY_ROLES = new Set(['admin', 'koordinator']);
-const USTADZ_HISTORY_ROLES = new Set(['ustadz', 'ustadzah']);
-const SANTRI_HISTORY_ROLES = new Set(['santri', 'alumni']);
 
 type SelectOption = {
 	id: string;
@@ -49,6 +46,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	await assertTpqAcademicTables(db);
 	await ensureSantriUstadzSchema(db);
+	const canReview = locals.can('hafalan.review');
+	const canInput = locals.can('hafalan.input');
+	const ownOnly = !canReview && !canInput;
 
 	const dateFromRaw = (url.searchParams.get('date_from') ?? '').trim();
 	const dateToRaw = (url.searchParams.get('date_to') ?? '').trim();
@@ -79,10 +79,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const conditions = ['s.institution_id = ?'];
 	const params: Array<string | number> = [institutionId];
 
-	if (SANTRI_HISTORY_ROLES.has(role)) {
+	if (ownOnly) {
 		conditions.push('s.santri_user_id = ?');
 		params.push(user.id);
-	} else if (USTADZ_HISTORY_ROLES.has(role)) {
+	} else if (!canReview) {
 		conditions.push(
 			`EXISTS (
 				SELECT 1
@@ -116,7 +116,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		params.push(validatedHalaqohId);
 	}
 
-	if (ADMIN_HISTORY_ROLES.has(role)) {
+	if (canReview) {
 		if (validatedSantriUserId) {
 			conditions.push('s.santri_user_id = ?');
 			params.push(validatedSantriUserId);
@@ -125,7 +125,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			conditions.push('s.ustadz_user_id = ?');
 			params.push(validatedUstadzUserId);
 		}
-	} else if (USTADZ_HISTORY_ROLES.has(role) && validatedSantriUserId) {
+	} else if (canInput && validatedSantriUserId) {
 		conditions.push('s.santri_user_id = ?');
 		params.push(validatedSantriUserId);
 	}
@@ -170,10 +170,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const today = todayIsoDate();
 	const summaryConditions = ['s.institution_id = ?', 's.date = ?'];
 	const summaryParams: Array<string | number> = [institutionId, today];
-	if (SANTRI_HISTORY_ROLES.has(role)) {
+	if (ownOnly) {
 		summaryConditions.push('s.santri_user_id = ?');
 		summaryParams.push(user.id);
-	} else if (USTADZ_HISTORY_ROLES.has(role)) {
+	} else if (!canReview) {
 		summaryConditions.push(
 			`EXISTS (
 				SELECT 1
@@ -203,7 +203,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			rejected: 0
 		};
 
-	const { results: halaqohRaw } = await (USTADZ_HISTORY_ROLES.has(role)
+	const { results: halaqohRaw } = await (canInput && !canReview
 		? db.prepare(
 				`SELECT id, name as label
 				 FROM tpq_halaqoh
@@ -220,7 +220,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			).bind(institutionId)
 	).all<SelectOption>();
 
-	const { results: santriRaw } = await (ADMIN_HISTORY_ROLES.has(role)
+	const { results: santriRaw } = await (canReview
 		? db.prepare(
 				`SELECT id, COALESCE(username, email) as label
 				 FROM users
@@ -230,7 +230,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				 ORDER BY COALESCE(username, email) ASC
 				 LIMIT 1000`
 			).bind(institutionId)
-		: USTADZ_HISTORY_ROLES.has(role)
+		: canInput
 			? db.prepare(
 					`SELECT u.id, COALESCE(u.username, u.email) as label
 					 FROM santri_ustadz su
@@ -244,7 +244,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			: db.prepare(`SELECT '' as id, '' as label WHERE 1 = 0`)
 	).all<SelectOption>();
 
-	const { results: ustadzRaw } = await (ADMIN_HISTORY_ROLES.has(role)
+	const { results: ustadzRaw } = await (canReview
 		? db.prepare(
 				`SELECT id, COALESCE(username, email) as label
 				 FROM users
@@ -280,7 +280,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			santri: (santriRaw ?? []) as SelectOption[],
 			ustadz: (ustadzRaw ?? []) as SelectOption[]
 		},
-		canFilterByUser: ADMIN_HISTORY_ROLES.has(role) || USTADZ_HISTORY_ROLES.has(role),
-		canFilterByUstadz: ADMIN_HISTORY_ROLES.has(role)
+		canInputSetoran: canInput,
+		canReviewSetoran: canReview,
+		canFilterByUser: canReview || canInput,
+		canFilterByUstadz: canReview
 	};
 };

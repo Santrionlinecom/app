@@ -1,15 +1,10 @@
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import {
-	assertFeature,
-	assertLoggedIn,
-	assertOrgMember,
-	assertOrgRoleAllowed
-} from '$lib/server/auth/rbac';
-import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
+import { assertLoggedIn, assertOrgMember, assertOrgRoleAllowed } from '$lib/server/auth/rbac';
+import { getOrganizationById } from '$lib/server/organizations';
+import { requirePermission } from '$lib/rbac/helpers';
 import * as XLSX from 'xlsx';
 
-const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
 const isMissingTableError = (err: unknown) =>
 	`${(err as Error)?.message ?? err}`.toLowerCase().includes('no such table');
 
@@ -102,13 +97,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!org) {
 		throw error(404, 'Lembaga tidak ditemukan');
 	}
-	const { isSystemAdmin } = getOrgScope(user);
 	const role = user.role ?? '';
-	if (!isSystemAdmin && !allowedRoles.has(role)) {
-		throw error(403, 'Tidak memiliki akses');
-	}
+	requirePermission(locals, 'finance.read');
 	assertOrgRoleAllowed(org.type, role);
-	assertFeature(org.type, user.role, 'kas_masjid');
 	if (org.type !== 'masjid' && org.type !== 'musholla') {
 		throw error(400, 'Fitur keuangan hanya untuk masjid atau musholla');
 	}
@@ -170,20 +161,16 @@ export const actions: Actions = {
 	importKas: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'finance.write');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationById(locals.db, orgId);
 		if (!org) {
 			return fail(404, { error: 'Lembaga tidak ditemukan' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'kas_masjid');
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
 		}
@@ -290,20 +277,16 @@ export const actions: Actions = {
 	addKas: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'finance.write');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationById(locals.db, orgId);
 		if (!org) {
 			return fail(404, { error: 'Lembaga tidak ditemukan' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'kas_masjid');
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
 		}
@@ -355,20 +338,16 @@ export const actions: Actions = {
 	updateKas: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'finance.write');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationById(locals.db, orgId);
 		if (!org) {
 			return fail(404, { error: 'Lembaga tidak ditemukan' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'kas_masjid');
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
 		}
@@ -420,20 +399,16 @@ export const actions: Actions = {
 	deleteKas: async ({ request, locals }) => {
 		const user = assertLoggedIn({ locals });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia' });
+		requirePermission(locals, 'finance.write');
 
 		const orgId = assertOrgMember(user);
-		const { isSystemAdmin } = getOrgScope(user);
 		const role = user.role ?? '';
-		if (!isSystemAdmin && !allowedRoles.has(role)) {
-			return fail(403, { error: 'Tidak memiliki akses' });
-		}
 
 		const org = await getOrganizationById(locals.db, orgId);
 		if (!org) {
 			return fail(404, { error: 'Lembaga tidak ditemukan' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		assertFeature(org.type, role, 'kas_masjid');
 		if (org.type !== 'masjid' && org.type !== 'musholla') {
 			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
 		}

@@ -1,10 +1,13 @@
 import type { InstitutionKey } from '$lib/config/institutions';
+import type { Permission } from '$lib/types/rbac';
 
 export type AppNavigationItem = {
 	label: string;
 	href: string;
 	icon: string;
 	description?: string;
+	permission?: Permission;
+	anyPermission?: Permission[];
 	allowedTypes?: InstitutionKey[];
 	allowedRoles?: string[];
 };
@@ -32,55 +35,55 @@ const fallbackHref = (feature: string) =>
 export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]> = {
 	tpq: [
 		{ label: 'Dashboard TPQ', href: '/dashboard', icon: ICONS.home, allowedTypes: ['tpq'] },
-		{ label: 'Data Santri', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['tpq'], allowedRoles: ['admin', 'koordinator', 'ustadz', 'ustadzah'] },
-		{ label: 'Setoran Hafalan', href: '/tpq/akademik/setoran', icon: ICONS.check, allowedTypes: ['tpq'], allowedRoles: ['admin', 'ustadz', 'ustadzah'] },
-		{ label: 'Ujian', href: '/dashboard/ujian-tahfidz', icon: ICONS.star, allowedTypes: ['tpq'], allowedRoles: ['admin', 'koordinator', 'ustadz', 'ustadzah'] },
-		{ label: 'Rapor', href: '/tpq/hafalan-rapor', icon: ICONS.file, allowedTypes: ['tpq'], allowedRoles: ['admin', 'koordinator', 'ustadz', 'ustadzah'] },
-		{ label: 'Akademik', href: '/tpq/akademik', icon: ICONS.book, allowedTypes: ['tpq'] },
-		{ label: 'Jadwal', href: '/kalender', icon: ICONS.calendar, allowedTypes: ['tpq'] },
-		{ label: 'Sosial', href: '/sosial', icon: ICONS.message, allowedTypes: ['tpq'] }
+		{ label: 'Data Santri', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['tpq'], permission: 'student.read', allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'wali_kelas', 'ustadz', 'ustadzah', 'operator'] },
+		{ label: 'Setoran Hafalan', href: '/tpq/akademik/setoran', icon: ICONS.check, allowedTypes: ['tpq'], permission: 'hafalan.input', allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'wali_kelas', 'ustadz', 'ustadzah'] },
+		{ label: 'Ujian', href: '/dashboard/ujian-tahfidz', icon: ICONS.star, allowedTypes: ['tpq'], permission: 'ujian.read', allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'wali_kelas', 'ustadz', 'ustadzah'] },
+		{ label: 'Rapor', href: '/tpq/hafalan-rapor', icon: ICONS.file, allowedTypes: ['tpq'], permission: 'raport.read', allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'wali_kelas', 'ustadz', 'ustadzah', 'wali'] },
+		{ label: 'Akademik', href: '/tpq/akademik', icon: ICONS.book, allowedTypes: ['tpq'], anyPermission: ['hafalan.read', 'hafalan.input', 'hafalan.review'] },
+		{ label: 'Jadwal', href: '/kalender', icon: ICONS.calendar, allowedTypes: ['tpq'], permission: 'schedule.read' },
+		{ label: 'Sosial', href: '/beranda', icon: ICONS.message, allowedTypes: ['tpq'], permission: 'social.post' }
 	],
 	pondok: [
 		{ label: 'Dashboard Pondok', href: '/dashboard', icon: ICONS.home, allowedTypes: ['pondok'] },
-		{ label: 'Data Santri', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['pondok'], allowedRoles: ['admin', 'ustadz', 'ustadzah'] },
-		{ label: 'Asrama/Kamar', href: fallbackHref('Asrama/Kamar'), icon: ICONS.building, allowedTypes: ['pondok'], allowedRoles: ['admin'] },
+		{ label: 'Data Santri', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['pondok'], allowedRoles: ['admin', 'pengasuh', 'musyrif', 'ustadz', 'ustadzah', 'operator'] },
+		{ label: 'Asrama/Kamar', href: fallbackHref('Asrama/Kamar'), icon: ICONS.building, allowedTypes: ['pondok'], allowedRoles: ['admin', 'pengasuh', 'musyrif', 'operator'] },
 		{ label: 'Diniyah', href: '/dashboard/diniyah', icon: ICONS.book, allowedTypes: ['pondok'] },
 		{ label: 'Hafalan', href: '/dashboard/pencapaian-hafalan', icon: ICONS.chart, allowedTypes: ['pondok'] },
-		{ label: 'Keuangan', href: fallbackHref('Keuangan Pondok'), icon: ICONS.wallet, allowedTypes: ['pondok'], allowedRoles: ['admin'] },
+		{ label: 'Keuangan', href: fallbackHref('Keuangan Pondok'), icon: ICONS.wallet, allowedTypes: ['pondok'], permission: 'finance.read', allowedRoles: ['admin', 'pengasuh', 'bendahara'] },
 		{ label: 'Jadwal', href: '/kalender', icon: ICONS.calendar, allowedTypes: ['pondok'] },
-		{ label: 'Sosial', href: '/sosial', icon: ICONS.message, allowedTypes: ['pondok'] }
+		{ label: 'Sosial', href: '/beranda', icon: ICONS.message, allowedTypes: ['pondok'] }
 	],
 	masjid: [
 		{ label: 'Dashboard Masjid', href: '/dashboard', icon: ICONS.home, allowedTypes: ['masjid'] },
-		{ label: 'Data Jamaah', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['masjid'], allowedRoles: ['admin', 'tamir', 'bendahara'] },
-		{ label: 'Kas Masjid', href: '/keuangan', icon: ICONS.wallet, allowedTypes: ['masjid'], allowedRoles: ['admin', 'tamir', 'bendahara'] },
-		{ label: 'Jadwal Imam/Khotib', href: '/dashboard/jadwal', icon: ICONS.calendar, allowedTypes: ['masjid'], allowedRoles: ['admin', 'tamir', 'bendahara'] },
-		{ label: 'Qurban', href: fallbackHref('Qurban'), icon: ICONS.star, allowedTypes: ['masjid'], allowedRoles: ['admin', 'tamir', 'bendahara'] },
-		{ label: 'Pengumuman', href: fallbackHref('Pengumuman Masjid'), icon: ICONS.megaphone, allowedTypes: ['masjid'] },
-		{ label: 'Sosial', href: '/sosial', icon: ICONS.message, allowedTypes: ['masjid'] }
+		{ label: 'Data Jamaah', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['masjid'], allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'bendahara', 'operator'] },
+		{ label: 'Kas Masjid', href: '/keuangan', icon: ICONS.wallet, allowedTypes: ['masjid'], permission: 'finance.read', allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'bendahara'] },
+		{ label: 'Jadwal Imam/Khotib', href: '/dashboard/jadwal', icon: ICONS.calendar, allowedTypes: ['masjid'], anyPermission: ['schedule.read', 'imam.schedule'], allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'imam', 'khotib', 'muadzin', 'operator'] },
+		{ label: 'Qurban', href: fallbackHref('Qurban'), icon: ICONS.star, allowedTypes: ['masjid'], permission: 'zakat.manage', allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'bendahara'] },
+		{ label: 'Pengumuman', href: fallbackHref('Pengumuman Masjid'), icon: ICONS.megaphone, allowedTypes: ['masjid'], permission: 'announcement.read' },
+		{ label: 'Sosial', href: '/beranda', icon: ICONS.message, allowedTypes: ['masjid'], permission: 'social.post' }
 	],
 	musholla: [
 		{ label: 'Dashboard Musholla', href: '/dashboard', icon: ICONS.home, allowedTypes: ['musholla'] },
-		{ label: 'Data Jamaah', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['musholla'], allowedRoles: ['admin', 'tamir', 'bendahara'] },
-		{ label: 'Kas Musholla', href: '/keuangan', icon: ICONS.wallet, allowedTypes: ['musholla'], allowedRoles: ['admin', 'tamir', 'bendahara'] },
-		{ label: 'Jadwal Imam', href: '/dashboard/jadwal', icon: ICONS.calendar, allowedTypes: ['musholla'], allowedRoles: ['admin', 'tamir', 'bendahara'] },
+		{ label: 'Data Jamaah', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['musholla'], allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'bendahara', 'operator'] },
+		{ label: 'Kas Musholla', href: '/keuangan', icon: ICONS.wallet, allowedTypes: ['musholla'], permission: 'finance.read', allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'bendahara'] },
+		{ label: 'Jadwal Imam', href: '/dashboard/jadwal', icon: ICONS.calendar, allowedTypes: ['musholla'], allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'imam', 'muadzin', 'operator'] },
 		{ label: 'Pengumuman', href: fallbackHref('Pengumuman Musholla'), icon: ICONS.megaphone, allowedTypes: ['musholla'] },
-		{ label: 'Sosial', href: '/sosial', icon: ICONS.message, allowedTypes: ['musholla'] }
+		{ label: 'Sosial', href: '/beranda', icon: ICONS.message, allowedTypes: ['musholla'] }
 	],
 	'rumah-tahfidz': [
 		{ label: 'Dashboard Rumah Tahfidz', href: '/dashboard', icon: ICONS.home, allowedTypes: ['rumah-tahfidz'] },
-		{ label: 'Data Santri', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['rumah-tahfidz'], allowedRoles: ['admin', 'ustadz', 'ustadzah'] },
-		{ label: 'Halaqoh', href: '/dashboard/halaqoh', icon: ICONS.building, allowedTypes: ['rumah-tahfidz'], allowedRoles: ['admin', 'ustadz', 'ustadzah'] },
+		{ label: 'Data Santri', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['rumah-tahfidz'], allowedRoles: ['admin', 'kepala_tahfidz', 'musyrif', 'ustadz', 'ustadzah', 'operator'] },
+		{ label: 'Halaqoh', href: '/dashboard/halaqoh', icon: ICONS.building, allowedTypes: ['rumah-tahfidz'], allowedRoles: ['admin', 'kepala_tahfidz', 'musyrif', 'ustadz', 'ustadzah', 'operator'] },
 		{ label: 'Setoran Hafalan', href: fallbackHref('Setoran Hafalan Rumah Tahfidz'), icon: ICONS.check, allowedTypes: ['rumah-tahfidz'] },
 		{ label: 'Progress Hafalan', href: '/dashboard/pencapaian-hafalan', icon: ICONS.chart, allowedTypes: ['rumah-tahfidz'] },
 		{ label: 'Jadwal', href: '/kalender', icon: ICONS.calendar, allowedTypes: ['rumah-tahfidz'] },
-		{ label: 'Sosial', href: '/sosial', icon: ICONS.message, allowedTypes: ['rumah-tahfidz'] }
+		{ label: 'Sosial', href: '/beranda', icon: ICONS.message, allowedTypes: ['rumah-tahfidz'] }
 	]
 };
 
 export const GLOBAL_APP_NAVIGATION: AppNavigationItem[] = [
 	{ label: 'Lembaga', href: '/lembaga', icon: ICONS.building, description: 'Kelola lembaga aktif' },
-	{ label: 'Addon', href: '/addon', icon: ICONS.star, description: 'Aktivasi fitur tambahan', allowedRoles: ['admin'] },
+	{ label: 'Addon', href: '/addon', icon: ICONS.star, description: 'Aktivasi fitur tambahan', permission: 'org.manage', allowedRoles: ['admin'] },
 	{ label: 'Akun', href: '/akun', icon: ICONS.settings, description: 'Profil dan keamanan akun' }
 ];
 
@@ -93,16 +96,31 @@ export const SUPER_ADMIN_NAVIGATION: AppNavigationItem[] = [
 	{ label: 'Licenses', href: '/admin/licenses', icon: ICONS.shield }
 ];
 
-const roleAllowed = (item: AppNavigationItem, role?: string | null) => {
-	if (!item.allowedRoles?.length) return true;
-	return item.allowedRoles.includes((role ?? '').trim());
+type NavigationFilterOptions = {
+	role?: string | null;
+	can?: (permission: Permission) => boolean;
 };
 
-export const getAppNavigation = (orgType?: string | null, role?: string | null) => {
+const itemAllowed = (item: AppNavigationItem, options: NavigationFilterOptions = {}) => {
+	if (item.permission && options.can?.(item.permission)) return true;
+	if (item.anyPermission?.some((permission) => options.can?.(permission))) return true;
+	if (item.permission || item.anyPermission?.length) {
+		return Boolean(item.allowedRoles?.includes((options.role ?? '').trim()));
+	}
+	if (!item.allowedRoles?.length) return true;
+	return item.allowedRoles.includes((options.role ?? '').trim());
+};
+
+export const getAppNavigation = (
+	orgType?: string | null,
+	role?: string | null,
+	can?: (permission: Permission) => boolean
+) => {
 	const normalizedType = (orgType ?? '').trim() as InstitutionKey;
+	const options = { role, can };
 	const institutionItems = normalizedType in APP_NAVIGATION_BY_TYPE
-		? APP_NAVIGATION_BY_TYPE[normalizedType].filter((item) => roleAllowed(item, role))
+		? APP_NAVIGATION_BY_TYPE[normalizedType].filter((item) => itemAllowed(item, options))
 		: [];
-	const globalItems = GLOBAL_APP_NAVIGATION.filter((item) => roleAllowed(item, role));
+	const globalItems = GLOBAL_APP_NAVIGATION.filter((item) => itemAllowed(item, options));
 	return [...institutionItems, ...globalItems];
 };

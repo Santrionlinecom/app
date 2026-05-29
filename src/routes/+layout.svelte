@@ -64,6 +64,7 @@ const appRoutePrefixes = [
 	'/tpq/hafalan-rapor',
 	'/tpq/rapor-rekap',
 	'/belajar',
+	'/beranda',
 	'/org'
 ];
 const isAppRoute = (path: string) =>
