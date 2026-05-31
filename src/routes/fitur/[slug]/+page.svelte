@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
-	const { feature, detail, others } = data;
+	const { feature, detail, others, hafalanCatalog } = data;
 </script>
 
 <svelte:head>
@@ -80,6 +80,83 @@
 						</li>
 					{/each}
 				</ul>
+			</div>
+		</div>
+
+		{#if detail.routineSchedule?.length}
+			<div class={`rounded-3xl border-2 ${detail.theme.border} ${detail.theme.soft} p-6 md:p-8 shadow-lg`}>
+				<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+					<div>
+						<h2 class={`text-2xl font-bold ${detail.theme.accent}`}>Agenda Rutin NU</h2>
+						<p class="mt-2 text-sm text-slate-700">
+							Kegiatan bisa disetel sebagai agenda bulanan lembaga dan dipakai sebagai penguatan bacaan santri.
+						</p>
+					</div>
+					<span class={`w-fit rounded-full px-4 py-2 text-xs font-semibold ${detail.theme.chip}`}>
+						Sebulan sekali
+					</span>
+				</div>
+				<div class="mt-6 grid gap-4 md:grid-cols-3">
+					{#each detail.routineSchedule as item}
+						<div class="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm">
+							<p class="text-sm font-semibold text-slate-900">{item.title}</p>
+							<p class="mt-2 text-xs leading-5 text-slate-600">{item.desc}</p>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		{#if detail.learningIntegration?.length}
+			<div class="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+				<h2 class="text-2xl font-bold text-slate-900 mb-4">Integrasi dengan Pembelajaran Murid</h2>
+				<p class="mb-5 text-sm text-slate-600">
+					Program publik ini terhubung dengan alur TPQ: target kelas, setoran, rapor hafalan, dan informasi untuk wali murid.
+				</p>
+				<div class="grid gap-4 md:grid-cols-3">
+					{#each detail.learningIntegration as item}
+						<div class="rounded-2xl border border-slate-200 p-4">
+							<p class="text-sm font-semibold text-slate-900">{item.title}</p>
+							<p class="mt-2 text-xs leading-5 text-slate-600">{item.desc}</p>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		<div class="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+			<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+				<div>
+					<h2 class="text-2xl font-bold text-slate-900">Katalog Hafalan yang Tersedia</h2>
+					<p class="mt-2 text-sm text-slate-600">
+						Daftar ini mengikuti materi hafalan default SantriOnline agar calon santri dan wali murid tahu cakupan pembelajaran sejak awal.
+					</p>
+				</div>
+				<a href="/register" class="btn btn-sm btn-outline">Daftar Lembaga</a>
+			</div>
+			<div class="mt-6 grid gap-5 lg:grid-cols-2">
+				{#each hafalanCatalog as category}
+					<section class="rounded-2xl border border-slate-200 p-4">
+						<div class="flex items-center gap-3">
+							<span class="text-2xl">{category.icon}</span>
+							<div>
+								<h3 class="text-base font-bold text-slate-900">{category.nama}</h3>
+								<p class="text-xs text-slate-500">{category.items.length} materi hafalan</p>
+							</div>
+						</div>
+						<div class="mt-4 flex flex-wrap gap-2">
+							{#each category.items as item}
+								<span
+									class="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-700"
+									title={item.fadhilah}
+								>
+									<span class="font-medium">{item.nama}</span>
+									<span class="rounded-full bg-white px-2 py-0.5 text-[10px] uppercase text-slate-500">{item.level}</span>
+								</span>
+							{/each}
+						</div>
+					</section>
+				{/each}
 			</div>
 		</div>
 

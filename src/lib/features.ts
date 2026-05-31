@@ -26,13 +26,13 @@ export const FEATURES: Feature[] = [
 		slug: 'dzikir-doa',
 		icon: '🤲',
 		title: 'Dzikir & Doa',
-		desc: 'Memperkuat spiritual dan ketenangan hati',
+		desc: 'Dzikir, doa harian, dan pembiasaan Aswaja',
 		cta: 'Pelajari wirid harian',
-		highlight: 'Kumpulan dzikir pagi-petang, doa harian, dan wirid-sanad.',
+		highlight: 'Kumpulan dzikir pagi-petang, doa harian, wirid setelah sholat, dan target hafalan santri.',
 		bullets: [
-			'Dzikir pagi-petang bersumber dari hadits shahih',
-			'Kumpulan doa mustajab ulama salaf',
-			'Pengingat dzikir dengan tampilan simpel'
+			'Dzikir pagi-petang, istighfar, tahlil, dan shalawat',
+			'Doa harian terhubung ke rapor hafalan santri',
+			'Materi publik agar wali murid tahu target pembiasaan'
 		]
 	},
 	{
@@ -52,26 +52,26 @@ export const FEATURES: Feature[] = [
 		slug: 'khataman-rutin',
 		icon: '🎯',
 		title: 'Khataman Rutin',
-		desc: 'Khatam Al-Quran bersama santri lainnya',
+		desc: 'Khataman bulanan Kamis Kliwon atau Jumat Legi',
 		cta: 'Gabung jadwal khatam',
-		highlight: 'Program khataman berkala dengan target terukur.',
+		highlight: 'Program khataman sebulan sekali ala pesantren dan Nahdlatul Ulama, terhubung dengan halaqoh santri.',
 		bullets: [
-			'Jadwal khatam mingguan/bulanan',
-			'Pembagian juz & reminder progres',
-			'Sesi doa khatmil Qur’an bersama'
+			'Jadwal Kamis Kliwon atau Jumat Legi',
+			'Pembagian juz, petugas, dan reminder progres',
+			'Khatmil Quran bersama santri, guru, dan wali'
 		]
 	},
 	{
 		slug: 'istighotsah',
 		icon: '✨',
 		title: 'Istighotsah',
-		desc: 'Memohon pertolongan Allah secara berjamaah',
+		desc: 'Istighotsah ala pesantren Nahdlatul Ulama',
 		cta: 'Ikuti jadwal istighotsah',
-		highlight: 'Panduan istighotsah ala pesantren dengan doa-doa pilihan.',
+		highlight: 'Panduan istighotsah, tahlil, shalawat, dan doa bersama yang bisa dijadwalkan rutin.',
 		bullets: [
-			'Teks doa istighotsah lengkap',
-			'Adab dan tata cara berjamaah',
-			'Jadwal virtual & luring'
+			'Agenda Kamis Kliwon, Jumat Legi, atau bulanan',
+			'Adab berjamaah dan rangkaian bacaan majelis',
+			'Terhubung dengan materi dzikir, doa, dan hafalan'
 		]
 	}
 ];
