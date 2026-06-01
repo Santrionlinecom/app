@@ -10,9 +10,15 @@
 	export let form;
 
 	const encodeValue = (value: string) => encodeURIComponent(value);
+	let selectedRole = '';
+	$: if (!selectedRole) {
+		selectedRole = lockedRole?.value ?? roles[0]?.value ?? '';
+	}
+	$: selectedRoleLabel =
+		lockedRole?.label ?? roles.find((role) => role.value === selectedRole)?.label ?? selectedRole;
 	$: googleHref =
-		lockedRole && org?.slug && org?.type
-			? `/auth/google?mode=member&orgType=${encodeValue(org.type)}&orgSlug=${encodeValue(org.slug)}&role=${encodeValue(lockedRole.value)}`
+		selectedRole && org?.slug && org?.type
+			? `/auth/google?mode=member&orgType=${encodeValue(org.type)}&orgSlug=${encodeValue(org.slug)}&role=${encodeValue(selectedRole)}`
 			: '';
 
 	onMount(() => {
@@ -80,7 +86,7 @@
 					<p class="text-xs text-emerald-700">Peran otomatis dari link pendaftaran.</p>
 				</div>
 			{:else}
-				<select id="role" name="role" class="select select-bordered" required>
+				<select id="role" name="role" class="select select-bordered" bind:value={selectedRole} required>
 					{#each roles as role}
 						<option value={role.value}>{role.label}</option>
 					{/each}
@@ -96,9 +102,12 @@
 
 		<button class="btn btn-primary w-full">Daftar Anggota</button>
 
-		{#if lockedRole && googleHref}
+		{#if googleHref}
 			<div class="pt-4 text-center text-xs text-slate-500">atau</div>
-			<GoogleAuthButton href={googleHref} label="Daftar dengan Google" />
+			<GoogleAuthButton href={googleHref} label={`Daftar sebagai ${selectedRoleLabel} dengan Google`} />
+			<p class="text-center text-xs text-slate-500">
+				Nama dan email akan diambil dari akun Google. Role mengikuti pilihan di atas.
+			</p>
 		{/if}
 	</form>
 </section>

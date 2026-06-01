@@ -8,4 +8,9 @@
 	<title>Daftar TPQ</title>
 </svelte:head>
 
-<OrgMemberRegisterView org={data.org} roles={data.roles} lockedRole={data.lockedRole} {form} />
+<OrgMemberRegisterView
+	org={data.org}
+	roles={data.roles}
+	lockedRole={data.lockedRole}
+	{form}
+/>

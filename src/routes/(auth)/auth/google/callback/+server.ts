@@ -1,7 +1,7 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getGoogleOAuthClient, initializeLucia } from '$lib/server/lucia';
-import { getOrganizationBySlug, memberRoleByType, type OrgType } from '$lib/server/organizations';
+import { allowedRolesByType, getOrganizationBySlug, memberRoleByType, type OrgType } from '$lib/server/organizations';
 import { generateId } from 'lucia';
 import { OAuth2RequestError } from 'arctic';
 import type { D1Database } from '@cloudflare/workers-types';
@@ -63,7 +63,7 @@ const parseOAuthContext = (value?: string | null) => {
 
 const isOrgType = (value?: string | null): value is OrgType => {
 	if (!value) return false;
-	return ['tpq'].includes(value);
+	return ['tpq', 'pondok', 'rumah-tahfidz', 'masjid', 'musholla'].includes(value);
 };
 
 const getUserColumns = async (db: D1Database) => {
@@ -102,11 +102,11 @@ const resolveMemberContext = async (
 	if (!org || org.status !== 'active') {
 		throw error(400, 'Lembaga belum aktif atau tidak ditemukan.');
 	}
-	const expectedRole = memberRoleByType[oauthContext.orgType];
-	if (oauthContext.role && oauthContext.role !== expectedRole) {
+	const requestedRole = oauthContext.role || memberRoleByType[oauthContext.orgType];
+	if (!allowedRolesByType[oauthContext.orgType].includes(requestedRole as any)) {
 		throw error(400, 'Role tidak valid.');
 	}
-	return { orgId: org.id, role: expectedRole };
+	return { orgId: org.id, role: requestedRole };
 };
 
 export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request, platform }) => {
@@ -186,6 +186,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 
 		let userId: string;
 		let finalRole = isSuperAdmin ? 'SUPER_ADMIN' : memberContext?.role ?? 'santri';
+		let memberOrgStatus: string | null = memberContext ? 'pending' : null;
 
 		const isNewUser = !existingUser;
 
@@ -231,6 +232,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 				if (currentOrgId && currentOrgId !== memberContext.orgId) {
 					throw error(400, 'Akun sudah terdaftar di lembaga lain.');
 				}
+				memberOrgStatus = currentOrgId === memberContext.orgId ? existingUser.orgStatus ?? 'active' : 'pending';
 				if (!currentOrgId && columns.has('org_id')) {
 					updates.push('org_id = ?');
 					updateValues.push(memberContext.orgId);
@@ -323,7 +325,7 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 
 		redirectTo = safeRedirectPath(oauthContext?.redirect) ?? buildRedirectForRole(finalRole);
 		if (memberContext) {
-			redirectTo = safeRedirectPath(oauthContext?.redirect) ?? '/menunggu';
+			redirectTo = safeRedirectPath(oauthContext?.redirect) ?? (memberOrgStatus === 'active' ? '/dashboard' : '/menunggu');
 		}
 	} catch (err) {
 		console.error('Google login error', err);
