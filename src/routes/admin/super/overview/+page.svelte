@@ -16,6 +16,7 @@
 	type DigitalPaymentMethod = PageData['digitalCommerce']['paymentMethods'][number];
 	type DigitalSale = PageData['digitalCommerce']['recentSales'][number];
 	type DigitalSalesPoint = PageData['digitalCommerce']['salesChart'][number];
+	type NotificationItem = PageData['notifications'][number];
 	type AdminUser = { username?: string | null; email?: string | null; role?: string | null };
 	type TypeSummary = {
 		type: string;
@@ -85,6 +86,8 @@
 		book: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15Z',
 		coins:
 			'M12 8c4.97 0 9-1.34 9-3s-4.03-3-9-3-9 1.34-9 3 4.03 3 9 3Zm-9 1v4c0 1.66 4.03 3 9 3s9-1.34 9-3V9M3 14v4c0 1.66 4.03 3 9 3s9-1.34 9-3v-4',
+		bell:
+			'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
 		settings:
 			'M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Zm7.4-2.1a7.8 7.8 0 0 0 .05-2.8l2-1.5-2-3.46-2.38.96a7.1 7.1 0 0 0-2.42-1.4L14.3 2h-4l-.35 3.2a7.1 7.1 0 0 0-2.42 1.4l-2.38-.96-2 3.46 2 1.5a7.8 7.8 0 0 0 .05 2.8l-2.05 1.56 2 3.46 2.44-.98a7.1 7.1 0 0 0 2.36 1.36l.35 3.2h4l.35-3.2a7.1 7.1 0 0 0 2.36-1.36l2.44.98 2-3.46-2.05-1.56Z',
 		wallet:
@@ -120,6 +123,7 @@
 	let lastRefreshed: number | null = null;
 	let pollTimer: ReturnType<typeof setInterval> | null = null;
 	let formError: string | null = null;
+	let notificationOpen = false;
 
 	const orgTypeLabel: Record<string, string> = {
 		pondok: 'Pondok',
@@ -655,6 +659,21 @@
 		if (!value) return '-';
 		return new Date(value).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 	};
+	const notificationTone = (severity?: string | null) => {
+		if (severity === 'urgent') return 'border-rose-200 bg-rose-50 text-rose-700';
+		if (severity === 'warning') return 'border-amber-200 bg-amber-50 text-amber-700';
+		return 'border-sky-200 bg-sky-50 text-sky-700';
+	};
+	const notificationIconLabel = (item: NotificationItem) => {
+		const map: Record<string, string> = {
+			register: 'RG',
+			topup: 'TC',
+			message: 'PS',
+			institution: 'LB',
+			order: 'OD'
+		};
+		return map[item.kind] ?? 'NT';
+	};
 
 	onMount(() => {
 		refreshLive();
@@ -784,14 +803,72 @@
 						</span>
 						<input class="so-focus h-11 w-full rounded-xl border border-so-border bg-white/90 pl-9 pr-4 text-sm shadow-sm" name="q" value={data.searchQuery} placeholder="Cari user, email, lembaga..." />
 					</form>
-					<button class="grid h-11 w-11 place-items-center rounded-xl border border-so-border bg-white text-so-green shadow-sm" type="button" aria-label="Notifikasi">
-						<span class="relative">
-							<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-								<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
-							</svg>
-							<span class="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500"></span>
-						</span>
-					</button>
+					<div class="relative">
+						<button
+							class="grid h-11 w-11 place-items-center rounded-xl border border-so-border bg-white text-so-green shadow-sm transition hover:border-so-green"
+							type="button"
+							aria-label="Notifikasi"
+							aria-expanded={notificationOpen}
+							on:click={() => (notificationOpen = !notificationOpen)}
+						>
+							<span class="relative">
+								<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+									<path d={iconPaths.bell} />
+								</svg>
+								{#if data.notificationCounts.total > 0}
+									<span class="absolute -right-2 -top-2 grid min-h-4 min-w-4 place-items-center rounded-full bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
+										{data.notificationCounts.total > 9 ? '9+' : data.notificationCounts.total}
+									</span>
+								{/if}
+							</span>
+						</button>
+						{#if notificationOpen}
+							<div class="absolute right-0 top-12 z-40 w-[min(92vw,420px)] overflow-hidden rounded-2xl border border-so-border bg-white shadow-2xl">
+								<div class="border-b border-so-border bg-so-cream px-4 py-3">
+									<div class="flex items-center justify-between gap-3">
+										<div>
+											<p class="font-display text-base font-bold text-so-green">Notifikasi Super Admin</p>
+											<p class="mt-0.5 text-xs text-so-muted">Akun baru, pesan, topup, order, dan lembaga urgent</p>
+										</div>
+										<span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-black text-rose-700">
+											{formatNumber(data.notificationCounts.urgent)} urgent
+										</span>
+									</div>
+								</div>
+								<div class="max-h-[430px] overflow-auto p-2 scrollbar-soft">
+									{#if data.notifications.length === 0}
+										<div class="px-4 py-8 text-center">
+											<p class="text-sm font-bold text-so-ink">Belum ada notifikasi penting</p>
+											<p class="mt-1 text-xs text-so-muted">Aktivitas urgent akan muncul di sini.</p>
+										</div>
+									{:else}
+										{#each data.notifications as item}
+											<a
+												href={item.href}
+												class="grid grid-cols-[38px_minmax(0,1fr)_auto] gap-3 rounded-xl px-3 py-3 transition hover:bg-so-green/5"
+												on:click={() => (notificationOpen = false)}
+											>
+												<span class={`grid h-9 w-9 place-items-center rounded-xl border text-[11px] font-black ${notificationTone(item.severity)}`}>
+													{notificationIconLabel(item)}
+												</span>
+												<span class="min-w-0">
+													<span class="block truncate text-sm font-bold text-so-ink">{item.title}</span>
+													<span class="mt-0.5 block text-xs leading-5 text-so-muted">{item.body}</span>
+												</span>
+												<time class="whitespace-nowrap text-[11px] font-semibold text-so-muted">{formatShortTime(item.createdAt)}</time>
+											</a>
+										{/each}
+									{/if}
+								</div>
+								<div class="border-t border-so-border bg-so-cream px-4 py-3">
+									<div class="flex items-center justify-between text-xs font-bold text-so-muted">
+										<span>{formatNumber(data.notificationCounts.total)} total</span>
+										<a class="text-so-green hover:text-so-green-2" href="/admin/super/coin-topups" on:click={() => (notificationOpen = false)}>Cek topup</a>
+									</div>
+								</div>
+							</div>
+						{/if}
+					</div>
 					<div class="flex items-center gap-3 rounded-xl border border-so-border bg-white px-3 py-2 shadow-sm">
 						<div class="grid h-9 w-9 place-items-center rounded-full bg-so-green text-sm font-black text-white">{adminInitials}</div>
 						<div class="hidden sm:block">
