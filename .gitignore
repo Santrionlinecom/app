@@ -42,3 +42,4 @@ data/tafsir/raw/
 data/tafsir/processed/
 data/tafsir/tafsir-kemenag-draft.json
 data/tafsir/tafsir-ringkas-draft.json
+.dev.vars
