@@ -7,6 +7,7 @@ import { generateId } from 'lucia';
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
+import { registerLoggedInMember } from '$lib/server/member-registration';
 
 const roleLabel = (value: string) => {
 	if (value === 'ustadzah') return 'Ustadzah';
@@ -47,6 +48,25 @@ export const actions: Actions = {
 		}
 
 		const formData = await request.formData();
+		const role = formData.get('role');
+		const fallbackRole = getDefaultMemberRole('tpq');
+		const roleValue = (getMemberReferralRole('tpq', url) ?? (typeof role === 'string' ? role : '')) || fallbackRole;
+
+		if (!allowedRolesByType.tpq.includes(roleValue as any)) {
+			return fail(400, { error: 'Role tidak valid.' });
+		}
+
+		const loggedInResult = await registerLoggedInMember({
+			db,
+			user: locals.user,
+			org,
+			role: roleValue,
+			source: 'tpq/member',
+			request,
+			platform
+		});
+		if (loggedInResult) return loggedInResult;
+
 		const ip = getRequestIp(request) ?? undefined;
 		const turnstile = await verifyTurnstileFormData(formData, ip);
 		if (!turnstile.success) {
@@ -56,10 +76,7 @@ export const actions: Actions = {
 		const name = formData.get('name');
 		const email = formData.get('email');
 		const password = formData.get('password');
-		const role = formData.get('role');
 		const gender = formData.get('gender');
-		const fallbackRole = getDefaultMemberRole('tpq');
-		const roleValue = (getMemberReferralRole('tpq', url) ?? (typeof role === 'string' ? role : '')) || fallbackRole;
 
 		if (
 			typeof name !== 'string' ||
@@ -72,9 +89,6 @@ export const actions: Actions = {
 		const genderValue = gender === 'pria' || gender === 'wanita' ? gender : null;
 		if (!genderValue) {
 			return fail(400, { error: 'Jenis kelamin tidak valid.' });
-		}
-		if (!allowedRolesByType.tpq.includes(roleValue as any)) {
-			return fail(400, { error: 'Role tidak valid.' });
 		}
 		if (password.length < 6) {
 			return fail(400, { error: 'Password minimal 6 karakter.' });

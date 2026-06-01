@@ -16,6 +16,8 @@
 	}
 	$: selectedRoleLabel =
 		lockedRole?.label ?? roles.find((role) => role.value === selectedRole)?.label ?? selectedRole;
+	$: currentUser = $page.data.user as { username?: string | null; email?: string | null } | null;
+	$: isLoggedIn = Boolean(currentUser);
 	$: googleHref =
 		selectedRole && org?.slug && org?.type
 			? `/auth/google?mode=member&orgType=${encodeValue(org.type)}&orgSlug=${encodeValue(org.slug)}&role=${encodeValue(selectedRole)}`
@@ -43,37 +45,44 @@
 	</header>
 
 	<form method="POST" class="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
-		<div class="form-control">
-			<label class="label" for="name">
-				<span class="label-text font-medium">Nama Lengkap</span>
-			</label>
-			<input id="name" name="name" class="input input-bordered" required />
-		</div>
+		{#if isLoggedIn}
+			<div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-900">
+				<p class="font-semibold">Daftar memakai akun yang sedang login</p>
+				<p class="mt-1 text-emerald-700">{currentUser?.username || currentUser?.email}</p>
+			</div>
+		{:else}
+			<div class="form-control">
+				<label class="label" for="name">
+					<span class="label-text font-medium">Nama Lengkap</span>
+				</label>
+				<input id="name" name="name" class="input input-bordered" required />
+			</div>
 
-		<div class="form-control">
-			<label class="label" for="email">
-				<span class="label-text font-medium">Email</span>
-			</label>
-			<input id="email" name="email" type="email" class="input input-bordered" required />
-		</div>
+			<div class="form-control">
+				<label class="label" for="email">
+					<span class="label-text font-medium">Email</span>
+				</label>
+				<input id="email" name="email" type="email" class="input input-bordered" required />
+			</div>
 
-		<div class="form-control">
-			<label class="label" for="password">
-				<span class="label-text font-medium">Password</span>
-			</label>
-			<input id="password" name="password" type="password" class="input input-bordered" minlength="6" required />
-		</div>
+			<div class="form-control">
+				<label class="label" for="password">
+					<span class="label-text font-medium">Password</span>
+				</label>
+				<input id="password" name="password" type="password" class="input input-bordered" minlength="6" required />
+			</div>
 
-		<div class="form-control">
-			<label class="label" for="gender">
-				<span class="label-text font-medium">Jenis Kelamin</span>
-			</label>
-			<select id="gender" name="gender" class="select select-bordered" required>
-				<option value="" disabled selected>Pilih jenis kelamin</option>
-				<option value="pria">Pria</option>
-				<option value="wanita">Wanita</option>
-			</select>
-		</div>
+			<div class="form-control">
+				<label class="label" for="gender">
+					<span class="label-text font-medium">Jenis Kelamin</span>
+				</label>
+				<select id="gender" name="gender" class="select select-bordered" required>
+					<option value="" disabled selected>Pilih jenis kelamin</option>
+					<option value="pria">Pria</option>
+					<option value="wanita">Wanita</option>
+				</select>
+			</div>
+		{/if}
 
 		<div class="form-control">
 			<label class="label" for="role">
@@ -98,11 +107,15 @@
 			<div class="alert alert-error text-sm">{form.error}</div>
 		{/if}
 
-		<Turnstile siteKey={$page.data.turnstileSiteKey ?? ''} />
+		{#if !isLoggedIn}
+			<Turnstile siteKey={$page.data.turnstileSiteKey ?? ''} />
+		{/if}
 
-		<button class="btn btn-primary w-full">Daftar Anggota</button>
+		<button class="btn btn-primary w-full">
+			{isLoggedIn ? `Daftar sebagai ${selectedRoleLabel}` : 'Daftar Anggota'}
+		</button>
 
-		{#if googleHref}
+		{#if !isLoggedIn && googleHref}
 			<div class="pt-4 text-center text-xs text-slate-500">atau</div>
 			<GoogleAuthButton href={googleHref} label={`Daftar sebagai ${selectedRoleLabel} dengan Google`} />
 			<p class="text-center text-xs text-slate-500">
