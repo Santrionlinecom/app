@@ -96,7 +96,8 @@
 	$: formState = (form ?? {}) as FormState;
 	$: displayName = profile?.username || profile?.email || 'Pengguna SantriOnline';
 	$: avatarUrl = profile?.avatarUrl ?? '';
-	$: bioLink = profile?.id ? `${baseUrl}/u/${profile.id}` : '';
+	$: publicHandle = profile?.publicHandle || profile?.id || '';
+	$: bioLink = publicHandle ? `${baseUrl}/u/${publicHandle}` : '';
 	$: activeOrgName = org?.name ?? managedLembaga[0]?.name ?? 'Belum memilih lembaga';
 	$: activeLembagaCount = managedLembaga.filter((item) => item.isAktif !== 0).length;
 	$: orgPublicUrl = org ? `${baseUrl}/${org.type}/${org.slug}` : '';
@@ -532,7 +533,7 @@
 					</label>
 					<label class="field">
 						<span>Username publik</span>
-						<input class="input-so" name="handle" value={profile?.id ?? ''} placeholder="username_unik" />
+						<input class="input-so" name="handle" value={publicHandle} placeholder="username_unik" />
 					</label>
 
 					{#if formState.success && !formState.type}

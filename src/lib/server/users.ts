@@ -14,6 +14,7 @@ export const ensureUserOptionalColumns = async (db: D1Database) => {
 	await addColumn(db, 'gender', 'TEXT');
 	await addColumn(db, 'whatsapp', 'TEXT');
 	await addColumn(db, 'avatar_url', 'TEXT');
+	await addColumn(db, 'public_handle', 'TEXT');
 	await addColumn(
 		db,
 		'work_status',
@@ -22,4 +23,5 @@ export const ensureUserOptionalColumns = async (db: D1Database) => {
 	await addColumn(db, 'expertise', 'TEXT');
 	await addColumn(db, 'org_id', 'TEXT');
 	await addColumn(db, 'org_status', "TEXT NOT NULL DEFAULT 'active'");
+	await db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_public_handle ON users(public_handle)').run();
 };

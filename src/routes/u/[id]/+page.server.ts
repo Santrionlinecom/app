@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(500, 'Layanan data tidak tersedia');
 	}
 
-	const handle = params.id;
+	const handle = params.id.trim().toLowerCase();
 	if (!handle) {
 		throw error(404, 'Profil tidak ditemukan');
 	}
@@ -36,9 +36,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				org_status as orgStatus,
 				created_at as createdAt
 			 FROM users
-			 WHERE id = ?`
+			 WHERE public_handle = ? OR id = ?
+			 ORDER BY CASE WHEN public_handle = ? THEN 0 ELSE 1 END
+			 LIMIT 1`
 		)
-		.bind(handle)
+		.bind(handle, handle, handle)
 		.first<PublicProfile>();
 
 	if (!profile) {
