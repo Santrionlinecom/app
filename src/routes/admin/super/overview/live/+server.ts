@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import { ensureSystemLogsTable } from '$lib/server/system-logs';
 import type { RequestHandler } from './$types';
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
+import { getSuperAdminNotifications } from '$lib/server/super-admin-notifications';
 
 const resolveRangeMs = (range: string) => {
 	switch (range) {
@@ -82,9 +83,12 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			email: string | null;
 			role: string | null;
 		}>();
+	const { notifications, notificationCounts } = await getSuperAdminNotifications(db);
 
 	return json({
 		recentActivities: results ?? [],
+		notifications,
+		notificationCounts,
 		filters: {
 			role: roleFilter,
 			action: actionFilter,

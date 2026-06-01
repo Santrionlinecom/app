@@ -17,6 +17,7 @@
 	type DigitalSale = PageData['digitalCommerce']['recentSales'][number];
 	type DigitalSalesPoint = PageData['digitalCommerce']['salesChart'][number];
 	type NotificationItem = PageData['notifications'][number];
+	type NotificationCounts = PageData['notificationCounts'];
 	type AdminUser = { username?: string | null; email?: string | null; role?: string | null };
 	type TypeSummary = {
 		type: string;
@@ -41,6 +42,13 @@
 		recentActivities: []
 	};
 	let recentActivities: LiveActivity[] = liveStats.recentActivities ?? [];
+	let notifications: NotificationItem[] = data.notifications ?? [];
+	let notificationCounts: NotificationCounts = data.notificationCounts ?? {
+		total: 0,
+		urgent: 0,
+		warning: 0,
+		info: 0
+	};
 
 	const roleOptions = [
 		{ value: 'all', label: 'Semua Role' },
@@ -646,6 +654,8 @@
 			if (res.ok) {
 				const payload = await res.json();
 				recentActivities = payload.recentActivities ?? [];
+				notifications = payload.notifications ?? notifications;
+				notificationCounts = payload.notificationCounts ?? notificationCounts;
 				lastRefreshed = Date.now();
 			}
 		} catch {
@@ -668,6 +678,7 @@
 		const map: Record<string, string> = {
 			register: 'RG',
 			topup: 'TC',
+			payment: 'PY',
 			message: 'PS',
 			institution: 'LB',
 			order: 'OD'
@@ -815,9 +826,9 @@
 								<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
 									<path d={iconPaths.bell} />
 								</svg>
-								{#if data.notificationCounts.total > 0}
+								{#if notificationCounts.total > 0}
 									<span class="absolute -right-2 -top-2 grid min-h-4 min-w-4 place-items-center rounded-full bg-rose-600 px-1 text-[10px] font-black leading-none text-white">
-										{data.notificationCounts.total > 9 ? '9+' : data.notificationCounts.total}
+										{notificationCounts.total > 9 ? '9+' : notificationCounts.total}
 									</span>
 								{/if}
 							</span>
@@ -831,18 +842,18 @@
 											<p class="mt-0.5 text-xs text-so-muted">Akun baru, pesan, topup, order, dan lembaga urgent</p>
 										</div>
 										<span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-black text-rose-700">
-											{formatNumber(data.notificationCounts.urgent)} urgent
+											{formatNumber(notificationCounts.urgent)} urgent
 										</span>
 									</div>
 								</div>
 								<div class="max-h-[430px] overflow-auto p-2 scrollbar-soft">
-									{#if data.notifications.length === 0}
+									{#if notifications.length === 0}
 										<div class="px-4 py-8 text-center">
 											<p class="text-sm font-bold text-so-ink">Belum ada notifikasi penting</p>
 											<p class="mt-1 text-xs text-so-muted">Aktivitas urgent akan muncul di sini.</p>
 										</div>
 									{:else}
-										{#each data.notifications as item}
+										{#each notifications as item}
 											<a
 												href={item.href}
 												class="grid grid-cols-[38px_minmax(0,1fr)_auto] gap-3 rounded-xl px-3 py-3 transition hover:bg-so-green/5"
@@ -862,7 +873,7 @@
 								</div>
 								<div class="border-t border-so-border bg-so-cream px-4 py-3">
 									<div class="flex items-center justify-between text-xs font-bold text-so-muted">
-										<span>{formatNumber(data.notificationCounts.total)} total</span>
+										<span>{formatNumber(notificationCounts.total)} total</span>
 										<a class="text-so-green hover:text-so-green-2" href="/admin/super/coin-topups" on:click={() => (notificationOpen = false)}>Cek topup</a>
 									</div>
 								</div>
