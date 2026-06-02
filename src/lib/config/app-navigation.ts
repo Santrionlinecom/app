@@ -24,6 +24,7 @@ const ICONS = {
 	megaphone: 'M4 13h3l9 4V7l-9 4H4v2zm3 0v5',
 	star: 'M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9L12 3z',
 	message: 'M4 5h16v11H8l-4 4V5z',
+	mapPin: 'M12 21s7-5.2 7-11a7 7 0 10-14 0c0 5.8 7 11 7 11zm0-8a3 3 0 100-6 3 3 0 000 6z',
 	building: 'M4 10.5L12 6l8 4.5v8.5a1 1 0 01-1 1H5a1 1 0 01-1-1v-8.5zM8 20v-6h8v6',
 	settings: 'M12 8a4 4 0 100 8 4 4 0 000-8zm9 4a7.5 7.5 0 01-.2 1.8l2 1.5-2 3.4-2.3-.7a7.4 7.4 0 01-1.6.9l-.3 2.4H9l-.3-2.4a7.4 7.4 0 01-1.6-.9l-2.3.7-2-3.4 2-1.5A7.5 7.5 0 015 12c0-.6.1-1.2.2-1.8L3.2 8.7l2-3.4 2.3.7c.5-.4 1-.7 1.6-.9L9 2.7h4l.3 2.4c.6.2 1.1.5 1.6.9l2.3-.7 2 3.4-2 1.5c.1.6.2 1.2.2 1.8z',
 	shield: 'M12 3l7 3v5c0 4.4-2.8 8.4-7 10-4.2-1.6-7-5.6-7-10V6l7-3z'
@@ -89,6 +90,7 @@ export const GLOBAL_APP_NAVIGATION: AppNavigationItem[] = [
 
 export const SUPER_ADMIN_NAVIGATION: AppNavigationItem[] = [
 	{ label: 'Super Admin', href: '/admin/super/overview', icon: ICONS.shield },
+	{ label: 'Peta Lembaga', href: '/admin/peta', icon: ICONS.mapPin, allowedRoles: ['super_admin'] },
 	{ label: 'Moderasi Buku', href: '/admin/super/buku', icon: ICONS.book },
 	{ label: 'Royalti', href: '/admin/super/buku/royalties', icon: ICONS.chart },
 	{ label: 'Topup Coin', href: '/admin/super/coin-topups', icon: ICONS.wallet },
