@@ -17,6 +17,12 @@ export type LembagaMapStats = {
 	pending: number;
 };
 
+export type LembagaTanpaKoordinatRow = {
+	id: string;
+	nama: string;
+	kota: string | null;
+};
+
 const normalizeStatus = (status: string | null | undefined) =>
 	(status ?? '').trim().replace(/[-\s]+/g, '_').toLowerCase();
 
@@ -68,4 +74,21 @@ export const getLembagaMapData = async (db: D1Database) => {
 	);
 
 	return { lembaga, stats };
+};
+
+export const getLembagaTanpaKoordinat = async (db: D1Database) => {
+	const { results } = await db
+		.prepare(
+			`SELECT
+				id,
+				name as nama,
+				COALESCE(NULLIF(TRIM(kota), ''), city) as kota
+			 FROM organizations
+			 WHERE latitude IS NULL
+			    OR longitude IS NULL
+			 ORDER BY name COLLATE NOCASE ASC`
+		)
+		.all<LembagaTanpaKoordinatRow>();
+
+	return results ?? [];
 };

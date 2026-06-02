@@ -10,6 +10,7 @@
 		ImageUp,
 		KeyRound,
 		LogOut,
+		MapPin,
 		Plus,
 		Share2,
 		ShieldCheck,
@@ -18,6 +19,7 @@
 		WalletCards,
 		X
 	} from 'lucide-svelte';
+	import KoordinatInput from '$lib/components/admin/KoordinatInput.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	export let data: PageData;
@@ -108,6 +110,21 @@
 			? `Assalamu'alaikum, silakan daftar sebagai ${memberLabel} ${org.name} melalui link ini: ${shareLink}`
 			: '';
 	$: waShareLink = shareMessage ? `https://wa.me/?text=${encodeURIComponent(shareMessage)}` : '';
+
+	let locationOrgId = '';
+	let orgAddress = '';
+	let orgKota = '';
+	let orgProvinsi = '';
+	let orgLatitude: number | null = null;
+	let orgLongitude: number | null = null;
+	$: if (org?.id && locationOrgId !== org.id) {
+		locationOrgId = org.id;
+		orgAddress = org.address ?? '';
+		orgKota = org.kota ?? org.city ?? '';
+		orgProvinsi = org.provinsi ?? '';
+		orgLatitude = org.latitude ?? null;
+		orgLongitude = org.longitude ?? null;
+	}
 
 	let copyMessage = '';
 	let canNativeShare = false;
@@ -440,6 +457,60 @@
 			<p class="rounded-xl border border-so-green/20 bg-white px-4 py-3 text-sm font-bold text-so-green shadow-card">
 				{copyMessage}
 			</p>
+		{/if}
+
+		{#if org}
+			<form method="POST" action="?/updateOrgLocation" class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
+				<input type="hidden" name="orgId" value={org.id} />
+				<div class="flex items-start gap-3">
+					<span class="settings-icon"><MapPin size={20} /></span>
+					<div>
+						<p class="text-sm font-bold text-so-gold">Lokasi Lembaga</p>
+						<h2 class="mt-1 text-xl font-black text-so-green">Lokasi di Peta</h2>
+						<p class="mt-1 text-sm leading-6 text-so-muted">
+							Lengkapi kota, provinsi, dan koordinat agar lembaga tampil di Peta Sebaran Lembaga.
+						</p>
+					</div>
+				</div>
+
+				<div class="mt-5 grid gap-4 lg:grid-cols-2">
+					<label class="field lg:col-span-2">
+						<span>Alamat</span>
+						<input class="input-so" name="address" bind:value={orgAddress} placeholder="Alamat lengkap lembaga" />
+					</label>
+					<label class="field">
+						<span>Kota/Kabupaten</span>
+						<input class="input-so" name="kota" bind:value={orgKota} placeholder="Contoh: Malang" />
+					</label>
+					<label class="field">
+						<span>Provinsi</span>
+						<input class="input-so" name="provinsi" bind:value={orgProvinsi} placeholder="Contoh: Jawa Timur" />
+					</label>
+					<div class="lg:col-span-2">
+						<KoordinatInput
+							latitude={orgLatitude}
+							longitude={orgLongitude}
+							kota={orgKota}
+							provinsi={orgProvinsi}
+							on:change={(event) => {
+								orgLatitude = event.detail.latitude;
+								orgLongitude = event.detail.longitude;
+							}}
+						/>
+					</div>
+				</div>
+
+				{#if formState.success && formState.type === 'org-location'}
+					<p class="success-box mt-4">{formState.message ?? 'Lokasi lembaga diperbarui.'}</p>
+				{:else if formState.message && formState.type === 'org-location'}
+					<p class="error-box mt-4">{formState.message}</p>
+				{/if}
+
+				<div class="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+					<p class="text-xs leading-5 text-so-muted">Klik peta mini untuk menggeser titik koordinat secara manual.</p>
+					<button class="btn-primary h-11" type="submit">Simpan Lokasi</button>
+				</div>
+			</form>
 		{/if}
 
 		<div class="grid gap-6 xl:grid-cols-4">

@@ -42,6 +42,13 @@ type AddonRow = {
 	berlakuHingga: number | null;
 };
 
+type OrgLocationFields = {
+	kota: string | null;
+	provinsi: string | null;
+	latitude: number | null;
+	longitude: number | null;
+};
+
 const isMissingMultiLembagaSchema = (err: unknown) => {
 	const message = `${(err as Error)?.message ?? err}`.toLowerCase();
 	return (
@@ -151,6 +158,35 @@ const listActiveAddons = async (db: App.Locals['db'], lembagaId?: string | null)
 	}
 };
 
+const getOrgLocationFields = async (db: App.Locals['db'], orgId?: string | null) => {
+	if (!db || !orgId) return null;
+
+	return db
+		.prepare(
+			`SELECT
+				kota,
+				provinsi,
+				latitude,
+				longitude
+			 FROM organizations
+			 WHERE id = ?`
+		)
+		.bind(orgId)
+		.first<OrgLocationFields>();
+};
+
+const parseNullableCoordinate = (formData: FormData, name: string) => {
+	const raw = formData.get(name);
+	if (typeof raw !== 'string') return { value: null, invalid: false };
+	const trimmed = raw.trim();
+	if (!trimmed) return { value: null, invalid: false };
+	const parsed = Number.parseFloat(trimmed);
+	return Number.isFinite(parsed) ? { value: parsed, invalid: false } : { value: null, invalid: true };
+};
+
+const isIndonesiaCoordinate = (latitude: number, longitude: number) =>
+	latitude >= -11 && latitude <= 6 && longitude >= 95 && longitude <= 141;
+
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth');
@@ -182,7 +218,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			}>())
 		?? null;
 
-	const org = profile?.orgId ? await getOrganizationById(db, profile.orgId) : null;
+	const orgBase = profile?.orgId ? await getOrganizationById(db, profile.orgId) : null;
+	const orgLocation = orgBase ? await getOrgLocationFields(db, orgBase.id) : null;
+	const org = orgBase ? { ...orgBase, ...orgLocation } : null;
 	const [orgMedia, managedLembaga, addonAktif] = await Promise.all([
 		org ? listOrgMedia(db, org.id) : [],
 		listManagedLembaga(db, user.id, profile?.orgId),
@@ -370,6 +408,73 @@ export const actions: Actions = {
 			.run();
 
 		return { success: true, message: 'Password diperbarui', type: 'password' };
+	},
+
+	updateOrgLocation: async ({ request, locals }) => {
+		if (!locals.user) return fail(401, { message: 'Unauthenticated', type: 'org-location' });
+		if (!locals.db) return fail(500, { message: 'Layanan data tidak tersedia', type: 'org-location' });
+
+		const formData = await request.formData();
+		const orgId = `${formData.get('orgId') ?? ''}`.trim();
+		const address = `${formData.get('address') ?? ''}`.trim();
+		const kota = `${formData.get('kota') ?? ''}`.trim();
+		const provinsi = `${formData.get('provinsi') ?? ''}`.trim();
+		const latitudeResult = parseNullableCoordinate(formData, 'latitude');
+		const longitudeResult = parseNullableCoordinate(formData, 'longitude');
+
+		if (!orgId) {
+			return fail(400, { message: 'Lembaga tidak valid', type: 'org-location' });
+		}
+		if (latitudeResult.invalid || longitudeResult.invalid) {
+			return fail(400, { message: 'Format koordinat tidak valid', type: 'org-location' });
+		}
+
+		const latitude = latitudeResult.value;
+		const longitude = longitudeResult.value;
+		if ((latitude === null && longitude !== null) || (latitude !== null && longitude === null)) {
+			return fail(400, { message: 'Latitude dan longitude harus diisi lengkap', type: 'org-location' });
+		}
+		if (latitude !== null && longitude !== null && !isIndonesiaCoordinate(latitude, longitude)) {
+			return fail(400, { message: 'Koordinat di luar wilayah Indonesia', type: 'org-location' });
+		}
+
+		const target = await locals.db
+			.prepare('SELECT id, akun_admin_id as akunAdminId FROM organizations WHERE id = ?')
+			.bind(orgId)
+			.first<{ id: string; akunAdminId: string | null }>();
+		if (!target) {
+			return fail(404, { message: 'Lembaga tidak ditemukan', type: 'org-location' });
+		}
+
+		const canUpdate = target.akunAdminId === locals.user.id || orgId === locals.user.orgId;
+		if (!canUpdate) {
+			return fail(403, { message: 'Tidak memiliki akses mengubah lembaga ini', type: 'org-location' });
+		}
+
+		const city = [kota, provinsi].filter(Boolean).join(', ');
+		await locals.db
+			.prepare(
+				`UPDATE organizations
+				 SET address = ?,
+					city = ?,
+					kota = ?,
+					provinsi = ?,
+					latitude = ?,
+					longitude = ?
+				 WHERE id = ?`
+			)
+			.bind(
+				address || null,
+				city || null,
+				kota || null,
+				provinsi || null,
+				latitude,
+				longitude,
+				orgId
+			)
+			.run();
+
+		return { success: true, message: 'Lokasi lembaga diperbarui', type: 'org-location' };
 	},
 
 	registerOrg: async ({ request, locals }) => {
