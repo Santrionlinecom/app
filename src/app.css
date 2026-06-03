@@ -111,6 +111,86 @@
 		background: rgb(27 67 50 / 0.18);
 		border-radius: 999px;
 	}
+
+	/* === Arabic Typography Utilities === */
+	.arabic-text {
+		font-family: 'Amiri Quran', 'Noto Naskh Arabic', 'Amiri', serif;
+		font-size: 1.75rem;
+		line-height: 2.4;
+		direction: rtl;
+		text-align: right;
+		color: #0f172a;
+		word-break: normal;
+		overflow-wrap: break-word;
+	}
+
+	.arabic-text-lg {
+		font-family: 'Amiri Quran', 'Noto Naskh Arabic', 'Amiri', serif;
+		font-size: 2rem;
+		line-height: 2.5;
+		direction: rtl;
+		text-align: right;
+		color: #0f172a;
+		word-break: normal;
+		overflow-wrap: break-word;
+	}
+
+	.arabic-text-sm {
+		font-family: 'Amiri Quran', 'Noto Naskh Arabic', 'Amiri', serif;
+		font-size: 1.35rem;
+		line-height: 2.2;
+		direction: rtl;
+		text-align: right;
+		color: #0f172a;
+		word-break: normal;
+		overflow-wrap: break-word;
+	}
+
+	.arabic-commentary {
+		font-family: 'Amiri Quran', 'Noto Naskh Arabic', 'Amiri', serif;
+		font-size: 1.25rem;
+		line-height: 2.3;
+		direction: rtl;
+		text-align: right;
+		color: #0f172a;
+		word-break: normal;
+		overflow-wrap: break-word;
+	}
+
+	.reader-card {
+		max-width: 100%;
+		min-width: 0;
+		word-break: break-word;
+		overflow-wrap: break-word;
+	}
+
+	@media (min-width: 768px) {
+		.arabic-text {
+			font-size: 2rem;
+			line-height: 2.5;
+		}
+
+		.arabic-text-lg {
+			font-size: 2.25rem;
+			line-height: 2.6;
+		}
+
+		.arabic-text-sm {
+			font-size: 1.5rem;
+			line-height: 2.3;
+		}
+
+		.arabic-commentary {
+			font-size: 1.35rem;
+			line-height: 2.4;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.reader-card {
+			max-width: 56rem;
+		}
+	}
 }
 
 @media (max-width: 767px) {

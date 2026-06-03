@@ -220,10 +220,10 @@
 				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Baca contoh yang paling penting</h2>
 				<div class="mt-6 space-y-4">
 					{#each santriExamples as example}
-						<div class="rounded-2xl border border-amber-100 bg-white px-5 py-5">
-							<p class="text-right text-2xl font-semibold text-slate-900 leading-[1.9]">{example.arabic}</p>
-							<p class="mt-3 text-base font-semibold text-slate-800">{example.translit}</p>
-							<p class="mt-2 text-sm leading-7 text-slate-600">{example.meaning}</p>
+						<div class="reader-card rounded-2xl border border-amber-100 bg-white px-5 py-5">
+							<p class="arabic-text-sm w-full max-w-full break-words">{example.arabic}</p>
+							<p class="mt-4 text-base font-semibold leading-relaxed text-slate-800">{example.translit}</p>
+							<p class="mt-3 text-base leading-7 text-slate-600">{example.meaning}</p>
 						</div>
 					{/each}
 				</div>
@@ -334,10 +334,10 @@
 				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Bahan baca dan penjelasan</h2>
 				<div class="mt-6 space-y-3">
 					{#each moduleItem.examples as example}
-						<div class="rounded-2xl border border-amber-100 bg-white px-4 py-4">
-							<p class="text-right text-xl font-semibold text-slate-900">{example.arabic}</p>
-							<p class="mt-2 text-sm font-semibold text-slate-700">{example.translit}</p>
-							<p class="mt-1 text-sm leading-6 text-slate-600">{example.meaning}</p>
+						<div class="reader-card rounded-2xl border border-amber-100 bg-white px-4 py-4">
+							<p class="arabic-text-sm w-full max-w-full break-words">{example.arabic}</p>
+							<p class="mt-4 text-base font-semibold leading-relaxed text-slate-700">{example.translit}</p>
+							<p class="mt-3 text-base leading-7 text-slate-600">{example.meaning}</p>
 						</div>
 					{/each}
 				</div>

@@ -1882,10 +1882,10 @@
 									{/if}
 									<article
 										id={verseDomId(verse)}
-										class={`rounded-xl border bg-base-100 p-3 shadow-sm transition md:p-4 ${memorized ? 'border-emerald-200 bg-emerald-50/40' : ''} ${selectedVerseKey === verse.verse_key ? 'border-emerald-300 ring-2 ring-emerald-100' : ''}`}
+										class={`reader-card rounded-2xl border bg-base-100 p-4 shadow-sm transition md:p-6 ${memorized ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200'} ${selectedVerseKey === verse.verse_key ? 'border-emerald-300 ring-2 ring-emerald-100' : ''}`}
 									>
-										<div class="flex flex-wrap items-center justify-between gap-2 text-xs text-base-content/60 mb-2">
-											<span>Surah {surahName(verse.surahNumber)} • Ayat {verse.ayahNumber}</span>
+										<div class="flex flex-wrap items-center justify-between gap-2 text-xs text-base-content/60 mb-4">
+											<span class="font-medium">Surah {surahName(verse.surahNumber)} • Ayat {verse.ayahNumber}</span>
 											<div class="flex flex-wrap items-center gap-2">
 												{#if memorized}
 													<span class="badge badge-success badge-outline">Sudah hafal</span>
@@ -1893,9 +1893,9 @@
 												<span class="badge badge-outline">Hal {verse.page_number}</span>
 											</div>
 										</div>
-										<p class="quran-text text-right" dir="rtl">{verse.text}</p>
+										<p class="arabic-text w-full max-w-full break-words">{verse.text}</p>
 										{#if insight?.translation}
-											<p class="mt-3 text-sm leading-7 text-slate-700">{insight.translation}</p>
+											<p class="mt-5 text-base leading-8 text-slate-700">{insight.translation}</p>
 										{/if}
 										<div class="mt-3 flex flex-wrap items-center gap-2">
 											<button
@@ -2081,7 +2081,7 @@
 														</p>
 													{/if}
 												</section>
-												<section class="rounded-lg border border-slate-200 bg-slate-50 p-4 lg:col-span-2">
+												<section class="reader-card rounded-lg border border-slate-200 bg-slate-50 p-4 lg:col-span-2">
 													<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 														<div>
 															<h3 class="text-sm font-semibold text-slate-950">Tafsir Ulama Klasik</h3>
@@ -2103,11 +2103,11 @@
 															Memuat tafsir ulama...
 														</p>
 													{:else if selectedClassicalTafsir}
-														<div class="mt-3 space-y-2">
+														<div class="mt-4 space-y-3">
 															<p class="text-xs font-semibold text-slate-500">
 																{selectedClassicalTafsir.label} • {selectedClassicalTafsir.author}
 															</p>
-															<p class="quran-commentary-arabic" dir="rtl">{selectedClassicalTafsir.text}</p>
+															<p class="arabic-commentary w-full max-w-full break-words">{selectedClassicalTafsir.text}</p>
 														</div>
 													{:else if classicalTafsirError}
 														<p class="mt-3 text-sm text-amber-700">{classicalTafsirError}</p>
@@ -2299,14 +2299,19 @@
 
 	.quran-text {
 		font-family: "Amiri Quran", "Noto Naskh Arabic", serif;
-		font-size: 1.3rem;
-		line-height: 2.2;
+		font-size: 1.75rem;
+		line-height: 2.4;
+		direction: rtl;
+		text-align: right;
+		color: #0f172a;
 	}
 
 	.quran-commentary-arabic {
 		font-family: "Amiri Quran", "Noto Naskh Arabic", serif;
-		font-size: 1.2rem;
-		line-height: 2.1;
+		font-size: 1.25rem;
+		line-height: 2.3;
+		direction: rtl;
+		text-align: right;
 		color: #0f172a;
 	}
 
