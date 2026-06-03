@@ -10,6 +10,13 @@ import {
 	touchStreamerDevice
 } from '$lib/server/license/streamer-db';
 import { buildClaimsFromLicense, generateLicenseToken, verifyLicenseToken } from '$lib/server/license/streamer-token';
+import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
+
+const RATE_LIMIT = {
+	scope: 'license:refresh',
+	limit: 90,
+	windowMs: 5 * 60 * 1000
+};
 
 const bad = (status: number, error: string, message: string) => json({ ok: false, error, message }, { status });
 const methodNotAllowed = () =>
@@ -29,6 +36,21 @@ export const OPTIONS = notAllowedHandler;
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const db = locals.db ?? platform?.env?.DB;
 	if (!db) return bad(503, 'db_unavailable', 'Layanan data tidak tersedia');
+
+	const ip = getRequestIp(request) ?? 'unknown';
+	const limiter = await consumeApiRateLimit({
+		db,
+		scope: RATE_LIMIT.scope,
+		key: `ip:${ip}`,
+		limit: RATE_LIMIT.limit,
+		windowMs: RATE_LIMIT.windowMs
+	});
+	if (!limiter.allowed) {
+		return json(
+			{ ok: false, error: 'rate_limit', message: 'Terlalu banyak request. Coba lagi sebentar.' },
+			{ status: 429, headers: buildRateLimitHeaders(limiter) }
+		);
+	}
 
 	await ensureStreamerLicenseTables(db);
 

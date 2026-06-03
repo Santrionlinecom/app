@@ -6,6 +6,7 @@ import {
 	desktopServerError,
 	isDesktopLicenseContractRequest
 } from '$lib/server/license/streamer-desktop';
+import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
 import {
 	countStreamerDevices,
 	ensureStreamerLicenseTables,
@@ -17,6 +18,12 @@ import {
 	upsertStreamerDevice
 } from '$lib/server/license/streamer-db';
 import { buildClaimsFromLicense, generateLicenseToken } from '$lib/server/license/streamer-token';
+
+const RATE_LIMIT = {
+	scope: 'license:activate',
+	limit: 30,
+	windowMs: 5 * 60 * 1000
+};
 
 const bad = (status: number, error: string, message: string) => json({ ok: false, error, message }, { status });
 const methodNotAllowed = () =>
@@ -36,6 +43,21 @@ export const OPTIONS = notAllowedHandler;
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const db = locals.db ?? platform?.env?.DB;
 	if (!db) return json(desktopServerError(), { status: 503 });
+
+	const ip = getRequestIp(request) ?? 'unknown';
+	const limiter = await consumeApiRateLimit({
+		db,
+		scope: RATE_LIMIT.scope,
+		key: `ip:${ip}`,
+		limit: RATE_LIMIT.limit,
+		windowMs: RATE_LIMIT.windowMs
+	});
+	if (!limiter.allowed) {
+		return json(
+			{ ok: false, error: 'rate_limit', message: 'Terlalu banyak request. Coba lagi sebentar.' },
+			{ status: 429, headers: buildRateLimitHeaders(limiter) }
+		);
+	}
 
 	let body: Record<string, unknown> = {};
 	try {
