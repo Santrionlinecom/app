@@ -12,27 +12,44 @@
     </div>
 
     {#if form?.message}
-        <div role="alert" class="alert alert-error mb-4 text-sm py-2">
-            <span>{form.message}</span>
+        <div role="alert" class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            <span>Mohon periksa kembali email dan password Anda</span>
         </div>
     {/if}
 
-    <form method="POST" class="space-y-4">
-        <div class="form-control w-full">
-            <label class="label" for="email">
-                <span class="label-text text-slate-600 font-medium">Email</span>
+    <form method="POST" class="space-y-5">
+        <div class="space-y-2">
+            <label class="text-sm font-bold text-slate-700" for="email">
+                Email
             </label>
-            <input type="email" name="email" id="email" class="input input-bordered w-full bg-slate-50 focus:bg-white focus:border-blue-500 rounded-lg h-12" required />
+            <input 
+                type="email" 
+                name="email" 
+                id="email" 
+                class="w-full min-w-0 rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 transition-all placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20" 
+                placeholder="Contoh: email@domain.com"
+                required 
+            />
         </div>
 
-        <div class="form-control w-full">
-            <label class="label" for="password">
-                <span class="label-text text-slate-600 font-medium">Password</span>
+        <div class="space-y-2">
+            <label class="text-sm font-bold text-slate-700" for="password">
+                Password
             </label>
-            <input type="password" name="password" id="password" class="input input-bordered w-full bg-slate-50 focus:bg-white focus:border-blue-500 rounded-lg h-12" required />
+            <input 
+                type="password" 
+                name="password" 
+                id="password" 
+                class="w-full min-w-0 rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 transition-all placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20" 
+                placeholder="Masukkan password Anda"
+                required 
+            />
         </div>
         
-        <button class="btn btn-primary w-full bg-blue-600 border-none hover:bg-blue-700 normal-case text-lg font-normal h-12 rounded-xl mt-4">
+        <button 
+            class="w-full min-h-[44px] rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-base font-bold text-white shadow-lg shadow-blue-600/30 transition-all hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:shadow-blue-600/40 focus:outline-none focus:ring-4 focus:ring-blue-500/50 disabled:opacity-60 disabled:cursor-not-allowed" 
+            type="submit"
+        >
             Masuk
         </button>
     </form>

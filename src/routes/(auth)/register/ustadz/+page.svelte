@@ -63,70 +63,72 @@
 
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<label class="text-sm font-semibold text-slate-700" for="fullName">Nama Lengkap</label>
+					<label class="text-sm font-bold text-slate-700" for="fullName">Nama Lengkap</label>
 					<input
 						id="fullName"
 						name="fullName"
 						type="text"
-						placeholder="Ustadz Ahmad"
-						class="input input-bordered w-full bg-slate-50 focus:bg-white"
+						placeholder="Contoh: Ustadz Ahmad Dahlan"
+						class="w-full min-w-0 rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/20"
 						bind:value={$form.fullName}
 						autocomplete="name"
 						required
 					/>
 					{#if fieldError($errors.fullName)}
-						<p class="text-xs text-red-600">{fieldError($errors.fullName)}</p>
+						<p class="text-sm text-red-600">Mohon isi nama lengkap Anda</p>
 					{/if}
 				</div>
 
 				<div class="space-y-2">
-					<label class="text-sm font-semibold text-slate-700" for="email">Email</label>
+					<label class="text-sm font-bold text-slate-700" for="email">Email</label>
 					<input
 						id="email"
 						name="email"
 						type="email"
-						placeholder="ustadz@email.com"
-						class="input input-bordered w-full bg-slate-50 focus:bg-white"
+						placeholder="Contoh: ustadz@email.com"
+						class="w-full min-w-0 rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/20"
 						bind:value={$form.email}
 						autocomplete="email"
 						required
 					/>
 					{#if fieldError($errors.email)}
-						<p class="text-xs text-red-600">{fieldError($errors.email)}</p>
+						<p class="text-sm text-red-600">Mohon gunakan email yang valid</p>
 					{/if}
 				</div>
 
 				<div class="space-y-2">
-					<label class="text-sm font-semibold text-slate-700" for="password">Password</label>
+					<label class="text-sm font-bold text-slate-700" for="password">Password</label>
 					<input
 						id="password"
 						name="password"
 						type="password"
 						placeholder="Minimal 6 karakter"
-						class="input input-bordered w-full bg-slate-50 focus:bg-white"
+						class="w-full min-w-0 rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/20"
 						bind:value={$form.password}
 						autocomplete="new-password"
 						required
 					/>
+					<p class="text-xs text-slate-500">Gunakan kombinasi huruf dan angka untuk keamanan lebih baik</p>
 					{#if fieldError($errors.password)}
-						<p class="text-xs text-red-600">{fieldError($errors.password)}</p>
+						<p class="text-sm text-red-600">Password minimal 6 karakter</p>
 					{/if}
 				</div>
 
 				<div class="space-y-2">
-					<label class="text-sm font-semibold text-slate-700" for="whatsapp">No. WhatsApp</label>
+					<label class="text-sm font-bold text-slate-700" for="whatsapp">No. WhatsApp</label>
 					<input
 						id="whatsapp"
 						name="whatsapp"
 						type="tel"
-						placeholder="08xxxxxxxxxx"
-						class="input input-bordered w-full bg-slate-50 focus:bg-white"
+						placeholder="Contoh: 087854545274"
+						class="w-full min-w-0 rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/20"
 						bind:value={$form.whatsapp}
 						autocomplete="tel"
 						required
 					/>
+					<p class="text-xs text-slate-500">Nomor aktif untuk komunikasi dengan lembaga dan wali santri</p>
 					{#if fieldError($errors.whatsapp)}
-						<p class="text-xs text-red-600">{fieldError($errors.whatsapp)}</p>
+						<p class="text-sm text-red-600">Mohon isi nomor WhatsApp yang valid</p>
 					{/if}
 				</div>
 			</div>
@@ -177,23 +179,29 @@
 			</div>
 
 			<div class="space-y-2">
-				<label class="text-sm font-semibold text-slate-700" for="expertise">Keahlian (opsional)</label>
+				<label class="text-sm font-bold text-slate-700" for="expertise">Keahlian (opsional)</label>
 				<textarea
 					id="expertise"
 					name="expertise"
 					rows="3"
-					placeholder="Contoh: Tahfidz, Fiqih, Nahwu"
-					class="textarea textarea-bordered w-full bg-slate-50 focus:bg-white"
+					placeholder="Contoh: Tahfidz, Fiqih, Nahwu, Shorof"
+					class="w-full min-w-0 rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/20"
 					bind:value={$form.expertise}
 				></textarea>
+				<p class="text-xs text-slate-500">Tuliskan bidang keahlian Anda untuk memudahkan penempatan</p>
 				{#if fieldError($errors.expertise)}
-					<p class="text-xs text-red-600">{fieldError($errors.expertise)}</p>
+					<p class="text-sm text-red-600">Mohon periksa kembali isian keahlian</p>
 				{/if}
 			</div>
 
 			<Turnstile siteKey={data.turnstileSiteKey} />
 
-			<button class="btn btn-primary w-full">Daftar Sebagai Ustadz</button>
+			<button 
+				class="w-full min-h-[44px] rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-3 text-base font-bold text-white shadow-lg shadow-emerald-600/30 transition-all hover:from-emerald-700 hover:to-emerald-800 hover:shadow-xl hover:shadow-emerald-600/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 disabled:opacity-60 disabled:cursor-not-allowed" 
+				type="submit"
+			>
+				Daftar Sebagai Ustadz
+			</button>
 		</form>
 
 		<p class="text-center text-sm text-slate-500">

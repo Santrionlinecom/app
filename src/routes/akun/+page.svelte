@@ -729,24 +729,50 @@
 	}
 
 	.btn-primary {
-		background: var(--color-so-green);
+		background: linear-gradient(135deg, var(--color-so-green) 0%, var(--color-so-green-2) 100%);
 		color: #fff;
-		padding: 0 1rem;
+		padding: 0 1.25rem;
+		box-shadow: 0 4px 12px rgb(27 67 50 / 0.25);
 	}
 
 	.btn-primary:hover {
-		background: var(--color-so-green-2);
+		background: linear-gradient(135deg, var(--color-so-green-2) 0%, var(--color-so-green-3) 100%);
+		box-shadow: 0 6px 16px rgb(27 67 50 / 0.35);
+	}
+
+	.btn-primary:focus {
+		outline: none;
+		box-shadow: 0 0 0 4px rgb(27 67 50 / 0.2);
+	}
+
+	.btn-primary:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		transform: none;
 	}
 
 	.btn-secondary {
 		border: 1px solid var(--color-so-border);
 		background: #fff;
 		color: var(--color-so-green);
-		padding: 0 1rem;
+		padding: 0 1.25rem;
 	}
 
 	.btn-secondary:hover {
 		border-color: rgb(27 67 50 / 0.35);
+		background: rgb(27 67 50 / 0.03);
+	}
+
+	.btn-secondary:focus {
+		outline: none;
+		border-color: var(--color-so-green);
+		box-shadow: 0 0 0 4px rgb(27 67 50 / 0.15);
+	}
+
+	.btn-secondary:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		transform: none;
 	}
 
 	.settings-card {
@@ -777,20 +803,33 @@
 
 	.input-so {
 		width: 100%;
+		min-width: 0;
 		min-height: 2.75rem;
 		border-radius: 0.75rem;
 		border: 1px solid var(--color-so-border);
 		background: #fff;
 		padding: 0 0.875rem;
-		font-size: 0.875rem;
-		font-weight: 700;
+		font-size: 0.9375rem;
+		font-weight: 600;
 		color: var(--color-so-ink);
 		outline: none;
+		transition: border-color 160ms ease, box-shadow 160ms ease;
+	}
+
+	.input-so::placeholder {
+		color: rgb(148 163 184);
 	}
 
 	.input-so:focus {
 		border-color: var(--color-so-gold);
 		box-shadow: 0 0 0 4px rgb(201 168 76 / 0.2);
+	}
+
+	.input-so:disabled,
+	.input-so:read-only {
+		background: var(--color-so-cream);
+		cursor: not-allowed;
+		opacity: 0.7;
 	}
 
 	.success-box,
