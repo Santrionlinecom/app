@@ -38,6 +38,7 @@ declare global {
                 MIGRATE_SECRET?: string;
                 SEED_SECRET?: string;
                 LICENSE_SIGNING_SECRET?: string;
+                LICENSE_KEY_HASH_SECRET?: string;
                 STREAMER_LICENSE_SIGNING_SECRET?: string;
                 GROQ_API_KEY?: string;
                 NEWS_FETCH_SECRET?: string;
