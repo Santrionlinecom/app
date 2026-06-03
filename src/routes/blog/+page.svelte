@@ -248,7 +248,7 @@
 								<span class={`inline-flex border px-2 py-1 text-[11px] font-semibold ${categoryClass(featured)}`}>
 									{postCategory(featured)}
 								</span>
-								<h2 class="mt-3 text-3xl font-bold leading-tight text-slate-950">
+								<h2 class="mt-3 break-words text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
 									<a href={`/blog/${featured.slug}`} class="hover:text-emerald-700">{featured.title}</a>
 								</h2>
 								<p class="mt-3 text-sm leading-6 text-slate-600">{postSummary(featured, 220)}</p>
@@ -322,7 +322,7 @@
 									</span>
 									<span class="text-[11px] text-slate-400">{postDate(post)}</span>
 								</div>
-								<h3 class="clamp-3 mt-2 text-sm font-bold leading-snug text-slate-950 sm:text-base">
+								<h3 class="clamp-3 mt-2 break-words text-base font-bold leading-snug text-slate-950 sm:text-lg">
 									<a href={`/blog/${post.slug}`} class="hover:text-emerald-700">{post.title}</a>
 								</h3>
 								<p class="clamp-2 mt-2 hidden text-sm leading-6 text-slate-600 sm:block">

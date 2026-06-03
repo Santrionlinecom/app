@@ -82,7 +82,8 @@
 	<title>Beranda Sosial SantriOnline</title>
 </svelte:head>
 
-<div class="mx-auto max-w-3xl space-y-5">
+<div class="mx-auto w-full max-w-full min-w-0 px-4 sm:max-w-3xl sm:px-6 lg:px-8">
+<div class="space-y-5">
 	<header class="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-700 to-teal-700 p-5 text-white shadow-sm">
 		<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100">Beranda</p>
 		<h1 class="mt-2 text-2xl font-bold sm:text-3xl">Sosial {data.org?.name ?? 'Lembaga'}</h1>
@@ -146,4 +147,5 @@
 			</div>
 		{/if}
 	{/if}
+</div>
 </div>

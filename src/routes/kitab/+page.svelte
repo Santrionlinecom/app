@@ -447,8 +447,9 @@
 										</span>
 									{/if}
 								</div>
-								<h3 class="mt-4 text-2xl font-semibold text-slate-900">{item.title}</h3>
-								<p class="mt-2 text-sm leading-7 text-slate-600">
+								<h3 class="mt-4 break-words text-2xl font-semibold leading-tight text-slate-900">{item.title}</h3>
+
+								<p class="mt-2 break-words text-base leading-relaxed text-slate-600">
 									{shortText(item.summary || item.description, 220)}
 								</p>
 								<p class="mt-5 text-xs uppercase tracking-[0.24em] text-slate-400">
@@ -523,8 +524,9 @@
 						<div class="space-y-4 p-5">
 							<div>
 								<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Terakhir update {formatDate(item.updatedAt)}</p>
-								<h3 class="mt-2 text-xl font-semibold text-slate-900">{item.title}</h3>
-								<p class="mt-3 text-sm leading-7 text-slate-600">
+								<h3 class="mt-2 break-words text-xl font-semibold leading-tight text-slate-900">{item.title}</h3>
+
+								<p class="mt-3 break-words text-base leading-relaxed text-slate-600">
 									{shortText(item.summary || item.description)}
 								</p>
 							</div>

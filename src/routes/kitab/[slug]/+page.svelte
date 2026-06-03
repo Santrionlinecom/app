@@ -133,8 +133,9 @@
 							{curatedItem.level}
 						</span>
 					</div>
-					<h1 class="mt-4 text-3xl font-bold md:text-5xl">{curatedItem.title}</h1>
-					<p class="mt-4 text-sm leading-7 text-white/75 md:text-base">{curatedItem.summary}</p>
+					<h1 class="mt-4 break-words text-3xl font-bold leading-tight md:text-5xl">{curatedItem.title}</h1>
+
+					<p class="mt-4 break-words text-base leading-relaxed text-white/75 md:text-lg md:leading-8">{curatedItem.summary}</p>
 
 					<div class="mt-6 flex flex-wrap gap-3">
 						{#if firstModule}
@@ -447,8 +448,9 @@
 							</span>
 						{/if}
 					</div>
-					<h1 class="mt-4 text-3xl font-bold md:text-5xl">{item.title}</h1>
-					<p class="mt-4 text-sm leading-7 text-white/75 md:text-base">
+					<h1 class="mt-4 break-words text-3xl font-bold leading-tight md:text-5xl">{item.title}</h1>
+
+					<p class="mt-4 break-words text-base leading-relaxed text-white/75 md:text-lg md:leading-8">
 						{plainText(item.summary || item.description) || 'Detail kitab ini dikelola dari pusat konten.'}
 					</p>
 
