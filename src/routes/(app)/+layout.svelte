@@ -427,27 +427,29 @@
 	</div>
 
 	<div class="relative flex min-h-screen w-full max-w-full overflow-x-hidden">
-		<aside class="hidden w-64 shrink-0 flex-col border-r border-white/70 bg-white/70 px-5 py-8 shadow-xl backdrop-blur xl:w-72 md:flex">
-			<div class="flex items-center justify-between">
-				<div>
-					<p class="app-title text-xl font-semibold">SantriOnline</p>
-					<p class="text-xs uppercase tracking-[0.3em] text-slate-500">Institution Hub</p>
+		<aside class="hidden w-64 shrink-0 flex-col border-r border-white/70 bg-white/70 px-4 py-6 shadow-xl backdrop-blur xl:w-72 xl:px-5 md:flex">
+			<div class="flex items-center justify-between gap-2">
+				<div class="min-w-0">
+					<p class="app-title truncate text-xl font-semibold">SantriOnline</p>
+					<p class="truncate text-xs uppercase tracking-[0.3em] text-slate-500">Institution Hub</p>
 				</div>
-				<span class="rounded-full bg-teal-100 px-3 py-1 text-[11px] font-semibold text-teal-700">
+				<span class="shrink-0 rounded-full bg-teal-100 px-2.5 py-1 text-[10px] font-semibold text-teal-700">
 					{orgLabel}
 				</span>
 			</div>
 
-			<nav class="mt-10 space-y-2">
+			<nav class="mt-8 space-y-1.5">
 				{#each menuItems as item, idx}
 					<a
 						href={item.href}
-						class="fade-in flex min-w-0 items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-800"
+						class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800 hover:shadow-sm"
 						class:bg-emerald-100={isActive(item)}
 						class:text-emerald-900={isActive(item)}
-						style={`animation-delay: ${idx * 60}ms;`}
+						class:shadow-sm={isActive(item)}
+						class:font-semibold={isActive(item)}
+						style={`animation-delay: ${idx * 50}ms;`}
 					>
-						<svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+						<svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
 							<path d={item.icon} />
 						</svg>
 						<span class="min-w-0 truncate">{item.label}</span>
@@ -456,11 +458,11 @@
 			</nav>
 
 			<div
-				class="mt-auto rounded-2xl px-4 py-4 text-xs"
+				class="mt-auto rounded-xl px-3 py-3 text-xs leading-relaxed"
 				style="border: 1px solid var(--app-warm-soft); background: var(--app-warm-wash); color: var(--app-warm);"
 			>
 				<p class="font-semibold">Akses Role</p>
-				<p class="mt-1">
+				<p class="mt-1.5 break-words">
 					{#if isImpersonating}
 						Super admin sedang memakai konteks admin {orgLabel} tanpa kehilangan akses global.
 					{:else}
@@ -471,57 +473,57 @@
 		</aside>
 
 		<div class="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden">
-			<header class="sticky top-0 z-20 flex w-full max-w-full items-center justify-between gap-2 border-b border-white/70 bg-white/70 px-3 py-4 shadow-sm backdrop-blur sm:gap-4 sm:px-4 md:px-8">
-				<div class="flex min-w-0 items-center gap-3">
+			<header class="sticky top-0 z-20 flex w-full max-w-full items-center justify-between gap-2 border-b border-white/70 bg-white/80 px-3 py-3 shadow-sm backdrop-blur-md sm:gap-3 sm:px-4 md:px-6 xl:px-8">
+				<div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
 					<button
-						class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm md:hidden"
+						class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100 md:hidden"
 						on:click={() => (sidebarOpen = true)}
 						aria-label="Open navigation"
 					>
-						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M4 6h16M4 12h16M4 18h10" />
 						</svg>
 					</button>
-					<div class="min-w-0">
-						<p class="truncate text-xs uppercase tracking-[0.3em] text-slate-400">Dashboard</p>
-						<h1 class="app-title truncate text-xl font-semibold text-slate-900 sm:text-2xl">{headerTitle}</h1>
+					<div class="min-w-0 flex-1 sm:flex-initial">
+						<p class="truncate text-[10px] uppercase tracking-[0.3em] text-slate-400 sm:text-xs">Dashboard</p>
+						<h1 class="app-title truncate text-lg font-semibold text-slate-900 sm:text-xl md:text-2xl">{headerTitle}</h1>
 					</div>
 				</div>
 
-				<div class="flex min-w-0 items-center gap-2 sm:gap-3">
-					<div class="min-w-0 max-w-[48vw] sm:max-w-[min(56vw,20rem)] md:max-w-none">
+				<div class="flex min-w-0 shrink-0 items-center gap-2">
+					<div class="min-w-0 max-w-[40vw] sm:max-w-[min(50vw,18rem)] md:max-w-[20rem]">
 						<LembagaSwitcher
 							lembagaList={data?.lembagaList ?? []}
 							fallbackLembaga={data?.org ?? null}
 							currentUser={data?.user ?? null}
 						/>
 					</div>
-					<div class="hidden rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-500 md:block">
+					<div class="hidden rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 lg:block">
 						{displayName}
 					</div>
 					<button
-						class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm"
+						class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100"
 						aria-label="Buka menu akun"
 					>
-						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M6 9l6 6 6-6" />
 						</svg>
 					</button>
 				</div>
 			</header>
 
-			<main class="min-w-0 flex-1 overflow-x-hidden px-3 py-6 sm:px-4 md:px-6 xl:px-8 2xl:px-10">
+			<main class="min-w-0 flex-1 overflow-x-hidden px-3 py-5 pb-20 sm:px-4 sm:py-6 md:px-6 md:pb-6 xl:px-8 2xl:px-10">
 				{#if isImpersonating}
-					<div class="mb-5 flex min-w-0 flex-col gap-3 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900 shadow-sm md:flex-row md:items-center md:justify-between">
+					<div class="mb-5 flex min-w-0 flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-900 shadow-sm md:flex-row md:items-center md:justify-between md:py-4">
 						<div class="min-w-0">
 							<p class="font-semibold">Mode Admin Lembaga Aktif</p>
-							<p class="mt-1 break-words text-amber-800/90">Akses dashboard organisasi sedang aktif, tetapi menu super admin dan license tetap tersedia.</p>
+							<p class="mt-1 break-words text-xs leading-relaxed text-amber-800/90 md:text-sm">Akses dashboard organisasi sedang aktif, tetapi menu super admin dan license tetap tersedia.</p>
 						</div>
-						<div class="flex flex-wrap gap-2">
-							<a href="/admin/super/overview" class="rounded-full border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-900 transition hover:bg-amber-100">
+						<div class="flex shrink-0 flex-wrap gap-2">
+							<a href="/admin/super/overview" class="inline-flex items-center justify-center rounded-xl border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100 active:bg-amber-200" style="min-height: 36px;">
 								Buka Super Admin
 							</a>
-							<a href="/admin/super/impersonate/stop" class="rounded-full bg-amber-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-950">
+							<a href="/admin/super/impersonate/stop" class="inline-flex items-center justify-center rounded-xl bg-amber-900 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-amber-950 active:bg-amber-950" style="min-height: 36px;">
 								Keluar Mode Admin
 							</a>
 						</div>
@@ -532,20 +534,21 @@
 		</div>
 	</div>
 
-	<nav class="fixed inset-x-0 bottom-0 z-40 max-w-full overflow-hidden border-t border-white/70 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] md:hidden safe-area-bottom">
-		<div class="flex w-full min-w-0 items-center justify-between px-2 py-3 pb-safe">
+	<nav class="fixed inset-x-0 bottom-0 z-40 max-w-full overflow-hidden border-t border-white/70 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] backdrop-blur-sm md:hidden safe-area-bottom">
+		<div class="flex w-full min-w-0 items-center justify-around gap-1 px-2 py-2 pb-safe sm:gap-2">
 			{#each mobileQuickItems as item}
 				<a
 					href={item.href}
-					class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg px-1 py-2 text-xs text-slate-500 transition-colors sm:px-2"
+					class="flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 text-xs text-slate-600 transition-all duration-200 active:scale-95"
 					class:text-emerald-700={isActive(item)}
 					class:font-semibold={isActive(item)}
 					class:bg-emerald-50={isActive(item)}
+					style="min-height: 44px;"
 				>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" stroke-width="2">
 						<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
 					</svg>
-					<span class="max-w-full truncate text-[10px]">{item.label}</span>
+					<span class="max-w-full truncate text-[10px] leading-tight">{item.label}</span>
 				</a>
 			{/each}
 		</div>
@@ -563,30 +566,36 @@
 				}}
 				aria-label="Tutup navigasi"
 			></div>
-			<aside class="absolute left-0 top-0 h-full w-[min(18rem,100vw)] max-w-full overflow-y-auto bg-white px-6 py-8 shadow-2xl">
-				<div class="flex items-center justify-between">
-					<p class="app-title text-lg font-semibold">SantriOnline</p>
+			<aside class="absolute left-0 top-0 h-full w-[min(18rem,85vw)] max-w-full overflow-y-auto bg-white px-5 py-6 shadow-2xl">
+				<div class="flex items-center justify-between gap-2">
+					<div class="min-w-0">
+						<p class="app-title truncate text-lg font-semibold">SantriOnline</p>
+						<p class="truncate text-[10px] uppercase tracking-[0.3em] text-slate-500">Menu</p>
+					</div>
 					<button
-						class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white"
+						class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white transition-colors hover:bg-slate-50 active:bg-slate-100"
 						on:click={() => (sidebarOpen = false)}
 						aria-label="Close navigation"
 					>
-						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M6 6l12 12M18 6l-12 12" />
 						</svg>
 					</button>
 				</div>
 
-				<nav class="mt-8 space-y-2">
+				<nav class="mt-6 space-y-1.5">
 					{#each menuItems as item, idx}
 						<a
 							href={item.href}
-							class="fade-in flex min-w-0 items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-800"
+							class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800 active:scale-[0.98]"
 							class:bg-emerald-100={isActive(item)}
 							class:text-emerald-900={isActive(item)}
-							style={`animation-delay: ${idx * 60}ms;`}
+							class:shadow-sm={isActive(item)}
+							class:font-semibold={isActive(item)}
+							style={`animation-delay: ${idx * 50}ms; min-height: 44px;`}
+							on:click={() => (sidebarOpen = false)}
 						>
-							<svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+							<svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
 								<path d={item.icon} />
 							</svg>
 							<span class="min-w-0 truncate">{item.label}</span>
@@ -595,11 +604,11 @@
 				</nav>
 
 				<div
-					class="mt-8 rounded-2xl px-4 py-4 text-xs"
+					class="mt-6 rounded-xl px-3 py-3 text-xs leading-relaxed"
 					style="border: 1px solid var(--app-accent-soft); background: var(--app-accent-wash); color: var(--app-accent);"
 				>
 					<p class="font-semibold">Role Aktif</p>
-					<p class="mt-1">{roleLabel} • {orgLabel}</p>
+					<p class="mt-1.5 break-words">{roleLabel} • {orgLabel}</p>
 				</div>
 			</aside>
 		</div>

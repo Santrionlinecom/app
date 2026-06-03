@@ -85,27 +85,29 @@
 	<div class="relative min-w-0 font-sans" bind:this={rootEl}>
 		<button
 			type="button"
-			class="inline-flex w-full min-w-0 max-w-[min(78vw,20rem)] items-center gap-2 rounded-xl border border-so-border bg-white px-3 py-2 text-left shadow-sm transition hover:border-so-green/60 hover:bg-so-cream/70 focus:outline-none focus:ring-4 focus:ring-so-gold/20"
+			class="inline-flex w-full min-w-0 items-center gap-2 rounded-xl border border-so-border bg-white px-2.5 py-2 text-left shadow-sm transition-all duration-200 hover:border-so-green/60 hover:bg-so-cream/70 hover:shadow focus:outline-none focus:ring-4 focus:ring-so-gold/20 active:scale-[0.98] sm:px-3"
 			class:cursor-default={!canSwitch}
+			style="min-height: 44px;"
 			on:click={toggle}
 			aria-haspopup="listbox"
 			aria-expanded={open}
 			aria-label="Pilih lembaga aktif"
 		>
 			<span
-				class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-so-green/10 text-so-green"
+				class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-so-green/10 text-so-green sm:h-9 sm:w-9"
 				aria-hidden="true"
 			>
-				<Building2 size={18} strokeWidth={2} />
+				<Building2 size={17} strokeWidth={2} class="sm:hidden" />
+				<Building2 size={18} strokeWidth={2} class="hidden sm:block" />
 			</span>
 			<span class="min-w-0 flex-1">
-				<span class="block truncate text-sm font-bold leading-5 text-so-green">{active.name}</span>
-				<span class="block truncate text-xs font-semibold leading-4 text-so-muted">
+				<span class="block truncate text-xs font-bold leading-tight text-so-green sm:text-sm sm:leading-5">{active.name}</span>
+				<span class="block truncate text-[10px] font-semibold leading-tight text-so-muted sm:text-xs sm:leading-4">
 					{normalizeType(active.type)}
 				</span>
 			</span>
 			{#if canSwitch}
-				<ChevronsUpDown size={16} class="shrink-0 text-so-muted" strokeWidth={2} />
+				<ChevronsUpDown size={15} class="shrink-0 text-so-muted sm:size-4" strokeWidth={2} />
 			{/if}
 		</button>
 
