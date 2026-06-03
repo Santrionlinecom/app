@@ -3,6 +3,9 @@
 	import type { Post } from '$lib/types/sosmed';
 	import PostCard from '$lib/components/sosmed/PostCard.svelte';
 	import PostComposer from '$lib/components/sosmed/PostComposer.svelte';
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import LoadingState from '$lib/components/ui/LoadingState.svelte';
+	import ErrorState from '$lib/components/ui/ErrorState.svelte';
 
 	export let data;
 
@@ -11,6 +14,7 @@
 	let isLoadingMore = false;
 	let loadError = '';
 	let eventSource: EventSource | null = null;
+	let isInitialLoad = false;
 
 	const upsertPost = (post: Post) => {
 		if (posts.some((item) => item.id === post.id)) return;
@@ -89,10 +93,17 @@
 
 	<PostComposer currentUser={data.currentUser} on:created={(event) => upsertPost(event.detail.post)} />
 
-	{#if posts.length === 0}
-		<section class="rounded-2xl border border-dashed border-emerald-200 bg-white p-8 text-center shadow-sm">
-			<p class="text-lg font-bold text-slate-900">Belum ada postingan.</p>
-			<p class="mt-2 text-sm leading-6 text-slate-500">Jadilah yang pertama berbagi manfaat hari ini.</p>
+	{#if isInitialLoad}
+		<div class="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
+			<LoadingState message="Memuat feed sosial..." />
+		</div>
+	{:else if posts.length === 0}
+		<section class="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
+			<EmptyState
+				icon="✨"
+				title="Belum ada postingan"
+				description="Jadilah yang pertama berbagi manfaat, inspirasi, atau kabar baik hari ini untuk anggota lembaga."
+			/>
 		</section>
 	{:else}
 		<div class="space-y-4">
@@ -108,19 +119,31 @@
 	{/if}
 
 	{#if loadError}
-		<p class="text-center text-sm font-semibold text-rose-600">{loadError}</p>
+		<div class="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
+			<ErrorState
+				title="Gagal memuat feed"
+				message={loadError}
+				onRetry={loadMore}
+				compact={true}
+			/>
+		</div>
 	{/if}
 
 	{#if cursor}
-		<div class="flex justify-center">
-			<button
-				type="button"
-				class="rounded-full border border-emerald-200 bg-white px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition hover:bg-emerald-50 disabled:opacity-60"
-				disabled={isLoadingMore}
-				on:click={loadMore}
-			>
-				{isLoadingMore ? 'Memuat...' : 'Muat lebih banyak'}
-			</button>
-		</div>
+		{#if isLoadingMore}
+			<div class="rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm">
+				<LoadingState message="Memuat postingan..." compact={true} />
+			</div>
+		{:else}
+			<div class="flex justify-center">
+				<button
+					type="button"
+					class="min-h-[44px] rounded-full border border-emerald-200 bg-white px-6 py-3 text-sm font-bold text-emerald-700 shadow-sm transition hover:bg-emerald-50 active:scale-95"
+					on:click={loadMore}
+				>
+					Muat lebih banyak
+				</button>
+			</div>
+		{/if}
 	{/if}
 </div>

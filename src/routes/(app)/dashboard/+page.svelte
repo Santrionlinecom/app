@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import { SURAH_DATA } from '$lib/surah-data';
 	import { enhance } from '$app/forms';
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
 	export let data: PageData;
 
@@ -683,7 +684,14 @@
 							{/each}
 						</div>
 					{:else}
-						<p class="mt-4 text-sm text-slate-500">Belum ada setoran dalam scope Anda.</p>
+						<EmptyState
+							icon="📖"
+							title="Belum ada setoran"
+							description="Setoran hafalan terbaru akan muncul di sini setelah santri mulai menyetor."
+							actionLabel="Lihat Riwayat"
+							actionHref="/tpq/akademik/riwayat"
+							compact={true}
+						/>
 					{/if}
 				</div>
 
@@ -707,7 +715,14 @@
 							{/each}
 						</div>
 					{:else}
-						<p class="mt-4 text-sm text-slate-500">Belum ada agenda lembaga 14 hari ke depan.</p>
+						<EmptyState
+							icon="📆"
+							title="Belum ada agenda"
+							description="Agenda TPQ 14 hari ke depan akan ditampilkan di sini. Tambahkan melalui kalender."
+							actionLabel="Buka Kalender"
+							actionHref="/kalender"
+							compact={true}
+						/>
 					{/if}
 				</div>
 			</div>
@@ -741,7 +756,14 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="mt-4 text-sm text-slate-500">Belum ada transaksi kas terbaru.</p>
+					<EmptyState
+						icon="💰"
+						title="Belum ada transaksi"
+						description="Transaksi kas akan muncul di sini setelah Anda mencatat pemasukan atau pengeluaran."
+						actionLabel="Kelola Keuangan"
+						actionHref="/keuangan"
+						compact={true}
+					/>
 				{/if}
 			</div>
 
@@ -765,7 +787,14 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="mt-4 text-sm text-slate-500">Belum ada agenda yang dijadwalkan.</p>
+					<EmptyState
+						icon="📅"
+						title="Belum ada agenda"
+						description="Agenda kegiatan komunitas akan muncul di sini. Tambahkan jadwal melalui kalender."
+						actionLabel="Buka Kalender"
+						actionHref="/kalender"
+						compact={true}
+					/>
 				{/if}
 			</div>
 		</section>
@@ -885,7 +914,12 @@
 						<span class="text-xs text-slate-400">{assets.length} item</span>
 					</div>
 					{#if assets.length === 0}
-						<p class="mt-4 text-sm text-slate-500">Belum ada data aset.</p>
+						<EmptyState
+							icon="🏢"
+							title="Belum ada aset"
+							description="Inventaris lembaga akan muncul di sini. Tambahkan aset melalui form di samping atau import Excel."
+							compact={true}
+						/>
 					{:else}
 						<div class="mt-4 space-y-3 md:hidden">
 							{#each assets as asset}
@@ -1006,7 +1040,14 @@
 					</div>
 					<p class="mt-4 text-xs text-slate-500">Data berdasarkan setoran yang disetujui.</p>
 				{:else}
-					<p class="mt-4 text-sm text-slate-500">Belum ada aktivitas setoran dalam 7 hari terakhir.</p>
+					<EmptyState
+						icon="📊"
+						title="Belum ada aktivitas"
+						description="Grafik aktivitas setoran 7 hari terakhir akan muncul di sini setelah Anda mulai menyetor."
+						actionLabel="Lihat Riwayat"
+						actionHref="/tpq/akademik/riwayat"
+						compact={true}
+					/>
 				{/if}
 			</div>
 
@@ -1036,7 +1077,14 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="mt-4 text-sm text-slate-500">Belum ada setoran yang disetujui.</p>
+					<EmptyState
+						icon="📚"
+						title="Belum ada data surah"
+						description="Statistik surah yang paling banyak disetujui akan muncul di sini setelah Anda mulai menyetor."
+						actionLabel="Lihat Pencapaian"
+						actionHref="/dashboard/pencapaian-hafalan"
+						compact={true}
+					/>
 				{/if}
 			</div>
 		</section>
@@ -1075,7 +1123,14 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="mt-4 text-sm text-slate-500">Belum ada data santri.</p>
+					<EmptyState
+						icon="👥"
+						title="Belum ada santri"
+						description="Data santri dan progres hafalan akan muncul di sini setelah Anda menambahkan santri."
+						actionLabel="Kelola Santri"
+						actionHref="/dashboard/kelola-santri"
+						compact={true}
+					/>
 				{/if}
 			</div>
 
@@ -1105,7 +1160,12 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="mt-4 text-sm text-slate-500">Tidak ada setoran yang menunggu.</p>
+					<EmptyState
+						icon="✅"
+						title="Semua setoran sudah direview"
+						description="Tidak ada setoran yang menunggu review. Santri dapat terus menyetor hafalan baru."
+						compact={true}
+					/>
 				{/if}
 			</div>
 		</section>
