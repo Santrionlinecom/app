@@ -60,6 +60,10 @@ export const normalizeDeviceHash = (value: string) =>
 
 export const isValidDeviceHash = (value: string) => value.length >= 8 && value.length <= MAX_DEVICE_HASH_LENGTH;
 
+export const normalizeProductSlug = (value: string) => value.trim().toLowerCase();
+
+export const isValidProductSlug = (value: string) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
+
 export const hashLicenseKey = async (licenseKey: string, secret?: string | null) => {
 	const normalizedKey = normalizeLicenseKeyInput(licenseKey);
 	const secretValue = secret?.trim();
@@ -103,10 +107,11 @@ export const getMaxDevicesForLicense = (license: ProductLicenseRow) =>
 export const isLicenseExpired = (license: Pick<ProductLicenseRow, 'expiresAt'>, now = Date.now()) =>
 	license.expiresAt !== null && Number(license.expiresAt) > 0 && now > Number(license.expiresAt);
 
-export const getLicenseByKeyHash = async (db: D1Database, licenseKeyHash: string) =>
-	(await db
-		.prepare(
-			`SELECT
+export const getLicenseByKeyHash = async (db: D1Database, licenseKeyHash: string, productSlug?: string | null) => {
+	const normalizedProductSlug = productSlug ? normalizeProductSlug(productSlug) : null;
+	const productClause = normalizedProductSlug ? ' AND p.slug = ?' : '';
+	const statement = db.prepare(
+		`SELECT
 				l.license_key AS licenseId,
 				l.user_id AS userId,
 				l.user_email AS userEmail,
@@ -127,10 +132,16 @@ export const getLicenseByKeyHash = async (db: D1Database, licenseKeyHash: string
 				p.features_json AS productFeaturesJson
 			 FROM licenses l
 			 LEFT JOIN products p ON p.id = l.product_id
-			 WHERE l.license_key_hash = ?`
-		)
-		.bind(licenseKeyHash)
-		.first<ProductLicenseRow>()) ?? null;
+			 WHERE l.license_key_hash = ?${productClause}`
+	);
+
+	return (
+		(await (normalizedProductSlug
+			? statement.bind(licenseKeyHash, normalizedProductSlug)
+			: statement.bind(licenseKeyHash)
+		).first<ProductLicenseRow>()) ?? null
+	);
+};
 
 export const getActivation = async (db: D1Database, licenseId: string, deviceHash: string) =>
 	(await db

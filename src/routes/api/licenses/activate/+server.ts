@@ -12,7 +12,9 @@ import {
 	hashLicenseKey,
 	isLicenseExpired,
 	isValidDeviceHash,
+	isValidProductSlug,
 	normalizeDeviceHash,
+	normalizeProductSlug,
 	upsertActivation
 } from '$lib/server/licenses/digital-products';
 
@@ -26,16 +28,49 @@ const payloadResponse = (
 	status: string,
 	plan: string | null = null,
 	expiresAt: number | null = null,
-	features: string[] = []
-) => ({ status, plan, expiresAt, features });
+	features: string[] = [],
+	detail?: { missingFields?: string[]; invalidFields?: string[] }
+) => ({
+	status,
+	plan,
+	expiresAt,
+	features,
+	...(detail ? { detail } : {})
+});
 
 const parseBody = async (request: Request) => {
 	const body = await request.json().catch(() => ({}));
 	return {
-		licenseKey: typeof body?.license_key === 'string' ? body.license_key.trim() : '',
-		deviceHash: typeof body?.device_hash === 'string' ? body.device_hash.trim() : '',
-		deviceName: typeof body?.device_name === 'string' ? body.device_name.trim() : '',
-		appVersion: typeof body?.app_version === 'string' ? body.app_version.trim() : ''
+		licenseKey:
+			typeof body?.licenseKey === 'string'
+				? body.licenseKey.trim()
+				: typeof body?.license_key === 'string'
+					? body.license_key.trim()
+					: '',
+		deviceHash:
+			typeof body?.deviceHash === 'string'
+				? body.deviceHash.trim()
+				: typeof body?.device_hash === 'string'
+					? body.device_hash.trim()
+					: '',
+		productSlug:
+			typeof body?.productSlug === 'string'
+				? body.productSlug.trim()
+				: typeof body?.product_slug === 'string'
+					? body.product_slug.trim()
+					: '',
+		deviceName:
+			typeof body?.deviceName === 'string'
+				? body.deviceName.trim()
+				: typeof body?.device_name === 'string'
+					? body.device_name.trim()
+					: '',
+		appVersion:
+			typeof body?.appVersion === 'string'
+				? body.appVersion.trim()
+				: typeof body?.app_version === 'string'
+					? body.app_version.trim()
+					: ''
 	};
 };
 
@@ -62,14 +97,27 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		});
 	}
 
-	const { licenseKey, deviceHash: rawDeviceHash, deviceName, appVersion } = await parseBody(request);
+	const { licenseKey, deviceHash: rawDeviceHash, productSlug: rawProductSlug, deviceName, appVersion } =
+		await parseBody(request);
 	const deviceHash = normalizeDeviceHash(rawDeviceHash);
-	if (!licenseKey || !isValidDeviceHash(deviceHash)) {
-		return json(payloadResponse('invalid_payload'), { status: 400 });
+	const productSlug = normalizeProductSlug(rawProductSlug);
+	const missingFields = [
+		!licenseKey ? 'licenseKey' : null,
+		!rawDeviceHash ? 'deviceHash' : null,
+		!rawProductSlug ? 'productSlug' : null
+	].filter((field): field is string => Boolean(field));
+	const invalidFields = [
+		rawDeviceHash && !isValidDeviceHash(deviceHash) ? 'deviceHash' : null,
+		rawProductSlug && !isValidProductSlug(productSlug) ? 'productSlug' : null
+	].filter((field): field is string => Boolean(field));
+	if (missingFields.length || invalidFields.length) {
+		return json(payloadResponse('invalid_payload', null, null, [], { missingFields, invalidFields }), {
+			status: 400
+		});
 	}
 
 	const licenseKeyHash = await hashLicenseKey(licenseKey, getHashSecret(platform));
-	const license = await getLicenseByKeyHash(db, licenseKeyHash);
+	const license = await getLicenseByKeyHash(db, licenseKeyHash, productSlug);
 	if (!license) {
 		return json(payloadResponse('not_found'), { status: 404 });
 	}
