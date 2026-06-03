@@ -176,38 +176,38 @@
 	/>
 </svelte:head>
 
-<div class="home-root min-h-screen bg-so-cream text-so-ink">
+<div class="home-root min-h-screen w-full max-w-full overflow-x-hidden bg-so-cream text-so-ink">
 	<section class="hero-band relative overflow-hidden">
 		<div class="hero-bg"></div>
 		<div class="hero-overlay"></div>
-		<div class="relative z-10 mx-auto max-w-7xl px-4 pb-12 pt-10 sm:px-6 md:pb-16 md:pt-14 lg:px-8">
-			<div class="max-w-4xl">
+		<div class="relative z-10 mx-auto w-full max-w-7xl px-4 pb-16 pt-12 sm:px-6 md:pb-20 md:pt-16 lg:px-8">
+			<div class="w-full max-w-4xl min-w-0">
 				<div class="flex flex-wrap gap-2">
 					<span class="chip chip-primary">Multi-Lembaga</span>
 					<span class="chip">TPQ Akademik</span>
 					<span class="chip">Midtrans Ready</span>
 					<span class="chip">Qur'an & Kitab</span>
 				</div>
-				<h1 class="mt-5 text-4xl font-black leading-[1.03] tracking-normal text-white sm:text-5xl md:text-6xl lg:text-7xl">
+				<h1 class="mt-6 break-words text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
 					SantriOnline App
 				</h1>
-				<p class="mt-5 max-w-2xl text-base font-semibold leading-8 text-white/88 md:text-lg">
+				<p class="mt-6 max-w-2xl break-words text-base font-semibold leading-relaxed text-white/90 md:text-lg md:leading-relaxed">
 					Satu ruang kerja untuk mengelola TPQ, pondok, masjid, musholla, rumah tahfidz, hafalan Qur'an,
 					kas, buku digital, coin, addon, dan konten belajar dalam satu ekosistem.
 				</p>
-				<div class="mt-7 flex flex-col gap-3 sm:flex-row">
-					<a class="btn-primary h-12 w-full px-5 sm:w-auto" href={primaryAction.href}>
-						<svelte:component this={primaryAction.icon} class="h-4 w-4" strokeWidth={2.4} />
-						{primaryAction.label}
+				<div class="mt-8 flex w-full max-w-full min-w-0 flex-col gap-3 sm:flex-row">
+					<a class="btn-primary h-14 w-full min-w-0 px-6 sm:w-auto" href={primaryAction.href}>
+						<svelte:component this={primaryAction.icon} class="h-5 w-5 shrink-0" strokeWidth={2.5} />
+						<span class="truncate">{primaryAction.label}</span>
 					</a>
-					<a class="btn-secondary h-12 w-full px-5 sm:w-auto" href={secondaryAction.href}>
-						<svelte:component this={secondaryAction.icon} class="h-4 w-4" strokeWidth={2.4} />
-						{secondaryAction.label}
+					<a class="btn-secondary h-14 w-full min-w-0 px-6 sm:w-auto" href={secondaryAction.href}>
+						<svelte:component this={secondaryAction.icon} class="h-5 w-5 shrink-0" strokeWidth={2.5} />
+						<span class="truncate">{secondaryAction.label}</span>
 					</a>
 				</div>
 			</div>
 
-			<div class="mt-10 grid gap-3 sm:grid-cols-3 lg:max-w-3xl">
+			<div class="mt-12 grid w-full max-w-3xl min-w-0 gap-4 sm:grid-cols-3">
 				<div class="metric">
 					<p>5</p>
 					<span>Tipe lembaga</span>
@@ -225,17 +225,17 @@
 	</section>
 
 	<section class="band band-white">
-		<div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
-			<div class="section-head">
+		<div class="mx-auto grid w-full max-w-7xl min-w-0 gap-8 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
+			<div class="section-head min-w-0">
 				<p class="eyebrow">Ringkasan Sistem</p>
-				<h2>Semua modul penting langsung terlihat dari halaman pertama.</h2>
-				<p>
+				<h2 class="break-words">Semua modul penting langsung terlihat dari halaman pertama.</h2>
+				<p class="break-words">
 					Halaman ini sekarang berfungsi sebagai peta produk: pengelolaan lembaga, akademik TPQ, hafalan,
 					Qur'an, buku, coin, pembayaran, operasional, dan admin sistem.
 				</p>
 			</div>
 
-			<div class="command-panel">
+			<div class="command-panel min-w-0">
 				<div class="panel-header">
 					<div>
 						<p class="text-xs font-black uppercase text-so-gold">Workspace</p>
@@ -280,13 +280,13 @@
 	</section>
 
 	<section id="fitur" class="band">
-		<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
-			<div class="section-head">
+		<div class="mx-auto w-full max-w-7xl min-w-0 px-4 py-12 sm:px-6 md:py-16 lg:px-8">
+			<div class="section-head min-w-0">
 				<p class="eyebrow">Semua Fitur</p>
-				<h2>Fitur sistem dikelompokkan supaya mudah dipindai.</h2>
-				<p>Setiap kartu mewakili modul yang sudah ada atau sudah disiapkan dalam aplikasi.</p>
+				<h2 class="break-words">Fitur sistem dikelompokkan supaya mudah dipindai.</h2>
+				<p class="break-words">Setiap kartu mewakili modul yang sudah ada atau sudah disiapkan dalam aplikasi.</p>
 			</div>
-			<div class="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+			<div class="mt-8 grid w-full min-w-0 gap-6 sm:grid-cols-2 xl:grid-cols-4">
 				{#each featureGroups as feature}
 					<article class="feature-card">
 						<div class="feature-icon">
@@ -306,13 +306,13 @@
 	</section>
 
 	<section class="band band-white">
-		<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
-			<div class="section-head">
+		<div class="mx-auto w-full max-w-7xl min-w-0 px-4 py-12 sm:px-6 md:py-16 lg:px-8">
+			<div class="section-head min-w-0">
 				<p class="eyebrow">Tipe Lembaga</p>
-				<h2>Satu akun dapat mengatur beberapa konteks lembaga.</h2>
-				<p>Menu dan akses dibuat mengikuti jenis lembaga agar pengguna tidak melihat fitur yang tidak relevan.</p>
+				<h2 class="break-words">Satu akun dapat mengatur beberapa konteks lembaga.</h2>
+				<p class="break-words">Menu dan akses dibuat mengikuti jenis lembaga agar pengguna tidak melihat fitur yang tidak relevan.</p>
 			</div>
-			<div class="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+			<div class="mt-8 grid w-full min-w-0 gap-6 sm:grid-cols-2 lg:grid-cols-5">
 				{#each institutionTypes as item}
 					<article class="type-card">
 						<div class="flex items-center justify-between gap-3">
@@ -330,8 +330,8 @@
 	</section>
 
 	<section class="band">
-		<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
-			<div class="grid gap-4 lg:grid-cols-3">
+		<div class="mx-auto w-full max-w-7xl min-w-0 px-4 py-12 sm:px-6 md:py-16 lg:px-8">
+			<div class="grid w-full min-w-0 gap-6 lg:grid-cols-3">
 				{#each operatingFlow as item}
 					<article class="flow-card">
 						<span>{item.step}</span>
@@ -344,15 +344,15 @@
 	</section>
 
 	<section id="addon" class="band band-white">
-		<div class="mx-auto grid max-w-7xl gap-7 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
-			<div class="section-head">
+		<div class="mx-auto grid w-full max-w-7xl min-w-0 gap-8 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+			<div class="section-head min-w-0">
 				<p class="eyebrow">Addon & Pembayaran</p>
-				<h2>Bayar modul yang dipakai, mulai dari paket kecil.</h2>
-				<p>
+				<h2 class="break-words">Bayar modul yang dipakai, mulai dari paket kecil.</h2>
+				<p class="break-words">
 					Katalog addon, billing, payment order, Midtrans Snap, webhook, dan topup coin sudah diarahkan ke
 					alur pembayaran yang sama.
 				</p>
-				<a class="btn-primary mt-6 h-11 w-full px-4 sm:w-fit" href="/addon">
+				<a class="btn-primary mt-8 h-12 w-full min-w-0 px-5 sm:w-fit" href="/addon">
 					<CreditCard class="h-4 w-4" strokeWidth={2.4} />
 					Lihat Addon
 				</a>
@@ -369,15 +369,15 @@
 	</section>
 
 	<section id="publik" class="band final-band">
-		<div class="mx-auto grid max-w-7xl gap-7 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
-			<div class="section-head">
+		<div class="mx-auto grid w-full max-w-7xl min-w-0 gap-8 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
+			<div class="section-head min-w-0">
 				<p class="eyebrow">Akses Publik</p>
-				<h2>Ekosistem belajar tetap terbuka untuk pengunjung.</h2>
-				<p>
+				<h2 class="break-words">Ekosistem belajar tetap terbuka untuk pengunjung.</h2>
+				<p class="break-words">
 					Pengunjung dapat membaca Qur'an, kitab, buku, artikel, dan kalender. Pengguna login mendapat
 					progres baca, bookmark, coin, dan dashboard lembaga.
 				</p>
-				<div class="mt-6 grid gap-2 sm:grid-cols-2 lg:max-w-2xl">
+				<div class="mt-8 grid w-full min-w-0 gap-3 sm:grid-cols-2 lg:max-w-2xl">
 					{#each publicLinks as link}
 						<a class="public-link" href={link.href}>
 							<ArrowRight class="h-4 w-4" strokeWidth={2.4} />
@@ -386,15 +386,15 @@
 					{/each}
 				</div>
 			</div>
-			<div class="cta-panel">
-				<Sparkles class="h-6 w-6 text-so-gold-2" strokeWidth={2.4} />
-				<h2>Mulai dari satu lembaga, lalu aktifkan fitur lain saat dibutuhkan.</h2>
-				<p>
+			<div class="cta-panel min-w-0">
+				<Sparkles class="h-6 w-6 shrink-0 text-so-gold-2" strokeWidth={2.4} />
+				<h2 class="break-words">Mulai dari satu lembaga, lalu aktifkan fitur lain saat dibutuhkan.</h2>
+				<p class="break-words">
 					Halaman pertama sekarang menjadi pintu masuk singkat untuk melihat kemampuan sistem dan langsung
 					masuk ke dashboard, akun, addon, atau konten publik.
 				</p>
-				<div class="mt-6 flex flex-col gap-3 sm:flex-row">
-					<a class="btn-light h-11 w-full px-4 sm:w-auto" href={primaryAction.href}>
+				<div class="mt-8 flex w-full max-w-full min-w-0 flex-col gap-3 sm:flex-row">
+					<a class="btn-light h-12 w-full min-w-0 px-5 sm:w-auto" href={primaryAction.href}>
 						<svelte:component this={primaryAction.icon} class="h-4 w-4" strokeWidth={2.4} />
 						{primaryAction.label}
 					</a>
@@ -434,8 +434,8 @@
 
 	.hero-overlay {
 		background:
-			linear-gradient(90deg, rgba(10, 37, 28, 0.92) 0%, rgba(27, 67, 50, 0.78) 48%, rgba(27, 67, 50, 0.25) 100%),
-			linear-gradient(180deg, rgba(10, 37, 28, 0.2) 0%, rgba(10, 37, 28, 0.72) 100%);
+			linear-gradient(90deg, rgba(10, 37, 28, 0.75) 0%, rgba(27, 67, 50, 0.65) 48%, rgba(27, 67, 50, 0.2) 100%),
+			linear-gradient(180deg, rgba(10, 37, 28, 0.15) 0%, rgba(10, 37, 28, 0.6) 100%);
 	}
 
 	.band {
@@ -460,19 +460,21 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.5rem;
-		border-radius: 0.75rem;
-		font-size: 0.875rem;
-		font-weight: 900;
-		letter-spacing: 0;
+		border-radius: 0.875rem;
+		font-size: 0.9375rem;
+		font-weight: 800;
+		letter-spacing: -0.01em;
 		transition:
-			background-color 160ms ease,
-			border-color 160ms ease,
-			transform 160ms ease;
+			background-color 180ms ease,
+			border-color 180ms ease,
+			transform 180ms ease,
+			box-shadow 180ms ease;
 	}
 
 	.btn-primary {
 		background: var(--color-so-gold);
 		color: #173525;
+		box-shadow: 0 4px 12px rgba(201, 168, 76, 0.25);
 	}
 
 	.btn-primary:hover,
@@ -481,7 +483,11 @@
 	.btn-ghost-light:hover,
 	.snapshot-action:hover,
 	.public-link:hover {
-		transform: translateY(-1px);
+		transform: translateY(-2px);
+	}
+
+	.btn-primary:hover {
+		box-shadow: 0 6px 16px rgba(201, 168, 76, 0.35);
 	}
 
 	.btn-secondary {
@@ -580,18 +586,18 @@
 
 	.section-head h2 {
 		max-width: 48rem;
-		font-size: 1.65rem;
+		font-size: 1.875rem;
 		font-weight: 900;
-		line-height: 1.14;
-		letter-spacing: 0;
+		line-height: 1.25;
+		letter-spacing: -0.02em;
 		color: var(--color-so-green);
 	}
 
 	.section-head p:not(.eyebrow) {
-		margin-top: 0.85rem;
+		margin-top: 1rem;
 		max-width: 48rem;
-		font-size: 0.96rem;
-		line-height: 1.78;
+		font-size: 1rem;
+		line-height: 1.75;
 		color: var(--color-so-muted);
 	}
 
@@ -609,8 +615,8 @@
 	.type-card,
 	.flow-card,
 	.cta-panel {
-		border-radius: var(--radius-so-lg);
-		padding: 1.25rem;
+		border-radius: 1.5rem;
+		padding: 1.5rem;
 	}
 
 	.panel-header {
@@ -679,19 +685,19 @@
 	.feature-card h3,
 	.type-card h3,
 	.flow-card h3 {
-		margin-top: 0.9rem;
-		font-size: 1.05rem;
-		font-weight: 900;
-		line-height: 1.3;
+		margin-top: 1rem;
+		font-size: 1.125rem;
+		font-weight: 800;
+		line-height: 1.4;
 		color: var(--color-so-green);
 	}
 
 	.feature-card p,
 	.type-card p,
 	.flow-card p {
-		margin-top: 0.65rem;
-		font-size: 0.9rem;
-		line-height: 1.72;
+		margin-top: 0.75rem;
+		font-size: 0.9375rem;
+		line-height: 1.65;
 		color: var(--color-so-muted);
 	}
 
@@ -741,17 +747,17 @@
 
 	.cta-panel h2 {
 		margin-top: 1rem;
-		font-size: 1.45rem;
+		font-size: 1.5rem;
 		font-weight: 900;
-		line-height: 1.18;
-		letter-spacing: 0;
+		line-height: 1.3;
+		letter-spacing: -0.01em;
 	}
 
 	.cta-panel p {
 		margin-top: 1rem;
-		font-size: 0.95rem;
-		line-height: 1.75;
-		color: rgb(255 255 255 / 0.78);
+		font-size: 1rem;
+		line-height: 1.7;
+		color: rgb(255 255 255 / 0.85);
 	}
 
 	@media (max-width: 639px) {
@@ -772,11 +778,13 @@
 
 	@media (min-width: 768px) {
 		.section-head h2 {
-			font-size: 2.25rem;
+			font-size: 2.5rem;
+			line-height: 1.2;
 		}
 
 		.cta-panel h2 {
 			font-size: 2rem;
+			line-height: 1.25;
 		}
 	}
 </style>
