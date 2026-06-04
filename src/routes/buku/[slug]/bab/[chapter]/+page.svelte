@@ -9,6 +9,14 @@
 
 	type ReaderFontSize = 'small' | 'normal' | 'large';
 	type ReaderTheme = 'light' | 'dark';
+	type InsufficientCoinForm = {
+		type: 'insufficient_coin';
+		error: string;
+		currentBalance?: number;
+		requiredAmount?: number;
+		shortfall?: number;
+		productName?: string;
+	};
 
 	const FONT_STORAGE_KEY = 'santrionline:buku-reader-font-size';
 	const THEME_STORAGE_KEY = 'santrionline:buku-reader-theme';
@@ -39,6 +47,13 @@
 
 	const isReaderTheme = (value: string | null): value is ReaderTheme =>
 		value === 'light' || value === 'dark';
+	const isInsufficientCoinForm = (value: unknown): value is InsufficientCoinForm =>
+		Boolean(
+			value &&
+				typeof value === 'object' &&
+				'type' in value &&
+				(value as { type?: unknown }).type === 'insufficient_coin'
+		);
 
 	let readerFontSize: ReaderFontSize = 'normal';
 	let readerTheme: ReaderTheme = 'light';
@@ -48,6 +63,9 @@
 	let chapterBookmarked = Boolean(data.chapterBookmark);
 	let bookmarkBusy = false;
 	let bookmarkError = '';
+	let formError = '';
+	let formType: string | null = null;
+	let insufficientCoinForm: InsufficientCoinForm | null = null;
 
 	onMount(() => {
 		const storedFontSize = localStorage.getItem(FONT_STORAGE_KEY);
@@ -86,6 +104,9 @@
 	$: nextChapter = data.nextChapter;
 	$: formBalance =
 		form && 'balance' in form && typeof form.balance === 'number' ? form.balance : null;
+	$: formError = form && 'error' in form ? form.error : '';
+	$: formType = form && 'type' in form && typeof form.type === 'string' ? form.type : null;
+	$: insufficientCoinForm = isInsufficientCoinForm(form) ? form : null;
 	$: walletBalance = formBalance ?? data.walletBalance ?? 0;
 	$: canUnlock = data.isLoggedIn && isLocked && walletBalance >= book.pricePerChapter;
 	$: isDarkReader = readerTheme === 'dark';
@@ -206,7 +227,9 @@
 	/>
 </svelte:head>
 
-<div class={`min-h-screen px-3 py-4 transition-colors duration-300 sm:px-5 md:px-8 md:py-8 ${shellClass}`}>
+<div
+	class={`min-h-screen px-3 py-4 transition-colors duration-300 sm:px-5 md:px-8 md:py-8 ${shellClass}`}
+>
 	<div class="reader-enter mx-auto max-w-5xl space-y-4 md:space-y-6">
 		<nav class={`rounded-3xl border px-4 py-3 text-sm backdrop-blur ${softCardClass}`}>
 			<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -226,11 +249,15 @@
 			</div>
 		</nav>
 
-		<header class={`overflow-hidden rounded-[2rem] border p-5 backdrop-blur md:p-7 ${softCardClass}`}>
+		<header
+			class={`overflow-hidden rounded-[2rem] border p-5 backdrop-blur md:p-7 ${softCardClass}`}
+		>
 			<div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
 				<div class="min-w-0">
 					<div class="flex flex-wrap items-center gap-2">
-						<span class="rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-white">
+						<span
+							class="rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-white"
+						>
 							Bab {chapter.chapterNumber}
 						</span>
 						<span
@@ -278,8 +305,13 @@
 					</div>
 					{#if data.isLoggedIn && !isLocked}
 						<div class="mt-4">
-							<div class={`h-2 overflow-hidden rounded-full ${isDarkReader ? 'bg-stone-800' : 'bg-slate-200'}`}>
-								<div class="h-full rounded-full bg-emerald-500" style={`width: ${progressPercent}%`}></div>
+							<div
+								class={`h-2 overflow-hidden rounded-full ${isDarkReader ? 'bg-stone-800' : 'bg-slate-200'}`}
+							>
+								<div
+									class="h-full rounded-full bg-emerald-500"
+									style={`width: ${progressPercent}%`}
+								></div>
 							</div>
 							<p class="mt-2 text-xs opacity-65">{progressPercent}% tersimpan</p>
 						</div>
@@ -292,7 +324,9 @@
 			<div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
 				<div class="grid gap-3 sm:grid-cols-2">
 					<div>
-						<p class="mb-2 text-xs font-semibold uppercase tracking-[0.22em] opacity-60">Ukuran Font</p>
+						<p class="mb-2 text-xs font-semibold uppercase tracking-[0.22em] opacity-60">
+							Ukuran Font
+						</p>
 						<div class="join w-full">
 							<button
 								type="button"
@@ -322,7 +356,9 @@
 					</div>
 
 					<div>
-						<p class="mb-2 text-xs font-semibold uppercase tracking-[0.22em] opacity-60">Mode Baca</p>
+						<p class="mb-2 text-xs font-semibold uppercase tracking-[0.22em] opacity-60">
+							Mode Baca
+						</p>
 						<div class="join w-full">
 							<button
 								type="button"
@@ -346,7 +382,10 @@
 
 				<div class="grid gap-2 sm:grid-cols-3 lg:min-w-[28rem]">
 					{#if previousChapter}
-						<a href={`/buku/${book.slug}/bab/${previousChapter.chapterNumber}`} class="btn btn-outline btn-sm">
+						<a
+							href={`/buku/${book.slug}/bab/${previousChapter.chapterNumber}`}
+							class="btn btn-outline btn-sm"
+						>
 							Bab Sebelumnya
 						</a>
 					{:else}
@@ -354,7 +393,10 @@
 					{/if}
 
 					{#if nextChapter}
-						<a href={`/buku/${book.slug}/bab/${nextChapter.chapterNumber}`} class="btn btn-primary btn-sm">
+						<a
+							href={`/buku/${book.slug}/bab/${nextChapter.chapterNumber}`}
+							class="btn btn-primary btn-sm"
+						>
 							Bab Berikutnya
 						</a>
 					{:else}
@@ -381,11 +423,19 @@
 		</section>
 
 		<article class={`relative overflow-hidden rounded-[2.25rem] border p-3 md:p-6 ${panelClass}`}>
-			<div class="pointer-events-none absolute inset-x-8 top-0 h-12 rounded-b-full bg-white/20 blur-2xl"></div>
-			<div class="absolute bottom-6 left-0 top-6 hidden w-5 rounded-r-full bg-black/5 md:block"></div>
+			<div
+				class="pointer-events-none absolute inset-x-8 top-0 h-12 rounded-b-full bg-white/20 blur-2xl"
+			></div>
+			<div
+				class="absolute bottom-6 left-0 top-6 hidden w-5 rounded-r-full bg-black/5 md:block"
+			></div>
 
-			<div class={`book-paper relative mx-auto max-w-3xl rounded-[1.6rem] border px-5 py-7 sm:px-7 md:px-11 md:py-12 ${paperClass}`}>
-				<div class={`mb-8 flex items-start justify-between gap-4 border-b pb-4 ${isDarkReader ? 'border-stone-700' : 'border-amber-100'}`}>
+			<div
+				class={`book-paper relative mx-auto max-w-3xl rounded-[1.6rem] border px-5 py-7 sm:px-7 md:px-11 md:py-12 ${paperClass}`}
+			>
+				<div
+					class={`mb-8 flex items-start justify-between gap-4 border-b pb-4 ${isDarkReader ? 'border-stone-700' : 'border-amber-100'}`}
+				>
 					<div class="min-w-0">
 						<p class={`text-[11px] font-semibold uppercase tracking-[0.26em] ${mutedTextClass}`}>
 							{book.title}
@@ -415,7 +465,9 @@
 					>
 						<p class="text-xs font-bold uppercase tracking-[0.28em] text-amber-700">Bab Premium</p>
 						<h2 class="mt-3 text-2xl font-semibold">Bab ini terkunci</h2>
-						<p class={`mt-4 text-sm leading-7 ${isDarkReader ? 'text-stone-300' : 'text-slate-700'}`}>
+						<p
+							class={`mt-4 text-sm leading-7 ${isDarkReader ? 'text-stone-300' : 'text-slate-700'}`}
+						>
 							Bab ini bisa dibuka permanen memakai coin. Pengurangan coin diproses secara aman.
 						</p>
 						<div
@@ -428,18 +480,21 @@
 							Harga unlock: <span class="font-semibold">{book.pricePerChapter} coin</span>
 						</div>
 
-						{#if form?.type === 'insufficient_coin'}
+						{#if insufficientCoinForm}
 							<div class="mt-5">
 								<InsufficientCoinNotice
-									currentBalance={form.currentBalance ?? walletBalance}
-									requiredAmount={form.requiredAmount ?? book.pricePerChapter}
-									shortfall={form.shortfall ?? (book.pricePerChapter - walletBalance)}
-									productName={form.productName ?? `${book.title} - Bab ${chapter.chapterNumber}`}
+									currentBalance={insufficientCoinForm.currentBalance ?? walletBalance}
+									requiredAmount={insufficientCoinForm.requiredAmount ?? book.pricePerChapter}
+									shortfall={insufficientCoinForm.shortfall ?? book.pricePerChapter - walletBalance}
+									productName={insufficientCoinForm.productName ??
+										`${book.title} - Bab ${chapter.chapterNumber}`}
 								/>
 							</div>
-						{:else if form?.error && form?.type !== 'insufficient_coin'}
-							<div class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-								{form.error}
+						{:else if formError && formType !== 'insufficient_coin'}
+							<div
+								class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+							>
+								{formError}
 							</div>
 						{/if}
 
@@ -451,10 +506,16 @@
 						{:else if !canUnlock}
 							<div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
 								<a href="/coins/topup" class="btn btn-warning flex-1">Isi Saldo Coin</a>
-								<a href={`/buku/${book.slug}`} class="btn btn-outline flex-1">Kembali ke Daftar Bab</a>
+								<a href={`/buku/${book.slug}`} class="btn btn-outline flex-1"
+									>Kembali ke Daftar Bab</a
+								>
 							</div>
 						{:else}
-							<form method="POST" action="?/unlock" class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+							<form
+								method="POST"
+								action="?/unlock"
+								class="mt-6 flex flex-col justify-center gap-3 sm:flex-row"
+							>
 								<button type="submit" class="btn btn-primary">
 									Buka Bab Ini - {book.pricePerChapter} Coin
 								</button>
@@ -497,7 +558,9 @@
 					}`}
 				>
 					<p class="text-xs font-semibold uppercase tracking-[0.22em] opacity-55">Sebelumnya</p>
-					<p class="mt-2 font-semibold">Bab {previousChapter.chapterNumber}: {previousChapter.title}</p>
+					<p class="mt-2 font-semibold">
+						Bab {previousChapter.chapterNumber}: {previousChapter.title}
+					</p>
 				</a>
 			{:else}
 				<div class={`rounded-[1.5rem] border border-dashed p-5 opacity-65 ${softCardClass}`}>
@@ -519,7 +582,9 @@
 					<p class="mt-2 font-semibold">Bab {nextChapter.chapterNumber}: {nextChapter.title}</p>
 				</a>
 			{:else}
-				<div class={`rounded-[1.5rem] border border-dashed p-5 opacity-65 sm:text-right ${softCardClass}`}>
+				<div
+					class={`rounded-[1.5rem] border border-dashed p-5 opacity-65 sm:text-right ${softCardClass}`}
+				>
 					<p class="text-xs font-semibold uppercase tracking-[0.22em]">Berikutnya</p>
 					<p class="mt-2 font-semibold">Ini bab terakhir.</p>
 				</div>
@@ -545,7 +610,13 @@
 
 	.book-paper::before {
 		background:
-			linear-gradient(90deg, rgba(120, 75, 30, 0.08), transparent 11%, transparent 89%, rgba(120, 75, 30, 0.06)),
+			linear-gradient(
+				90deg,
+				rgba(120, 75, 30, 0.08),
+				transparent 11%,
+				transparent 89%,
+				rgba(120, 75, 30, 0.06)
+			),
 			linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 38%);
 		border-radius: inherit;
 		content: '';

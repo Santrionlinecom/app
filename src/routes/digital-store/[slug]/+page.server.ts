@@ -4,7 +4,11 @@ import {
 	ensureDigitalCommerceSchema,
 	getPublishedDigitalProductBySlug
 } from '$lib/server/domains/digital-store/commerce';
-import { checkCoinBalance, deductCoins, rupiahToCoin } from '$lib/server/domains/buku/coin-operations';
+import {
+	checkCoinBalance,
+	deductCoins,
+	rupiahToCoin
+} from '$lib/server/domains/buku/coin-operations';
 import { ensureCoinWallet, getCoinBalance } from '$lib/server/domains/buku/wallet';
 
 const normalizeText = (value: FormDataEntryValue | null) =>
@@ -38,9 +42,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 export const actions: Actions = {
 	createOrder: async ({ request, params, locals }) => {
 		if (!locals.user) {
-			return fail(401, { 
+			return fail(401, {
 				type: 'auth_required',
-				error: 'Silakan login terlebih dahulu untuk membeli produk.' 
+				error: 'Silakan login terlebih dahulu untuk membeli produk.'
 			});
 		}
 
@@ -81,7 +85,7 @@ export const actions: Actions = {
 				currentBalance: balanceCheck.currentBalance,
 				requiredAmount: balanceCheck.required,
 				shortfall: balanceCheck.shortfall,
-				productName: product.name
+				productName: product.title
 			});
 		}
 
@@ -96,7 +100,7 @@ export const actions: Actions = {
 				locals.db,
 				locals.user.id,
 				coinRequired,
-				`Pembelian ${product.name}`,
+				`Pembelian ${product.title}`,
 				'digital_product',
 				orderId
 			);
@@ -144,7 +148,7 @@ export const actions: Actions = {
 			console.info('digital_store_order_success_coin', {
 				order_id: orderId,
 				product_id: product.id,
-				product_name: product.name,
+				product_name: product.title,
 				coin_amount: coinRequired,
 				new_balance: deductResult.newBalance
 			});

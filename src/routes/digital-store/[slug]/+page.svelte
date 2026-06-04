@@ -32,6 +32,8 @@
 		shortfall: number;
 		productName: string;
 	} | null = null;
+	let formError = '';
+	let formType: string | null = null;
 
 	const showToast = (kind: ToastKind, message: string) => {
 		if (toastTimer) {
@@ -47,7 +49,7 @@
 
 	const handlePurchase = async (event: Event) => {
 		event.preventDefault();
-		
+
 		if (!data.isLoggedIn) {
 			showToast('error', 'Silakan login terlebih dahulu.');
 			setTimeout(() => {
@@ -71,7 +73,7 @@
 
 			if (result.type === 'failure') {
 				const payload = result.data as any;
-				
+
 				if (payload?.type === 'insufficient_coin') {
 					insufficientCoinData = {
 						currentBalance: payload.currentBalance ?? 0,
@@ -82,7 +84,7 @@
 					showToast('error', 'Saldo coin tidak cukup. Silakan isi saldo terlebih dahulu.');
 					return;
 				}
-				
+
 				throw new Error(payload?.error ?? 'Gagal membuat pesanan.');
 			}
 
@@ -104,25 +106,36 @@
 	};
 
 	$: canAfford = data.isLoggedIn && data.coinBalance >= data.product.price;
+	$: formError = form && 'error' in form ? form.error : '';
+	$: formType = form && 'type' in form && typeof form.type === 'string' ? form.type : null;
 </script>
 
 <svelte:head>
 	<title>{data.product.title} - Digital Store</title>
 	<meta
 		name="description"
-		content={plainText(data.product.summary || data.product.description) || `Beli ${data.product.title} di Santri Online.`}
+		content={plainText(data.product.summary || data.product.description) ||
+			`Beli ${data.product.title} di Santri Online.`}
 	/>
 </svelte:head>
 
 <div class="space-y-8">
-	<section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-[linear-gradient(135deg,_#0f172a_0%,_#111827_45%,_#064e3b_100%)] px-6 py-8 text-white shadow-xl md:px-8 md:py-10">
+	<section
+		class="overflow-hidden rounded-[2rem] border border-slate-200 bg-[linear-gradient(135deg,_#0f172a_0%,_#111827_45%,_#064e3b_100%)] px-6 py-8 text-white shadow-xl md:px-8 md:py-10"
+	>
 		<div class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
 			<div class="max-w-sm">
 				<div class="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5 shadow-2xl">
 					{#if data.product.coverUrl}
-						<img src={data.product.coverUrl} alt={`Cover ${data.product.title}`} class="h-full w-full object-cover" />
+						<img
+							src={data.product.coverUrl}
+							alt={`Cover ${data.product.title}`}
+							class="h-full w-full object-cover"
+						/>
 					{:else}
-						<div class="flex min-h-[320px] items-center justify-center px-8 text-center text-sm text-white/65">
+						<div
+							class="flex min-h-[320px] items-center justify-center px-8 text-center text-sm text-white/65"
+						>
 							Cover produk belum ditambahkan.
 						</div>
 					{/if}
@@ -130,18 +143,26 @@
 			</div>
 
 			<div class="max-w-3xl">
-				<a href="/digital-store" class="text-sm text-emerald-200 hover:text-white">← Kembali ke Digital Store</a>
+				<a href="/digital-store" class="text-sm text-emerald-200 hover:text-white"
+					>← Kembali ke Digital Store</a
+				>
 				<div class="mt-4 flex flex-wrap gap-2">
-					<span class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white">
+					<span
+						class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white"
+					>
 						Produk Digital
 					</span>
 					{#if data.product.featured}
-						<span class="rounded-full border border-emerald-300/20 bg-emerald-300/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100">
+						<span
+							class="rounded-full border border-emerald-300/20 bg-emerald-300/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100"
+						>
 							Unggulan
 						</span>
 					{/if}
 					{#if data.isLoggedIn}
-						<span class="rounded-full border border-emerald-300/20 bg-emerald-300/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100">
+						<span
+							class="rounded-full border border-emerald-300/20 bg-emerald-300/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100"
+						>
 							<Coins class="inline h-3 w-3" />
 							Saldo: {formatCoin(data.coinBalance)} Coin
 						</span>
@@ -149,7 +170,8 @@
 				</div>
 				<h1 class="mt-4 text-3xl font-bold md:text-5xl">{data.product.title}</h1>
 				<p class="mt-4 text-sm leading-7 text-white/75 md:text-base">
-					{plainText(data.product.summary || data.product.description) || 'Produk digital ini dikelola dari pusat konten.'}
+					{plainText(data.product.summary || data.product.description) ||
+						'Produk digital ini dikelola dari pusat konten.'}
 				</p>
 
 				<div class="mt-6 grid gap-3 sm:grid-cols-3">
@@ -186,22 +208,33 @@
 		<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
 			<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
 				<div>
-					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Checkout dengan Coin</p>
+					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">
+						Checkout dengan Coin
+					</p>
 					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Beli dengan Coin</h2>
 				</div>
 				<p class="text-sm text-slate-500">Pembayaran langsung menggunakan saldo Coin Anda.</p>
 			</div>
 
-			{#if form?.error && form?.type !== 'insufficient_coin'}
-				<div class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-					{form.error}
+			{#if formError && formType !== 'insufficient_coin'}
+				<div
+					class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+				>
+					{formError}
 				</div>
 			{/if}
 
 			{#if !data.isLoggedIn}
-				<div class="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-6 py-8 text-center">
-					<p class="text-sm font-semibold text-amber-900">Silakan login terlebih dahulu untuk membeli produk ini.</p>
-					<a href="/auth?redirect={encodeURIComponent($page.url.pathname)}" class="btn btn-primary mt-4">
+				<div
+					class="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-6 py-8 text-center"
+				>
+					<p class="text-sm font-semibold text-amber-900">
+						Silakan login terlebih dahulu untuk membeli produk ini.
+					</p>
+					<a
+						href="/auth?redirect={encodeURIComponent($page.url.pathname)}"
+						class="btn btn-primary mt-4"
+					>
 						Login Sekarang
 					</a>
 				</div>
@@ -209,7 +242,9 @@
 				<form on:submit={handlePurchase} class="mt-6 space-y-6">
 					<div class="grid gap-4 md:grid-cols-2">
 						<label class="block">
-							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Nama Pembeli</span>
+							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
+								>Nama Pembeli</span
+							>
 							<input
 								name="buyerName"
 								class="input input-bordered mt-2 w-full"
@@ -219,7 +254,9 @@
 							/>
 						</label>
 						<label class="block">
-							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">WhatsApp / Kontak</span>
+							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
+								>WhatsApp / Kontak</span
+							>
 							<input
 								name="buyerContact"
 								class="input input-bordered mt-2 w-full"
@@ -233,15 +270,21 @@
 					<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
 						<div class="flex items-center justify-between">
 							<div>
-								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Total Pembayaran</p>
+								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+									Total Pembayaran
+								</p>
 								<p class="mt-1 flex items-center gap-1 text-2xl font-bold text-emerald-900">
 									<Coins class="h-6 w-6" />
 									{formatCoin(data.product.price)} Coin
 								</p>
 							</div>
 							<div class="text-right">
-								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Saldo Anda</p>
-								<p class="mt-1 flex items-center justify-end gap-1 text-lg font-semibold text-emerald-900">
+								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+									Saldo Anda
+								</p>
+								<p
+									class="mt-1 flex items-center justify-end gap-1 text-lg font-semibold text-emerald-900"
+								>
 									<Coins class="h-5 w-5" />
 									{formatCoin(data.coinBalance)} Coin
 								</p>
@@ -273,7 +316,9 @@
 		</article>
 
 		<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-			<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Informasi Produk</p>
+			<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">
+				Informasi Produk
+			</p>
 			<h2 class="mt-3 text-2xl font-semibold text-slate-900">Detail Pembelian</h2>
 
 			<div class="mt-6 space-y-4">
@@ -291,7 +336,9 @@
 				</div>
 
 				<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-					<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Keuntungan Pembayaran Coin</p>
+					<p class="text-xs uppercase tracking-[0.24em] text-slate-400">
+						Keuntungan Pembayaran Coin
+					</p>
 					<ul class="mt-3 space-y-2 text-sm leading-7 text-slate-700">
 						<li class="flex gap-2">
 							<span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
