@@ -778,14 +778,14 @@
 
 		const settings = {
 			width: 420,
-			height: 620,
-			size: 'stretch',
-			minWidth: 315,
-			maxWidth: 520,
-			minHeight: 480,
-			maxHeight: 780,
+			height: 580,
+			size: 'fixed',
+			minWidth: 280,
+			maxWidth: 480,
+			minHeight: 400,
+			maxHeight: 600,
 			usePortrait: true,
-			autoSize: true,
+			autoSize: false,
 			maxShadowOpacity: 0.25,
 			showCover: false,
 			mobileScrollSupport: true,
@@ -2355,26 +2355,46 @@
 	.mushaf-shell {
 		display: flex;
 		justify-content: center;
-		padding: 0.5rem 0 1.5rem;
+		align-items: flex-start;
+		padding: 0.5rem 0 2rem;
+		width: 100%;
 		height: auto;
-		overflow: visible;
+		overflow-x: hidden;
+		overflow-y: visible;
 	}
 
 	.mushaf-book {
 		width: 100%;
-		max-width: 940px;
+		max-width: 480px;
 		margin: 0 auto;
 		height: auto;
+		position: relative;
 	}
 
 	.mushaf-page {
 		background: linear-gradient(180deg, #fffdf6 0%, #fbf2e2 100%);
-		border-radius: 18px;
-		box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
-		padding: 14px;
+		border-radius: 12px;
+		box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+		padding: 12px;
 		width: 100% !important;
 		height: auto !important;
-		min-height: 480px;
+		min-height: 400px;
+		max-height: none;
+	}
+
+	@media (max-width: 640px) {
+		.mushaf-shell {
+			padding: 0.5rem 0.5rem 2rem;
+		}
+
+		.mushaf-book {
+			max-width: 100%;
+		}
+
+		.mushaf-page {
+			min-height: 380px;
+			padding: 10px;
+		}
 	}
 
 	.mushaf-frame {
