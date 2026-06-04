@@ -426,6 +426,8 @@
 	let activeTab: 'mushaf' | 'sejarah' = 'mushaf';
 	let viewMode: 'lembaran' | 'teks' = 'lembaran';
 	let isLoggedIn = false;
+	let filterPanelOpen = false;
+	let infoPanelOpen = false;
 	let selectedJuz = '1';
 	let selectedJuzNumber = 1;
 	let verses: Verse[] = [];
@@ -1493,79 +1495,110 @@
 
 	{#if activeTab === 'mushaf'}
 		<div class="rounded-2xl border bg-base-100 p-4 md:p-6 shadow-sm space-y-4">
-			<div class="grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end">
-				<div class="grid gap-3 md:grid-cols-[160px_minmax(220px,1fr)_140px_auto] md:items-end">
-					<label class="form-control w-full">
-						<div class="label">
-							<span class="label-text">Pilih Juz</span>
+			<!-- Collapsible Filter Panel -->
+			<div class="space-y-3">
+				<button
+					type="button"
+					class="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+					on:click={() => (filterPanelOpen = !filterPanelOpen)}
+				>
+					<span class="flex items-center gap-2">
+						<span class="text-base">{filterPanelOpen ? '▼' : '▶'}</span>
+						<span>Filter & Navigasi</span>
+					</span>
+					<span class="text-xs text-slate-500">Juz {selectedJuzNumber} • {surahName(Number(selectedSurah))} {selectedAyah}</span>
+				</button>
+
+				{#if filterPanelOpen}
+					<div class="grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end">
+						<div class="grid gap-3 md:grid-cols-[160px_minmax(220px,1fr)_140px_auto] md:items-end">
+							<label class="form-control w-full">
+								<div class="label">
+									<span class="label-text">Pilih Juz</span>
+								</div>
+								<select class="select select-bordered w-full" bind:value={selectedJuz} on:change={handleJuzChange}>
+									{#each JUZ_RANGES as range}
+										<option value={String(range.juz)}>Juz {range.juz}</option>
+									{/each}
+								</select>
+							</label>
+							<label class="form-control w-full">
+								<div class="label">
+									<span class="label-text">Surah</span>
+								</div>
+								<select class="select select-bordered w-full" bind:value={selectedSurah} on:change={handleSurahChange}>
+									{#each SURAH_DATA as surah}
+										<option value={String(surah.number)}>{surah.number}. {surah.name}</option>
+									{/each}
+								</select>
+							</label>
+							<label class="form-control w-full">
+								<div class="label">
+									<span class="label-text">Ayat</span>
+								</div>
+								<input
+									class="input input-bordered w-full"
+									type="number"
+									min="1"
+									max={selectedSurahMeta.totalAyah}
+									bind:value={selectedAyah}
+									on:change={handleSurahChange}
+								/>
+							</label>
+							<div class="flex flex-wrap gap-2">
+								<button class="btn btn-primary" on:click={openSelectedAyah} disabled={loading}>
+									Buka Ayat
+								</button>
+								<div class="join">
+									<button class="btn join-item btn-outline" on:click={() => navigateRelativeVerse(-1)} disabled={loading}>
+										Sebelum
+									</button>
+									<button class="btn join-item btn-outline" on:click={() => navigateRelativeVerse(1)} disabled={loading}>
+										Sesudah
+									</button>
+								</div>
+							</div>
 						</div>
-						<select class="select select-bordered w-full" bind:value={selectedJuz} on:change={handleJuzChange}>
-							{#each JUZ_RANGES as range}
-								<option value={String(range.juz)}>Juz {range.juz}</option>
-							{/each}
-						</select>
-					</label>
-					<label class="form-control w-full">
-						<div class="label">
-							<span class="label-text">Surah</span>
-						</div>
-						<select class="select select-bordered w-full" bind:value={selectedSurah} on:change={handleSurahChange}>
-							{#each SURAH_DATA as surah}
-								<option value={String(surah.number)}>{surah.number}. {surah.name}</option>
-							{/each}
-						</select>
-					</label>
-					<label class="form-control w-full">
-						<div class="label">
-							<span class="label-text">Ayat</span>
-						</div>
-						<input
-							class="input input-bordered w-full"
-							type="number"
-							min="1"
-							max={selectedSurahMeta.totalAyah}
-							bind:value={selectedAyah}
-							on:change={handleSurahChange}
-						/>
-					</label>
-					<div class="flex flex-wrap gap-2">
-						<button class="btn btn-primary" on:click={openSelectedAyah} disabled={loading}>
-							Buka Ayat
-						</button>
-						<div class="join">
-							<button class="btn join-item btn-outline" on:click={() => navigateRelativeVerse(-1)} disabled={loading}>
-								Sebelum
+						<div class="flex flex-wrap items-center gap-2">
+							<div class="join">
+								<button
+									class={`btn join-item ${viewMode === 'lembaran' ? 'btn-primary' : 'btn-ghost'}`}
+									on:click={() => handleViewChange('lembaran')}
+								>
+									Lembaran
+								</button>
+								<button
+									class={`btn join-item ${viewMode === 'teks' ? 'btn-primary' : 'btn-ghost'}`}
+									on:click={() => handleViewChange('teks')}
+								>
+									Teks
+								</button>
+							</div>
+							<button class="btn btn-primary" on:click={() => loadJuz(selectedJuzNumber)} disabled={loading}>
+								{loading ? 'Memuat...' : 'Muat Juz'}
 							</button>
-							<button class="btn join-item btn-outline" on:click={() => navigateRelativeVerse(1)} disabled={loading}>
-								Sesudah
+							<button class="btn btn-ghost" on:click={() => (query = '')} disabled={!query}>
+								Reset
 							</button>
 						</div>
 					</div>
-				</div>
-				<div class="flex flex-wrap items-center gap-2">
-					<div class="join">
-						<button
-							class={`btn join-item ${viewMode === 'lembaran' ? 'btn-primary' : 'btn-ghost'}`}
-							on:click={() => handleViewChange('lembaran')}
-						>
-							Lembaran
-						</button>
-						<button
-							class={`btn join-item ${viewMode === 'teks' ? 'btn-primary' : 'btn-ghost'}`}
-							on:click={() => handleViewChange('teks')}
-						>
-							Teks
-						</button>
-					</div>
-					<button class="btn btn-primary" on:click={() => loadJuz(selectedJuzNumber)} disabled={loading}>
-						{loading ? 'Memuat...' : 'Muat Juz'}
-					</button>
-					<button class="btn btn-ghost" on:click={() => (query = '')} disabled={!query}>
-						Reset
-					</button>
-				</div>
+				{/if}
 			</div>
-			<div class="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600 md:grid-cols-2">
+
+			<!-- Collapsible Info Panel -->
+			<button
+				type="button"
+				class="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-100"
+				on:click={() => (infoPanelOpen = !infoPanelOpen)}
+			>
+				<span class="flex items-center gap-2">
+					<span>{infoPanelOpen ? '▼' : '▶'}</span>
+					<span>Info Juz & Ayat</span>
+				</span>
+			</button>
+
+			{#if infoPanelOpen}
+				<div class="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600 md:grid-cols-2">
 				<p>
 					Juz {selectedJuzNumber}: {selectedJuzRange ? formatJuzRange(selectedJuzRange) : 'rentang belum tersedia'}.
 				</p>
@@ -1588,7 +1621,8 @@
 				{#if memorizationError}
 					<p class="text-amber-700 md:col-span-2">{memorizationError}</p>
 				{/if}
-			</div>
+				</div>
+			{/if}
 
 			<div class="quran-reader-grid">
 				<aside class="quran-search-panel">
@@ -2322,13 +2356,15 @@
 		display: flex;
 		justify-content: center;
 		padding: 0.5rem 0 1.5rem;
-		min-height: 70vh;
+		height: auto;
+		overflow: visible;
 	}
 
 	.mushaf-book {
 		width: 100%;
 		max-width: 940px;
 		margin: 0 auto;
+		height: auto;
 	}
 
 	.mushaf-page {
@@ -2337,7 +2373,7 @@
 		box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
 		padding: 14px;
 		width: 100% !important;
-		height: 100% !important;
+		height: auto !important;
 		min-height: 480px;
 	}
 
