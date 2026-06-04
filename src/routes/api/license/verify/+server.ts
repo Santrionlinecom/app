@@ -8,9 +8,9 @@ import {
 	normalizeLicenseKey,
 	normalizeLicenseStatus,
 	type LicenseVerifyStatus
-} from '$lib/server/license/db';
+} from '$lib/server/domains/digital-store/license/db';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
-import { signPayload } from '$lib/server/license/sign';
+import { signPayload } from '$lib/server/domains/digital-store/license/sign';
 
 const RATE_LIMIT = {
 	scope: 'license:verify',

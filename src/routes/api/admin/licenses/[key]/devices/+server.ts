@@ -4,7 +4,7 @@ import {
 	ensureLicenseTables,
 	logLicenseEvent,
 	normalizeLicenseKey
-} from '$lib/server/license/db';
+} from '$lib/server/domains/digital-store/license/db';
 
 export const GET: RequestHandler = async ({ locals, params }) => {
 	const { db } = requireSuperAdmin(locals);

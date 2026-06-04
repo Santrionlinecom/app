@@ -5,7 +5,7 @@ import {
 	getAdminRoyaltySummary,
 	isBukuRoyaltyStatus,
 	listAdminRoyaltyLedger
-} from '$lib/server/buku-royalty';
+} from '$lib/server/domains/buku/royalty';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db } = requireSuperAdmin(locals);

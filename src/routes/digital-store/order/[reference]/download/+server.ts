@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { ensureDigitalCommerceSchema, getDigitalOrderByReference } from '$lib/server/digital-commerce';
+import { ensureDigitalCommerceSchema, getDigitalOrderByReference } from '$lib/server/domains/digital-store/commerce';
 
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	if (!locals.db) {

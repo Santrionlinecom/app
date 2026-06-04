@@ -2,6 +2,7 @@ import { redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { isSuperAdminRole, requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 import { isSuperAdminUser } from '$lib/auth/session-user';
+import { isTeachingRole } from '$lib/utils/role-helpers';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) throw redirect(302, '/auth');
@@ -63,12 +64,11 @@ export const actions: Actions = {
 			return fail(404, { error: 'User tidak ditemukan' });
 		}
 
-		const normalizedRole =
-			requestedRole === 'ustadz' || requestedRole === 'ustadzah'
-				? user.gender === 'wanita'
-					? 'ustadzah'
-					: 'ustadz'
-				: requestedRole;
+		const normalizedRole = isTeachingRole(requestedRole)
+			? user.gender === 'wanita'
+				? 'ustadzah'
+				: 'ustadz'
+			: requestedRole;
 
 		await db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(normalizedRole, userId).run();
 

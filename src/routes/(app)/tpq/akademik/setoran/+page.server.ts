@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { ensureSantriUstadzSchema } from '$lib/server/santri-ustadz';
+import { ensureSantriUstadzSchema } from '$lib/server/domains/tpq/santri-ustadz';
 import { SURAH_DATA } from '$lib/surah-data';
 import {
 	assertSafeScopedId,
@@ -15,7 +15,7 @@ import {
 	todayIsoDate,
 	TPQ_SETORAN_QUALITIES,
 	TPQ_SETORAN_TYPES
-} from '$lib/server/tpq-academic';
+} from '$lib/server/domains/tpq/academic';
 
 const SETORAN_TYPE_SET = new Set<string>(TPQ_SETORAN_TYPES);
 const SETORAN_QUALITY_SET = new Set<string>(TPQ_SETORAN_QUALITIES);

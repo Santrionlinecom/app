@@ -1,10 +1,10 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { ensureDefaultManualPaymentMethods } from '$lib/server/default-manual-payments';
+import { ensureDefaultManualPaymentMethods } from '$lib/server/domains/digital-store/manual-payments';
 import {
 	ensureDigitalCommerceSchema,
 	listPublishedDigitalProducts
-} from '$lib/server/digital-commerce';
+} from '$lib/server/domains/digital-store/commerce';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.db) {

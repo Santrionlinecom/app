@@ -6,7 +6,7 @@ import {
 	getAdminBukuBookById,
 	listAuthorBukuChapters,
 	updateAdminBukuBookStatus
-} from '$lib/server/buku-library';
+} from '$lib/server/domains/buku/library';
 
 const readAdminNote = async (request: Request) => {
 	const formData = await request.formData();

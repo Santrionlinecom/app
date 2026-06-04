@@ -5,7 +5,8 @@ import { Scrypt } from '$lib/server/password';
 import { generateId } from 'lucia';
 import type { D1Database } from '@cloudflare/workers-types';
 import { SURAH_DATA } from '$lib/surah-data';
-import { ensureSantriUstadzSchema } from '$lib/server/santri-ustadz';
+import { ensureSantriUstadzSchema } from '$lib/server/domains/tpq/santri-ustadz';
+import { isTeachingRole } from '$lib/utils/role-helpers';
 
 export type HafalanStatus = 'belum' | 'setor' | 'disetujui';
 export type QualityStatus = 'merah' | 'kuning' | 'hijau';
@@ -274,12 +275,11 @@ export const updateUserRole = async (db: D1Database, params: { id: string; role:
     const { results } =
         (await db.prepare('SELECT gender FROM users WHERE id = ?').bind(params.id).all<{ gender?: string }>()) ?? {};
     const gender = results?.[0]?.gender;
-    const normalizedRole =
-        params.role === 'ustadz' || params.role === 'ustadzah'
-            ? gender === 'wanita'
-                ? 'ustadzah'
-                : 'ustadz'
-            : params.role;
+    const normalizedRole = isTeachingRole(params.role)
+        ? gender === 'wanita'
+            ? 'ustadzah'
+            : 'ustadz'
+        : params.role;
 
     await db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(normalizedRole, params.id).run();
 };

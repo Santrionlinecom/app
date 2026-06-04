@@ -6,7 +6,7 @@ import {
 	assertOrgMember,
 	canAccessPermission
 } from '$lib/server/auth/rbac';
-import { ensureHafalanTable } from '$lib/server/hafalan';
+import { ensureHafalanTable } from '$lib/server/domains/tpq/hafalan';
 import { getOrganizationById } from '$lib/server/organizations';
 import { submitSurahForUser } from '$lib/server/progress';
 import { SURAH_DATA } from '$lib/surah-data';

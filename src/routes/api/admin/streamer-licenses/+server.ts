@@ -7,8 +7,8 @@ import {
 	hashLicenseKey,
 	logStreamerLicenseEvent,
 	type StreamerPlanType
-} from '$lib/server/license/streamer-db';
-import { buildStrmLicenseKey } from '$lib/server/license/key-format';
+} from '$lib/server/domains/digital-store/license/streamer-db';
+import { buildStrmLicenseKey } from '$lib/server/domains/digital-store/license/key-format';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

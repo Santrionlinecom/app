@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { submitSurahForUser } from '$lib/server/progress';
-import { isTeacherForSantri } from '$lib/server/santri-ustadz';
+import { isTeacherForSantri } from '$lib/server/domains/tpq/santri-ustadz';
 import { assertLoggedIn, assertOrgMember, isSystemAdmin } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
 import { requirePermission } from '$lib/rbac/helpers';

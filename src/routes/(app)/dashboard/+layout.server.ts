@@ -1,8 +1,9 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
+import { isAdminRole } from '$lib/utils/role-helpers';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
-	const isAdmin = locals.user?.role === 'admin';
+	const isAdmin = isAdminRole(locals.user?.role ?? '');
 	if (!isAdmin && locals.user?.orgId && locals.user.orgStatus === 'pending') {
 		throw redirect(302, '/menunggu');
 	}

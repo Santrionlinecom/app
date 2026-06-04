@@ -1,8 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { ensureBukuAccessSchema, getBukuChapterAccess } from '$lib/server/buku-access';
-import { ensureBukuLibrarySchema } from '$lib/server/buku-library';
-import { ensureBukuProgressSchema, saveReadingProgress } from '$lib/server/buku-progress';
+import { ensureBukuAccessSchema, getBukuChapterAccess } from '$lib/server/domains/buku/access';
+import { ensureBukuLibrarySchema } from '$lib/server/domains/buku/library';
+import { ensureBukuProgressSchema, saveReadingProgress } from '$lib/server/domains/buku/progress';
 
 const readText = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
 

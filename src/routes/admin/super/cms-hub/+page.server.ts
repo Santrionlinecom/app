@@ -5,7 +5,7 @@ import { KITAB_CATEGORY_OPTIONS } from '$lib/data/kitab-categories';
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 import { ensureCmsSchema, getAllPosts } from '$lib/server/cms';
 import { buildR2PublicUrl, requireR2Bucket } from '$lib/server/cloudflare';
-import { ensureDefaultManualPaymentMethods } from '$lib/server/default-manual-payments';
+import { ensureDefaultManualPaymentMethods } from '$lib/server/domains/digital-store/manual-payments';
 import {
 	deleteDigitalPaymentMethod,
 	deleteDigitalProduct,
@@ -15,7 +15,7 @@ import {
 	updateDigitalProductStatus,
 	upsertDigitalPaymentMethod,
 	upsertDigitalProduct
-} from '$lib/server/digital-commerce';
+} from '$lib/server/domains/digital-store/commerce';
 import {
 	deleteKitabItem,
 	ensureKitabCatalogSchema,

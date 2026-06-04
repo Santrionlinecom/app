@@ -4,7 +4,7 @@ import {
 	ensureStreamerLicenseTables,
 	getStreamerLicenseById,
 	logStreamerLicenseEvent
-} from '$lib/server/license/streamer-db';
+} from '$lib/server/domains/digital-store/license/streamer-db';
 
 const bad = (status: number, message: string) => json({ ok: false, message }, { status });
 

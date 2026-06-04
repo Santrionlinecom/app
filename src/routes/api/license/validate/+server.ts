@@ -4,7 +4,7 @@ import {
 	desktopLicenseResponseStatus,
 	desktopServerError,
 	validateDesktopLicense
-} from '$lib/server/license/streamer-desktop';
+} from '$lib/server/domains/digital-store/license/streamer-desktop';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
 
 const RATE_LIMIT = {

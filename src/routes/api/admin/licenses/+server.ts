@@ -6,7 +6,7 @@ import {
 	logLicenseEvent,
 	normalizeEpochMs,
 	type LicensePlan
-} from '$lib/server/license/db';
+} from '$lib/server/domains/digital-store/license/db';
 
 const isPlan = (value: string): value is LicensePlan =>
 	value === 'starter' || value === 'pro' || value === 'studio';

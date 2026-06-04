@@ -12,7 +12,7 @@ import {
 	isValidDeviceHash,
 	normalizeDeviceHash,
 	touchActivation
-} from '$lib/server/licenses/digital-products';
+} from '$lib/server/domains/digital-store/licenses/digital-products';
 
 const RATE_LIMIT = {
 	scope: 'digital-license:verify',

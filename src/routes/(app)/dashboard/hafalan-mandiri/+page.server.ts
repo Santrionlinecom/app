@@ -1,7 +1,7 @@
 import { fail, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { SURAH_DATA } from '$lib/surah-data';
-import { ensureHafalanSurahChecksTable } from '$lib/server/hafalan';
+import { ensureHafalanSurahChecksTable } from '$lib/server/domains/tpq/hafalan';
 import { assertLoggedIn, assertOrgMember } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
 import { requirePermission } from '$lib/rbac/helpers';

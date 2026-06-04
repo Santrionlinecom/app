@@ -1,9 +1,9 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireD1 } from '$lib/server/cloudflare';
-import { ensureBukuAccessSchema, unlockBukuChapter } from '$lib/server/buku-access';
-import { ensureBukuLibrarySchema } from '$lib/server/buku-library';
-import { ensureBukuWalletSchema, getCoinBalance } from '$lib/server/buku-wallet';
+import { ensureBukuAccessSchema, unlockBukuChapter } from '$lib/server/domains/buku/access';
+import { ensureBukuLibrarySchema } from '$lib/server/domains/buku/library';
+import { ensureBukuWalletSchema, getCoinBalance } from '$lib/server/domains/buku/wallet';
 import {
 	ensureDrmSchema,
 	getDrmAccess,
@@ -11,7 +11,7 @@ import {
 	getDrmProgress,
 	mirrorDrmAccess,
 	normalizeChapterId
-} from '$lib/server/drm';
+} from '$lib/server/domains/buku/drm';
 
 export const GET: RequestHandler = async ({ url, platform, locals }) => {
 	if (!locals.user?.id) {

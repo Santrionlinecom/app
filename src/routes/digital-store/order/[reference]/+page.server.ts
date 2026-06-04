@@ -1,11 +1,11 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { uploadDigitalPaymentProof } from '$lib/server/digital-payment-proof';
+import { uploadDigitalPaymentProof } from '$lib/server/domains/digital-store/payment-proof';
 import {
 	attachDigitalSaleProof,
 	ensureDigitalCommerceSchema,
 	getDigitalOrderByReference
-} from '$lib/server/digital-commerce';
+} from '$lib/server/domains/digital-store/commerce';
 import { getRequestIp } from '$lib/server/logger';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 

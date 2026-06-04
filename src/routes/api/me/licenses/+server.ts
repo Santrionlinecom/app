@@ -6,7 +6,7 @@ import {
 	getPlanForLicense,
 	isLicenseExpired,
 	listUserProductLicenses
-} from '$lib/server/licenses/digital-products';
+} from '$lib/server/domains/digital-store/licenses/digital-products';
 
 export const GET: RequestHandler = async ({ locals, platform, setHeaders }) => {
 	setHeaders({ 'cache-control': 'private, no-store' });

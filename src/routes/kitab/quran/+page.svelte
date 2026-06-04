@@ -791,18 +791,19 @@
 			mobileScrollSupport: true,
 			flippingTime: 700,
 			swipeDistance: 30,
-			startPage: 'last',
+			startPage: 0,
 			drawShadow: true,
 			useMouseEvents: true
 		};
 
 		flipInstance = new PageFlip(flipContainer, settings);
 		const pageElements = flipContainer.querySelectorAll('.mushaf-page');
-		flipInstance.loadFromHTML(pageElements);
+		const reversedPages = Array.from(pageElements).reverse();
+		flipInstance.loadFromHTML(reversedPages);
 		flipInstance.on('flip', (event: { data: number }) => {
-			currentPageIndex = event.data;
+			currentPageIndex = reversedPages.length - 1 - event.data;
 		});
-		currentPageIndex = 0;
+		currentPageIndex = pages.length - 1;
 	};
 
 	const loadJuz = async (value: number) => {
@@ -1336,11 +1337,11 @@
 	};
 
 	const flipPrev = () => {
-		flipInstance?.flipNext();
+		flipInstance?.flipPrev();
 	};
 
 	const flipNext = () => {
-		flipInstance?.flipPrev();
+		flipInstance?.flipNext();
 	};
 
 	onMount(() => {
@@ -1879,8 +1880,8 @@
 									Lembar {currentSpread} dari {totalSpreads} • Halaman {currentPageNumber || '-'}
 								</div>
 								<div class="flex items-center gap-2">
-									<button class="btn btn-sm" on:click={flipNext} aria-label="Halaman sebelumnya">◀</button>
-									<button class="btn btn-sm" on:click={flipPrev} aria-label="Halaman selanjutnya">▶</button>
+									<button class="btn btn-sm" on:click={flipPrev} aria-label="Halaman sebelumnya">◀</button>
+									<button class="btn btn-sm" on:click={flipNext} aria-label="Halaman selanjutnya">▶</button>
 								</div>
 							</div>
 							<div class="mushaf-shell">

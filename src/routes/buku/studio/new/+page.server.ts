@@ -4,7 +4,7 @@ import {
 	createBukuBook,
 	ensureBukuLibrarySchema,
 	parseBukuBookForm
-} from '$lib/server/buku-library';
+} from '$lib/server/domains/buku/library';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
 	if (!locals.user) {

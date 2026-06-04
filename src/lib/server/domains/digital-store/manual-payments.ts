@@ -1,5 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import { listDigitalPaymentMethods, upsertDigitalPaymentMethod } from '$lib/server/digital-commerce';
+import { listDigitalPaymentMethods, upsertDigitalPaymentMethod } from '$lib/server/domains/digital-store/commerce';
 
 const DEFAULT_MANUAL_PAYMENT_METHODS = [
 	{

@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { ensureBukuLibrarySchema, listAuthorBukuBooks } from '$lib/server/buku-library';
+import { ensureBukuLibrarySchema, listAuthorBukuBooks } from '$lib/server/domains/buku/library';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
 	if (!locals.user) {

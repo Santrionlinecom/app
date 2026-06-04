@@ -1,15 +1,15 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { requireD1 } from '$lib/server/cloudflare';
-import { ensureBukuAccessSchema } from '$lib/server/buku-access';
+import { ensureBukuAccessSchema } from '$lib/server/domains/buku/access';
 import {
 	ensureBukuLibrarySchema,
 	getPublishedBukuBookBySlug,
 	isValidBukuSlug,
 	listPublishedBukuChapters
-} from '$lib/server/buku-library';
-import { ensureBukuWalletSchema, getCoinBalance } from '$lib/server/buku-wallet';
-import { ensureDrmSchema, getDrmAccess, getDrmProgress } from '$lib/server/drm';
+} from '$lib/server/domains/buku/library';
+import { ensureBukuWalletSchema, getCoinBalance } from '$lib/server/domains/buku/wallet';
+import { ensureDrmSchema, getDrmAccess, getDrmProgress } from '$lib/server/domains/buku/drm';
 
 export const load: PageServerLoad = async ({ params, url, locals, platform }) => {
 	if (!isValidBukuSlug(params.slug)) {

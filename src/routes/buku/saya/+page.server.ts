@@ -1,9 +1,9 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
-import { ensureBukuAccessSchema } from '$lib/server/buku-access';
-import { ensureBukuLibrarySchema } from '$lib/server/buku-library';
-import { ensureBukuProgressSchema } from '$lib/server/buku-progress';
+import { ensureBukuAccessSchema } from '$lib/server/domains/buku/access';
+import { ensureBukuLibrarySchema } from '$lib/server/domains/buku/library';
+import { ensureBukuProgressSchema } from '$lib/server/domains/buku/progress';
 
 type ReadingProgressItem = {
 	id: string;

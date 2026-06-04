@@ -3,6 +3,7 @@
 	import { SURAH_DATA } from '$lib/surah-data';
 	import { enhance } from '$app/forms';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import { isTeachingRole, isMentoringRole } from '$lib/utils/role-helpers';
 
 	export let data: PageData;
 
@@ -94,8 +95,8 @@
 	$: {
 		role = data?.role ?? '';
 		isAdmin = role === 'admin' || role.replace('-', '_').toUpperCase() === 'SUPER_ADMIN';
-		isCoordinator = role === 'koordinator';
-		isUstadz = role === 'ustadz' || role === 'ustadzah';
+		isCoordinator = isMentoringRole(role);
+		isUstadz = isTeachingRole(role);
 		isStaff = isAdmin || isCoordinator || isUstadz;
 		isStudent = role === 'santri' || role === 'alumni';
 		isEducationalOrg = Boolean(data?.isEducationalOrg);

@@ -6,7 +6,7 @@ import {
 	getAuthorBukuChapterById,
 	parseBukuChapterForm,
 	updateBukuChapter
-} from '$lib/server/buku-library';
+} from '$lib/server/domains/buku/library';
 
 export const load: PageServerLoad = async ({ locals, platform, params, url }) => {
 	if (!locals.user) {

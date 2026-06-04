@@ -551,7 +551,7 @@ onMount(() => {
 	const handleBeforeInstallPrompt = (event: Event) => {
 		event.preventDefault();
 		deferredInstallPrompt = event as BeforeInstallPromptEvent;
-		openInstallPopup('native', 900);
+		openInstallPopup('native', 3000);
 	};
 	const handleAppInstalled = () => {
 		deferredInstallPrompt = null;
@@ -562,7 +562,7 @@ onMount(() => {
 	window.addEventListener('appinstalled', handleAppInstalled);
 
 	const fallbackMode = detectInstallMode() ?? 'android';
-	openInstallPopup(fallbackMode, 1400);
+	openInstallPopup(fallbackMode, 5000);
 
 	return () => {
 		window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -1107,7 +1107,7 @@ $: if (pathname !== previousPathname) {
 						<a href="/" class="flex min-w-0 items-center gap-3">
 							<img
 								src="https://files.santrionline.com/ICON%20SANTRI%20ONLINE%20COM%20kecil%20(1).png"
-								alt="Santri Online"
+								alt="Logo SantriOnline - Platform Manajemen Lembaga Islam"
 								class="h-12 w-12 shrink-0 object-contain"
 								loading="lazy"
 							/>
@@ -1638,7 +1638,7 @@ $: if (pathname !== previousPathname) {
 	</main>
 
 	{#if !hidePageChrome}
-		<footer class="border-t border-slate-200 bg-white">
+	<footer class="border-t border-slate-200 bg-white pb-safe">
 			<div class="container mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
 				<div>
 					<a href="/" class="inline-flex items-center gap-2">
@@ -1987,7 +1987,7 @@ $: if (pathname !== previousPathname) {
 		scroll-snap-align: start;
 		white-space: nowrap;
 		border-radius: 999px;
-		border: 1px solid rgba(226, 232, 240, 0.92);
+		border: 1px solid rgba(226, 232, 240, 1);
 		background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
 		padding: 0.64rem 0.92rem;
 		font-size: 0.72rem;

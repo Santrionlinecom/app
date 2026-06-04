@@ -1,6 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import { ensureBukuWalletSchema, ensureCoinWallet } from '$lib/server/buku-wallet';
-import { recordChapterUnlockRoyalty } from '$lib/server/buku-royalty';
+import { ensureBukuWalletSchema, ensureCoinWallet } from '$lib/server/domains/buku/wallet';
+import { recordChapterUnlockRoyalty } from '$lib/server/domains/buku/royalty';
 
 export type BukuChapterAccess = 'free' | 'unlocked' | 'locked';
 

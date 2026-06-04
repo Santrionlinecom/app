@@ -4,7 +4,7 @@ import {
 	createMidtransOrderId,
 	ensurePaymentOrdersSchema,
 	MIDTRANS_SNAP_TRANSACTION_URL
-} from '$lib/server/payments/midtrans';
+} from '$lib/server/services/payment-gateway/payments/midtrans';
 import type { Actions, PageServerLoad } from './$types';
 
 type AddonAktifRow = {

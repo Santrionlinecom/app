@@ -8,8 +8,8 @@ import {
 	logStreamerLicenseEvent,
 	normalizeDeviceIdHash,
 	touchStreamerDevice
-} from '$lib/server/license/streamer-db';
-import { buildClaimsFromLicense, generateLicenseToken, verifyLicenseToken } from '$lib/server/license/streamer-token';
+} from '$lib/server/domains/digital-store/license/streamer-db';
+import { buildClaimsFromLicense, generateLicenseToken, verifyLicenseToken } from '$lib/server/domains/digital-store/license/streamer-token';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
 
 const RATE_LIMIT = {

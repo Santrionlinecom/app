@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getOrganizationById } from '$lib/server/organizations';
-import { hasAssignedSantri } from '$lib/server/santri-ustadz';
+import { hasAssignedSantri } from '$lib/server/domains/tpq/santri-ustadz';
 
 type PublicProfile = {
 	id: string;

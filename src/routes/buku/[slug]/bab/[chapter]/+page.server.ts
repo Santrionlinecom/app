@@ -4,7 +4,7 @@ import {
 	ensureBukuAccessSchema,
 	getBukuChapterAccess,
 	unlockBukuChapter
-} from '$lib/server/buku-access';
+} from '$lib/server/domains/buku/access';
 import {
 	ensureBukuLibrarySchema,
 	getAdjacentPublishedBukuChapters,
@@ -12,13 +12,13 @@ import {
 	getPublishedBukuChapterByNumber,
 	isValidBukuSlug,
 	parseBukuChapterParam
-} from '$lib/server/buku-library';
+} from '$lib/server/domains/buku/library';
 import {
 	getBookReadingProgress,
 	listUserBookmarks,
 	saveReadingProgress
-} from '$lib/server/buku-progress';
-import { ensureBukuWalletSchema, getCoinBalance } from '$lib/server/buku-wallet';
+} from '$lib/server/domains/buku/progress';
+import { ensureBukuWalletSchema, getCoinBalance } from '$lib/server/domains/buku/wallet';
 
 export const load: PageServerLoad = async ({ params, locals, platform }) => {
 	if (!isValidBukuSlug(params.slug)) {

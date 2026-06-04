@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { ensureCoinWallet, getCoinWallet } from '$lib/server/buku-wallet';
+import { ensureCoinWallet, getCoinWallet } from '$lib/server/domains/buku/wallet';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
 	if (!locals.user) {

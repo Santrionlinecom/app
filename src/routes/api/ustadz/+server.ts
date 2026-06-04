@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getOrganizationById } from '$lib/server/organizations';
-import { assignSantriTeacher, getSantriTeacherId, listOrgTeachers } from '$lib/server/santri-ustadz';
+import { assignSantriTeacher, getSantriTeacherId, listOrgTeachers } from '$lib/server/domains/tpq/santri-ustadz';
 
 const ensureSantri = async (locals: App.Locals) => {
 	if (!locals.user) {

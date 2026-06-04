@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireD1, requireR2Bucket } from '$lib/server/cloudflare';
-import { ensureBukuAccessSchema } from '$lib/server/buku-access';
-import { ensureBukuLibrarySchema } from '$lib/server/buku-library';
+import { ensureBukuAccessSchema } from '$lib/server/domains/buku/access';
+import { ensureBukuLibrarySchema } from '$lib/server/domains/buku/library';
 import {
 	DRM_MAX_DEVICES,
 	ensureDrmSchema,
@@ -12,7 +12,7 @@ import {
 	logDrmAccess,
 	normalizeChapterId,
 	registerOrTouchDevice
-} from '$lib/server/drm';
+} from '$lib/server/domains/buku/drm';
 
 export const GET: RequestHandler = async ({ request, url, platform, locals }) => {
 	if (!locals.user?.id) {

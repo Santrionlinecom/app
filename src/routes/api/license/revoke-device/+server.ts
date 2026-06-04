@@ -7,7 +7,7 @@ import {
 	logStreamerLicenseEvent,
 	normalizeDeviceIdHash,
 	removeStreamerDevice
-} from '$lib/server/license/streamer-db';
+} from '$lib/server/domains/digital-store/license/streamer-db';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 

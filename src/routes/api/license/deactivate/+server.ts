@@ -5,12 +5,12 @@ import {
 	desktopLicenseResponseStatus,
 	desktopServerError,
 	isDesktopLicenseContractRequest
-} from '$lib/server/license/streamer-desktop';
+} from '$lib/server/domains/digital-store/license/streamer-desktop';
 import {
 	ensureLicenseTables,
 	logLicenseEvent,
 	normalizeLicenseKey
-} from '$lib/server/license/db';
+} from '$lib/server/domains/digital-store/license/db';
 import {
 	ensureStreamerLicenseTables,
 	getStreamerDevice,
@@ -18,8 +18,8 @@ import {
 	logStreamerLicenseEvent,
 	normalizeDeviceIdHash,
 	removeStreamerDevice
-} from '$lib/server/license/streamer-db';
-import { verifyLicenseToken } from '$lib/server/license/streamer-token';
+} from '$lib/server/domains/digital-store/license/streamer-db';
+import { verifyLicenseToken } from '$lib/server/domains/digital-store/license/streamer-token';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
 
 const RATE_LIMIT = {

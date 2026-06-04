@@ -1,7 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { generateId } from 'lucia';
-import { ensureBukuWalletSchema } from '$lib/server/buku-wallet';
-import { ensurePaymentOrdersSchema } from '$lib/server/payments/midtrans';
+import { ensureBukuWalletSchema } from '$lib/server/domains/buku/wallet';
+import { ensurePaymentOrdersSchema } from '$lib/server/services/payment-gateway/payments/midtrans';
 
 const ADDON_TYPES = [
 	'lembaga_tambahan',

@@ -1,5 +1,5 @@
 import { env as privateEnv } from '$env/dynamic/private';
-import type { StreamerLicenseRow } from '$lib/server/license/streamer-db';
+import type { StreamerLicenseRow } from '$lib/server/domains/digital-store/license/streamer-db';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();

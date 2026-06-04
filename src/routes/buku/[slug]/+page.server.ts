@@ -5,8 +5,8 @@ import {
 	getPublishedBukuBookBySlug,
 	isValidBukuSlug,
 	listPublishedBukuChapters
-} from '$lib/server/buku-library';
-import { getBookReadingProgress, listUserBookmarks } from '$lib/server/buku-progress';
+} from '$lib/server/domains/buku/library';
+import { getBookReadingProgress, listUserBookmarks } from '$lib/server/domains/buku/progress';
 
 export const load: PageServerLoad = async ({ params, locals, platform }) => {
 	if (!isValidBukuSlug(params.slug)) {

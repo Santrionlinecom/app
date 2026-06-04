@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { ensureBukuLibrarySchema } from '$lib/server/buku-library';
-import { addBookmark, ensureBukuProgressSchema, removeBookmark } from '$lib/server/buku-progress';
+import { ensureBukuLibrarySchema } from '$lib/server/domains/buku/library';
+import { addBookmark, ensureBukuProgressSchema, removeBookmark } from '$lib/server/domains/buku/progress';
 
 const readText = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
 

@@ -5,7 +5,7 @@ import {
 	desktopLicenseResponseStatus,
 	desktopServerError,
 	isDesktopLicenseContractRequest
-} from '$lib/server/license/streamer-desktop';
+} from '$lib/server/domains/digital-store/license/streamer-desktop';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
 import {
 	countStreamerDevices,
@@ -16,8 +16,8 @@ import {
 	logStreamerLicenseEvent,
 	normalizeDeviceIdHash,
 	upsertStreamerDevice
-} from '$lib/server/license/streamer-db';
-import { buildClaimsFromLicense, generateLicenseToken } from '$lib/server/license/streamer-token';
+} from '$lib/server/domains/digital-store/license/streamer-db';
+import { buildClaimsFromLicense, generateLicenseToken } from '$lib/server/domains/digital-store/license/streamer-token';
 
 const RATE_LIMIT = {
 	scope: 'license:activate',

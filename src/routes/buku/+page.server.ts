@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { ensureBukuLibrarySchema, listPublishedBukuBooks } from '$lib/server/buku-library';
-import { getUserReadingProgress } from '$lib/server/buku-progress';
+import { ensureBukuLibrarySchema, listPublishedBukuBooks } from '$lib/server/domains/buku/library';
+import { getUserReadingProgress } from '$lib/server/domains/buku/progress';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
 	const db = locals.db ?? platform?.env?.DB;

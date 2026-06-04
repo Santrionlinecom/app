@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
 	import type { PageData } from './$types';
+	import { isTeachingRole } from '$lib/utils/role-helpers';
 
 	type MemberRow = {
 		id: string;
@@ -52,7 +53,7 @@
 		const matchSearch = !searchQuery || 
 			s.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 			s.email?.toLowerCase().includes(searchQuery.toLowerCase());
-		const matchRole = filterRole === 'all' || s.role === filterRole || (filterRole === 'ustadz' && s.role === 'ustadzah');
+		const matchRole = filterRole === 'all' || s.role === filterRole || (filterRole === 'ustadz' && isTeachingRole(s.role));
 		const matchStatus = filterStatus === 'all' || (s.orgStatus || 'active') === filterStatus;
 		return matchSearch && matchRole && matchStatus;
 	});
@@ -60,7 +61,7 @@
 	const deriveStats = (list: MemberRow[]) => ({
 		total: list.length,
 		santri: list.filter((s: MemberRow) => s.role === 'santri').length,
-		ustadz: list.filter((s: MemberRow) => s.role === 'ustadz' || s.role === 'ustadzah').length,
+		ustadz: list.filter((s: MemberRow) => isTeachingRole(s.role)).length,
 		admin: list.filter((s: MemberRow) => s.role === 'admin').length,
 		pending: list.filter((s: MemberRow) => (s.orgStatus || 'active') === 'pending').length
 	});

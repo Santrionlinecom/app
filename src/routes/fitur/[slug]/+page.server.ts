@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import { FEATURES } from '$lib/features';
-import { SEED_HAFALAN_DEFAULT } from '$lib/server/seed-hafalan-default';
+import { SEED_HAFALAN_DEFAULT } from '$lib/server/domains/tpq/seed-hafalan-default';
 
 type FeatureDetail = {
 	heroTagline: string;

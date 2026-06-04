@@ -3,6 +3,7 @@ import { Scrypt } from '$lib/server/password';
 import { getOrgScope, getOrganizationById, memberRoleByType } from '$lib/server/organizations';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import { requirePermission } from '$lib/rbac/helpers';
+import { isTeachingRole } from '$lib/utils/role-helpers';
 import type { RequestHandler } from './$types';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'admin'] as const;
@@ -15,7 +16,7 @@ const ensureAuth = (locals: App.Locals) => {
 };
 
 const normalizeUstadzRole = (role?: string, gender?: string | null) => {
-	if (role === 'ustadz' || role === 'ustadzah') {
+	if (isTeachingRole(role || '')) {
 		return gender === 'wanita' ? 'ustadzah' : 'ustadz';
 	}
 	return role;

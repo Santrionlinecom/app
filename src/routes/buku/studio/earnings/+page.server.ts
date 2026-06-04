@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types';
 import {
 	listAuthorRoyaltyLedger,
 	listAuthorRoyaltySummary
-} from '$lib/server/buku-royalty';
+} from '$lib/server/domains/buku/royalty';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
 	if (!locals.user) {

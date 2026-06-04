@@ -4,7 +4,7 @@ import {
 	canInputSetoran,
 	canReviewSetoran,
 	requireTpqAcademicContext
-} from '$lib/server/tpq-academic';
+} from '$lib/server/domains/tpq/academic';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const { role } = await requireTpqAcademicContext(locals);

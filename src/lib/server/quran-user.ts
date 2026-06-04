@@ -1,5 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import { ensureHafalanTable } from '$lib/server/hafalan';
+import { ensureHafalanTable } from '$lib/server/domains/tpq/hafalan';
 
 export type QuranBookmark = {
 	id: string;

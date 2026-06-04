@@ -4,9 +4,9 @@ import {
 	getKategoriByOrg,
 	getRekap,
 	seedHafalanDefault
-} from '$lib/server/db-hafalan';
-import { SEED_HAFALAN_DEFAULT } from '$lib/server/seed-hafalan-default';
-import { requireTpqAcademicContext } from '$lib/server/tpq-academic';
+} from '$lib/server/domains/tpq/db-hafalan';
+import { SEED_HAFALAN_DEFAULT } from '$lib/server/domains/tpq/seed-hafalan-default';
+import { requireTpqAcademicContext } from '$lib/server/domains/tpq/academic';
 
 const REKAP_ROLES = new Set(['admin', 'koordinator', 'super_admin']);
 

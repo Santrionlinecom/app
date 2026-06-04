@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
 	import LembagaSwitcher from '$lib/components/LembagaSwitcher.svelte';
+	import { isTeachingRole, isMentoringRole } from '$lib/utils/role-helpers';
 	import type { LayoutData } from './$types';
 
 	export let data: LayoutData;
@@ -321,8 +322,8 @@
 		}
 
 		if (role === 'admin') return educationalAdminItems;
-		if (role === 'koordinator') return educationalCoordinatorItems;
-		if (role === 'ustadz' || role === 'ustadzah') return educationalTeacherItems;
+		if (isMentoringRole(role)) return educationalCoordinatorItems;
+		if (isTeachingRole(role)) return educationalTeacherItems;
 		if (role === 'santri' || role === 'alumni') return educationalStudentItems;
 		return [];
 	};

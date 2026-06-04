@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { getPendingSubmissions, getAllStudentsProgress, getSantriChecklist, getSantriStats, getDailySeries } from '$lib/server/progress';
-import { getSantriTeacherId, listOrgTeachers } from '$lib/server/santri-ustadz';
+import { getSantriTeacherId, listOrgTeachers } from '$lib/server/domains/tpq/santri-ustadz';
 import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
 import type { D1Database } from '@cloudflare/workers-types';
 import { SURAH_DATA } from '$lib/surah-data';
@@ -17,7 +17,8 @@ import {
 	canViewSetoranHistory,
 	normalizeAppRole,
 	todayIsoDate
-} from '$lib/server/tpq-academic';
+} from '$lib/server/domains/tpq/academic';
+import { isTeachingRole, isMentoringRole } from '$lib/utils/role-helpers';
 import * as XLSX from 'xlsx';
 
 const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
@@ -261,7 +262,7 @@ const buildTpqSetoranScope = (params: {
 	const conditions = [`${alias}institution_id = ?`];
 	const values: (string | number)[] = [params.orgId];
 
-	if (params.role === 'ustadz' || params.role === 'ustadzah') {
+	if (isTeachingRole(params.role)) {
 		conditions.push(
 			`EXISTS (
 				SELECT 1
@@ -617,7 +618,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 	};
 
 	// Load data based on user role
-	if (role === 'admin' || role === 'koordinator' || isSuperAdminRole(role)) {
+	if (role === 'admin' || isMentoringRole(role) || isSuperAdminRole(role)) {
 		// Admin/koordinator: list scoped users + santri & surah options
 		const baseQuery = 'SELECT id, username, email, role, created_at FROM users';
 		const { results } = await (scopedOrgId
@@ -681,7 +682,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			students: await getAllStudentsProgress(db, { orgId: scopedOrgId }),
 			pending: await getPendingSubmissions(db, { orgId: scopedOrgId })
 		};
-	} else if (role === 'ustadz' || role === 'ustadzah') {
+	} else if (isTeachingRole(role)) {
 		// Ustadz: pending submissions and student progress
 		if (isCommunityOrg) {
 			const communityWidgets = await loadCommunityWidgets();

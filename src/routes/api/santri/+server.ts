@@ -7,6 +7,7 @@ import type { RequestHandler } from './$types';
 import { logActivity } from '$lib/server/activity-logs';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import { requirePermission } from '$lib/rbac/helpers';
+import { isTeachingRole } from '$lib/utils/role-helpers';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'admin'] as const;
 
@@ -181,12 +182,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const userId = generateId(15);
 	const hashedPassword = await new Scrypt().hash(password);
-	const normalizedRole =
-		role === 'ustadz' || role === 'ustadzah'
-			? gender === 'wanita'
-				? 'ustadzah'
-				: 'ustadz'
-			: role;
+	const normalizedRole = isTeachingRole(role)
+		? gender === 'wanita'
+			? 'ustadzah'
+			: 'ustadz'
+		: role;
 
 	if (!normalizedRole) {
 		throw error(400, 'Role tidak valid');

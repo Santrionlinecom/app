@@ -138,6 +138,101 @@ Gunakan index untuk kolom yang sering dipakai:
 
 ---
 
+## Role System (Updated 2026-06-04)
+
+SantriOnline menggunakan **simplified role-based access control (RBAC)** dengan struktur hierarki:
+
+### Platform Roles (Global)
+- `SUPER_ADMIN` - Akses penuh ke seluruh sistem
+- `support` - Tim support platform
+- `auditor` - Audit dan monitoring sistem
+
+### Organization Roles (Universal)
+
+**Role Levels:**
+- Level 3 (Admin): `admin`, `kepala`, `bendahara`
+- Level 2 (Manager): `pembimbing`, `operator`, `sekretaris`, `humas`, `kurikulum`, `pembina`
+- Level 1 (Staff): `pengajar`, `takmir`, `imam`, `khotib`, `muadzin`
+- Level 0 (Member): `santri`, `wali`, `alumni`, `jamaah`
+
+**Simplified Roles:**
+- `admin` - Administrator organisasi (full access)
+- `kepala` - Kepala/Pimpinan (merge: kepala_tpq, kepala_tahfidz, pengasuh, ketua_takmir)
+- `pengajar` - Pengajar (merge: ustadz, ustadzah - gender di user profile)
+- `pembimbing` - Pembimbing (merge: musyrif, koordinator, wali_kelas)
+- `operator` - Operator data
+- `bendahara` - Pengelola keuangan
+- `sekretaris` - Administrasi dan dokumentasi
+- `humas` - Public relations dan media sosial
+- `kurikulum` - Pengembangan program pembelajaran
+- `pembina` - Pembinaan karakter dan kedisiplinan
+- `santri` - Siswa/Santri
+- `wali` - Wali santri/orang tua
+- `alumni` - Alumni (pondok, rumah-tahfidz)
+- `jamaah` - Jamaah (masjid, musholla)
+- `takmir` - Takmir (masjid, musholla)
+- `imam` - Imam sholat (masjid, musholla)
+- `khotib` - Khotib Jumat (masjid, musholla)
+- `muadzin` - Muadzin (masjid, musholla)
+
+### Permission System
+
+**Wildcard Support:**
+```typescript
+'hafalan.*'  // semua akses hafalan
+'finance.*'  // semua akses keuangan
+'org.*'      // semua akses organisasi
+```
+
+**Scope-based Permissions:**
+```typescript
+'student.read.own'   // hanya santri sendiri
+'student.read.class' // satu kelas
+'student.read.all'   // semua santri
+```
+
+**Multi-role Support:**
+- User bisa memiliki `secondary_roles` (JSON array)
+- Temporary role dengan `role_expires_at`
+- Role delegation untuk temporary permissions
+
+### Legacy Role Mapping
+
+Migration otomatis dari role lama ke role baru:
+- `ustadz`, `ustadzah` → `pengajar`
+- `kepala_tpq`, `kepala_tahfidz`, `pengasuh`, `ketua_takmir` → `kepala`
+- `koordinator`, `wali_kelas`, `musyrif` → `pembimbing`
+
+**Helper Functions:**
+```typescript
+import { normalizeRole, isRole, isTeachingRole } from '$lib/utils/role-helpers';
+
+// Normalize legacy role
+const role = normalizeRole('ustadz'); // returns 'pengajar'
+
+// Check role (handles legacy)
+if (isRole(user.role, 'ustadz')) { } // works with both 'ustadz' and 'pengajar'
+
+// Check teaching role
+if (isTeachingRole(user.role)) { } // true for pengajar, ustadz, ustadzah
+```
+
+### Role Assignment Rules
+
+1. **Principle of Least Privilege** - Berikan permission minimal yang dibutuhkan
+2. **Separation of Duties** - Hindari conflict of interest (e.g., bendahara tidak boleh jadi admin)
+3. **Regular Review** - Audit role assignment setiap 6 bulan
+4. **Time-bound Roles** - Gunakan `role_expires_at` untuk temporary assignment
+
+### Audit & Compliance
+
+Semua perubahan role dan penggunaan permission dicatat di:
+- `user_role_history` - History perubahan role
+- `permission_usage_logs` - Log penggunaan permission
+- `role_delegations` - Delegasi permission temporary
+
+---
+
 ## Migration Rules
 
 Semua migration berada di:

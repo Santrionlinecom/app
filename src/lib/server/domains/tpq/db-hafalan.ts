@@ -1,8 +1,8 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import type { SeedHafalanDefault } from '$lib/server/seed-hafalan-default';
+import type { SeedHafalanDefault } from '$lib/server/domains/tpq/seed-hafalan-default';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import { canAccessPermission } from '$lib/server/auth/rbac';
-import { isTeacherForSantri } from '$lib/server/santri-ustadz';
+import { isTeacherForSantri } from '$lib/server/domains/tpq/santri-ustadz';
 
 export const HAFALAN_RAPOR_STATUSES = ['belum', 'proses', 'lulus', 'perlu_perbaikan'] as const;
 export type HafalanRaporStatus = (typeof HAFALAN_RAPOR_STATUSES)[number];

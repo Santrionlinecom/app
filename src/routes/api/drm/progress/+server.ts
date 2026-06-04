@@ -1,15 +1,15 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireD1 } from '$lib/server/cloudflare';
-import { ensureBukuAccessSchema } from '$lib/server/buku-access';
-import { ensureBukuLibrarySchema } from '$lib/server/buku-library';
-import { saveReadingProgress } from '$lib/server/buku-progress';
+import { ensureBukuAccessSchema } from '$lib/server/domains/buku/access';
+import { ensureBukuLibrarySchema } from '$lib/server/domains/buku/library';
+import { saveReadingProgress } from '$lib/server/domains/buku/progress';
 import {
 	ensureDrmSchema,
 	getDrmAccess,
 	normalizeChapterId,
 	saveDrmProgress
-} from '$lib/server/drm';
+} from '$lib/server/domains/buku/drm';
 
 export const POST: RequestHandler = async ({ request, platform, locals }) => {
 	if (!locals.user?.id) {

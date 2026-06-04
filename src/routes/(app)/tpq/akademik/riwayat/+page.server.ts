@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { ensureSantriUstadzSchema } from '$lib/server/santri-ustadz';
+import { ensureSantriUstadzSchema } from '$lib/server/domains/tpq/santri-ustadz';
 import {
 	assertSafeScopedId,
 	assertTpqAcademicTables,
@@ -10,7 +10,7 @@ import {
 	requireTpqAcademicContext,
 	todayIsoDate,
 	validateDateRangeDays
-} from '$lib/server/tpq-academic';
+} from '$lib/server/domains/tpq/academic';
 
 const STATUS_FILTERS = new Set(['submitted', 'approved', 'rejected']);
 const TYPE_FILTERS = new Set(['hafalan', 'murojaah']);

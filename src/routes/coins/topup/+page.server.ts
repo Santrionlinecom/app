@@ -1,13 +1,13 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { ensureBukuWalletSchema } from '$lib/server/buku-wallet';
+import { ensureBukuWalletSchema } from '$lib/server/domains/buku/wallet';
 import { getCoinTopupPackageById, getCoinTopupPackages } from '$lib/server/coin-packages';
 import {
 	createMidtransAuthorization,
 	createMidtransOrderId,
 	ensurePaymentOrdersSchema,
 	MIDTRANS_SNAP_TRANSACTION_URL
-} from '$lib/server/payments/midtrans';
+} from '$lib/server/services/payment-gateway/payments/midtrans';
 
 type MidtransSnapResponse = {
 	token?: string;

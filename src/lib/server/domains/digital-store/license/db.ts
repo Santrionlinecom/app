@@ -1,5 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import { buildStrmLicenseKey } from '$lib/server/license/key-format';
+import { buildStrmLicenseKey } from '$lib/server/domains/digital-store/license/key-format';
 
 export const LICENSE_GRACE_DAYS = 14;
 

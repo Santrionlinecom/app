@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireD1 } from '$lib/server/cloudflare';
-import { deleteDrmDevice, ensureDrmSchema, listDrmDevices } from '$lib/server/drm';
+import { deleteDrmDevice, ensureDrmSchema, listDrmDevices } from '$lib/server/domains/buku/drm';
 
 export const GET: RequestHandler = async ({ platform, locals }) => {
 	if (!locals.user?.id) {

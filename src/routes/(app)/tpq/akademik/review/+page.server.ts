@@ -9,7 +9,7 @@ import {
 	requireTpqAcademicContext,
 	syncApprovedHafalanFromSetoran,
 	todayIsoDate
-} from '$lib/server/tpq-academic';
+} from '$lib/server/domains/tpq/academic';
 
 const REVIEW_DECISIONS = new Set(['approved', 'rejected']);
 

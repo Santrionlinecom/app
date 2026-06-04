@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
-import { hashLicenseKey } from '$lib/server/licenses/digital-products';
+import { hashLicenseKey } from '$lib/server/domains/digital-store/licenses/digital-products';
 
 const KEY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 

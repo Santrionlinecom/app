@@ -9,7 +9,7 @@ import {
 	canReviewSetoran,
 	canViewSetoranHistory,
 	normalizeAppRole
-} from '$lib/server/tpq-academic';
+} from '$lib/server/domains/tpq/academic';
 
 type RoleScope = 'student' | 'teacher' | 'manager';
 

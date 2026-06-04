@@ -6,7 +6,7 @@ import { getOrganizationById } from '$lib/server/organizations';
 import { logActivity } from '$lib/server/activity-logs';
 import { isSuperAdminRole, requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 import { ensureCmsSchema, getAllPosts } from '$lib/server/cms';
-import { ensureDefaultManualPaymentMethods } from '$lib/server/default-manual-payments';
+import { ensureDefaultManualPaymentMethods } from '$lib/server/domains/digital-store/manual-payments';
 import {
 	createDigitalSale,
 	deleteDigitalPaymentMethod,
@@ -16,7 +16,7 @@ import {
 	updateDigitalProductStatus,
 	upsertDigitalPaymentMethod,
 	upsertDigitalProduct
-} from '$lib/server/digital-commerce';
+} from '$lib/server/domains/digital-store/commerce';
 import { getSuperAdminNotifications } from '$lib/server/super-admin-notifications';
 
 const memberRoles = ['santri'];

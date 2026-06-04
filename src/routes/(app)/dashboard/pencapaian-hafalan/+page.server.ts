@@ -11,7 +11,7 @@ import {
 	canViewSetoranHistory,
 	normalizeAppRole,
 	todayIsoDate
-} from '$lib/server/tpq-academic';
+} from '$lib/server/domains/tpq/academic';
 
 type RoleScope = 'student' | 'teacher' | 'manager';
 

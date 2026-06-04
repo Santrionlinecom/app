@@ -6,7 +6,7 @@ import {
 	normalizeLicenseKey,
 	normalizeEpochMs,
 	type LicenseStatus
-} from '$lib/server/license/db';
+} from '$lib/server/domains/digital-store/license/db';
 
 const isStatus = (value: string): value is LicenseStatus =>
 	value === 'active' || value === 'revoked' || value === 'expired';

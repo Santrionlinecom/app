@@ -6,7 +6,7 @@ import {
 	getAdminBukuStatusCounts,
 	isBukuBookStatus,
 	listAdminBukuBooks
-} from '$lib/server/buku-library';
+} from '$lib/server/domains/buku/library';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db } = requireSuperAdmin(locals);

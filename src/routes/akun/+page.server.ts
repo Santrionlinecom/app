@@ -8,8 +8,8 @@ import {
 	type OrgType
 } from '$lib/server/organizations';
 import { listOrgMedia } from '$lib/server/org-media';
-import { seedHafalanDefault } from '$lib/server/db-hafalan';
-import { SEED_HAFALAN_DEFAULT } from '$lib/server/seed-hafalan-default';
+import { seedHafalanDefault } from '$lib/server/domains/tpq/db-hafalan';
+import { SEED_HAFALAN_DEFAULT } from '$lib/server/domains/tpq/seed-hafalan-default';
 import { buildR2PublicUrl, requireR2Bucket } from '$lib/server/cloudflare';
 import type { Actions, PageServerLoad } from './$types';
 
