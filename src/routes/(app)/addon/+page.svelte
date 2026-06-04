@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { deserialize } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { BadgeCheck, Clock3, CreditCard, Loader2, Settings } from 'lucide-svelte';
+	import { BadgeCheck, Clock3, Coins, Loader2, Settings } from 'lucide-svelte';
+	import InsufficientCoinNotice from '$lib/components/InsufficientCoinNotice.svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -27,16 +28,15 @@
 		features: string[];
 	};
 
-	type SnapCallbacks = {
-		onSuccess?: (result: unknown) => void;
-		onPending?: (result: unknown) => void;
-		onError?: (result: unknown) => void;
-	};
-
-	type SnapTokenPayload = {
+	type OrderResponse = {
 		type?: string;
-		snapToken?: string;
 		message?: string;
+		currentBalance?: number;
+		requiredAmount?: number;
+		shortfall?: number;
+		productName?: string;
+		newBalance?: number;
+		orderId?: string;
 	};
 
 	type ToastKind = 'success' | 'pending' | 'error';
@@ -44,13 +44,6 @@
 		kind: ToastKind;
 		message: string;
 	};
-
-	type SnapWindow = Window &
-		typeof globalThis & {
-			snap?: {
-				pay: (token: string, callbacks?: SnapCallbacks) => void;
-			};
-		};
 
 	const addonCatalog = [
 		{
@@ -100,8 +93,14 @@
 	let activatingAddon: AddonTipe | null = null;
 	let toast: ToastState | null = null;
 	let toastTimer: ReturnType<typeof setTimeout> | null = null;
+	let insufficientCoinData: {
+		currentBalance: number;
+		requiredAmount: number;
+		shortfall: number;
+		productName: string;
+	} | null = null;
 
-	const formatRupiah = (amount: number) => new Intl.NumberFormat('id-ID').format(amount);
+	const formatCoin = (amount: number) => new Intl.NumberFormat('id-ID').format(amount);
 
 	const showToast = (kind: ToastKind, message: string) => {
 		if (toastTimer) {
@@ -115,19 +114,14 @@
 		}, 4200);
 	};
 
-	const getMidtransSnap = () => (window as SnapWindow).snap;
-
 	const activateAddon = async (addon: AddonCatalogItem) => {
 		if (!data.lembagaId) {
 			showToast('error', 'Lembaga aktif tidak ditemukan untuk akun ini.');
 			return;
 		}
 
-		const snap = getMidtransSnap();
-		if (!data.midtransClientKey || !snap) {
-			showToast('error', 'Midtrans Snap belum siap. Muat ulang halaman lalu coba lagi.');
-			return;
-		}
+		// Clear previous insufficient coin notice
+		insufficientCoinData = null;
 
 		activatingAddon = addon.type;
 
@@ -144,7 +138,20 @@
 			const result = deserialize(await response.text());
 
 			if (result.type === 'failure') {
-				const payload = result.data as SnapTokenPayload | undefined;
+				const payload = result.data as OrderResponse | undefined;
+				
+				// Check if it's insufficient coin error
+				if (payload?.type === 'insufficient_coin') {
+					insufficientCoinData = {
+						currentBalance: payload.currentBalance ?? 0,
+						requiredAmount: payload.requiredAmount ?? addon.price,
+						shortfall: payload.shortfall ?? 0,
+						productName: payload.productName ?? addon.name
+					};
+					showToast('error', 'Saldo coin tidak cukup. Silakan isi saldo terlebih dahulu.');
+					return;
+				}
+				
 				throw new Error(payload?.message ?? 'Gagal membuat order addon.');
 			}
 
@@ -157,31 +164,22 @@
 				return;
 			}
 
-			const payload = result.data as SnapTokenPayload | undefined;
-			if (result.type !== 'success' || payload?.type !== 'snapToken' || !payload.snapToken) {
-				throw new Error(payload?.message ?? 'Token pembayaran tidak tersedia.');
+			const payload = result.data as OrderResponse | undefined;
+			if (result.type === 'success' && payload?.type === 'success') {
+				showToast('success', payload.message ?? 'Addon berhasil diaktifkan!');
+				// Update coin balance in UI
+				data.coinBalance = payload.newBalance ?? data.coinBalance;
+				void invalidateAll();
+			} else {
+				throw new Error(payload?.message ?? 'Gagal mengaktifkan addon.');
 			}
-
-			snap.pay(payload.snapToken, {
-				onSuccess: () => {
-					showToast('success', 'Pembayaran sukses. Addon sedang diaktifkan.');
-					void invalidateAll();
-				},
-				onPending: () => {
-					showToast('pending', 'Pembayaran masih pending. Selesaikan pembayaran di Midtrans.');
-				},
-				onError: () => {
-					showToast('error', 'Pembayaran gagal diproses.');
-				}
-			});
 		} catch (err) {
-			showToast('error', err instanceof Error ? err.message : 'Gagal memulai pembayaran addon.');
+			showToast('error', err instanceof Error ? err.message : 'Gagal memproses addon.');
 		} finally {
 			activatingAddon = null;
 		}
 	};
 
-	$: midtransClientKey = data.midtransClientKey ?? '';
 	$: activeTypes = new Set(
 		((data.addonAktif ?? []) as AddonAktif[]).map((addon) => addon.tipeAddon)
 	);
@@ -190,7 +188,6 @@
 <svelte:head>
 	<title>Addon - SantriOnline App</title>
 	<meta name="description" content="Katalog addon SantriOnline untuk lembaga aktif." />
-	<script src="https://app.midtrans.com/snap/snap.js" data-client-key={midtransClientKey}></script>
 </svelte:head>
 
 <section class="space-y-6 font-sans">
@@ -207,29 +204,53 @@
 					Aktivasi fitur tambahan untuk {data.lembagaNama ?? 'lembaga aktif'}.
 				</p>
 			</div>
-			<div
-				class="inline-flex w-fit items-center gap-2 rounded-full border border-so-gold/40 bg-so-gold/12 px-3 py-1.5 text-xs font-bold text-so-green"
-			>
-				<BadgeCheck size={15} strokeWidth={2.4} />
-				{activeTypes.size} addon aktif
+			<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+				<div
+					class="inline-flex w-fit items-center gap-2 rounded-full border border-so-gold/40 bg-so-gold/12 px-3 py-1.5 text-xs font-bold text-so-green"
+				>
+					<BadgeCheck size={15} strokeWidth={2.4} />
+					{activeTypes.size} addon aktif
+				</div>
+				<a
+					href="/coins"
+					class="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100"
+				>
+					<Coins size={15} strokeWidth={2.4} />
+					Saldo: {formatCoin(data.coinBalance)} Coin
+				</a>
 			</div>
 		</div>
 	</header>
 
+	{#if insufficientCoinData}
+		<InsufficientCoinNotice
+			currentBalance={insufficientCoinData.currentBalance}
+			requiredAmount={insufficientCoinData.requiredAmount}
+			shortfall={insufficientCoinData.shortfall}
+			productName={insufficientCoinData.productName}
+		/>
+	{/if}
+
 	<div
-		class="flex flex-col gap-3 rounded-so-lg border border-so-gold/35 bg-so-gold/12 p-4 text-so-green shadow-card md:flex-row md:items-center"
+		class="flex flex-col gap-3 rounded-so-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 shadow-card md:flex-row md:items-center"
 	>
-		<div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-so-green text-white">
-			<CreditCard size={19} strokeWidth={2.2} />
+		<div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-600 text-white">
+			<Coins size={19} strokeWidth={2.2} />
 		</div>
-		<p class="text-sm font-semibold leading-6">
-			Pembayaran addon diproses via Midtrans Snap production untuk aktivasi bulanan.
-		</p>
+		<div class="min-w-0 flex-1">
+			<p class="text-sm font-semibold leading-6">
+				Semua addon dibeli menggunakan Coin. Pastikan saldo Coin Anda mencukupi sebelum melakukan pembelian.
+			</p>
+			<a href="/coins/topup" class="mt-1 text-xs font-bold text-emerald-700 underline hover:text-emerald-900">
+				Isi Saldo Coin →
+			</a>
+		</div>
 	</div>
 
 	<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 		{#each addonCatalog as addon}
 			{@const isActive = activeTypes.has(addon.type)}
+			{@const canAfford = data.coinBalance >= addon.price}
 			<article
 				class={`flex min-h-[18rem] flex-col rounded-so-lg border bg-white p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-soft ${
 					isActive ? 'border-so-green/45' : 'border-so-border hover:border-so-gold/60'
@@ -239,8 +260,9 @@
 					<div class="min-w-0">
 						<div class="text-4xl leading-none" aria-hidden="true">{addon.emoji}</div>
 						<h2 class="mt-4 text-lg font-black text-so-green">{addon.name}</h2>
-						<p class="mt-1 text-sm font-bold text-so-gold">
-							Rp{formatRupiah(addon.price)}/bulan
+						<p class="mt-1 flex items-center gap-1 text-sm font-bold text-so-gold">
+							<Coins size={14} strokeWidth={2.4} />
+							{formatCoin(addon.price)} Coin/bulan
 						</p>
 					</div>
 
@@ -280,6 +302,14 @@
 							<Settings size={17} strokeWidth={2.3} />
 							Kelola
 						</button>
+					{:else if !canAfford}
+						<a
+							href="/coins/topup"
+							class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-500 bg-amber-50 px-4 text-sm font-black text-amber-700 transition hover:bg-amber-100"
+						>
+							<Coins size={17} strokeWidth={2.4} />
+							Isi Saldo Coin
+						</a>
 					{:else}
 						<button
 							type="button"
@@ -295,7 +325,8 @@
 								<Loader2 size={17} strokeWidth={2.4} class="animate-spin" />
 								Memproses...
 							{:else}
-								Aktifkan — Rp{formatRupiah(addon.price)}/bulan
+								<Coins size={17} strokeWidth={2.4} />
+								Aktifkan — {formatCoin(addon.price)} Coin
 							{/if}
 						</button>
 					{/if}

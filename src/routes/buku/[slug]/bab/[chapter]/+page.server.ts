@@ -2,8 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import {
 	ensureBukuAccessSchema,
-	getBukuChapterAccess,
-	unlockBukuChapter
+	getBukuChapterAccess
 } from '$lib/server/domains/buku/access';
 import {
 	ensureBukuLibrarySchema,
@@ -19,6 +18,7 @@ import {
 	saveReadingProgress
 } from '$lib/server/domains/buku/progress';
 import { ensureBukuWalletSchema, getCoinBalance } from '$lib/server/domains/buku/wallet';
+import { checkCoinBalance, deductCoins } from '$lib/server/domains/buku/coin-operations';
 
 export const load: PageServerLoad = async ({ params, locals, platform }) => {
 	if (!isValidBukuSlug(params.slug)) {
@@ -134,21 +134,57 @@ export const actions: Actions = {
 			throw redirect(303, url.pathname);
 		}
 
-		const unlock = await unlockBukuChapter(db, {
-			userId: locals.user.id,
-			bookId: book.id,
-			chapterId: chapter.id,
-			coinPrice: book.pricePerChapter,
-			description: `Unlock ${book.title} - Bab ${chapter.chapterNumber}: ${chapter.title}`
-		});
-
-		if (unlock.status === 'insufficient_coin') {
+		// Check coin balance
+		const balanceCheck = await checkCoinBalance(db, locals.user.id, book.pricePerChapter);
+		if (!balanceCheck.hasEnough) {
 			return fail(400, {
-				error: 'Coin belum cukup. Silakan topup coin terlebih dahulu.',
-				balance: unlock.balance,
-				required: unlock.required
+				type: 'insufficient_coin',
+				error: 'Saldo coin tidak cukup.',
+				currentBalance: balanceCheck.currentBalance,
+				requiredAmount: balanceCheck.required,
+				shortfall: balanceCheck.shortfall,
+				productName: `${book.title} - Bab ${chapter.chapterNumber}`
 			});
 		}
+
+		// Deduct coins
+		const deductResult = await deductCoins(
+			db,
+			locals.user.id,
+			book.pricePerChapter,
+			`Unlock ${book.title} - Bab ${chapter.chapterNumber}: ${chapter.title}`,
+			'buku_chapter',
+			chapter.id
+		);
+
+		if (!deductResult.success) {
+			return fail(400, {
+				type: 'deduct_failed',
+				error: deductResult.error || 'Gagal memproses pembayaran coin.'
+			});
+		}
+
+		// Create unlock record
+		const unlockId = crypto.randomUUID();
+		const now = new Date().toISOString();
+
+		await db
+			.prepare(
+				`INSERT INTO buku_unlocks (
+					id, user_id, book_id, chapter_id, coin_spent, created_at
+				) VALUES (?, ?, ?, ?, ?, ?)`
+			)
+			.bind(unlockId, locals.user.id, book.id, chapter.id, book.pricePerChapter, now)
+			.run();
+
+		console.info('buku_chapter_unlock_success', {
+			unlock_id: unlockId,
+			user_id: locals.user.id,
+			book_id: book.id,
+			chapter_id: chapter.id,
+			coin_spent: book.pricePerChapter,
+			new_balance: deductResult.newBalance
+		});
 
 		throw redirect(303, url.pathname);
 	}

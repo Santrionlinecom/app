@@ -1,21 +1,13 @@
 <script lang="ts">
+	import { Coins } from 'lucide-svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
 
 	type Product = PageData['products'][number];
 
-	const formatCurrency = (value: number | null | undefined) =>
-		new Intl.NumberFormat('id-ID', {
-			style: 'currency',
-			currency: 'IDR',
-			maximumFractionDigits: 0
-		}).format(value ?? 0);
-
-	const formatPrice = (value: number | null | undefined) => {
-		const price = Number(value ?? 0);
-		return price > 0 ? formatCurrency(price) : 'Gratis';
-	};
+	const formatCoin = (value: number | null | undefined) =>
+		new Intl.NumberFormat('id-ID').format(value ?? 0);
 
 	const formatDate = (value: number | null | undefined) =>
 		value
@@ -38,12 +30,7 @@
 		return source.length > length ? `${source.slice(0, length).trim()}...` : source;
 	};
 
-	const paymentTypeLabel: Record<string, string> = {
-		bank: 'Transfer Bank',
-		ewallet: 'E-Wallet',
-		qris: 'QRIS',
-		manual: 'Manual'
-	};
+	const canAfford = (price: number) => data.isLoggedIn && data.coinBalance >= price;
 
 	$: products = Array.isArray(data.products) ? data.products : [];
 	$: featuredProducts = products.filter((product: Product) => product.featured);
@@ -53,7 +40,7 @@
 	<title>Digital Store - Santri Online</title>
 	<meta
 		name="description"
-		content="Katalog produk digital Santri Online yang dikelola dari pusat konten."
+		content="Katalog produk digital Santri Online. Beli dengan Coin untuk akses instan."
 	/>
 </svelte:head>
 
@@ -66,16 +53,22 @@
 				<p class="text-xs uppercase tracking-[0.35em] text-emerald-200/70">Digital Store</p>
 				<h1 class="mt-3 text-3xl font-bold md:text-5xl">Produk digital pilihan SantriOnline</h1>
 				<p class="mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
-					Halaman ini menampilkan katalog produk digital yang sudah dipublish dari panel super admin. Cocok
-					untuk e-book, modul, file panduan, atau materi premium lain yang Anda jual dengan alur pembayaran manual yang rapi.
+					Beli produk digital menggunakan Coin untuk akses instan. E-book, modul, file panduan, dan materi premium lainnya tersedia di sini.
 				</p>
 				<div class="mt-6 flex flex-wrap gap-3">
 					<a href="#katalog" class="btn border-none bg-white text-slate-900 hover:bg-emerald-50">
 						Lihat Produk
 					</a>
-					<a href="/blog" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
-						Kembali ke Blog
-					</a>
+					{#if data.isLoggedIn}
+						<a href="/coins/topup" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
+							<Coins class="h-4 w-4" />
+							Isi Saldo Coin
+						</a>
+					{:else}
+						<a href="/auth" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
+							Login
+						</a>
+					{/if}
 				</div>
 			</div>
 
@@ -90,11 +83,22 @@
 					<p class="mt-3 text-3xl font-semibold">{data.stats.featuredProducts}</p>
 					<p class="mt-1 text-xs text-white/65">Produk yang ditandai featured.</p>
 				</div>
-				<div class="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-					<p class="text-[11px] uppercase tracking-[0.24em] text-white/55">Metode Bayar</p>
-					<p class="mt-3 text-3xl font-semibold">{data.stats.paymentMethods}</p>
-					<p class="mt-1 text-xs text-white/65">Terhubung ke produk yang tayang.</p>
-				</div>
+				{#if data.isLoggedIn}
+					<div class="rounded-3xl border border-emerald-300/20 bg-emerald-300/10 p-5 backdrop-blur">
+						<p class="text-[11px] uppercase tracking-[0.24em] text-emerald-200/70">Saldo Coin</p>
+						<p class="mt-3 flex items-center gap-1 text-3xl font-semibold">
+							<Coins class="h-7 w-7" />
+							{formatCoin(data.coinBalance)}
+						</p>
+						<a href="/coins" class="mt-1 text-xs text-emerald-200/80 hover:text-white">Lihat riwayat →</a>
+					</div>
+				{:else}
+					<div class="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+						<p class="text-[11px] uppercase tracking-[0.24em] text-white/55">Pembayaran</p>
+						<p class="mt-3 text-3xl font-semibold">Coin</p>
+						<p class="mt-1 text-xs text-white/65">Login untuk membeli.</p>
+					</div>
+				{/if}
 			</div>
 		</div>
 	</section>
@@ -140,18 +144,17 @@
 								<p class="mt-2 text-sm leading-7 text-slate-600">
 									{shortText(product.summary || product.description, 210)}
 								</p>
-								<p class="mt-5 text-2xl font-semibold text-emerald-700">{formatPrice(product.price)}</p>
-								{#if product.paymentMethods.length > 0}
-									<div class="mt-5 flex flex-wrap gap-2">
-										{#each product.paymentMethods as method}
-											<span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
-												{paymentTypeLabel[method.type] ?? method.name}
-											</span>
-										{/each}
-									</div>
+								<p class="mt-5 flex items-center gap-1 text-2xl font-semibold text-emerald-700">
+									<Coins class="h-6 w-6" />
+									{formatCoin(product.price)} Coin
+								</p>
+								{#if data.isLoggedIn && !canAfford(product.price)}
+									<p class="mt-2 text-xs text-amber-600">
+										Saldo tidak cukup. Butuh {formatCoin(product.price - data.coinBalance)} Coin lagi.
+									</p>
 								{/if}
 								<div class="mt-5 flex gap-2">
-									<a href={`/digital-store/${product.slug}`} class="btn btn-primary">Lihat Detail</a>
+									<a href={`/digital-store/${product.slug}`} class="btn btn-primary flex-1">Lihat Detail</a>
 								</div>
 							</div>
 						</div>
@@ -167,7 +170,7 @@
 				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Katalog Publik</p>
 				<h2 class="mt-2 text-2xl font-semibold text-slate-900">Semua produk digital</h2>
 			</div>
-			<p class="text-sm text-slate-500">Tersusun otomatis dari produk yang statusnya sudah dipublikasikan.</p>
+			<p class="text-sm text-slate-500">Beli dengan Coin untuk akses instan.</p>
 		</div>
 
 		{#if products.length === 0}
@@ -180,6 +183,7 @@
 		{:else}
 			<div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
 				{#each products as product}
+					{@const affordable = canAfford(product.price)}
 					<article
 						id={product.slug}
 						class="group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
@@ -210,7 +214,7 @@
 							</div>
 						</div>
 
-							<div class="space-y-4 p-5">
+						<div class="space-y-4 p-5">
 							<div>
 								<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Terakhir update {formatDate(product.updatedAt)}</p>
 								<h3 class="mt-2 text-xl font-semibold text-slate-900">{product.title}</h3>
@@ -219,36 +223,40 @@
 								</p>
 							</div>
 
-							<div class="rounded-2xl bg-slate-50 p-4">
+							<div class={`rounded-2xl p-4 ${affordable ? 'bg-emerald-50' : 'bg-slate-50'}`}>
 								<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Harga</p>
-								<p class="mt-2 text-2xl font-semibold text-emerald-700">{formatPrice(product.price)}</p>
-							</div>
-
-								<div>
-									<p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Metode pembayaran</p>
-									{#if product.paymentMethods.length > 0}
-										<div class="mt-3 flex flex-wrap gap-2">
-											{#each product.paymentMethods as method}
-											<span class="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600">
-												{method.name}
-											</span>
-										{/each}
-									</div>
-								{:else}
-									<p class="mt-3 text-sm text-slate-500">Metode pembayaran belum dihubungkan untuk produk ini.</p>
+								<p class={`mt-2 flex items-center gap-1 text-2xl font-semibold ${affordable ? 'text-emerald-700' : 'text-slate-700'}`}>
+									<Coins class="h-6 w-6" />
+									{formatCoin(product.price)} Coin
+								</p>
+								{#if data.isLoggedIn && !affordable}
+									<p class="mt-2 text-xs text-amber-600">
+										Butuh {formatCoin(product.price - data.coinBalance)} Coin lagi
+									</p>
 								{/if}
-								</div>
-
-								<div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-									<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Akses File</p>
-									<p class="mt-2 text-sm font-semibold text-slate-900">File dibuka setelah bukti pembayaran diverifikasi admin.</p>
-								</div>
-
-								<div class="flex gap-2">
-									<a href={`/digital-store/${product.slug}`} class="btn btn-primary flex-1">Beli Sekarang</a>
-								</div>
 							</div>
-						</article>
+
+							<div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+								<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Akses File</p>
+								<p class="mt-2 text-sm font-semibold text-slate-900">Langsung setelah pembelian dengan Coin</p>
+							</div>
+
+							<div class="flex gap-2">
+								{#if !data.isLoggedIn}
+									<a href="/auth?redirect={encodeURIComponent(`/digital-store/${product.slug}`)}" class="btn btn-primary flex-1">
+										Login untuk Beli
+									</a>
+								{:else if !affordable}
+									<a href="/coins/topup" class="btn btn-warning flex-1">
+										<Coins class="h-4 w-4" />
+										Isi Saldo
+									</a>
+								{:else}
+									<a href={`/digital-store/${product.slug}`} class="btn btn-primary flex-1">Beli Sekarang</a>
+								{/if}
+							</div>
+						</div>
+					</article>
 				{/each}
 			</div>
 		{/if}

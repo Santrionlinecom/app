@@ -1,11 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import {
-	createMidtransAuthorization,
-	createMidtransOrderId,
-	ensurePaymentOrdersSchema,
-	MIDTRANS_SNAP_TRANSACTION_URL
-} from '$lib/server/services/payment-gateway/payments/midtrans';
 import type { Actions, PageServerLoad } from './$types';
+import { checkCoinBalance, deductCoins, rupiahToCoin } from '$lib/server/domains/buku/coin-operations';
+import { ensureCoinWallet, getCoinBalance } from '$lib/server/domains/buku/wallet';
 
 type AddonAktifRow = {
 	id: string;
@@ -35,11 +31,6 @@ const ADDON_NAMES = {
 
 type AddonTipe = keyof typeof ADDON_PRICES;
 
-type MidtransSnapResponse = {
-	token?: string;
-	error_messages?: string[];
-};
-
 const isAddonTipe = (value: string): value is AddonTipe => value in ADDON_PRICES;
 
 const readFormString = (formData: FormData, key: string) => {
@@ -62,9 +53,12 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 			addonAktif: [],
 			lembagaNama: null,
 			lembagaId: null,
-			midtransClientKey: platform?.env?.MIDTRANS_CLIENT_KEY ?? ''
+			coinBalance: 0
 		};
 	}
+
+	// Get coin balance
+	const coinBalance = await getCoinBalance(locals.db, locals.user.id);
 
 	const nowMs = Date.now();
 	const nowSeconds = Math.floor(nowMs / 1000);
@@ -100,12 +94,12 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 		addonAktif: addonResult.results ?? [],
 		lembagaNama: lembaga?.name ?? null,
 		lembagaId: lembaga?.id ?? null,
-		midtransClientKey: platform?.env?.MIDTRANS_CLIENT_KEY ?? ''
+		coinBalance
 	};
 };
 
 export const actions: Actions = {
-	order: async ({ locals, platform, request, fetch }) => {
+	order: async ({ locals, platform, request }) => {
 		if (!locals.user) {
 			return fail(401, { message: 'Silakan login terlebih dahulu.' });
 		}
@@ -113,11 +107,6 @@ export const actions: Actions = {
 		const db = locals.db ?? platform?.env?.DB;
 		if (!db) {
 			return fail(500, { message: 'Layanan data tidak tersedia.' });
-		}
-
-		const serverKey = platform?.env?.MIDTRANS_SERVER_KEY;
-		if (!serverKey) {
-			return fail(500, { message: 'Konfigurasi Midtrans belum tersedia.' });
 		}
 
 		const formData = await request.formData();
@@ -147,117 +136,104 @@ export const actions: Actions = {
 			return fail(403, { message: 'Lembaga tidak ditemukan atau bukan milik akun ini.' });
 		}
 
-		await ensurePaymentOrdersSchema(db);
+		// Ensure coin wallet exists
+		await ensureCoinWallet(db, locals.user.id);
 
-		const orderId = createMidtransOrderId();
-		const packageName = `Addon ${ADDON_NAMES[addonTipe]} Bulanan`;
-		const now = Date.now();
-		const metadata = JSON.stringify({
-			userId: locals.user.id,
-			lembagaId,
-			addonSlug: addonTipe,
-			packageName
-		});
+		// Convert rupiah to coin (1:1 conversion)
+		const coinRequired = rupiahToCoin(nominal);
 
-		await db.batch([
-			db
-				.prepare(
-					`INSERT INTO payment_orders (
-						id,
-						provider,
-						purpose,
-						user_id,
-						lembaga_id,
-						product_slug,
-						package_name,
-						gross_amount,
-						currency,
-						status,
-						metadata,
-						created_at,
-						updated_at
-					)
-					VALUES (?, 'midtrans', 'addon', ?, ?, ?, ?, ?, 'IDR', 'pending', ?, ?, ?)`
-				)
-				.bind(orderId, locals.user.id, lembagaId, addonTipe, packageName, nominal, metadata, now, now),
-			db
-				.prepare(
-					`INSERT INTO billing (
-						id,
-						akun_admin_id,
-						lembaga_id,
-						addon_tipe,
-						nominal,
-						metode,
-						status
-					)
-					VALUES (?, ?, ?, ?, ?, 'midtrans', 'pending')`
-				)
-				.bind(orderId, locals.user.id, lembagaId, addonTipe, nominal)
-		]);
-
-		console.info('midtrans_snap_create_addon', {
-			order_id: orderId,
-			gross_amount: nominal,
-			product_slug: addonTipe
-		});
-
-		const snapResponse = await fetch(MIDTRANS_SNAP_TRANSACTION_URL, {
-			method: 'POST',
-			headers: {
-				Authorization: createMidtransAuthorization(serverKey),
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				transaction_details: {
-					order_id: orderId,
-					gross_amount: nominal
-				},
-				customer_details: {
-					first_name: locals.user.username ?? locals.user.email,
-					email: locals.user.email
-				},
-				item_details: [
-					{
-						id: addonTipe,
-						price: nominal,
-						quantity: 1,
-						name: packageName
-					}
-				]
-			})
-		});
-
-		const snapPayload = (await snapResponse.json().catch(() => ({}))) as MidtransSnapResponse;
-		if (!snapResponse.ok || !snapPayload.token) {
-			await db.batch([
-				db.prepare("UPDATE billing SET status = 'gagal' WHERE id = ?").bind(orderId),
-				db
-					.prepare(
-						"UPDATE payment_orders SET status = 'gagal', provider_status = ?, updated_at = ? WHERE id = ?"
-					)
-					.bind(String(snapResponse.status), Date.now(), orderId)
-			]);
-			console.warn('midtrans_snap_create_addon_failed', {
-				order_id: orderId,
-				gross_amount: nominal,
-				product_slug: addonTipe,
-				status: snapResponse.status
+		// Check coin balance
+		const balanceCheck = await checkCoinBalance(db, locals.user.id, coinRequired);
+		if (!balanceCheck.hasEnough) {
+			return fail(400, {
+				type: 'insufficient_coin',
+				message: 'Saldo coin tidak cukup.',
+				currentBalance: balanceCheck.currentBalance,
+				requiredAmount: balanceCheck.required,
+				shortfall: balanceCheck.shortfall,
+				productName: ADDON_NAMES[addonTipe]
 			});
-			const midtransMessage = Array.isArray(snapPayload.error_messages)
-				? snapPayload.error_messages.join(', ')
-				: 'Midtrans Snap tidak mengembalikan token.';
-			return fail(502, { message: midtransMessage });
 		}
 
-		await db
-			.prepare('UPDATE payment_orders SET provider_token = ?, updated_at = ? WHERE id = ?')
-			.bind(snapPayload.token, Date.now(), orderId)
-			.run();
+		const orderId = crypto.randomUUID();
+		const packageName = `Addon ${ADDON_NAMES[addonTipe]} Bulanan`;
+		const now = Date.now();
 
-		return {
-			type: 'snapToken',
-			snapToken: snapPayload.token
-		};
+		try {
+			// Deduct coins
+			const deductResult = await deductCoins(
+				db,
+				locals.user.id,
+				coinRequired,
+				`Pembelian ${packageName}`,
+				'addon',
+				orderId
+			);
+
+			if (!deductResult.success) {
+				return fail(400, {
+					type: 'deduct_failed',
+					message: deductResult.error || 'Gagal memproses pembayaran coin.'
+				});
+			}
+
+			// Calculate expiry (30 days from now)
+			const expiryMs = now + 30 * 24 * 60 * 60 * 1000;
+
+			// Create addon record and billing record
+			await db.batch([
+				db
+					.prepare(
+						`INSERT INTO addon_lembaga (
+							id,
+							lembaga_id,
+							tipe_addon,
+							status,
+							berlaku_hingga,
+							created_at
+						)
+						VALUES (?, ?, ?, 'aktif', ?, ?)`
+					)
+					.bind(orderId, lembagaId, addonTipe, expiryMs, now),
+				db
+					.prepare(
+						`INSERT INTO billing (
+							id,
+							akun_admin_id,
+							lembaga_id,
+							addon_tipe,
+							nominal,
+							metode,
+							status
+						)
+						VALUES (?, ?, ?, ?, ?, 'coin', 'lunas')`
+					)
+					.bind(orderId, locals.user.id, lembagaId, addonTipe, nominal)
+			]);
+
+			console.info('addon_order_success_coin', {
+				order_id: orderId,
+				addon_type: addonTipe,
+				coin_amount: coinRequired,
+				new_balance: deductResult.newBalance
+			});
+
+			return {
+				type: 'success',
+				message: `Berhasil mengaktifkan ${packageName}!`,
+				newBalance: deductResult.newBalance,
+				orderId
+			};
+		} catch (err: any) {
+			console.error('addon_order_error', {
+				order_id: orderId,
+				addon_type: addonTipe,
+				error: err.message
+			});
+			return fail(500, {
+				type: 'error',
+				message: 'Terjadi kesalahan saat memproses pesanan. Silakan coba lagi.'
+			});
+		}
 	}
 };

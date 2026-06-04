@@ -1,10 +1,10 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { ensureDefaultManualPaymentMethods } from '$lib/server/domains/digital-store/manual-payments';
 import {
 	ensureDigitalCommerceSchema,
 	listPublishedDigitalProducts
 } from '$lib/server/domains/digital-store/commerce';
+import { getCoinBalance } from '$lib/server/domains/buku/wallet';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.db) {
@@ -12,12 +12,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	await ensureDigitalCommerceSchema(locals.db);
-	await ensureDefaultManualPaymentMethods(locals.db);
 
 	const products = await listPublishedDigitalProducts(locals.db);
 	const paymentMethodIds = new Set(
 		products.flatMap((product) => product.paymentMethods.map((method) => method.id))
 	);
+
+	// Get user's coin balance if logged in
+	let coinBalance = 0;
+	if (locals.user) {
+		coinBalance = await getCoinBalance(locals.db, locals.user.id);
+	}
 
 	return {
 		products,
@@ -25,6 +30,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			totalProducts: products.length,
 			featuredProducts: products.filter((product) => product.featured).length,
 			paymentMethods: paymentMethodIds.size
-		}
+		},
+		coinBalance,
+		isLoggedIn: !!locals.user
 	};
 };

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
+	import InsufficientCoinNotice from '$lib/components/InsufficientCoinNotice.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	export let data: PageData;
@@ -427,7 +428,16 @@
 							Harga unlock: <span class="font-semibold">{book.pricePerChapter} coin</span>
 						</div>
 
-						{#if form?.error}
+						{#if form?.type === 'insufficient_coin'}
+							<div class="mt-5">
+								<InsufficientCoinNotice
+									currentBalance={form.currentBalance ?? walletBalance}
+									requiredAmount={form.requiredAmount ?? book.pricePerChapter}
+									shortfall={form.shortfall ?? (book.pricePerChapter - walletBalance)}
+									productName={form.productName ?? `${book.title} - Bab ${chapter.chapterNumber}`}
+								/>
+							</div>
+						{:else if form?.error && form?.type !== 'insufficient_coin'}
 							<div class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
 								{form.error}
 							</div>
@@ -439,17 +449,10 @@
 								<a href={`/buku/${book.slug}`} class="btn btn-outline">Kembali ke Daftar Bab</a>
 							</div>
 						{:else if !canUnlock}
-							<div
-								class={`mt-5 rounded-2xl border px-4 py-4 text-sm ${
-									isDarkReader
-										? 'border-amber-800/80 bg-stone-950/55 text-stone-300'
-										: 'border-amber-200 bg-white text-slate-700'
-								}`}
-							>
-								Coin belum cukup. Silakan topup coin terlebih dahulu.
-								<p class="mt-2 text-xs opacity-70">Saldo saat ini: {walletBalance} coin.</p>
+							<div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+								<a href="/coins/topup" class="btn btn-warning flex-1">Isi Saldo Coin</a>
+								<a href={`/buku/${book.slug}`} class="btn btn-outline flex-1">Kembali ke Daftar Bab</a>
 							</div>
-							<a href={`/buku/${book.slug}`} class="btn btn-outline mt-6">Kembali ke Daftar Bab</a>
 						{:else}
 							<form method="POST" action="?/unlock" class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
 								<button type="submit" class="btn btn-primary">
