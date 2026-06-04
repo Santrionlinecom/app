@@ -778,9 +778,9 @@
 			width: 420,
 			height: 620,
 			size: 'stretch',
-			minWidth: 280,
+			minWidth: 315,
 			maxWidth: 520,
-			minHeight: 400,
+			minHeight: 480,
 			maxHeight: 780,
 			usePortrait: true,
 			autoSize: true,
@@ -788,7 +788,10 @@
 			showCover: false,
 			mobileScrollSupport: true,
 			flippingTime: 700,
-			swipeDistance: 30
+			swipeDistance: 30,
+			startPage: 'last',
+			drawShadow: true,
+			useMouseEvents: true
 		};
 
 		flipInstance = new PageFlip(flipContainer, settings);
@@ -1331,11 +1334,11 @@
 	};
 
 	const flipPrev = () => {
-		flipInstance?.flipPrev();
+		flipInstance?.flipNext();
 	};
 
 	const flipNext = () => {
-		flipInstance?.flipNext();
+		flipInstance?.flipPrev();
 	};
 
 	onMount(() => {
@@ -1842,8 +1845,8 @@
 									Lembar {currentSpread} dari {totalSpreads} • Halaman {currentPageNumber || '-'}
 								</div>
 								<div class="flex items-center gap-2">
-									<button class="btn btn-sm" on:click={flipPrev}>◀</button>
-									<button class="btn btn-sm" on:click={flipNext}>▶</button>
+									<button class="btn btn-sm" on:click={flipNext} aria-label="Halaman sebelumnya">◀</button>
+									<button class="btn btn-sm" on:click={flipPrev} aria-label="Halaman selanjutnya">▶</button>
 								</div>
 							</div>
 							<div class="mushaf-shell">
@@ -2319,10 +2322,12 @@
 		display: flex;
 		justify-content: center;
 		padding: 0.5rem 0 1.5rem;
+		min-height: 70vh;
 	}
 
 	.mushaf-book {
-		width: min(100%, 940px);
+		width: 100%;
+		max-width: 940px;
 		margin: 0 auto;
 	}
 
@@ -2331,6 +2336,9 @@
 		border-radius: 18px;
 		box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
 		padding: 14px;
+		width: 100% !important;
+		height: 100% !important;
+		min-height: 480px;
 	}
 
 	.mushaf-frame {
