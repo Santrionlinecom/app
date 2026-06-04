@@ -47,7 +47,8 @@ $: isImpersonating = isImpersonatingUser(data?.user);
 $: scrollY = $scrollDirection.scrollY;
 $: scrollingDown = $scrollDirection.scrollingDown;
 $: hideChromeFromRoute = Boolean(($page.data as PageDataWithChrome | undefined)?.hideChrome);
-$: hidePageChrome = hideChrome || hideChromeFromRoute;
+// Auto-hide header/footer when user is logged in
+$: hidePageChrome = hideChrome || hideChromeFromRoute || Boolean(data?.user);
 $: shouldHideMobileChrome =
 	!hidePageChrome &&
 	isMobileViewport &&
@@ -1661,8 +1662,52 @@ $: if (pathname !== previousPathname) {
 		</footer>
 	{/if}
 
-	<!-- Bottom nav (mobile) -->
-	{#if !hidePageChrome && !isAppRouteActive && !isAdminRouteActive}
+	<!-- Bottom nav (mobile) - Always show for logged-in users -->
+	{#if data?.user}
+		<nav
+			class={`pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom transition-transform duration-300 ease-in-out will-change-transform ${
+				shouldHideMobileChrome ? 'translate-y-full' : 'translate-y-0'
+			}`}
+		>
+			<div class="mx-auto max-w-xl px-3 py-3 pb-safe">
+				<div class="pointer-events-auto rounded-[1.7rem] border border-white/70 bg-white/92 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+					{#if isAdminRouteActive && isSuperAdmin}
+						<div class="grid grid-cols-4 gap-1">
+							{#each adminNav as item}
+								<a
+									href={item.href}
+									class="mobile-tab-link"
+									class:mobile-tab-link-active={item.isActive(pathname)}
+								>
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+										<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+									</svg>
+									<span class="text-[10px]">{item.label}</span>
+								</a>
+							{/each}
+						</div>
+					{:else}
+						<!-- Scrollable bottom nav for logged-in users -->
+						<div class="mobile-scroll-row flex gap-1 overflow-x-auto pb-1">
+							{#each mobilePublicTabs as item}
+								<a
+									href={item.href}
+									class="mobile-tab-link shrink-0"
+									class:mobile-tab-link-active={item.isActive(pathname)}
+								>
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+										<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+									</svg>
+									<span class="text-[10px]">{item.label}</span>
+								</a>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</div>
+		</nav>
+	{:else if !hidePageChrome && !isAppRouteActive && !isAdminRouteActive}
+		<!-- Bottom nav for non-logged-in users -->
 		<nav
 			class={`pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom transition-transform duration-300 ease-in-out will-change-transform ${
 				shouldHideMobileChrome ? 'translate-y-full' : 'translate-y-0'
@@ -1683,31 +1728,6 @@ $: if (pathname !== previousPathname) {
 								<span class="text-[10px]">{item.label}</span>
 							</a>
 						{/each}
-					</div>
-				</div>
-			</div>
-		</nav>
-	{:else if !hidePageChrome && isAdminRouteActive && isSuperAdmin}
-		<nav
-			class={`pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom transition-transform duration-300 ease-in-out will-change-transform ${
-				shouldHideMobileChrome ? 'translate-y-full' : 'translate-y-0'
-			}`}
-		>
-			<div class="mx-auto max-w-xl px-3 py-3 pb-safe">
-				<div class="pointer-events-auto rounded-[1.7rem] border border-white/70 bg-white/92 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
-					<div class="grid grid-cols-4 gap-1">
-					{#each adminNav as item}
-						<a
-							href={item.href}
-							class="mobile-tab-link"
-							class:mobile-tab-link-active={item.isActive(pathname)}
-						>
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-								<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
-							</svg>
-							<span class="text-[10px]">{item.label}</span>
-						</a>
-					{/each}
 					</div>
 				</div>
 			</div>
