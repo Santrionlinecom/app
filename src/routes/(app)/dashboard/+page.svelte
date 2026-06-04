@@ -1361,13 +1361,10 @@
 	<title>{dashboardTitle} | SantriOnline</title>
 </svelte:head>
 
-<div class="mx-auto w-full max-w-[90rem] space-y-5 px-0 sm:space-y-6">
-	<section
-		class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-		style="animation-delay: 40ms;"
-	>
+<div class="dashboard-command-shell mx-auto w-full max-w-[90rem] space-y-6 text-so-ink">
+	<section class="fade-in admin-card min-w-0 overflow-hidden" style="animation-delay: 40ms;">
 		<div
-			class="grid min-w-0 gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)] lg:items-center"
+			class="grid min-w-0 gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)] lg:items-stretch"
 		>
 			<div class="min-w-0">
 				<div class="flex min-w-0 flex-wrap items-center gap-2">
@@ -1375,8 +1372,8 @@
 						<span
 							class={`inline-flex min-h-9 max-w-full items-center rounded-full border px-3 py-1.5 text-xs font-bold ${
 								pill.active
-									? 'border-emerald-700 bg-emerald-700 text-white shadow-sm'
-									: 'border-slate-200 bg-slate-50 text-slate-600'
+									? 'border-so-green bg-so-green text-white shadow-sm'
+									: 'border-so-border bg-so-cream text-so-muted'
 							}`}
 						>
 							<span class="min-w-0 break-words">{pill.label}</span>
@@ -1384,30 +1381,43 @@
 					{/each}
 				</div>
 				<h1
-					class="app-title mt-4 break-words text-2xl font-bold leading-tight text-slate-950 sm:text-3xl"
+					class="font-display mt-4 break-words text-3xl font-bold leading-tight text-so-green sm:text-4xl"
 				>
 					{dashboardTitle}
 				</h1>
-				<p class="mt-2 max-w-3xl break-words text-sm leading-6 text-slate-600 sm:text-base">
+				<p class="mt-2 max-w-3xl break-words text-sm leading-6 text-so-muted sm:text-base">
 					{dashboardSubtitle}
 				</p>
+				<div class="mt-5 grid min-w-0 gap-3 sm:grid-cols-3">
+					{#each statHighlights as item}
+						<a
+							href={item.href}
+							class="min-w-0 rounded-xl border border-so-border bg-so-cream/75 p-3 transition hover:border-so-green hover:bg-white"
+						>
+							<p class="break-words text-[11px] font-bold uppercase text-so-muted">{item.label}</p>
+							<p class="mt-1 truncate text-lg font-bold text-so-green">{item.value}</p>
+						</a>
+					{/each}
+				</div>
 			</div>
-			<div class="min-w-0 rounded-xl border border-slate-200 bg-slate-50/70 p-3 sm:p-4">
+			<div class="min-w-0 rounded-xl border border-so-border bg-so-cream p-3 shadow-sm sm:p-4">
 				<div
-					class="flex min-w-0 items-center gap-3 rounded-xl border border-white bg-white px-3 py-3 shadow-sm"
+					class="flex min-w-0 items-center gap-3 rounded-xl border border-so-border bg-white px-3 py-3 shadow-sm"
 				>
-					<Search size={18} class="shrink-0 text-slate-400" strokeWidth={2.2} />
+					<Search size={18} class="shrink-0 text-so-muted" strokeWidth={2.2} />
 					<div class="min-w-0 flex-1">
-						<p class="truncate text-sm font-bold text-slate-900">
+						<p class="truncate text-sm font-bold text-so-ink">
 							{displayName}
 						</p>
-						<p class="truncate text-xs text-slate-500">
+						<p class="truncate text-xs text-so-muted">
 							{orgName} - {roleLabel}
 						</p>
 					</div>
 				</div>
-				<div class="mt-3 flex min-w-0 items-center gap-2 text-xs text-slate-500">
-					<ShieldCheck size={15} class="shrink-0 text-emerald-700" strokeWidth={2.2} />
+				<div
+					class="mt-3 flex min-w-0 items-start gap-2 rounded-xl border border-so-gold/30 bg-white/75 px-3 py-3 text-xs text-so-muted"
+				>
+					<ShieldCheck size={15} class="mt-0.5 shrink-0 text-so-green" strokeWidth={2.2} />
 					<span class="min-w-0 break-words"
 						>Ini bukan role switcher. Tampilan mengikuti izin akun aktif.</span
 					>
@@ -1423,7 +1433,7 @@
 		{#each dashboardStats as stat}
 			<a
 				href={stat.href}
-				class={`group relative min-h-[9.25rem] min-w-0 overflow-hidden rounded-2xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${getTone(stat.tone).card}`}
+				class="admin-card group relative min-h-[9.25rem] min-w-0 overflow-hidden p-4 transition hover:-translate-y-0.5 hover:border-so-green hover:shadow-soft"
 			>
 				<span class={`absolute inset-x-0 top-0 h-1 ${getTone(stat.tone).accent}`}></span>
 				<div class="flex min-w-0 items-start justify-between gap-3">
@@ -1438,19 +1448,19 @@
 						{stat.source}
 					</span>
 				</div>
-				<p class="mt-4 break-words text-xs font-bold uppercase text-slate-500">
+				<p class="mt-4 break-words text-xs font-bold uppercase text-so-muted">
 					{stat.label}
 				</p>
-				<p class="mt-1 break-words text-2xl font-bold leading-tight text-slate-950 tabular-nums">
+				<p class="mt-1 break-words text-2xl font-bold leading-tight text-so-ink tabular-nums">
 					{stat.value}
 				</p>
 				<div class="mt-2 flex min-w-0 items-end justify-between gap-2">
-					<p class="min-w-0 break-words text-xs leading-5 text-slate-500">
+					<p class="min-w-0 break-words text-xs leading-5 text-so-muted">
 						{stat.desc}
 					</p>
 					<ArrowRight
 						size={16}
-						class="shrink-0 text-slate-300 transition group-hover:text-emerald-700"
+						class="shrink-0 text-so-muted/45 transition group-hover:text-so-green"
 						strokeWidth={2.2}
 					/>
 				</div>
@@ -1460,19 +1470,19 @@
 
 	<section class="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-12">
 		<div
-			class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 xl:col-span-8"
+			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-8"
 			style="animation-delay: 100ms;"
 		>
 			<div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 				<div class="min-w-0">
-					<p class="text-xs font-bold uppercase text-emerald-700">Overview</p>
-					<h2 class="app-title mt-1 break-words text-xl font-bold text-slate-950">
+					<p class="text-xs font-bold uppercase text-so-green">Overview</p>
+					<h2 class="font-display mt-1 break-words text-xl font-bold text-so-green">
 						{chartTitle}
 					</h2>
-					<p class="mt-1 break-words text-sm text-slate-500">{chartDesc}</p>
+					<p class="mt-1 break-words text-sm text-so-muted">{chartDesc}</p>
 				</div>
 				<span
-					class="inline-flex min-h-9 w-fit items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600"
+					class="inline-flex min-h-9 w-fit items-center rounded-full border border-so-border bg-white px-3 py-1.5 text-xs font-bold text-so-muted"
 				>
 					{chartMeta}
 				</span>
@@ -1480,7 +1490,7 @@
 
 			{#if chartBars.length}
 				<div
-					class="mt-6 h-72 min-w-0 rounded-xl border border-slate-100 bg-gradient-to-b from-slate-50 to-white p-3 sm:p-4"
+					class="soft-grid mt-6 h-72 min-w-0 rounded-xl border border-so-border bg-so-cream p-3 sm:p-4"
 				>
 					<div class="flex h-full min-w-0 items-end gap-2 sm:gap-3">
 						{#each chartBars as entry}
@@ -1489,12 +1499,10 @@
 									class={`w-full min-w-0 rounded-t-xl bg-gradient-to-t ${entry.tone} shadow-sm`}
 									style={`height: ${entry.height}%`}
 								></div>
-								<p
-									class="mt-2 w-full truncate text-center text-[11px] font-semibold text-slate-500"
-								>
+								<p class="mt-2 w-full truncate text-center text-[11px] font-semibold text-so-muted">
 									{entry.label}
 								</p>
-								<p class="w-full truncate text-center text-[11px] font-bold text-slate-800">
+								<p class="w-full truncate text-center text-[11px] font-bold text-so-ink">
 									{entry.display}
 								</p>
 							</div>
@@ -1503,12 +1511,12 @@
 				</div>
 			{:else}
 				<div
-					class="mt-6 grid min-h-72 place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-center"
+					class="mt-6 grid min-h-72 place-items-center rounded-xl border border-dashed border-so-border bg-so-cream/70 p-6 text-center"
 				>
 					<div class="max-w-sm">
-						<BarChart3 class="mx-auto text-slate-300" size={38} strokeWidth={1.8} />
-						<p class="mt-3 text-sm font-bold text-slate-700">Belum tersedia</p>
-						<p class="mt-1 text-xs leading-5 text-slate-500">
+						<BarChart3 class="mx-auto text-so-green/35" size={38} strokeWidth={1.8} />
+						<p class="mt-3 text-sm font-bold text-so-green">Belum tersedia</p>
+						<p class="mt-1 text-xs leading-5 text-so-muted">
 							Chart akan aktif setelah data aktivitas, kas, atau progress tersedia dari server load.
 						</p>
 					</div>
@@ -1517,16 +1525,16 @@
 		</div>
 
 		<div
-			class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm xl:col-span-4"
+			class="fade-in admin-card min-w-0 overflow-hidden xl:col-span-4"
 			style="animation-delay: 130ms;"
 		>
-			<div class="border-b border-slate-100 p-4 sm:p-5">
-				<p class="text-xs font-bold uppercase text-emerald-700">Status Panel</p>
-				<h2 class="app-title mt-1 break-words text-xl font-bold text-slate-950">
+			<div class="border-b border-so-border bg-so-cream/55 p-4 sm:p-5">
+				<p class="text-xs font-bold uppercase text-so-green">Status Panel</p>
+				<h2 class="font-display mt-1 break-words text-xl font-bold text-so-green">
 					Kesiapan Operasional
 				</h2>
 			</div>
-			<div class="divide-y divide-slate-100">
+			<div class="divide-y divide-so-border">
 				{#each statusItems as item}
 					<div class="min-w-0 p-4 sm:p-5">
 						<div class="flex min-w-0 items-start gap-3">
@@ -1539,7 +1547,7 @@
 								<div
 									class="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:justify-between"
 								>
-									<p class="min-w-0 break-words text-sm font-bold text-slate-900">
+									<p class="min-w-0 break-words text-sm font-bold text-so-ink">
 										{item.label}
 									</p>
 									<span
@@ -1548,11 +1556,11 @@
 										{item.value}
 									</span>
 								</div>
-								<p class="mt-1 break-words text-xs leading-5 text-slate-500">
+								<p class="mt-1 break-words text-xs leading-5 text-so-muted">
 									{item.desc}
 								</p>
 								{#if item.progress !== null && item.progress !== undefined}
-									<div class="mt-3 h-2 rounded-full bg-slate-100">
+									<div class="mt-3 h-2 rounded-full bg-so-cream">
 										<div
 											class={`h-2 rounded-full ${getTone(item.tone).accent}`}
 											style={`width: ${item.progress}%`}
@@ -1569,22 +1577,22 @@
 
 	<section class="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-12">
 		<div
-			class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 xl:col-span-4"
+			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-4"
 			style="animation-delay: 160ms;"
 		>
 			<div class="flex min-w-0 items-start justify-between gap-3">
 				<div class="min-w-0">
-					<p class="text-xs font-bold uppercase text-emerald-700">Aktivitas</p>
-					<h2 class="app-title mt-1 break-words text-xl font-bold text-slate-950">Terbaru</h2>
+					<p class="text-xs font-bold uppercase text-so-green">Aktivitas</p>
+					<h2 class="font-display mt-1 break-words text-xl font-bold text-so-green">Terbaru</h2>
 				</div>
-				<Activity size={20} class="shrink-0 text-emerald-700" strokeWidth={2.2} />
+				<Activity size={20} class="shrink-0 text-so-green" strokeWidth={2.2} />
 			</div>
 			{#if activityFeed.length}
 				<div class="mt-4 space-y-3">
 					{#each activityFeed as item}
 						<a
 							href={item.href ?? '/dashboard'}
-							class="group flex min-w-0 gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3 transition hover:border-emerald-100 hover:bg-white hover:shadow-sm"
+							class="group flex min-w-0 gap-3 rounded-xl border border-so-border bg-so-cream/60 p-3 transition hover:border-so-green hover:bg-white hover:shadow-sm"
 						>
 							<span
 								class={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${getTone(item.tone).icon}`}
@@ -1592,11 +1600,11 @@
 								<svelte:component this={item.icon} size={18} strokeWidth={2.2} />
 							</span>
 							<span class="min-w-0 flex-1">
-								<span class="block break-words text-sm font-bold text-slate-900">{item.title}</span>
-								<span class="mt-1 block break-words text-xs leading-5 text-slate-500"
+								<span class="block break-words text-sm font-bold text-so-ink">{item.title}</span>
+								<span class="mt-1 block break-words text-xs leading-5 text-so-muted"
 									>{item.desc}</span
 								>
-								<span class="mt-1 block break-words text-[11px] font-semibold text-slate-400"
+								<span class="mt-1 block break-words text-[11px] font-semibold text-so-muted/75"
 									>{item.meta}</span
 								>
 							</span>
@@ -1605,9 +1613,9 @@
 				</div>
 			{:else}
 				<div
-					class="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-5 text-sm text-slate-500"
+					class="mt-4 rounded-xl border border-dashed border-so-border bg-so-cream/70 p-5 text-sm text-so-muted"
 				>
-					<p class="font-bold text-slate-700">Belum tersedia</p>
+					<p class="font-bold text-so-green">Belum tersedia</p>
 					<p class="mt-1 text-xs leading-5">
 						Aktivitas akan muncul setelah ada setoran, agenda, atau transaksi existing.
 					</p>
@@ -1616,13 +1624,13 @@
 		</div>
 
 		<div
-			class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 xl:col-span-4"
+			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-4"
 			style="animation-delay: 190ms;"
 		>
 			<div class="flex min-w-0 items-start justify-between gap-3">
 				<div class="min-w-0">
-					<p class="text-xs font-bold uppercase text-emerald-700">Quick Actions</p>
-					<h2 class="app-title mt-1 break-words text-xl font-bold text-slate-950">Akses Cepat</h2>
+					<p class="text-xs font-bold uppercase text-so-green">Quick Actions</p>
+					<h2 class="font-display mt-1 break-words text-xl font-bold text-so-green">Akses Cepat</h2>
 				</div>
 				<Zap size={20} class="shrink-0 text-amber-600" strokeWidth={2.2} />
 			</div>
@@ -1630,17 +1638,16 @@
 				{#each quickLinks as item}
 					<a
 						href={item.href}
-						class="group flex min-h-16 min-w-0 items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-left transition hover:border-emerald-100 hover:bg-white hover:shadow-sm"
+						class="group flex min-h-16 min-w-0 items-center gap-3 rounded-xl border border-so-border bg-white p-3 text-left transition hover:border-so-green hover:bg-so-cream/50 hover:shadow-sm"
 					>
 						<span
-							class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700"
+							class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-so-green/10 text-so-green"
 						>
 							<svelte:component this={getQuickIcon(item.label)} size={19} strokeWidth={2.2} />
 						</span>
 						<span class="min-w-0 flex-1">
-							<span class="block break-words text-sm font-bold text-slate-900">{item.label}</span>
-							<span class="mt-1 block break-words text-xs leading-5 text-slate-500"
-								>{item.desc}</span
+							<span class="block break-words text-sm font-bold text-so-ink">{item.label}</span>
+							<span class="mt-1 block break-words text-xs leading-5 text-so-muted">{item.desc}</span
 							>
 						</span>
 					</a>
@@ -1649,13 +1656,13 @@
 		</div>
 
 		<div
-			class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 xl:col-span-4"
+			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-4"
 			style="animation-delay: 220ms;"
 		>
 			<div class="flex min-w-0 items-start justify-between gap-3">
 				<div class="min-w-0">
-					<p class="text-xs font-bold uppercase text-emerald-700">Insight</p>
-					<h2 class="app-title mt-1 break-words text-xl font-bold text-slate-950">
+					<p class="text-xs font-bold uppercase text-so-green">Insight</p>
+					<h2 class="font-display mt-1 break-words text-xl font-bold text-so-green">
 						Fokus Saat Ini
 					</h2>
 				</div>
@@ -1663,20 +1670,20 @@
 			</div>
 			<div class="mt-4 space-y-3">
 				{#each insightCards as item}
-					<div class="flex min-w-0 gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+					<div class="flex min-w-0 gap-3 rounded-xl border border-so-border bg-so-cream/60 p-3">
 						<span
 							class={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${getTone(item.tone).icon}`}
 						>
 							<svelte:component this={item.icon} size={18} strokeWidth={2.2} />
 						</span>
 						<div class="min-w-0">
-							<p class="break-words text-xs font-bold uppercase text-slate-500">
+							<p class="break-words text-xs font-bold uppercase text-so-muted">
 								{item.label}
 							</p>
-							<p class="mt-1 break-words text-base font-bold text-slate-950">
+							<p class="mt-1 break-words text-base font-bold text-so-ink">
 								{item.value}
 							</p>
-							<p class="mt-1 break-words text-xs leading-5 text-slate-500">
+							<p class="mt-1 break-words text-xs leading-5 text-so-muted">
 								{item.desc}
 							</p>
 						</div>
@@ -1687,17 +1694,17 @@
 	</section>
 
 	<section
-		class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+		class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
 		style="animation-delay: 250ms;"
 	>
 		<div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
 			<div class="min-w-0">
-				<p class="text-xs font-bold uppercase text-emerald-700">Fitur Lembaga</p>
-				<h2 class="app-title mt-1 break-words text-xl font-bold text-slate-950 sm:text-2xl">
+				<p class="text-xs font-bold uppercase text-so-green">Fitur Lembaga</p>
+				<h2 class="font-display mt-1 break-words text-xl font-bold text-so-green sm:text-2xl">
 					{orgName}
 				</h2>
 			</div>
-			<p class="break-words text-xs text-slate-500 sm:text-sm">
+			<p class="break-words text-xs text-so-muted sm:text-sm">
 				Menu disesuaikan dengan tipe lembaga dan role akun.
 			</p>
 		</div>
@@ -1706,11 +1713,11 @@
 			{#each featureCards as card}
 				<a
 					href={card.href}
-					class="group flex min-h-[7rem] min-w-0 flex-col rounded-xl border border-slate-100 bg-slate-50/70 p-4 transition hover:border-emerald-100 hover:bg-white hover:shadow-sm"
+					class="group flex min-h-[7rem] min-w-0 flex-col rounded-xl border border-so-border bg-white p-4 transition hover:border-so-green hover:bg-so-cream/50 hover:shadow-sm"
 				>
 					<div class="flex min-w-0 items-start justify-between gap-3">
 						<span
-							class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700"
+							class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-so-green/10 text-so-green"
 						>
 							<svelte:component this={getQuickIcon(card.label)} size={19} strokeWidth={2.2} />
 						</span>
@@ -1721,10 +1728,10 @@
 							>
 						{/if}
 					</div>
-					<p class="mt-3 break-words text-sm font-bold text-slate-900">
+					<p class="mt-3 break-words text-sm font-bold text-so-ink">
 						{card.label}
 					</p>
-					<p class="mt-1.5 break-words text-xs leading-5 text-slate-500">
+					<p class="mt-1.5 break-words text-xs leading-5 text-so-muted">
 						{card.desc}
 					</p>
 				</a>
@@ -1734,18 +1741,18 @@
 
 	{#if orgType === 'tpq' && tpqDashboard}
 		<section
-			class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm sm:p-6"
+			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
 			style="animation-delay: 100ms;"
 		>
 			<div class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 				<div class="min-w-0">
-					<p class="text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-600">
+					<p class="text-[10px] font-bold uppercase tracking-[0.25em] text-so-green">
 						TPQ Akademik
 					</p>
-					<h3 class="app-title mt-2 break-words text-2xl font-bold text-slate-900">
+					<h3 class="font-display mt-2 break-words text-2xl font-bold text-so-green">
 						Pusat Operasional TPQ
 					</h3>
-					<p class="mt-2 max-w-2xl break-words text-sm leading-relaxed text-slate-600">
+					<p class="mt-2 max-w-2xl break-words text-sm leading-relaxed text-so-muted">
 						Satu pintu untuk setoran resmi, review, riwayat, rapor, sertifikat, dan agenda lembaga.
 					</p>
 				</div>
@@ -1760,15 +1767,15 @@
 				{#each tpqCards as card}
 					<a
 						href={card.href}
-						class={`min-w-0 rounded-xl border border-slate-100 bg-gradient-to-br ${card.tone} p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
+						class={`min-w-0 rounded-xl border border-so-border bg-gradient-to-br ${card.tone} p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-so-green hover:shadow-md`}
 					>
-						<p class="break-words text-[11px] font-bold uppercase tracking-wide text-slate-600">
+						<p class="break-words text-[11px] font-bold uppercase tracking-wide text-so-muted">
 							{card.label}
 						</p>
 						<p class="mt-2 break-words text-2xl font-bold tabular-nums tracking-tight">
 							{card.value}
 						</p>
-						<p class="mt-1.5 break-words text-xs leading-relaxed text-slate-600">
+						<p class="mt-1.5 break-words text-xs leading-relaxed text-so-muted">
 							{card.desc}
 						</p>
 					</a>
@@ -1776,11 +1783,11 @@
 			</div>
 
 			<div class="mt-6 grid min-w-0 gap-4 xl:grid-cols-2">
-				<div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/30 p-4 sm:p-5">
+				<div class="min-w-0 rounded-xl border border-so-border bg-so-cream/55 p-4 sm:p-5">
 					<div class="flex min-w-0 items-center justify-between gap-3">
-						<h4 class="text-sm font-bold text-slate-900">Setoran terbaru</h4>
+						<h4 class="text-sm font-bold text-so-green">Setoran terbaru</h4>
 						<a
-							class="text-xs font-bold text-emerald-600 hover:text-emerald-700"
+							class="text-xs font-bold text-so-green hover:text-so-green-2"
 							href="/tpq/akademik/riwayat"
 						>
 							Lihat riwayat
@@ -1790,14 +1797,14 @@
 						<div class="mt-4 space-y-2.5">
 							{#each tpqRecentSetoran as item}
 								<div
-									class="flex min-w-0 flex-col gap-2 rounded-xl border border-slate-100 bg-white px-4 py-3 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between"
+									class="flex min-w-0 flex-col gap-2 rounded-xl border border-so-border bg-white px-4 py-3 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between"
 								>
 									<div class="min-w-0">
-										<p class="break-words font-semibold text-slate-900">
+										<p class="break-words font-semibold text-so-ink">
 											{item.santriName || 'Santri'} · {getSurahName(Number(item.surah))}
 											{item.ayatFrom}-{item.ayatTo}
 										</p>
-										<p class="mt-1 break-words text-xs text-slate-500">
+										<p class="mt-1 break-words text-xs text-so-muted">
 											{formatDate(item.date)} · {item.type === 'murojaah' ? "Muroja'ah" : 'Hafalan'}
 											· {item.ustadzName || 'Pengampu'}
 										</p>
@@ -1822,10 +1829,10 @@
 					{/if}
 				</div>
 
-				<div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/30 p-4 sm:p-5">
+				<div class="min-w-0 rounded-xl border border-so-border bg-so-cream/55 p-4 sm:p-5">
 					<div class="flex min-w-0 items-center justify-between gap-3">
-						<h4 class="text-sm font-bold text-slate-900">Agenda TPQ</h4>
-						<a class="text-xs font-bold text-emerald-600 hover:text-emerald-700" href="/kalender">
+						<h4 class="text-sm font-bold text-so-green">Agenda TPQ</h4>
+						<a class="text-xs font-bold text-so-green hover:text-so-green-2" href="/kalender">
 							Buka kalender
 						</a>
 					</div>
@@ -1833,16 +1840,16 @@
 						<div class="mt-4 space-y-2.5">
 							{#each tpqAgenda as item}
 								<div
-									class="min-w-0 rounded-xl border border-slate-100 bg-white px-4 py-3 text-sm shadow-sm"
+									class="min-w-0 rounded-xl border border-so-border bg-white px-4 py-3 text-sm shadow-sm"
 								>
-									<p class="break-words font-semibold text-slate-900">
+									<p class="break-words font-semibold text-so-ink">
 										{item.title}
 									</p>
-									<p class="mt-1 text-xs text-slate-500">
+									<p class="mt-1 text-xs text-so-muted">
 										{formatDate(item.eventDate)}
 									</p>
 									{#if item.content}
-										<p class="mt-2 break-words text-xs leading-5 text-slate-500">
+										<p class="mt-2 break-words text-xs leading-5 text-so-muted">
 											{item.content}
 										</p>
 									{/if}
@@ -1867,14 +1874,14 @@
 	{#if isCommunityOrg}
 		<section class="grid min-w-0 grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-3">
 			<div
-				class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm sm:p-6 xl:col-span-2"
+				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-2"
 				style="animation-delay: 120ms;"
 			>
 				<div class="flex min-w-0 items-center justify-between gap-3">
-					<h3 class="app-title min-w-0 break-words text-xl font-bold text-slate-900">
+					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
 						Transaksi Kas Terbaru
 					</h3>
-					<a class="text-xs font-bold text-emerald-600 hover:text-emerald-700" href="/keuangan">
+					<a class="text-xs font-bold text-so-green hover:text-so-green-2" href="/keuangan">
 						Lihat keuangan
 					</a>
 				</div>
@@ -1882,13 +1889,13 @@
 					<div class="mt-5 space-y-2.5">
 						{#each finance.kas.entries as entry}
 							<div
-								class="flex min-w-0 flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between"
+								class="flex min-w-0 flex-col gap-2 rounded-xl border border-so-border bg-so-cream/60 px-4 py-3 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between"
 							>
 								<div class="min-w-0">
-									<p class="break-words font-semibold text-slate-900">
+									<p class="break-words font-semibold text-so-ink">
 										{entry.kategori}
 									</p>
-									<p class="text-xs text-slate-500">
+									<p class="text-xs text-so-muted">
 										{formatDate(entry.tanggal)}
 									</p>
 								</div>
@@ -1898,7 +1905,7 @@
 									>
 										{entry.tipe === 'masuk' ? '+' : '-'}{formatCurrency(entry.nominal)}
 									</p>
-									<p class="break-words text-xs text-slate-500">
+									<p class="break-words text-xs text-so-muted">
 										{entry.keterangan || '-'}
 									</p>
 								</div>
@@ -1918,14 +1925,14 @@
 			</div>
 
 			<div
-				class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm sm:p-6"
+				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
 				style="animation-delay: 200ms;"
 			>
 				<div class="flex min-w-0 items-center justify-between gap-3">
-					<h3 class="app-title min-w-0 break-words text-xl font-bold text-slate-900">
+					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
 						Agenda 2 Minggu
 					</h3>
-					<a class="text-xs font-bold text-emerald-600 hover:text-emerald-700" href="/kalender">
+					<a class="text-xs font-bold text-so-green hover:text-so-green-2" href="/kalender">
 						Lihat kalender
 					</a>
 				</div>
@@ -1933,16 +1940,16 @@
 					<div class="mt-5 space-y-2.5">
 						{#each communitySchedule as item}
 							<div
-								class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 text-sm shadow-sm"
+								class="min-w-0 rounded-xl border border-so-border bg-so-cream/60 px-4 py-3 text-sm shadow-sm"
 							>
-								<p class="break-words font-semibold text-slate-900">
+								<p class="break-words font-semibold text-so-ink">
 									{item.title}
 								</p>
-								<p class="text-xs text-slate-500">
+								<p class="text-xs text-so-muted">
 									{formatDate(item.eventDate)}
 								</p>
 								{#if item.content}
-									<p class="mt-1 break-words text-xs text-slate-500">
+									<p class="mt-1 break-words text-xs text-so-muted">
 										{item.content}
 									</p>
 								{/if}
@@ -1964,15 +1971,13 @@
 		{#if canManageCommunity}
 			<section class="grid min-w-0 grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2">
 				<div
-					class={`min-w-0 overflow-hidden rounded-3xl border border-white/80 bg-white/80 p-4 shadow-xl backdrop-blur sm:p-6 ${assetId ? 'xl:col-span-2' : ''}`}
+					class={`admin-card min-w-0 overflow-hidden p-5 sm:p-6 ${assetId ? 'xl:col-span-2' : ''}`}
 				>
-					<h3 class="app-title break-words text-xl font-semibold text-slate-900">Kelola Aset</h3>
-					<p class="text-xs text-slate-500">Inventaris lembaga yang tampil di halaman publik.</p>
-					<div
-						class="mt-4 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4"
-					>
-						<h4 class="text-sm font-semibold text-emerald-700">Import Excel</h4>
-						<p class="mt-1 break-words text-xs text-emerald-700/80">
+					<h3 class="font-display break-words text-xl font-bold text-so-green">Kelola Aset</h3>
+					<p class="text-xs text-so-muted">Inventaris lembaga yang tampil di halaman publik.</p>
+					<div class="mt-4 rounded-xl border border-dashed border-so-green/25 bg-so-green/8 p-4">
+						<h4 class="text-sm font-semibold text-so-green">Import Excel</h4>
+						<p class="mt-1 break-words text-xs text-so-muted">
 							Kolom wajib: <strong>name</strong>, <strong>quantity</strong>. Opsional:
 							<strong>category</strong>, <strong>condition</strong>,
 							<strong>location</strong>, <strong>acquired_at</strong>,
@@ -2008,7 +2013,7 @@
 						{#if assetId}
 							<input type="hidden" name="id" value={assetId} />
 							<div
-								class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700"
+								class="rounded-xl border border-so-gold/35 bg-so-gold/12 p-3 text-xs text-so-green"
 							>
 								Sedang mengedit aset. Simpan untuk memperbarui atau batalkan untuk input baru.
 							</div>
@@ -2084,13 +2089,13 @@
 				</div>
 
 				<div
-					class={`min-w-0 overflow-hidden rounded-3xl border border-white/80 bg-white/80 p-4 shadow-xl backdrop-blur sm:p-6 ${assetId ? 'xl:col-span-2' : ''}`}
+					class={`admin-card min-w-0 overflow-hidden p-5 sm:p-6 ${assetId ? 'xl:col-span-2' : ''}`}
 				>
 					<div class="flex min-w-0 items-center justify-between gap-3">
-						<h3 class="app-title min-w-0 break-words text-xl font-semibold text-slate-900">
+						<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
 							Daftar Aset
 						</h3>
-						<span class="text-xs text-slate-400">{assets.length} item</span>
+						<span class="text-xs text-so-muted">{assets.length} item</span>
 					</div>
 					{#if assets.length === 0}
 						<EmptyState
@@ -2103,32 +2108,32 @@
 						<div class="mt-4 space-y-3 md:hidden">
 							{#each assets as asset}
 								<div
-									class={`rounded-2xl border p-4 shadow-sm ${
+									class={`rounded-xl border p-4 shadow-sm ${
 										assetId === asset.id
 											? 'border-amber-300 bg-amber-50/60'
-											: 'border-slate-200 bg-white'
+											: 'border-so-border bg-white'
 									}`}
 								>
 									<div class="flex min-w-0 items-center justify-between gap-3">
-										<p class="min-w-0 break-words text-sm font-semibold text-slate-900">
+										<p class="min-w-0 break-words text-sm font-semibold text-so-ink">
 											{asset.name}
 										</p>
-										<span class="text-xs text-slate-500">{asset.quantity} unit</span>
+										<span class="text-xs text-so-muted">{asset.quantity} unit</span>
 									</div>
-									<p class="mt-2 break-words text-xs text-slate-500">
+									<p class="mt-2 break-words text-xs text-so-muted">
 										Kategori: {asset.category || '-'}
 									</p>
-									<p class="mt-1 break-words text-xs text-slate-500">
+									<p class="mt-1 break-words text-xs text-so-muted">
 										Kondisi: {asset.condition || '-'}
 									</p>
-									<p class="mt-1 break-words text-xs text-slate-500">
+									<p class="mt-1 break-words text-xs text-so-muted">
 										Lokasi: {asset.location || '-'}
 									</p>
-									<p class="mt-1 text-xs text-slate-500">
+									<p class="mt-1 text-xs text-so-muted">
 										Tanggal: {formatDate(asset.acquiredAt)}
 									</p>
 									{#if asset.notes}
-										<p class="mt-2 break-words text-xs text-slate-500">
+										<p class="mt-2 break-words text-xs text-so-muted">
 											{asset.notes}
 										</p>
 									{/if}
@@ -2158,10 +2163,12 @@
 								</div>
 							{/each}
 						</div>
-						<div class="mt-4 hidden max-w-full overflow-x-auto md:block">
-							<table class="table table-zebra w-full text-sm">
+						<div
+							class="mt-4 hidden max-w-full overflow-x-auto rounded-xl border border-so-border md:block"
+						>
+							<table class="w-full min-w-[920px] text-sm">
 								<thead>
-									<tr>
+									<tr class="bg-so-cream text-left text-xs uppercase text-so-muted">
 										<th>Nama</th>
 										<th>Kategori</th>
 										<th>Jumlah</th>
@@ -2172,7 +2179,7 @@
 										<th>Aksi</th>
 									</tr>
 								</thead>
-								<tbody>
+								<tbody class="divide-y divide-so-border bg-white">
 									{#each assets as asset}
 										<tr class={assetId === asset.id ? 'bg-amber-50' : ''}>
 											<td>{asset.name}</td>
@@ -2219,21 +2226,23 @@
 	{:else if isEducationalOrg && isStudent}
 		<section class="grid min-w-0 grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-3">
 			<div
-				class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm sm:p-6 xl:col-span-2"
+				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-2"
 				style="animation-delay: 120ms;"
 			>
 				<div class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-					<h3 class="app-title min-w-0 break-words text-xl font-bold text-slate-900">
+					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
 						Aktivitas 7 Hari Terakhir
 					</h3>
 					<span
-						class="w-fit rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold text-teal-700"
+						class="w-fit rounded-full border border-so-green/15 bg-so-green/10 px-3 py-1 text-xs font-semibold text-so-green"
 					>
 						{stats.todayApproved ?? 0} disetujui hari ini
 					</span>
 				</div>
 				{#if seriesBars.length}
-					<div class="mt-6 flex h-44 min-w-0 items-end gap-2 sm:gap-3">
+					<div
+						class="soft-grid mt-6 flex h-44 min-w-0 items-end gap-2 rounded-xl border border-so-border bg-so-cream p-4 sm:gap-3"
+					>
 						{#each seriesBars as entry}
 							<div class="min-w-0 flex-1 text-center">
 								<div
@@ -2249,7 +2258,7 @@
 							</div>
 						{/each}
 					</div>
-					<p class="mt-4 text-xs text-slate-500">Data berdasarkan setoran yang disetujui.</p>
+					<p class="mt-4 text-xs text-so-muted">Data berdasarkan setoran yang disetujui.</p>
 				{:else}
 					<EmptyState
 						icon="📊"
@@ -2263,15 +2272,15 @@
 			</div>
 
 			<div
-				class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm sm:p-6"
+				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
 				style="animation-delay: 200ms;"
 			>
 				<div class="flex min-w-0 items-center justify-between gap-3">
-					<h3 class="app-title min-w-0 break-words text-xl font-bold text-slate-900">
+					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
 						Surah Terbanyak
 					</h3>
 					<a
-						class="text-xs font-bold text-emerald-600 hover:text-emerald-700"
+						class="text-xs font-bold text-so-green hover:text-so-green-2"
 						href="/dashboard/pencapaian-hafalan"
 					>
 						Lihat detail
@@ -2281,18 +2290,18 @@
 					<div class="mt-5 space-y-2.5">
 						{#each topChecklist as row}
 							<div
-								class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 text-sm shadow-sm"
+								class="min-w-0 rounded-xl border border-so-border bg-so-cream/60 px-4 py-3 text-sm shadow-sm"
 							>
 								<div class="flex min-w-0 items-center justify-between gap-3">
 									<div class="min-w-0">
-										<p class="break-words font-semibold text-slate-900">
+										<p class="break-words font-semibold text-so-ink">
 											{row.name || getSurahName(row.surahNumber)}
 										</p>
-										<p class="text-xs text-slate-500">
+										<p class="text-xs text-so-muted">
 											{row.disetujui}/{row.totalAyah} ayat disetujui
 										</p>
 									</div>
-									<span class="text-xs font-semibold text-emerald-700">
+									<span class="text-xs font-semibold text-so-green">
 										{row.totalAyah ? Math.round((row.disetujui / row.totalAyah) * 100) : 0}%
 									</span>
 								</div>
@@ -2314,15 +2323,15 @@
 	{:else if isEducationalOrg && isStaff}
 		<section class="grid min-w-0 grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-2">
 			<div
-				class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm sm:p-6"
+				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
 				style="animation-delay: 120ms;"
 			>
 				<div class="flex min-w-0 items-center justify-between gap-3">
-					<h3 class="app-title min-w-0 break-words text-xl font-bold text-slate-900">
+					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
 						Progress Santri
 					</h3>
 					<a
-						class="text-xs font-bold text-emerald-600 hover:text-emerald-700"
+						class="text-xs font-bold text-so-green hover:text-so-green-2"
 						href="/dashboard/kelola-santri"
 					>
 						Lihat semua
@@ -2332,29 +2341,29 @@
 					<div class="mt-5 space-y-2.5">
 						{#each studentHighlights as student}
 							<div
-								class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 text-sm shadow-sm"
+								class="min-w-0 rounded-xl border border-so-border bg-so-cream/60 px-4 py-3 text-sm shadow-sm"
 							>
 								<div class="flex min-w-0 items-center justify-between gap-3">
 									<div class="min-w-0">
-										<p class="break-words font-semibold text-slate-900">
+										<p class="break-words font-semibold text-so-ink">
 											{student.username || student.email}
 										</p>
-										<p class="break-words text-xs text-slate-500">
+										<p class="break-words text-xs text-so-muted">
 											{student.email}
 										</p>
 									</div>
 									<div class="text-right">
-										<p class="text-sm font-semibold text-emerald-700">
+										<p class="text-sm font-semibold text-so-green">
 											{Math.round(student.percentage ?? 0)}%
 										</p>
-										<p class="text-xs text-slate-500">
+										<p class="text-xs text-so-muted">
 											{student.approvedAyah ?? 0} ayat
 										</p>
 									</div>
 								</div>
-								<div class="mt-2 h-2 rounded-full bg-slate-200">
+								<div class="mt-2 h-2 rounded-full bg-white">
 									<div
-										class="h-2 rounded-full bg-emerald-500"
+										class="h-2 rounded-full bg-so-green"
 										style={`width: ${Math.min(100, Math.round(student.percentage ?? 0))}%`}
 									></div>
 								</div>
@@ -2374,15 +2383,15 @@
 			</div>
 
 			<div
-				class="fade-in min-w-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm sm:p-6"
+				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
 				style="animation-delay: 200ms;"
 			>
 				<div class="flex min-w-0 items-center justify-between gap-3">
-					<h3 class="app-title min-w-0 break-words text-xl font-bold text-slate-900">
+					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
 						Setoran Menunggu
 					</h3>
 					<a
-						class="text-xs font-bold text-emerald-600 hover:text-emerald-700"
+						class="text-xs font-bold text-so-green hover:text-so-green-2"
 						href={tpqDashboard?.canReviewSetoran ? '/tpq/akademik/review' : '/tpq/akademik/riwayat'}
 					>
 						Lihat semua
@@ -2392,14 +2401,14 @@
 					<div class="mt-5 space-y-2.5">
 						{#each tpqPendingSetoran as item}
 							<div
-								class="flex min-w-0 flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between"
+								class="flex min-w-0 flex-col gap-2 rounded-xl border border-so-border bg-so-cream/60 px-4 py-3 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between"
 							>
 								<div class="min-w-0">
-									<p class="break-words font-semibold text-slate-900">
+									<p class="break-words font-semibold text-so-ink">
 										{item.santriName || 'Santri'} · {getSurahName(Number(item.surah))}
 										{item.ayatFrom}-{item.ayatTo}
 									</p>
-									<p class="break-words text-xs text-slate-500">
+									<p class="break-words text-xs text-so-muted">
 										{formatDate(item.date)} · {item.type === 'murojaah' ? "Muroja'ah" : 'Hafalan'}
 									</p>
 								</div>
@@ -2422,11 +2431,77 @@
 			</div>
 		</section>
 	{:else}
-		<section
-			class="min-w-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-5 text-sm text-slate-500 shadow-sm sm:p-6"
-		>
+		<section class="admin-card min-w-0 overflow-hidden p-5 text-sm text-so-muted sm:p-6">
 			Dashboard ini akan menampilkan ringkasan data sesuai peran Anda. Silakan gunakan menu untuk
 			mulai mengisi data.
 		</section>
 	{/if}
 </div>
+
+<style>
+	:global(body:has(.dashboard-command-shell)) {
+		background: #faf8f3;
+	}
+
+	:global(.dashboard-command-shell) {
+		font-family: var(
+			--font-sans,
+			ui-sans-serif,
+			system-ui,
+			-apple-system,
+			BlinkMacSystemFont,
+			'Segoe UI',
+			sans-serif
+		);
+	}
+
+	:global(.dashboard-command-shell .admin-card) {
+		border: 1px solid rgb(232 228 220 / 0.95);
+		border-radius: var(--radius-so, 12px);
+		background: rgb(255 255 255 / 0.88);
+		box-shadow: var(--shadow-card, 0 12px 34px rgb(27 67 50 / 0.08));
+		backdrop-filter: blur(18px);
+	}
+
+	:global(.dashboard-command-shell .soft-grid) {
+		background-image:
+			linear-gradient(rgb(232 228 220 / 0.74) 1px, transparent 1px),
+			linear-gradient(90deg, rgb(232 228 220 / 0.48) 1px, transparent 1px);
+		background-size:
+			100% 25%,
+			16.66% 100%;
+	}
+
+	:global(.dashboard-command-shell table th),
+	:global(.dashboard-command-shell table td) {
+		padding: 0.75rem 1rem;
+		vertical-align: top;
+	}
+
+	:global(.dashboard-command-shell input),
+	:global(.dashboard-command-shell textarea),
+	:global(.dashboard-command-shell select) {
+		max-width: 100%;
+		border-color: var(--color-so-border, #e8e4dc);
+		background-color: rgb(250 248 243 / 0.45);
+	}
+
+	:global(.dashboard-command-shell input:focus),
+	:global(.dashboard-command-shell textarea:focus),
+	:global(.dashboard-command-shell select:focus) {
+		border-color: var(--color-so-gold, #c9a84c);
+		box-shadow: 0 0 0 4px rgb(201 168 76 / 0.18);
+		outline: none;
+	}
+
+	:global(.dashboard-command-shell .btn-primary) {
+		border-color: var(--color-so-green, #1b4332);
+		background: var(--color-so-green, #1b4332);
+		color: #ffffff;
+	}
+
+	:global(.dashboard-command-shell .btn-outline) {
+		border-color: var(--color-so-border, #e8e4dc);
+		color: var(--color-so-green, #1b4332);
+	}
+</style>

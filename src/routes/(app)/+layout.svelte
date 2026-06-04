@@ -27,6 +27,7 @@
 	let roleLabel = 'Pengguna';
 	let headerTitle = 'Ringkasan Harian';
 	let featureAccess: Record<string, boolean> = {};
+	let isDashboardRoute = false;
 
 	const orgLabelMap: Record<string, string> = {
 		pondok: 'Pondok',
@@ -46,6 +47,16 @@
 		jamaah: 'Jamaah',
 		tamir: "Ta'mir",
 		bendahara: 'Bendahara'
+	};
+
+	const santriOnlineIconUrl =
+		'https://files.santrionline.com/ICON%20SANTRI%20ONLINE%20COM%20kecil%20(1).png';
+
+	const dashboardIconPaths = {
+		dashboard: 'M3 13h8V3H3v10Zm10 8h8V11h-8v10ZM3 21h8v-6H3v6Zm10-12h8V3h-8v6Z',
+		search: 'M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z',
+		sparkles:
+			'M12 3l1.7 4.6L18 9.3l-4.3 1.7L12 15.5 10.3 11 6 9.3l4.3-1.7L12 3Zm6 10 1 2.6 2.5 1-2.5 1-1 2.4-1-2.4-2.5-1 2.5-1 1-2.6ZM5 13l.8 2.1L8 16l-2.2.9L5 19l-.8-2.1L2 16l2.2-.9L5 13Z'
 	};
 
 	type MenuItem = {
@@ -309,8 +320,7 @@
 		}
 	];
 
-	const featureAllowed = (item: MenuItem) =>
-		!item.feature || Boolean(featureAccess[item.feature]);
+	const featureAllowed = (item: MenuItem) => !item.feature || Boolean(featureAccess[item.feature]);
 
 	const resolveRoleItems = () => {
 		if (!hasOrg) return [];
@@ -330,8 +340,10 @@
 
 	let roleItems: MenuItem[] = [];
 	let menuItems: MenuItem[] = [];
+	let dashboardShellMenuItems: MenuItem[] = [];
 	let mobileQuickItems: MenuItem[] = [];
 	$: {
+		isDashboardRoute = $page.url.pathname === '/dashboard';
 		role = data?.user?.role ?? '';
 		orgType = data?.org?.type ?? null;
 		isCommunityOrg = orgType === 'masjid' || orgType === 'musholla';
@@ -341,21 +353,26 @@
 		featureAccess = (data?.featureAccess ?? {}) as Record<string, boolean>;
 		const roleKey = isSuperAdmin && !isImpersonating ? 'SUPER_ADMIN' : role;
 		orgLabel =
-			isSuperAdmin && !isImpersonating ? 'System' : orgType ? orgLabelMap[orgType] ?? orgType : 'Lembaga';
+			isSuperAdmin && !isImpersonating
+				? 'System'
+				: orgType
+					? (orgLabelMap[orgType] ?? orgType)
+					: 'Lembaga';
 		roleLabel = roleLabelMap[roleKey] ?? 'Pengguna';
-		headerTitle = isSuperAdmin && !isImpersonating
-			? 'Panel Super Admin'
-			: orgType === 'tpq'
-				? 'Dashboard TPQ'
-				: orgType === 'pondok'
-					? 'Dashboard Pondok'
-					: orgType === 'masjid'
-						? 'Dashboard Masjid'
-						: orgType === 'musholla'
-							? 'Dashboard Musholla'
-							: orgType === 'rumah-tahfidz'
-								? 'Dashboard Rumah Tahfidz'
-								: 'Dashboard Lembaga';
+		headerTitle =
+			isSuperAdmin && !isImpersonating
+				? 'Panel Super Admin'
+				: orgType === 'tpq'
+					? 'Dashboard TPQ'
+					: orgType === 'pondok'
+						? 'Dashboard Pondok'
+						: orgType === 'masjid'
+							? 'Dashboard Masjid'
+							: orgType === 'musholla'
+								? 'Dashboard Musholla'
+								: orgType === 'rumah-tahfidz'
+									? 'Dashboard Rumah Tahfidz'
+									: 'Dashboard Lembaga';
 
 		roleItems = resolveRoleItems().filter(featureAllowed);
 		const configuredMenu = ((data?.appMenu ?? []) as MenuItem[]).filter(Boolean);
@@ -388,13 +405,22 @@
 						href: '/addon',
 						icon: 'M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9L12 3z'
 					}
-		];
+				];
 		const utilityItems = isSuperAdmin ? superAdminItems : [];
 		menuItems = configuredMenu.length
 			? configuredMenu
 			: isImpersonating
 				? [...primaryItems, ...bookAccessItems, ...utilityItems, ...roleItems, ...footerItems]
-				: [...primaryItems, ...bookAccessItems, ...(isSuperAdmin ? utilityItems : roleItems), ...footerItems];
+				: [
+						...primaryItems,
+						...bookAccessItems,
+						...(isSuperAdmin ? utilityItems : roleItems),
+						...footerItems
+					];
+		dashboardShellMenuItems = [
+			{ label: 'Dashboard', href: '/dashboard', icon: dashboardIconPaths.dashboard },
+			...menuItems.filter((item) => item.href !== '/dashboard')
+		];
 		const dashboardItem = menuItems.find((item) => item.href === '/dashboard') ?? primaryItems[0];
 		const socialItem = menuItems.find((item) => item.href === '/beranda');
 		const lembagaItem = menuItems.find((item) => item.href === '/lembaga');
@@ -418,185 +444,318 @@
 	};
 
 	const displayName = data?.user?.username || data?.user?.email || 'Guest';
+	const displayInitials =
+		displayName
+			.split(/[\s@._-]+/)
+			.filter(Boolean)
+			.slice(0, 2)
+			.map((part) => part[0]?.toUpperCase())
+			.join('') || 'SO';
 </script>
 
-<div class="app-shell relative min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-teal-50 to-amber-50 text-slate-900">
-	<div class="pointer-events-none absolute inset-0 overflow-hidden">
-		<div class="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-teal-200/40 blur-3xl"></div>
-		<div class="absolute -right-10 top-40 h-64 w-64 rounded-full bg-amber-200/50 blur-[90px]"></div>
-		<div class="absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-cyan-200/40 blur-[110px]"></div>
-	</div>
-
-	<div class="relative flex min-h-screen w-full max-w-full overflow-x-hidden">
-		<aside class="hidden w-64 shrink-0 flex-col border-r border-white/70 bg-white/70 px-4 py-6 shadow-xl backdrop-blur xl:w-72 xl:px-5 md:flex">
-			<div class="flex items-center justify-between gap-2">
-				<div class="min-w-0">
-					<p class="app-title truncate text-xl font-semibold">SantriOnline</p>
-					<p class="truncate text-xs uppercase tracking-[0.3em] text-slate-500">Institution Hub</p>
+{#if isDashboardRoute}
+	<div
+		class="dashboard-app-shell min-h-screen bg-so-cream text-so-ink lg:grid lg:grid-cols-[276px_minmax(0,1fr)]"
+	>
+		<aside
+			class="hidden min-h-screen bg-gradient-to-b from-so-green-3 via-so-green to-[#07351f] p-5 text-white lg:sticky lg:top-0 lg:flex lg:flex-col"
+		>
+			<a href="/dashboard" class="flex items-center gap-3">
+				<img src={santriOnlineIconUrl} alt="SantriOnline" class="h-11 w-11 object-contain" />
+				<div>
+					<p class="font-display text-xl font-bold leading-none">SantriOnline</p>
+					<p class="text-xs font-semibold text-white/65">{roleLabel}</p>
 				</div>
-				<span class="shrink-0 rounded-full bg-teal-100 px-2.5 py-1 text-[10px] font-semibold text-teal-700">
-					{orgLabel}
-				</span>
+			</a>
+
+			<div class="mt-8 rounded-xl border border-white/10 bg-white/8 p-3">
+				<div class="flex items-center gap-3">
+					<div
+						class="grid h-11 w-11 place-items-center rounded-lg bg-so-cream text-xs font-black text-so-green"
+					>
+						{displayInitials}
+					</div>
+					<div class="min-w-0">
+						<p class="truncate text-sm font-bold">{displayName}</p>
+						<p class="mt-0.5 text-xs text-white/60">{roleLabel.toUpperCase()} · {orgLabel}</p>
+					</div>
+				</div>
 			</div>
 
-			<nav class="mt-8 space-y-1.5">
-				{#each menuItems as item, idx}
+			<nav class="mt-6 grid gap-1.5">
+				{#each dashboardShellMenuItems as item}
 					<a
 						href={item.href}
-						class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800 hover:shadow-sm"
-						class:bg-emerald-100={isActive(item)}
-						class:text-emerald-900={isActive(item)}
-						class:shadow-sm={isActive(item)}
-						class:font-semibold={isActive(item)}
-						style={`animation-delay: ${idx * 50}ms;`}
+						class={`group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${
+							isActive(item)
+								? 'bg-so-gold/24 text-white ring-1 ring-so-gold/30'
+								: 'text-white/78 hover:bg-white/10 hover:text-white'
+						}`}
 					>
-						<svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-							<path d={item.icon} />
-						</svg>
+						<span
+							class={`grid h-8 w-8 place-items-center rounded-lg ${
+								isActive(item)
+									? 'bg-so-gold text-so-green'
+									: 'bg-white/8 text-white/80 group-hover:bg-white/14'
+							}`}
+						>
+							<svg
+								class="h-4 w-4"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.8"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path d={item.icon} />
+							</svg>
+						</span>
 						<span class="min-w-0 truncate">{item.label}</span>
 					</a>
 				{/each}
 			</nav>
 
-			<div
-				class="mt-auto rounded-xl px-3 py-3 text-xs leading-relaxed"
-				style="border: 1px solid var(--app-warm-soft); background: var(--app-warm-wash); color: var(--app-warm);"
-			>
-				<p class="font-semibold">Akses Role</p>
-				<p class="mt-1.5 break-words">
-					{#if isImpersonating}
-						Super admin sedang memakai konteks admin {orgLabel} tanpa kehilangan akses global.
-					{:else}
-						Menu ditampilkan sesuai peran {roleLabel} di {orgLabel}.
-					{/if}
-				</p>
+			<div class="mt-auto rounded-xl border border-so-gold/45 bg-so-green-3/55 p-4">
+				<div class="flex items-start gap-3">
+					<span class="grid h-9 w-9 place-items-center rounded-lg bg-so-gold text-so-green">
+						<svg
+							class="h-4 w-4"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<path d={dashboardIconPaths.sparkles} />
+						</svg>
+					</span>
+					<div>
+						<p class="font-display text-base font-bold">Control Center</p>
+						<p class="mt-1 text-xs leading-5 text-white/67">
+							Tampilan mengikuti izin {roleLabel} di {orgLabel}. Tidak mengubah permission akun.
+						</p>
+					</div>
+				</div>
 			</div>
 		</aside>
 
-		<div class="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden">
-			<header class="sticky top-0 z-20 flex w-full max-w-full items-center justify-between gap-2 border-b border-white/70 bg-white/80 px-3 py-3 shadow-sm backdrop-blur-md sm:gap-3 sm:px-4 md:px-6 xl:px-8">
-				<div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-					<button
-						class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100 md:hidden"
-						on:click={() => (sidebarOpen = true)}
-						aria-label="Open navigation"
-					>
-						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<path d="M4 6h16M4 12h16M4 18h10" />
-						</svg>
-					</button>
-					<div class="min-w-0 flex-1 sm:flex-initial">
-						<p class="truncate text-[10px] uppercase tracking-[0.3em] text-slate-400 sm:text-xs">Dashboard</p>
-						<h1 class="app-title truncate text-lg font-semibold text-slate-900 sm:text-xl md:text-2xl">{headerTitle}</h1>
+		{#if sidebarOpen}
+			<div class="fixed inset-0 z-50 lg:hidden">
+				<button
+					class="absolute inset-0 bg-slate-950/45"
+					type="button"
+					aria-label="Tutup menu"
+					on:click={() => (sidebarOpen = false)}
+				></button>
+				<aside
+					class="relative h-full w-[286px] overflow-y-auto bg-gradient-to-b from-so-green-3 via-so-green to-[#07351f] p-5 text-white shadow-2xl"
+				>
+					<div class="flex items-center justify-between">
+						<a
+							href="/dashboard"
+							class="flex items-center gap-3"
+							on:click={() => (sidebarOpen = false)}
+						>
+							<img src={santriOnlineIconUrl} alt="SantriOnline" class="h-10 w-10 object-contain" />
+							<div>
+								<p class="font-display text-lg font-bold leading-none">SantriOnline</p>
+								<p class="text-xs text-white/65">{roleLabel}</p>
+							</div>
+						</a>
+						<button
+							class="grid h-9 w-9 place-items-center rounded-lg border border-white/15 bg-white/10"
+							type="button"
+							aria-label="Tutup menu"
+							on:click={() => (sidebarOpen = false)}
+						>
+							×
+						</button>
 					</div>
-				</div>
+					<nav class="mt-6 grid gap-1.5">
+						{#each dashboardShellMenuItems as item}
+							<a
+								href={item.href}
+								class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold ${
+									isActive(item) ? 'bg-so-gold/24 text-white' : 'text-white/78'
+								}`}
+								on:click={() => (sidebarOpen = false)}
+							>
+								<svg
+									class="h-4 w-4"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.8"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
+									<path d={item.icon} />
+								</svg>
+								<span class="min-w-0 truncate">{item.label}</span>
+							</a>
+						{/each}
+					</nav>
+				</aside>
+			</div>
+		{/if}
 
-				<div class="flex min-w-0 shrink-0 items-center gap-2">
-					<div class="min-w-0 max-w-[40vw] sm:max-w-[min(50vw,18rem)] md:max-w-[20rem]">
-						<LembagaSwitcher
-							lembagaList={data?.lembagaList ?? []}
-							fallbackLembaga={data?.org ?? null}
-							currentUser={data?.user ?? null}
-						/>
+		<main class="min-w-0 pb-8">
+			<header
+				class="sticky top-0 z-30 border-b border-so-border/70 bg-so-cream/88 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8"
+			>
+				<div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+					<div class="flex items-center gap-3">
+						<button
+							class="grid h-10 w-10 place-items-center rounded-xl border border-so-border bg-white text-so-green shadow-sm lg:hidden"
+							type="button"
+							aria-label="Buka menu"
+							on:click={() => (sidebarOpen = true)}
+						>
+							☰
+						</button>
+						<div>
+							<h1 class="font-display text-2xl font-bold tracking-tight text-so-green md:text-3xl">
+								Dashboard
+							</h1>
+							<p class="mt-1 text-sm text-so-muted">Beranda ringkasan aktivitas lembaga</p>
+						</div>
 					</div>
-					<div class="hidden rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 lg:block">
-						{displayName}
+
+					<div class="flex flex-wrap items-center gap-3">
+						<div class="relative min-w-[240px] flex-1 sm:min-w-[320px] xl:w-[360px] xl:flex-none">
+							<span class="absolute left-3 top-1/2 -translate-y-1/2 text-so-muted">
+								<svg
+									class="h-4 w-4"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.8"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
+									<path d={dashboardIconPaths.search} />
+								</svg>
+							</span>
+							<input
+								class="so-focus h-11 w-full rounded-xl border border-so-border bg-white/90 pl-9 pr-4 text-sm shadow-sm"
+								placeholder="Cari menu, lembaga, atau aktivitas..."
+								aria-label="Pencarian cepat dashboard"
+								readonly
+							/>
+						</div>
+						<div class="min-w-0 max-w-[min(72vw,22rem)] sm:max-w-[20rem]">
+							<LembagaSwitcher
+								lembagaList={data?.lembagaList ?? []}
+								fallbackLembaga={data?.org ?? null}
+								currentUser={data?.user ?? null}
+							/>
+						</div>
+						<a
+							href="/akun"
+							class="flex items-center gap-3 rounded-xl border border-so-border bg-white px-3 py-2 shadow-sm"
+						>
+							<div
+								class="grid h-9 w-9 place-items-center rounded-full bg-so-green text-sm font-black text-white"
+							>
+								{displayInitials}
+							</div>
+							<div class="hidden sm:block">
+								<p class="max-w-[140px] truncate text-sm font-bold text-so-ink">{displayName}</p>
+								<p class="text-xs text-so-muted">{roleLabel}</p>
+							</div>
+						</a>
 					</div>
-					<button
-						class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100"
-						aria-label="Buka menu akun"
-					>
-						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<path d="M6 9l6 6 6-6" />
-						</svg>
-					</button>
 				</div>
 			</header>
 
-			<main class="min-w-0 flex-1 overflow-x-hidden px-3 py-5 pb-20 sm:px-4 sm:py-6 md:px-6 md:pb-6 xl:px-8 2xl:px-10">
+			<div class="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
 				{#if isImpersonating}
-					<div class="mb-5 flex min-w-0 flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-900 shadow-sm md:flex-row md:items-center md:justify-between md:py-4">
+					<div
+						class="mb-5 flex min-w-0 flex-col gap-3 rounded-xl border border-so-gold/45 bg-so-gold/12 px-4 py-3.5 text-sm text-so-green shadow-sm md:flex-row md:items-center md:justify-between md:py-4"
+					>
 						<div class="min-w-0">
 							<p class="font-semibold">Mode Admin Lembaga Aktif</p>
-							<p class="mt-1 break-words text-xs leading-relaxed text-amber-800/90 md:text-sm">Akses dashboard organisasi sedang aktif, tetapi menu super admin dan license tetap tersedia.</p>
+							<p class="mt-1 break-words text-xs leading-relaxed text-so-green/80 md:text-sm">
+								Akses dashboard organisasi sedang aktif, tetapi menu super admin dan license tetap
+								tersedia.
+							</p>
 						</div>
 						<div class="flex shrink-0 flex-wrap gap-2">
-							<a href="/admin/super/overview" class="inline-flex items-center justify-center rounded-xl border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100 active:bg-amber-200" style="min-height: 36px;">
+							<a
+								href="/admin/super/overview"
+								class="inline-flex items-center justify-center rounded-xl border border-so-gold/60 px-3 py-2 text-xs font-semibold text-so-green transition-colors hover:bg-so-gold/20"
+								style="min-height: 36px;"
+							>
 								Buka Super Admin
 							</a>
-							<a href="/admin/super/impersonate/stop" class="inline-flex items-center justify-center rounded-xl bg-amber-900 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-amber-950 active:bg-amber-950" style="min-height: 36px;">
+							<a
+								href="/admin/super/impersonate/stop"
+								class="inline-flex items-center justify-center rounded-xl bg-so-green px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-so-green-2"
+								style="min-height: 36px;"
+							>
 								Keluar Mode Admin
 							</a>
 						</div>
 					</div>
 				{/if}
 				<slot />
-			</main>
-		</div>
+			</div>
+		</main>
 	</div>
-
-	<nav class="fixed inset-x-0 bottom-0 z-40 max-w-full overflow-hidden border-t border-white/70 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] backdrop-blur-sm md:hidden safe-area-bottom">
-		<div class="flex w-full min-w-0 items-center justify-around gap-1 px-2 py-2 pb-safe sm:gap-2">
-			{#each mobileQuickItems as item}
-				<a
-					href={item.href}
-					class="flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 text-xs text-slate-600 transition-all duration-200 active:scale-95"
-					class:text-emerald-700={isActive(item)}
-					class:font-semibold={isActive(item)}
-					class:bg-emerald-50={isActive(item)}
-					style="min-height: 44px;"
-				>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" stroke-width="2">
-						<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
-					</svg>
-					<span class="max-w-full truncate text-[10px] leading-tight">{item.label}</span>
-				</a>
-			{/each}
-		</div>
-	</nav>
-
-	{#if sidebarOpen}
-		<div class="fixed inset-0 z-40 md:hidden">
+{:else}
+	<div
+		class="app-shell relative min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-teal-50 to-amber-50 text-slate-900"
+	>
+		<div class="pointer-events-none absolute inset-0 overflow-hidden">
+			<div class="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-teal-200/40 blur-3xl"></div>
 			<div
-				class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
-				role="button"
-				tabindex="0"
-				on:click={() => (sidebarOpen = false)}
-				on:keydown={(event) => {
-					if (event.key === 'Enter' || event.key === ' ') sidebarOpen = false;
-				}}
-				aria-label="Tutup navigasi"
+				class="absolute -right-10 top-40 h-64 w-64 rounded-full bg-amber-200/50 blur-[90px]"
 			></div>
-			<aside class="absolute left-0 top-0 h-full w-[min(18rem,85vw)] max-w-full overflow-y-auto bg-white px-5 py-6 shadow-2xl">
+			<div
+				class="absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-cyan-200/40 blur-[110px]"
+			></div>
+		</div>
+
+		<div class="relative flex min-h-screen w-full max-w-full overflow-x-hidden">
+			<aside
+				class="hidden w-64 shrink-0 flex-col border-r border-white/70 bg-white/70 px-4 py-6 shadow-xl backdrop-blur xl:w-72 xl:px-5 md:flex"
+			>
 				<div class="flex items-center justify-between gap-2">
 					<div class="min-w-0">
-						<p class="app-title truncate text-lg font-semibold">SantriOnline</p>
-						<p class="truncate text-[10px] uppercase tracking-[0.3em] text-slate-500">Menu</p>
+						<p class="app-title truncate text-xl font-semibold">SantriOnline</p>
+						<p class="truncate text-xs uppercase tracking-[0.3em] text-slate-500">
+							Institution Hub
+						</p>
 					</div>
-					<button
-						class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white transition-colors hover:bg-slate-50 active:bg-slate-100"
-						on:click={() => (sidebarOpen = false)}
-						aria-label="Close navigation"
+					<span
+						class="shrink-0 rounded-full bg-teal-100 px-2.5 py-1 text-[10px] font-semibold text-teal-700"
 					>
-						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<path d="M6 6l12 12M18 6l-12 12" />
-						</svg>
-					</button>
+						{orgLabel}
+					</span>
 				</div>
 
-				<nav class="mt-6 space-y-1.5">
+				<nav class="mt-8 space-y-1.5">
 					{#each menuItems as item, idx}
 						<a
 							href={item.href}
-							class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800 active:scale-[0.98]"
+							class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800 hover:shadow-sm"
 							class:bg-emerald-100={isActive(item)}
 							class:text-emerald-900={isActive(item)}
 							class:shadow-sm={isActive(item)}
 							class:font-semibold={isActive(item)}
-							style={`animation-delay: ${idx * 50}ms; min-height: 44px;`}
-							on:click={() => (sidebarOpen = false)}
+							style={`animation-delay: ${idx * 50}ms;`}
 						>
-							<svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+							<svg
+								class="h-5 w-5 shrink-0"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.8"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
 								<path d={item.icon} />
 							</svg>
 							<span class="min-w-0 truncate">{item.label}</span>
@@ -605,16 +764,231 @@
 				</nav>
 
 				<div
-					class="mt-6 rounded-xl px-3 py-3 text-xs leading-relaxed"
-					style="border: 1px solid var(--app-accent-soft); background: var(--app-accent-wash); color: var(--app-accent);"
+					class="mt-auto rounded-xl px-3 py-3 text-xs leading-relaxed"
+					style="border: 1px solid var(--app-warm-soft); background: var(--app-warm-wash); color: var(--app-warm);"
 				>
-					<p class="font-semibold">Role Aktif</p>
-					<p class="mt-1.5 break-words">{roleLabel} • {orgLabel}</p>
+					<p class="font-semibold">Akses Role</p>
+					<p class="mt-1.5 break-words">
+						{#if isImpersonating}
+							Super admin sedang memakai konteks admin {orgLabel} tanpa kehilangan akses global.
+						{:else}
+							Menu ditampilkan sesuai peran {roleLabel} di {orgLabel}.
+						{/if}
+					</p>
 				</div>
 			</aside>
+
+			<div class="flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden">
+				<header
+					class="sticky top-0 z-20 flex w-full max-w-full items-center justify-between gap-2 border-b border-white/70 bg-white/80 px-3 py-3 shadow-sm backdrop-blur-md sm:gap-3 sm:px-4 md:px-6 xl:px-8"
+				>
+					<div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+						<button
+							class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100 md:hidden"
+							on:click={() => (sidebarOpen = true)}
+							aria-label="Open navigation"
+						>
+							<svg
+								class="h-5 w-5"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path d="M4 6h16M4 12h16M4 18h10" />
+							</svg>
+						</button>
+						<div class="min-w-0 flex-1 sm:flex-initial">
+							<p class="truncate text-[10px] uppercase tracking-[0.3em] text-slate-400 sm:text-xs">
+								Dashboard
+							</p>
+							<h1
+								class="app-title truncate text-lg font-semibold text-slate-900 sm:text-xl md:text-2xl"
+							>
+								{headerTitle}
+							</h1>
+						</div>
+					</div>
+
+					<div class="flex min-w-0 shrink-0 items-center gap-2">
+						<div class="min-w-0 max-w-[40vw] sm:max-w-[min(50vw,18rem)] md:max-w-[20rem]">
+							<LembagaSwitcher
+								lembagaList={data?.lembagaList ?? []}
+								fallbackLembaga={data?.org ?? null}
+								currentUser={data?.user ?? null}
+							/>
+						</div>
+						<div
+							class="hidden rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 lg:block"
+						>
+							{displayName}
+						</div>
+						<button
+							class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100"
+							aria-label="Buka menu akun"
+						>
+							<svg
+								class="h-5 w-5"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path d="M6 9l6 6 6-6" />
+							</svg>
+						</button>
+					</div>
+				</header>
+
+				<main
+					class="min-w-0 flex-1 overflow-x-hidden px-3 py-5 pb-20 sm:px-4 sm:py-6 md:px-6 md:pb-6 xl:px-8 2xl:px-10"
+				>
+					{#if isImpersonating}
+						<div
+							class="mb-5 flex min-w-0 flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-900 shadow-sm md:flex-row md:items-center md:justify-between md:py-4"
+						>
+							<div class="min-w-0">
+								<p class="font-semibold">Mode Admin Lembaga Aktif</p>
+								<p class="mt-1 break-words text-xs leading-relaxed text-amber-800/90 md:text-sm">
+									Akses dashboard organisasi sedang aktif, tetapi menu super admin dan license tetap
+									tersedia.
+								</p>
+							</div>
+							<div class="flex shrink-0 flex-wrap gap-2">
+								<a
+									href="/admin/super/overview"
+									class="inline-flex items-center justify-center rounded-xl border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-100 active:bg-amber-200"
+									style="min-height: 36px;"
+								>
+									Buka Super Admin
+								</a>
+								<a
+									href="/admin/super/impersonate/stop"
+									class="inline-flex items-center justify-center rounded-xl bg-amber-900 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-amber-950 active:bg-amber-950"
+									style="min-height: 36px;"
+								>
+									Keluar Mode Admin
+								</a>
+							</div>
+						</div>
+					{/if}
+					<slot />
+				</main>
+			</div>
 		</div>
-	{/if}
-</div>
+
+		<nav
+			class="fixed inset-x-0 bottom-0 z-40 max-w-full overflow-hidden border-t border-white/70 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] backdrop-blur-sm md:hidden safe-area-bottom"
+		>
+			<div class="flex w-full min-w-0 items-center justify-around gap-1 px-2 py-2 pb-safe sm:gap-2">
+				{#each mobileQuickItems as item}
+					<a
+						href={item.href}
+						class="flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 text-xs text-slate-600 transition-all duration-200 active:scale-95"
+						class:text-emerald-700={isActive(item)}
+						class:font-semibold={isActive(item)}
+						class:bg-emerald-50={isActive(item)}
+						style="min-height: 44px;"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 24 24"
+							class="h-6 w-6 shrink-0"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
+							<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+						</svg>
+						<span class="max-w-full truncate text-[10px] leading-tight">{item.label}</span>
+					</a>
+				{/each}
+			</div>
+		</nav>
+
+		{#if sidebarOpen}
+			<div class="fixed inset-0 z-40 md:hidden">
+				<div
+					class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
+					role="button"
+					tabindex="0"
+					on:click={() => (sidebarOpen = false)}
+					on:keydown={(event) => {
+						if (event.key === 'Enter' || event.key === ' ') sidebarOpen = false;
+					}}
+					aria-label="Tutup navigasi"
+				></div>
+				<aside
+					class="absolute left-0 top-0 h-full w-[min(18rem,85vw)] max-w-full overflow-y-auto bg-white px-5 py-6 shadow-2xl"
+				>
+					<div class="flex items-center justify-between gap-2">
+						<div class="min-w-0">
+							<p class="app-title truncate text-lg font-semibold">SantriOnline</p>
+							<p class="truncate text-[10px] uppercase tracking-[0.3em] text-slate-500">Menu</p>
+						</div>
+						<button
+							class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white transition-colors hover:bg-slate-50 active:bg-slate-100"
+							on:click={() => (sidebarOpen = false)}
+							aria-label="Close navigation"
+						>
+							<svg
+								class="h-5 w-5"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path d="M6 6l12 12M18 6l-12 12" />
+							</svg>
+						</button>
+					</div>
+
+					<nav class="mt-6 space-y-1.5">
+						{#each menuItems as item, idx}
+							<a
+								href={item.href}
+								class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800 active:scale-[0.98]"
+								class:bg-emerald-100={isActive(item)}
+								class:text-emerald-900={isActive(item)}
+								class:shadow-sm={isActive(item)}
+								class:font-semibold={isActive(item)}
+								style={`animation-delay: ${idx * 50}ms; min-height: 44px;`}
+								on:click={() => (sidebarOpen = false)}
+							>
+								<svg
+									class="h-5 w-5 shrink-0"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.8"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
+									<path d={item.icon} />
+								</svg>
+								<span class="min-w-0 truncate">{item.label}</span>
+							</a>
+						{/each}
+					</nav>
+
+					<div
+						class="mt-6 rounded-xl px-3 py-3 text-xs leading-relaxed"
+						style="border: 1px solid var(--app-accent-soft); background: var(--app-accent-wash); color: var(--app-accent);"
+					>
+						<p class="font-semibold">Role Aktif</p>
+						<p class="mt-1.5 break-words">{roleLabel} • {orgLabel}</p>
+					</div>
+				</aside>
+			</div>
+		{/if}
+	</div>
+{/if}
 
 <style>
 	:global(:root) {
@@ -627,7 +1001,13 @@
 	}
 
 	:global(.app-shell) {
-		font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		font-family:
+			ui-sans-serif,
+			system-ui,
+			-apple-system,
+			BlinkMacSystemFont,
+			'Segoe UI',
+			sans-serif;
 	}
 
 	:global(.app-title) {
