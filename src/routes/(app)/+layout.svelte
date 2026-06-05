@@ -434,6 +434,7 @@
 	}
 
 	let sidebarOpen = false;
+	let desktopSidebarCollapsed = false;
 
 	const isActive = (item: MenuItem) => {
 		const path = $page.url.pathname;
@@ -455,30 +456,57 @@
 
 {#if isDashboardRoute}
 	<div
-		class="dashboard-app-shell min-h-screen bg-so-cream text-so-ink lg:grid lg:grid-cols-[276px_minmax(0,1fr)]"
+		class="dashboard-app-shell min-h-screen bg-so-cream text-so-ink lg:grid"
+		class:lg:grid-cols-[276px_minmax(0,1fr)]={!desktopSidebarCollapsed}
+		class:lg:grid-cols-[72px_minmax(0,1fr)]={desktopSidebarCollapsed}
 	>
 		<aside
-			class="hidden min-h-screen bg-gradient-to-b from-so-green-3 via-so-green to-[#07351f] p-5 text-white lg:sticky lg:top-0 lg:flex lg:flex-col"
+			class="hidden min-h-screen bg-gradient-to-b from-so-green-3 via-so-green to-[#07351f] p-5 text-white transition-all duration-300 lg:sticky lg:top-0 lg:flex lg:flex-col"
+			class:lg:w-[276px]={!desktopSidebarCollapsed}
+			class:lg:w-[72px]={desktopSidebarCollapsed}
+			class:lg:px-3={desktopSidebarCollapsed}
 		>
-			<a href="/dashboard" class="flex items-center gap-3">
+			<button
+				class="absolute -right-3 top-8 z-10 hidden h-6 w-6 items-center justify-center rounded-full border border-white/20 bg-so-green text-white shadow-lg transition-all hover:bg-so-green-2 lg:flex"
+				on:click={() => (desktopSidebarCollapsed = !desktopSidebarCollapsed)}
+				aria-label={desktopSidebarCollapsed ? 'Buka sidebar' : 'Tutup sidebar'}
+			>
+				<svg
+					class="h-3 w-3 transition-transform duration-300"
+					class:rotate-180={desktopSidebarCollapsed}
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="3"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<path d="M15 18l-6-6 6-6" />
+				</svg>
+			</button>
+			<a href="/dashboard" class="flex items-center gap-3" class:justify-center={desktopSidebarCollapsed}>
 				<img src={santriOnlineIconUrl} alt="SantriOnline" class="h-11 w-11 object-contain" />
-				<div>
-					<p class="font-display text-xl font-bold leading-none">SantriOnline</p>
-					<p class="text-xs font-semibold text-white/65">{roleLabel}</p>
-				</div>
+				{#if !desktopSidebarCollapsed}
+					<div>
+						<p class="font-display text-xl font-bold leading-none">SantriOnline</p>
+						<p class="text-xs font-semibold text-white/65">{roleLabel}</p>
+					</div>
+				{/if}
 			</a>
 
-			<div class="mt-8 rounded-xl border border-white/10 bg-white/8 p-3">
-				<div class="flex items-center gap-3">
+			<div class="mt-8 rounded-xl border border-white/10 bg-white/8 p-3" class:flex={desktopSidebarCollapsed} class:justify-center={desktopSidebarCollapsed}>
+				<div class="flex items-center gap-3" class:flex-col={desktopSidebarCollapsed} class:gap-0={desktopSidebarCollapsed}>
 					<div
 						class="grid h-11 w-11 place-items-center rounded-lg bg-so-cream text-xs font-black text-so-green"
 					>
 						{displayInitials}
 					</div>
-					<div class="min-w-0">
-						<p class="truncate text-sm font-bold">{displayName}</p>
-						<p class="mt-0.5 text-xs text-white/60">{roleLabel.toUpperCase()} · {orgLabel}</p>
-					</div>
+					{#if !desktopSidebarCollapsed}
+						<div class="min-w-0">
+							<p class="truncate text-sm font-bold">{displayName}</p>
+							<p class="mt-0.5 text-xs text-white/60">{roleLabel.toUpperCase()} · {orgLabel}</p>
+						</div>
+					{/if}
 				</div>
 			</div>
 
@@ -491,6 +519,9 @@
 								? 'bg-so-gold/24 text-white ring-1 ring-so-gold/30'
 								: 'text-white/78 hover:bg-white/10 hover:text-white'
 						}`}
+						class:justify-center={desktopSidebarCollapsed}
+						class:px-2={desktopSidebarCollapsed}
+						title={desktopSidebarCollapsed ? item.label : ''}
 					>
 						<span
 							class={`grid h-8 w-8 place-items-center rounded-lg ${
@@ -511,14 +542,16 @@
 								<path d={item.icon} />
 							</svg>
 						</span>
-						<span class="min-w-0 truncate">{item.label}</span>
+						{#if !desktopSidebarCollapsed}
+							<span class="min-w-0 truncate">{item.label}</span>
+						{/if}
 					</a>
 				{/each}
 			</nav>
 
-			<div class="mt-auto rounded-xl border border-so-gold/45 bg-so-green-3/55 p-4">
-				<div class="flex items-start gap-3">
-					<span class="grid h-9 w-9 place-items-center rounded-lg bg-so-gold text-so-green">
+			<div class="mt-auto rounded-xl border border-so-gold/45 bg-so-green-3/55 p-4" class:flex={desktopSidebarCollapsed} class:justify-center={desktopSidebarCollapsed} class:p-3={desktopSidebarCollapsed}>
+				<div class="flex items-start gap-3" class:flex-col={desktopSidebarCollapsed} class:items-center={desktopSidebarCollapsed} class:gap-2={desktopSidebarCollapsed}>
+					<span class="grid h-9 w-9 place-items-center rounded-lg bg-so-gold text-so-green" class:h-8={desktopSidebarCollapsed} class:w-8={desktopSidebarCollapsed}>
 						<svg
 							class="h-4 w-4"
 							viewBox="0 0 24 24"
@@ -531,12 +564,14 @@
 							<path d={dashboardIconPaths.sparkles} />
 						</svg>
 					</span>
-					<div>
-						<p class="font-display text-base font-bold">Control Center</p>
-						<p class="mt-1 text-xs leading-5 text-white/67">
-							Tampilan mengikuti izin {roleLabel} di {orgLabel}. Tidak mengubah permission akun.
-						</p>
-					</div>
+					{#if !desktopSidebarCollapsed}
+						<div>
+							<p class="font-display text-base font-bold">Control Center</p>
+							<p class="mt-1 text-xs leading-5 text-white/67">
+								Tampilan mengikuti izin {roleLabel} di {orgLabel}. Tidak mengubah permission akun.
+							</p>
+						</div>
+					{/if}
 				</div>
 			</div>
 		</aside>
