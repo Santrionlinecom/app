@@ -467,7 +467,7 @@
 			class:lg:px-3={desktopSidebarCollapsed}
 		>
 			<button
-				class="absolute -right-3 top-8 z-10 hidden h-6 w-6 items-center justify-center rounded-full border border-white/20 bg-so-green text-white shadow-lg transition-all hover:bg-so-green-2 lg:flex"
+				class="absolute -right-3 top-1/2 z-10 hidden h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-so-green text-white shadow-lg transition-all hover:bg-so-green-2 lg:flex"
 				on:click={() => (desktopSidebarCollapsed = !desktopSidebarCollapsed)}
 				aria-label={desktopSidebarCollapsed ? 'Buka sidebar' : 'Tutup sidebar'}
 			>
