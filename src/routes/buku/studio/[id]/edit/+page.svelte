@@ -5,6 +5,7 @@
 	export let form: ActionData | undefined;
 
 	type BookFormValues = {
+		folderId?: string;
 		title?: string;
 		description?: string;
 		category?: string;
@@ -47,6 +48,7 @@
 	let coverUploadError = '';
 	$: slugPreview = slugify(title) || data.book.slug;
 	$: chapters = Array.isArray(data.chapters) ? data.chapters : [];
+	$: folders = Array.isArray(data.folders) ? data.folders : [];
 	$: canSubmitReview = data.book.status === 'draft' || data.book.status === 'rejected';
 	$: canEditBook = data.book.status === 'draft' || data.book.status === 'rejected';
 	$: coverPreviewUrl = coverUrl.trim();
@@ -191,6 +193,24 @@
 					maxlength="5000"
 					disabled={!canEditBook}
 				>{values.description ?? data.book.description ?? ''}</textarea>
+			</label>
+
+			<label class="block">
+				<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Folder</span>
+				<select
+					name="folderId"
+					class="select select-bordered mt-2 w-full"
+					value={values.folderId ?? data.book.folderId ?? ''}
+					disabled={!canEditBook}
+				>
+					<option value="">Tanpa folder</option>
+					{#each folders as folder}
+						<option value={folder.id}>{folder.name}</option>
+					{/each}
+				</select>
+				<p class="mt-2 text-xs leading-5 text-slate-500">
+					Ubah folder dari sini. Tambah/hapus folder dari halaman Studio Buku.
+				</p>
 			</label>
 
 			<div class="grid gap-5 md:grid-cols-2">

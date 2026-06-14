@@ -1,9 +1,11 @@
 <script lang="ts">
-	import type { ActionData } from './$types';
+	import type { ActionData, PageData } from './$types';
 
+	export let data: PageData;
 	export let form: ActionData | undefined;
 
 	type BookFormValues = {
+		folderId?: string;
 		title?: string;
 		description?: string;
 		category?: string;
@@ -28,6 +30,7 @@
 
 	$: slugPreview = slugify(title) || 'slug-otomatis';
 	$: coverPreviewUrl = coverUrl.trim();
+	$: folders = Array.isArray(data.folders) ? data.folders : [];
 
 	const uploadCover = async (event: Event) => {
 		const input = event.currentTarget as HTMLInputElement;
@@ -118,6 +121,19 @@
 					placeholder="Tulis sinopsis singkat buku."
 					maxlength="5000"
 				>{values.description ?? ''}</textarea>
+			</label>
+
+			<label class="block">
+				<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Folder</span>
+				<select name="folderId" class="select select-bordered mt-2 w-full" value={values.folderId ?? ''}>
+					<option value="">Tanpa folder</option>
+					{#each folders as folder}
+						<option value={folder.id}>{folder.name}</option>
+					{/each}
+				</select>
+				<p class="mt-2 text-xs leading-5 text-slate-500">
+					Folder bisa ditambah atau dihapus dari halaman Studio Buku.
+				</p>
 			</label>
 
 			<div class="grid gap-5 md:grid-cols-2">

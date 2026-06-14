@@ -1,28 +1,9 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
-import { hashLicenseKey } from '$lib/server/domains/digital-store/licenses/digital-products';
+import { hashLicenseKey, parseFeatures } from '$lib/server/domains/digital-store/licenses/digital-products';
 
 const KEY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
-const PRODUCT_OPTIONS = [
-	{
-		label: 'Santri Cleaner Pro',
-		slug: 'santri-cleaner-pro',
-		keyPrefix: 'SC-PRO',
-		fallbackMaxDevices: 1,
-		features: ['deep_scan', 'developer_cleaner', 'creator_cleaner', 'export_pdf', 'ai_assistant']
-	},
-	{
-		label: 'Santri Studio Pro',
-		slug: 'santri-studio-pro',
-		keyPrefix: 'SS-PRO',
-		fallbackMaxDevices: 1,
-		features: ['video_export', 'subtitle_auto', 'ai_script', 'render_queue', 'cloud_assets']
-	}
-] as const;
-
-type ProductSlug = (typeof PRODUCT_OPTIONS)[number]['slug'];
 
 type ProductRow = {
 	id: string;
@@ -30,6 +11,17 @@ type ProductRow = {
 	name: string;
 	plan: 'free' | 'pro';
 	default_max_devices: number | null;
+	features_json: string | null;
+};
+
+type ProductOption = {
+	label: string;
+	slug: string;
+	plan: ProductRow['plan'];
+	keyPrefix: string;
+	keyFormat: string;
+	defaultMaxDevices: number;
+	features: string[];
 };
 
 type DigitalLicenseListRow = {
@@ -45,9 +37,6 @@ type DigitalLicenseListRow = {
 	activeDevices: number | null;
 };
 
-const isProductSlug = (value: string): value is ProductSlug =>
-	PRODUCT_OPTIONS.some((option) => option.slug === value);
-
 const randomSegment = () => {
 	const bytes = crypto.getRandomValues(new Uint8Array(4));
 	let segment = '';
@@ -57,8 +46,48 @@ const randomSegment = () => {
 	return segment;
 };
 
+const buildKeyPrefix = (slug: string) => {
+	const parts = slug.split('-').filter(Boolean);
+	const plan = (parts.at(-1) ?? 'pro').toUpperCase();
+	const productInitials = parts
+		.slice(0, -1)
+		.map((part) => part[0])
+		.join('')
+		.toUpperCase();
+
+	return `${productInitials || 'SO'}-${plan}`;
+};
+
 const generateLicenseKey = (prefix: string) =>
 	`${prefix}-${randomSegment()}-${randomSegment()}-${randomSegment()}`;
+
+const toProductOption = (product: ProductRow): ProductOption => {
+	const keyPrefix = buildKeyPrefix(product.slug);
+	return {
+		label: product.name,
+		slug: product.slug,
+		plan: product.plan,
+		keyPrefix,
+		keyFormat: `${keyPrefix}-XXXX-XXXX-XXXX`,
+		defaultMaxDevices: Math.max(1, Number(product.default_max_devices ?? 1)),
+		features: parseFeatures(product.features_json)
+	};
+};
+
+const listLicenseProducts = async (db: App.Locals['db']) => {
+	if (!db) return [];
+	const rows = await db
+		.prepare(
+			`SELECT id, slug, name, plan, default_max_devices, features_json
+			 FROM products
+			 WHERE status = ? AND slug LIKE 'santri-%'
+			 ORDER BY slug ASC`
+		)
+		.bind('active')
+		.all<ProductRow>();
+
+	return (rows.results ?? []).map(toProductOption);
+};
 
 const parseExpiresAt = (value: FormDataEntryValue | null) => {
 	const raw = typeof value === 'string' ? value.trim() : '';
@@ -82,9 +111,8 @@ const buildProductFilterClause = (filter: string) => {
 	return '';
 };
 
-const listDigitalLicenses = async (db: App.Locals['db'], productFilter: string) => {
-	if (!db) return [];
-	const productSlugs = PRODUCT_OPTIONS.map((option) => option.slug);
+const listDigitalLicenses = async (db: App.Locals['db'], productFilter: string, productSlugs: string[]) => {
+	if (!db || productSlugs.length === 0) return [];
 	const placeholders = productSlugs.map(() => '?').join(', ');
 	const filterClause = buildProductFilterClause(productFilter);
 	const rows = await db
@@ -120,15 +148,16 @@ const listDigitalLicenses = async (db: App.Locals['db'], productFilter: string) 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db } = requireSuperAdmin(locals);
 	const productFilter = normalizeFilter(url.searchParams.get('product'));
+	const productOptions = await listLicenseProducts(db);
 
 	return {
 		productFilter,
-		productOptions: PRODUCT_OPTIONS.map((option) => ({
-			label: option.label,
-			slug: option.slug,
-			features: option.features
-		})),
-		licenses: await listDigitalLicenses(db, productFilter)
+		productOptions,
+		licenses: await listDigitalLicenses(
+			db,
+			productFilter,
+			productOptions.map((option) => option.slug)
+		)
 	};
 };
 
@@ -144,7 +173,7 @@ export const actions: Actions = {
 
 		const formData = await request.formData();
 		const productSlug = String(formData.get('productSlug') ?? '').trim();
-		if (!isProductSlug(productSlug)) {
+		if (!productSlug) {
 			return fail(400, {
 				error: 'Produk tidak valid.',
 				selectedProductSlug: productSlug
@@ -159,23 +188,24 @@ export const actions: Actions = {
 			});
 		}
 
-		const option = PRODUCT_OPTIONS.find((item) => item.slug === productSlug)!;
 		const product = await db
 			.prepare(
-				`SELECT id, slug, name, plan, default_max_devices
+				`SELECT id, slug, name, plan, default_max_devices, features_json
 				 FROM products
-				 WHERE slug = ? AND status = ?`
+				 WHERE slug = ? AND status = ? AND slug LIKE 'santri-%'`
 			)
 			.bind(productSlug, 'active')
 			.first<ProductRow>();
 		if (!product?.id) {
 			return fail(400, {
-				error: `Produk ${productSlug} belum tersedia. Pastikan migration 0046 sudah diterapkan.`,
+				error: `Produk ${productSlug} belum tersedia di D1 atau belum aktif.`,
 				selectedProductSlug: productSlug
 			});
 		}
 
-		const maxDevices = Math.max(1, Number(product.default_max_devices ?? option.fallbackMaxDevices));
+		const option = toProductOption(product);
+		const maxDevices = option.defaultMaxDevices;
+		const legacyPlan = product.plan === 'free' ? 'starter' : 'pro';
 
 		for (let attempt = 0; attempt < 5; attempt += 1) {
 			const licenseKey = generateLicenseKey(option.keyPrefix);
@@ -207,7 +237,7 @@ export const actions: Actions = {
 					)
 					.bind(
 						internalLicenseId,
-						product.plan,
+						legacyPlan,
 						maxDevices,
 						now,
 						expiresAt,

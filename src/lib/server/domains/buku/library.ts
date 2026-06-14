@@ -9,6 +9,7 @@ export type BukuChapterStatus = (typeof BUKU_CHAPTER_STATUSES)[number];
 export type BukuBook = {
 	id: string;
 	authorId: string;
+	folderId: string | null;
 	title: string;
 	slug: string;
 	description: string | null;
@@ -18,6 +19,14 @@ export type BukuBook = {
 	freeChapterLimit: number;
 	pricePerChapter: number;
 	adminNote: string | null;
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type BukuFolder = {
+	id: string;
+	authorId: string;
+	name: string;
 	createdAt: string;
 	updatedAt: string;
 };
@@ -40,6 +49,7 @@ export type BukuBookListItem = BukuBook & {
 export type BukuAuthorBookListItem = BukuBookListItem & {
 	totalChapterCount: number;
 	draftChapterCount: number;
+	folderName: string | null;
 };
 
 export type BukuChapterPreview = Omit<BukuChapter, 'content'>;
@@ -54,6 +64,7 @@ export type BukuAdminBookListItem = BukuAuthorBookListItem & {
 };
 
 export type BukuBookFormValues = {
+	folderId: string;
 	title: string;
 	description: string;
 	category: string;
@@ -61,6 +72,10 @@ export type BukuBookFormValues = {
 	freeChapterLimit: number;
 	pricePerChapter: number;
 	status: BukuBookAuthorStatus;
+};
+
+export type BukuFolderFormValues = {
+	name: string;
 };
 
 export type BukuChapterFormValues = {
@@ -96,6 +111,7 @@ export const parseBukuChapterParam = (value: string) => {
 const toBukuBook = (row: any): BukuBook => ({
 	id: row.id,
 	authorId: row.authorId,
+	folderId: row.folderId ?? null,
 	title: row.title,
 	slug: row.slug,
 	description: row.description ?? null,
@@ -117,7 +133,16 @@ const toBukuBookListItem = (row: any): BukuBookListItem => ({
 const toBukuAuthorBookListItem = (row: any): BukuAuthorBookListItem => ({
 	...toBukuBookListItem(row),
 	totalChapterCount: Number(row.totalChapterCount ?? 0),
-	draftChapterCount: Number(row.draftChapterCount ?? 0)
+	draftChapterCount: Number(row.draftChapterCount ?? 0),
+	folderName: row.folderName ?? null
+});
+
+const toBukuFolder = (row: any): BukuFolder => ({
+	id: row.id,
+	authorId: row.authorId,
+	name: row.name,
+	createdAt: row.createdAt,
+	updatedAt: row.updatedAt
 });
 
 const toBukuAdminBookListItem = (row: any): BukuAdminBookListItem => ({
@@ -173,6 +198,7 @@ const clampLimit = (value: number, fallback = 48) => {
 const BOOK_SELECT = `
 	b.id,
 	b.author_id as authorId,
+	b.folder_id as folderId,
 	b.title,
 	b.slug,
 	b.description,
@@ -198,6 +224,7 @@ const CHAPTER_PREVIEW_SELECT = `
 
 export function parseBukuBookForm(formData: FormData, defaultStatus: BukuBookAuthorStatus): BukuFormResult<BukuBookFormValues> {
 	const values: BukuBookFormValues = {
+		folderId: formText(formData.get('folderId')),
 		title: formText(formData.get('title')),
 		description: formText(formData.get('description')),
 		category: formText(formData.get('category')),
@@ -228,6 +255,18 @@ export function parseBukuBookForm(formData: FormData, defaultStatus: BukuBookAut
 	}
 	if (!Number.isInteger(values.pricePerChapter) || values.pricePerChapter < 0 || values.pricePerChapter > 1_000_000) {
 		return { ok: false, error: 'Harga per bab harus angka 0-1.000.000 coin.', values };
+	}
+
+	return { ok: true, values };
+}
+
+export function parseBukuFolderForm(formData: FormData): BukuFormResult<BukuFolderFormValues> {
+	const values: BukuFolderFormValues = {
+		name: formText(formData.get('name'))
+	};
+
+	if (values.name.length < 2 || values.name.length > 80) {
+		return { ok: false, error: 'Nama folder harus 2-80 karakter.', values };
 	}
 
 	return { ok: true, values };
@@ -398,10 +437,12 @@ export async function listAuthorBukuBooks(db: D1Database, authorId: string) {
 		.prepare(
 			`SELECT
 				${BOOK_SELECT},
+				f.name as folderName,
 				COUNT(c.id) as totalChapterCount,
 				SUM(CASE WHEN c.status = 'published' THEN 1 ELSE 0 END) as publishedChapterCount,
 				SUM(CASE WHEN c.status = 'draft' THEN 1 ELSE 0 END) as draftChapterCount
 			FROM buku_books b
+			LEFT JOIN buku_folders f ON f.id = b.folder_id AND f.author_id = b.author_id
 			LEFT JOIN buku_chapters c ON c.book_id = b.id
 			WHERE b.author_id = ?
 			GROUP BY b.id
@@ -413,15 +454,66 @@ export async function listAuthorBukuBooks(db: D1Database, authorId: string) {
 	return (results ?? []).map(toBukuAuthorBookListItem);
 }
 
+export async function listAuthorBukuFolders(db: D1Database, authorId: string) {
+	const { results } = await db
+		.prepare(
+			`SELECT
+				id,
+				author_id as authorId,
+				name,
+				created_at as createdAt,
+				updated_at as updatedAt
+			FROM buku_folders
+			WHERE author_id = ?
+			ORDER BY name ASC`
+		)
+		.bind(authorId)
+		.all<any>();
+
+	return (results ?? []).map(toBukuFolder);
+}
+
+export async function authorOwnsBukuFolder(db: D1Database, authorId: string, folderId: string) {
+	if (!folderId) return true;
+	const row = await db
+		.prepare('SELECT id FROM buku_folders WHERE id = ? AND author_id = ? LIMIT 1')
+		.bind(folderId, authorId)
+		.first<{ id: string }>();
+	return Boolean(row);
+}
+
+export async function createBukuFolder(db: D1Database, authorId: string, values: BukuFolderFormValues) {
+	const id = crypto.randomUUID();
+	await db
+		.prepare('INSERT INTO buku_folders (id, author_id, name) VALUES (?, ?, ?)')
+		.bind(id, authorId, values.name)
+		.run();
+	return { id };
+}
+
+export async function deleteBukuFolder(db: D1Database, authorId: string, folderId: string) {
+	await db
+		.prepare('UPDATE buku_books SET folder_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE author_id = ? AND folder_id = ?')
+		.bind(authorId, folderId)
+		.run();
+	const result = await db
+		.prepare('DELETE FROM buku_folders WHERE id = ? AND author_id = ?')
+		.bind(folderId, authorId)
+		.run();
+	return Number(result.meta?.changes ?? 0) > 0;
+}
+
 export async function getAuthorBukuBookById(db: D1Database, authorId: string, id: string) {
 	const row = await db
 		.prepare(
 			`SELECT
 				${BOOK_SELECT},
+				f.name as folderName,
 				COUNT(c.id) as totalChapterCount,
 				SUM(CASE WHEN c.status = 'published' THEN 1 ELSE 0 END) as publishedChapterCount,
 				SUM(CASE WHEN c.status = 'draft' THEN 1 ELSE 0 END) as draftChapterCount
 			FROM buku_books b
+			LEFT JOIN buku_folders f ON f.id = b.folder_id AND f.author_id = b.author_id
 			LEFT JOIN buku_chapters c ON c.book_id = b.id
 			WHERE b.author_id = ? AND b.id = ?
 			GROUP BY b.id
@@ -440,12 +532,13 @@ export async function createBukuBook(db: D1Database, authorId: string, values: B
 	await db
 		.prepare(
 			`INSERT INTO buku_books (
-				id, author_id, title, slug, description, cover_url, category, status, free_chapter_limit, price_per_chapter
-			) VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)`
+				id, author_id, folder_id, title, slug, description, cover_url, category, status, free_chapter_limit, price_per_chapter
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)`
 		)
 		.bind(
 			id,
 			authorId,
+			values.folderId || null,
 			values.title,
 			slug,
 			values.description || null,
@@ -471,6 +564,7 @@ export async function updateAuthorBukuBook(
 			`UPDATE buku_books
 			SET title = ?,
 				slug = ?,
+				folder_id = ?,
 				description = ?,
 				cover_url = ?,
 				category = ?,
@@ -483,6 +577,7 @@ export async function updateAuthorBukuBook(
 		.bind(
 			values.title,
 			slug,
+			values.folderId || null,
 			values.description || null,
 			values.coverUrl || null,
 			values.category || null,
@@ -683,9 +778,23 @@ export async function updateBukuChapter(
 export async function ensureBukuLibrarySchema(db: D1Database) {
 	await db
 		.prepare(
+			`CREATE TABLE IF NOT EXISTS buku_folders (
+				id TEXT PRIMARY KEY,
+				author_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+				name TEXT NOT NULL,
+				created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				UNIQUE(author_id, name)
+			)`
+		)
+		.run();
+
+	await db
+		.prepare(
 			`CREATE TABLE IF NOT EXISTS buku_books (
 				id TEXT PRIMARY KEY,
 				author_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+				folder_id TEXT,
 				title TEXT NOT NULL,
 				slug TEXT NOT NULL UNIQUE,
 				description TEXT,
@@ -700,6 +809,12 @@ export async function ensureBukuLibrarySchema(db: D1Database) {
 			)`
 		)
 		.run();
+
+	const bookColumns = await db.prepare('PRAGMA table_info(buku_books)').all<{ name: string }>();
+	const hasFolderId = (bookColumns.results ?? []).some((column) => column.name === 'folder_id');
+	if (!hasFolderId) {
+		await db.prepare('ALTER TABLE buku_books ADD COLUMN folder_id TEXT').run();
+	}
 
 	await db
 		.prepare(
@@ -718,6 +833,8 @@ export async function ensureBukuLibrarySchema(db: D1Database) {
 		.run();
 
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_buku_books_author ON buku_books(author_id)').run();
+	await db.prepare('CREATE INDEX IF NOT EXISTS idx_buku_folders_author ON buku_folders(author_id)').run();
+	await db.prepare('CREATE INDEX IF NOT EXISTS idx_buku_books_folder ON buku_books(folder_id)').run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_buku_books_slug ON buku_books(slug)').run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_buku_books_status ON buku_books(status)').run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_buku_chapters_book ON buku_chapters(book_id)').run();

@@ -1,7 +1,12 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { ActionData, PageData } from './$types';
 
 	export let data: PageData;
+	export let form: ActionData | undefined;
+
+	type FolderFormValues = {
+		name?: string;
+	};
 
 	const statusLabel: Record<string, string> = {
 		draft: 'Draft',
@@ -22,6 +27,8 @@
 	const canEditBook = (status: string) => status === 'draft' || status === 'rejected';
 
 	$: books = Array.isArray(data.books) ? data.books : [];
+	$: folders = Array.isArray(data.folders) ? data.folders : [];
+	$: folderValues = (form && 'folderValues' in form ? form.folderValues : {}) as FolderFormValues;
 </script>
 
 <svelte:head>
@@ -63,14 +70,76 @@
 					<p class="mt-3 text-3xl font-semibold">{data.stats.totalChapters}</p>
 				</div>
 				<div class="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-					<p class="text-[11px] uppercase tracking-[0.24em] text-white/55">Draft</p>
-					<p class="mt-3 text-3xl font-semibold">{data.stats.draftBooks}</p>
+					<p class="text-[11px] uppercase tracking-[0.24em] text-white/55">Folder</p>
+					<p class="mt-3 text-3xl font-semibold">{data.stats.totalFolders}</p>
 				</div>
 				<div class="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
 					<p class="text-[11px] uppercase tracking-[0.24em] text-white/55">Published</p>
 					<p class="mt-3 text-3xl font-semibold">{data.stats.publishedBooks}</p>
 				</div>
 			</div>
+		</div>
+	</section>
+
+	<section class="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+		<form method="POST" action="?/createFolder" class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+			<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Folder Buku</p>
+			<h2 class="mt-2 text-2xl font-semibold text-slate-900">Tambah folder</h2>
+			<p class="mt-2 text-sm leading-6 text-slate-500">
+				Pakai folder untuk mengelompokkan novel, seri, atau draft ide agar studio lebih rapi.
+			</p>
+
+			{#if form && 'folderError' in form && form.folderError}
+				<div class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+					{form.folderError}
+				</div>
+			{/if}
+
+			<div class="mt-5 flex flex-col gap-3 sm:flex-row">
+				<input
+					name="name"
+					class="input input-bordered flex-1"
+					placeholder="Contoh: Novel Santri"
+					value={folderValues.name ?? ''}
+					minlength="2"
+					maxlength="80"
+					required
+				/>
+				<button type="submit" class="btn btn-primary">Tambah Folder</button>
+			</div>
+		</form>
+
+		<div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+			<div class="flex items-center justify-between gap-3">
+				<div>
+					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Daftar Folder</p>
+					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Kelola folder</h2>
+				</div>
+				<span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{folders.length} folder</span>
+			</div>
+
+			{#if folders.length === 0}
+				<div class="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+					Belum ada folder. Buku baru tetap bisa dibuat tanpa folder.
+				</div>
+			{:else}
+				<div class="mt-5 grid gap-3 sm:grid-cols-2">
+					{#each folders as folder}
+						<div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+							<p class="font-semibold text-slate-900">{folder.name}</p>
+							<p class="mt-1 text-xs text-slate-500">
+								{books.filter((book) => book.folderId === folder.id).length} buku di folder ini
+							</p>
+							<form method="POST" action="?/deleteFolder" class="mt-3">
+								<input type="hidden" name="folderId" value={folder.id} />
+								<button type="submit" class="btn btn-outline btn-sm border-rose-200 text-rose-700 hover:border-rose-300 hover:bg-rose-50">
+									Hapus Folder
+								</button>
+							</form>
+						</div>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</section>
 
@@ -111,6 +180,11 @@
 									{#if book.category}
 										<span class="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-700">
 											{book.category}
+										</span>
+									{/if}
+									{#if book.folderName}
+										<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
+											Folder: {book.folderName}
 										</span>
 									{/if}
 								</div>

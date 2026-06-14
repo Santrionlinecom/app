@@ -1,8 +1,10 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import {
+	authorOwnsBukuFolder,
 	ensureBukuLibrarySchema,
 	getAuthorBukuBookById,
+	listAuthorBukuFolders,
 	listAuthorBukuChapters,
 	parseBukuBookForm,
 	submitAuthorBukuBookForReview,
@@ -26,9 +28,11 @@ export const load: PageServerLoad = async ({ locals, platform, params, url }) =>
 	}
 
 	const chapters = await listAuthorBukuChapters(db, book.id);
+	const folders = await listAuthorBukuFolders(db, locals.user.id);
 
 	return {
 		book,
+		folders,
 		chapters,
 		saved: url.searchParams.get('saved') === '1',
 		reviewSubmitted: url.searchParams.get('saved') === 'review'
@@ -61,6 +65,9 @@ export const actions: Actions = {
 		const parsed = parseBukuBookForm(formData, book.status);
 		if (!parsed.ok) {
 			return fail(400, { error: parsed.error, values: parsed.values });
+		}
+		if (!(await authorOwnsBukuFolder(db, locals.user.id, parsed.values.folderId))) {
+			return fail(400, { error: 'Folder tidak valid.', values: parsed.values });
 		}
 
 		try {

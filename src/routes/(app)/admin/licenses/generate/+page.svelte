@@ -2,6 +2,9 @@
 	type ProductOption = {
 		label: string;
 		slug: string;
+		plan: 'free' | 'pro';
+		keyFormat: string;
+		defaultMaxDevices: number;
 		features: string[];
 	};
 
@@ -79,8 +82,7 @@
 		await navigator.clipboard.writeText(value);
 	};
 
-	let selectedProductSlug =
-		form?.productSlug ?? form?.selectedProductSlug ?? data.productOptions[0]?.slug ?? 'santri-cleaner-pro';
+	let selectedProductSlug = form?.productSlug ?? form?.selectedProductSlug ?? data.productOptions[0]?.slug ?? '';
 
 	$: selectedProduct =
 		data.productOptions.find((product) => product.slug === selectedProductSlug) ?? data.productOptions[0];
@@ -124,12 +126,12 @@
 				<div class="grid gap-3 sm:grid-cols-2">
 					<div class="rounded-xl border bg-slate-50 p-3">
 						<p class="text-xs text-slate-500">Plan</p>
-						<p class="mt-1 font-semibold text-slate-900">pro</p>
+						<p class="mt-1 font-semibold text-slate-900">{selectedProduct?.plan ?? '-'}</p>
 					</div>
 					<div class="rounded-xl border bg-slate-50 p-3">
 						<p class="text-xs text-slate-500">Format Key</p>
 						<p class="mt-1 font-mono text-sm font-semibold text-slate-900">
-							{selectedProductSlug === 'santri-studio-pro' ? 'SS-PRO-XXXX-XXXX-XXXX' : 'SC-PRO-XXXX-XXXX-XXXX'}
+							{selectedProduct?.keyFormat ?? '-'}
 						</p>
 					</div>
 				</div>
