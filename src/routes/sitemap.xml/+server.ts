@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { designTemplates } from '$lib/data/desain';
 import type { RequestHandler } from './$types';
 
 const BASE_URL = 'https://app.santrionline.com';
@@ -33,6 +34,8 @@ const staticPages: SitemapPage[] = [
 	{ loc: '/dinasti', priority: '0.7', changefreq: 'weekly' },
 	{ loc: '/ormas', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/blog', priority: '0.9', changefreq: 'daily' },
+	{ loc: '/desain', priority: '0.9', changefreq: 'weekly' },
+	{ loc: '/desain/cetak', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/digital-store', priority: '0.7', changefreq: 'weekly' },
 	{ loc: '/tentang', priority: '0.5', changefreq: 'monthly' },
 	{ loc: '/kontak', priority: '0.5', changefreq: 'monthly' },
@@ -124,7 +127,15 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 		'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
 		'        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
 		'        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">',
-		...[...staticPages, ...dynamicPages].map((page) => renderUrl(page, today)),
+		...[
+			...staticPages,
+			...designTemplates.map((template) => ({
+				loc: `/desain/${template.slug}`,
+				priority: '0.8',
+				changefreq: 'monthly' as const
+			})),
+			...dynamicPages
+		].map((page) => renderUrl(page, today)),
 		'</urlset>'
 	].join('\n');
 
