@@ -112,6 +112,7 @@
 		{ label: 'Daftar Lembaga', href: '#institution-list', icon: iconPaths.building },
 		{ label: 'CMS Hub', href: '/admin/super/cms-hub', icon: iconPaths.file },
 		{ label: 'Moderasi Buku', href: '/admin/super/buku', icon: iconPaths.book },
+		{ label: 'Approval Addon', href: '/admin/super/addons', icon: iconPaths.wallet },
 		{ label: 'Topup Coin', href: '/admin/super/coin-topups', icon: iconPaths.coins },
 		{ label: 'Akun', href: '/akun', icon: iconPaths.settings }
 	];
@@ -119,6 +120,7 @@
 	const quickActions = [
 		{ label: 'CMS Hub', href: '/admin/super/cms-hub', icon: iconPaths.file },
 		{ label: 'Buku', href: '/admin/super/buku', icon: iconPaths.book },
+		{ label: 'Addon', href: '/admin/super/addons', icon: iconPaths.wallet },
 		{ label: 'Topup Coin', href: '/admin/super/coin-topups', icon: iconPaths.coins },
 		{ label: 'Akun', href: '/akun', icon: iconPaths.settings }
 	];
