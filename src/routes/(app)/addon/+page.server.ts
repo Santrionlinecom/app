@@ -1,7 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { checkCoinBalance, deductCoins, rupiahToCoin } from '$lib/server/domains/buku/coin-operations';
-import { ensureCoinWallet, getCoinBalance } from '$lib/server/domains/buku/wallet';
+import { getCoinBalance } from '$lib/server/domains/buku/wallet';
 
 type AddonAktifRow = {
 	id: string;
@@ -31,6 +30,11 @@ const ADDON_NAMES = {
 
 type AddonTipe = keyof typeof ADDON_PRICES;
 
+// Migration 0037 only allows status: aktif, expired, trial.
+// Until a safe schema migration expands the CHECK constraint, trial is used as
+// the request/pending state so the public "Minta Addon" button does not fail.
+const ADDON_REQUEST_STATUS = 'trial';
+
 const isAddonTipe = (value: string): value is AddonTipe => value in ADDON_PRICES;
 
 const readFormString = (formData: FormData, key: string) => {
@@ -38,7 +42,7 @@ const readFormString = (formData: FormData, key: string) => {
 	return typeof value === 'string' ? value.trim() : '';
 };
 
-export const load: PageServerLoad = async ({ locals, platform }) => {
+export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth');
 	}
@@ -84,11 +88,11 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 						OR berlaku_hingga > ?
 						OR (berlaku_hingga < 100000000000 AND berlaku_hingga > ?)
 					))
-					OR status = 'pending'
+					OR status = ?
 				   )
 				 ORDER BY created_at DESC`
 			)
-			.bind(lembagaId, nowMs, nowSeconds)
+			.bind(lembagaId, nowMs, nowSeconds, ADDON_REQUEST_STATUS)
 			.all<AddonAktifRow>()
 	]);
 
@@ -132,14 +136,15 @@ export const actions: Actions = {
 			return fail(403, { message: 'Lembaga tidak ditemukan atau bukan milik akun ini.' });
 		}
 
-		// Check if there's already a pending request for this addon
+		// Check if there's already a pending request for this addon.
+		// Pending requests are stored as `trial` to match the existing D1 CHECK constraint.
 		const existingPending = await db
 			.prepare(
 				`SELECT id FROM addon_lembaga
-				 WHERE lembaga_id = ? AND tipe_addon = ? AND status = 'pending'
+				 WHERE lembaga_id = ? AND tipe_addon = ? AND status = ?
 				 LIMIT 1`
 			)
-			.bind(lembagaId, addonTipe)
+			.bind(lembagaId, addonTipe, ADDON_REQUEST_STATUS)
 			.first<{ id: string }>();
 
 		if (existingPending) {
@@ -171,21 +176,42 @@ export const actions: Actions = {
 		const now = Date.now();
 
 		try {
-			// Create addon request with pending status (no payment needed)
-			await db
+			const existingInactive = await db
 				.prepare(
-					`INSERT INTO addon_lembaga (
-						id,
-						lembaga_id,
-						tipe_addon,
-						status,
-						berlaku_hingga,
-						created_at
-					)
-					VALUES (?, ?, ?, 'pending', NULL, ?)`
+					`SELECT id FROM addon_lembaga
+					 WHERE lembaga_id = ? AND tipe_addon = ?
+					 LIMIT 1`
 				)
-				.bind(orderId, lembagaId, addonTipe, now)
-				.run();
+				.bind(lembagaId, addonTipe)
+				.first<{ id: string }>();
+
+			if (existingInactive) {
+				await db
+					.prepare(
+						`UPDATE addon_lembaga
+						 SET status = ?, berlaku_hingga = NULL, created_at = ?
+						 WHERE id = ?`
+					)
+					.bind(ADDON_REQUEST_STATUS, now, existingInactive.id)
+					.run();
+			} else {
+				// Create addon request with pending status (no payment needed).
+				// See ADDON_REQUEST_STATUS above for why the stored value is `trial`.
+				await db
+					.prepare(
+						`INSERT INTO addon_lembaga (
+							id,
+							lembaga_id,
+							tipe_addon,
+							status,
+							berlaku_hingga,
+							created_at
+						)
+						VALUES (?, ?, ?, ?, NULL, ?)`
+					)
+					.bind(orderId, lembagaId, addonTipe, ADDON_REQUEST_STATUS, now)
+					.run();
+			}
 
 			console.info('addon_request_success', {
 				order_id: orderId,

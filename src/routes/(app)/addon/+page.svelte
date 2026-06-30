@@ -154,13 +154,15 @@
 		}
 	};
 
-	$: activeTypes = new Set(
-		((data.addonAktif ?? []) as AddonAktif[]).map((addon) => addon.tipeAddon)
-	);
-
 	$: pendingTypes = new Set(
 		((data.addonAktif ?? []) as AddonAktif[])
-			.filter((addon) => addon.status === 'pending')
+			.filter((addon) => addon.status === 'pending' || addon.status === 'trial')
+			.map((addon) => addon.tipeAddon)
+	);
+
+	$: activeTypes = new Set(
+		((data.addonAktif ?? []) as AddonAktif[])
+			.filter((addon) => addon.status === 'aktif')
 			.map((addon) => addon.tipeAddon)
 	);
 </script>

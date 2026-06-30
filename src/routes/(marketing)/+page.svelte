@@ -2,24 +2,23 @@
 	import type { PageData } from './$types';
 	import { isSuperAdminUser } from '$lib/auth/session-user';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import BarChart3 from '@lucide/svelte/icons/bar-chart-3';
 	import BookOpenCheck from '@lucide/svelte/icons/book-open-check';
 	import BookOpenText from '@lucide/svelte/icons/book-open-text';
+	import BrainCircuit from '@lucide/svelte/icons/brain-circuit';
 	import Building2 from '@lucide/svelte/icons/building-2';
-	import CalendarDays from '@lucide/svelte/icons/calendar-days';
+	import CalendarCheck from '@lucide/svelte/icons/calendar-check';
+	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
 	import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
-	import Coins from '@lucide/svelte/icons/coins';
+	import Compass from '@lucide/svelte/icons/compass';
 	import CreditCard from '@lucide/svelte/icons/credit-card';
-	import Database from '@lucide/svelte/icons/database';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
-	import Home from '@lucide/svelte/icons/home';
-	import Landmark from '@lucide/svelte/icons/landmark';
+	import HeartHandshake from '@lucide/svelte/icons/heart-handshake';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import LogIn from '@lucide/svelte/icons/log-in';
+	import Medal from '@lucide/svelte/icons/medal';
 	import School from '@lucide/svelte/icons/school';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import Store from '@lucide/svelte/icons/store';
 	import Users from '@lucide/svelte/icons/users';
 	import WalletCards from '@lucide/svelte/icons/wallet-cards';
 
@@ -28,140 +27,99 @@
 	const dashboardRoles = new Set([
 		'admin',
 		'admin_lembaga',
+		'kepala',
+		'pengajar',
 		'ustadz',
 		'ustadzah',
+		'pembimbing',
+		'operator',
 		'santri',
 		'alumni',
+		'takmir',
 		'tamir',
 		'bendahara',
 		'jamaah'
 	]);
 
-	const institutionTypes = [
+	const pillars = [
 		{
-			icon: School,
-			name: 'TPQ',
-			status: 'Prioritas',
-			desc: 'Setoran, review, halaqoh, santri, rapor, dan progres hafalan.'
+			icon: ShieldCheck,
+			title: 'Aqidah kuat',
+			desc: 'Materi Aswaja bertahap agar santri memahami iman, bukan sekadar hafal istilah.'
 		},
 		{
-			icon: GraduationCap,
-			name: 'Pondok',
-			status: 'Multi-lembaga',
-			desc: 'Manajemen santri, akademik dasar, hafalan, kas, dan aset.'
-		},
-		{
-			icon: Landmark,
-			name: 'Masjid',
-			status: 'Addon',
-			desc: 'Jamaah, kas, jadwal imam/khotib, agenda, dan aset.'
-		},
-		{
-			icon: Home,
-			name: 'Musholla',
-			status: 'Addon',
-			desc: 'Jamaah, kas musholla, jadwal kegiatan, dan administrasi ringan.'
-		},
-		{
-			icon: BookOpenCheck,
-			name: 'Rumah Tahfidz',
-			status: 'Addon',
-			desc: 'Tahfidz, murojaah, ujian, sertifikat, dan monitoring ayat.'
-		}
-	];
-
-	const featureGroups = [
-		{
-			icon: Building2,
-			title: 'Lembaga & Role',
-			desc: 'Multi-lembaga, switcher lembaga aktif, profil publik, dan akses role-aware.',
-			items: ['TPQ', 'Pondok', 'Masjid', 'Musholla', 'Rumah Tahfidz', 'Admin', 'Guru', 'Santri', "Ta'mir"]
-		},
-		{
-			icon: ClipboardCheck,
-			title: 'TPQ Akademik',
-			desc: 'Workflow harian TPQ dari input setoran sampai review koordinator.',
-			items: ['Setoran', 'Review', 'Riwayat', 'Halaqoh', 'Kelola Santri', 'Dashboard TPQ']
-		},
-		{
-			icon: BarChart3,
-			title: 'Hafalan & Rapor',
-			desc: 'Progress hafalan tervalidasi per ayat, rapor, rekap, dan sertifikat.',
-			items: ['Pencapaian Hafalan', 'Belum Lancar', "Muroja'ah", 'Rapor Hafalan', 'Sertifikat']
+			icon: HeartHandshake,
+			title: 'Adab jadi kebiasaan',
+			desc: 'Misi harian untuk shalat, Qur’an, birrul walidain, adab guru, dan adab digital.'
 		},
 		{
 			icon: BookOpenText,
-			title: "Qur'an & Kitab",
-			desc: "Mushaf 30 juz, bookmark, progress baca, tafsir, asbab, dan tanya kitab berbasis RAG.",
-			items: ['Mushaf', 'Bookmark Ayat', 'Tafsir', 'Asbabun Nuzul', 'Kitab Turats', 'Tanya Kitab']
+			title: 'Ilmu agama hidup',
+			desc: 'Sirah, sahabat, fiqih praktis, akhlak, kitab, dan Qur’an dibuat dekat dengan anak.'
 		},
 		{
-			icon: Store,
-			title: 'Buku & Digital Store',
-			desc: 'Katalog buku, DRM, studio penulis, royalti, produk digital, dan unduhan aman.',
-			items: ['Buku Digital', 'Buku Saya', 'Studio Penulis', 'Royalti', 'Digital Store', 'DRM']
+			icon: BrainCircuit,
+			title: 'Skill masa depan',
+			desc: 'Literasi digital, AI, komunikasi, menulis, desain, bahasa, dan problem solving halal.'
 		},
 		{
-			icon: WalletCards,
-			title: 'Coin & Pembayaran',
-			desc: 'Wallet coin, topup, billing addon, Midtrans Snap, webhook, dan order tracking.',
-			items: ['Coin', 'Topup', 'Midtrans', 'Addon', 'Payment Orders', 'Billing']
-		},
-		{
-			icon: CalendarDays,
-			title: 'Operasional Lembaga',
-			desc: 'Kas, jadwal, aset, kalender kegiatan, laporan anggota, dan laporan keuangan.',
-			items: ['Keuangan', 'Jadwal', 'Aset', 'Kalender', 'Report PDF', 'Shortlink']
-		},
-		{
-			icon: ShieldCheck,
-			title: 'Admin & Konten',
-			desc: 'Super admin, CMS, analytics, SEO, lisensi, perangkat, dan generator konten AI.',
-			items: ['Super Admin', 'CMS', 'Analytics', 'License', 'SEO', 'AI Konten']
+			icon: Users,
+			title: 'Komunitas & mentor',
+			desc: 'Orang tua, guru, musyrif, dan lembaga punya dashboard pembinaan yang nyambung.'
 		}
 	];
 
-	const operatingFlow = [
+	const workspaces = [
+		{ icon: School, title: 'TPQ', desc: 'Setoran, review, halaqah, santri, rapor, dan progres hafalan.' },
+		{ icon: GraduationCap, title: 'Pondok', desc: 'Data santri, akademik dasar, kas, aset, jadwal, dan pembinaan.' },
+		{ icon: BookOpenCheck, title: 'Rumah Tahfidz', desc: 'Tahfidz, murojaah, ujian, sertifikat, dan monitoring ayat.' },
+		{ icon: Building2, title: 'Masjid/Musholla', desc: 'Jamaah, kas, agenda, imam/khotib, aset, dan administrasi takmir.' }
+	];
+
+	const featureLanes = [
 		{
-			step: '01',
-			title: 'Pilih lembaga aktif',
-			desc: 'Satu akun dapat berpindah antar lembaga tanpa mencampur data santri, jamaah, kas, atau addon.'
+			eyebrow: 'Akademik TPQ',
+			title: 'Setoran sampai rapor',
+			desc: 'Guru input setoran, pembimbing review, admin melihat rekap, wali mendapat gambaran perkembangan.'
 		},
 		{
-			step: '02',
-			title: 'Kerjakan tugas harian',
-			desc: 'Guru menginput setoran, koordinator mereview, admin memantau progres dan operasional.'
+			eyebrow: 'Kitab Digital RAG',
+			title: 'Qur’an, kitab, dan rujukan',
+			desc: 'Mushaf, tafsir, asbabun nuzul, kitab turats, dan tanya kitab sebagai fondasi ilmu.'
 		},
 		{
-			step: '03',
-			title: 'Aktifkan modul saat perlu',
-			desc: 'Fitur premium, coin, buku, dan addon dibayar bertahap sesuai kebutuhan lembaga.'
+			eyebrow: 'Habit System',
+			title: 'Misi, streak, dan badge',
+			desc: 'Anak diarahkan menang kecil setiap hari agar ibadah, adab, dan belajar terasa hidup.'
+		},
+		{
+			eyebrow: 'Operasional',
+			title: 'Lembaga lebih tertata',
+			desc: 'Multi-lembaga, role, addon, coin, pembayaran, kas, aset, kalender, dan laporan.'
 		}
 	];
 
-	const addonPlans = [
-		['Santri Unlimited', 'Rp20.000/bulan'],
-		['Raport PDF Premium', 'Rp15.000/bulan'],
-		['Modul Masjid', 'Rp25.000/bulan'],
-		['Modul Tahfidz', 'Rp20.000/bulan'],
-		['Modul Musholla', 'Rp15.000/bulan'],
-		['Lembaga Tambahan', 'Rp15.000/bulan']
+	const quickLinks = [
+		{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+		{ label: 'Katalog Addon', href: '/addon', icon: WalletCards },
+		{ label: 'Mushaf Qur’an', href: '/kitab/quran', icon: BookOpenText },
+		{ label: 'Kitab Turats', href: '/kitab', icon: BookOpenCheck },
+		{ label: 'Data Lembaga', href: '/lembaga', icon: Building2 },
+		{ label: 'Kalender', href: '/kalender', icon: CalendarCheck }
 	];
 
-	const publicLinks = [
-		{ label: "Mushaf Qur'an", href: '/kitab/quran' },
-		{ label: 'Kitab Turats', href: '/kitab' },
-		{ label: 'Buku Digital', href: '/buku' },
-		{ label: 'Digital Store', href: '/digital-store' },
-		{ label: 'Kalender', href: '/kalender' },
-		{ label: 'Blog', href: '/blog' }
+	const readiness = [
+		'Aqidah + adab + amal, bukan sekadar aplikasi administrasi',
+		'Gamifikasi untuk melawan dopamin cepat game dan scrolling',
+		'Orang tua, guru, dan lembaga punya peran dalam satu alur',
+		'Tetap hemat biaya dengan Cloudflare serverless-first'
 	];
 
 	$: primaryAction = isSuperAdminUser(data?.user)
 		? { href: '/admin/super/overview', label: 'Buka Super Admin', icon: ShieldCheck }
 		: dashboardRoles.has(data?.user?.role ?? '')
 			? { href: '/dashboard', label: 'Buka Dashboard', icon: LayoutDashboard }
-			: { href: '/register', label: 'Mulai Daftar', icon: ArrowRight };
+			: { href: '/register', label: 'Mulai Daftar Lembaga', icon: ArrowRight };
 
 	$: secondaryAction = data?.user
 		? { href: '/akun', label: 'Kelola Akun', icon: Users }
@@ -169,172 +127,106 @@
 </script>
 
 <svelte:head>
-	<title>SantriOnline App - Platform Manajemen Lembaga Islam</title>
+	<title>SantriOnline App - Sistem Pembinaan Generasi Muslim</title>
 	<meta
 		name="description"
-		content="SantriOnline App membantu TPQ, pondok, masjid, musholla, dan rumah tahfidz mengelola lembaga, santri, jamaah, hafalan, kas, buku digital, coin, dan addon berbayar."
+		content="SantriOnline App adalah sistem pembinaan generasi muslim untuk TPQ, pondok, rumah tahfidz, masjid, musholla, habit ibadah, adab, akademik, kitab digital, dan operasional lembaga."
 	/>
 </svelte:head>
 
-<div class="home-root min-h-screen w-full max-w-full overflow-x-hidden bg-so-cream text-so-ink">
-	<section class="hero-band relative overflow-hidden">
-		<div class="hero-bg"></div>
-		<div class="hero-overlay"></div>
-		<div class="relative z-10 mx-auto w-full max-w-7xl px-4 pb-16 pt-12 sm:px-6 md:pb-20 md:pt-16 lg:px-8">
-			<div class="w-full max-w-4xl min-w-0">
-				<div class="flex flex-wrap gap-2">
-					<span class="chip chip-primary">Multi-Lembaga</span>
-					<span class="chip">TPQ Akademik</span>
-					<span class="chip">Midtrans Ready</span>
-					<span class="chip">Qur'an & Kitab</span>
+<div class="home-root min-h-screen overflow-hidden bg-[#f8f3e7] text-[#1d2d24]">
+	<section class="hero relative isolate overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
+		<div class="hero-glow hero-glow-one"></div>
+		<div class="hero-glow hero-glow-two"></div>
+		<div class="mx-auto grid max-w-7xl gap-8 pt-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:pt-10">
+			<div class="relative z-10">
+				<div class="inline-flex max-w-full items-center gap-2 rounded-full border border-white/20 bg-white/12 px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#f7d878] shadow-sm backdrop-blur">
+					<Sparkles class="h-4 w-4 shrink-0" strokeWidth={2.4} />
+					<span class="truncate">Aqidah · Adab · Ilmu · Skill · Habit</span>
 				</div>
-				<h1 class="mt-6 break-words text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
-					SantriOnline App
+
+				<h1 class="mt-7 max-w-4xl text-4xl font-black leading-[0.96] tracking-[-0.06em] text-white sm:text-5xl md:text-6xl lg:text-7xl">
+					Sistem pembinaan generasi muslim, bukan sekadar aplikasi lembaga.
 				</h1>
-				<p class="mt-6 max-w-2xl break-words text-base font-semibold leading-relaxed text-white/90 md:text-lg md:leading-relaxed">
-					Satu ruang kerja untuk mengelola TPQ, pondok, masjid, musholla, rumah tahfidz, hafalan Qur'an,
-					kas, buku digital, coin, addon, dan konten belajar dalam satu ekosistem.
+				<p class="mt-6 max-w-2xl text-base font-semibold leading-8 text-white/84 md:text-lg">
+					SantriOnline membantu TPQ, pondok, rumah tahfidz, masjid, dan musholla membentuk santri yang kuat aqidahnya, rapi ibadahnya, tinggi adabnya, hidup ilmunya, dan siap bersaing dengan skill masa depan.
 				</p>
-				<div class="mt-8 flex w-full max-w-full min-w-0 flex-col gap-3 sm:flex-row">
-					<a class="btn-primary h-14 w-full min-w-0 px-6 sm:w-auto" href={primaryAction.href}>
-						<svelte:component this={primaryAction.icon} class="h-5 w-5 shrink-0" strokeWidth={2.5} />
-						<span class="truncate">{primaryAction.label}</span>
+
+				<div class="mt-8 flex flex-col gap-3 sm:flex-row">
+					<a class="btn-gold h-14 px-6" href={primaryAction.href}>
+						<svelte:component this={primaryAction.icon} class="h-5 w-5" strokeWidth={2.5} />
+						{primaryAction.label}
 					</a>
-					<a class="btn-secondary h-14 w-full min-w-0 px-6 sm:w-auto" href={secondaryAction.href}>
-						<svelte:component this={secondaryAction.icon} class="h-5 w-5 shrink-0" strokeWidth={2.5} />
-						<span class="truncate">{secondaryAction.label}</span>
+					<a class="btn-glass h-14 px-6" href={secondaryAction.href}>
+						<svelte:component this={secondaryAction.icon} class="h-5 w-5" strokeWidth={2.5} />
+						{secondaryAction.label}
 					</a>
+				</div>
+
+				<div class="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
+					<div class="metric"><strong>5</strong><span>Pilar pembinaan</span></div>
+					<div class="metric"><strong>4</strong><span>Ruang kerja lembaga</span></div>
+					<div class="metric"><strong>1</strong><span>Ekosistem terpadu</span></div>
 				</div>
 			</div>
 
-			<div class="mt-12 grid w-full max-w-3xl min-w-0 gap-4 sm:grid-cols-3">
-				<div class="metric">
-					<p>5</p>
-					<span>Tipe lembaga</span>
-				</div>
-				<div class="metric">
-					<p>8</p>
-					<span>Kelompok fitur utama</span>
-				</div>
-				<div class="metric">
-					<p>6</p>
-					<span>Addon berbayar</span>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<section class="band band-white">
-		<div class="mx-auto grid w-full max-w-7xl min-w-0 gap-8 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
-			<div class="section-head min-w-0">
-				<p class="eyebrow">Ringkasan Sistem</p>
-				<h2 class="break-words">Semua modul penting langsung terlihat dari halaman pertama.</h2>
-				<p class="break-words">
-					Halaman ini sekarang berfungsi sebagai peta produk: pengelolaan lembaga, akademik TPQ, hafalan,
-					Qur'an, buku, coin, pembayaran, operasional, dan admin sistem.
-				</p>
-			</div>
-
-			<div class="command-panel min-w-0">
-				<div class="panel-header">
-					<div>
-						<p class="text-xs font-black uppercase text-so-gold">Workspace</p>
-						<h3 class="mt-1 text-xl font-black text-so-green">Dashboard Lembaga</h3>
-					</div>
-					<span class="status-pill">Aktif</span>
-				</div>
-				<div class="mt-5 grid gap-3 sm:grid-cols-3">
-					<div class="snapshot-stat">
-						<span>Setoran</span>
-						<strong>Review</strong>
-					</div>
-					<div class="snapshot-stat">
-						<span>Kas</span>
-						<strong>Report</strong>
-					</div>
-					<div class="snapshot-stat">
-						<span>Addon</span>
-						<strong>Snap</strong>
-					</div>
-				</div>
-				<div class="mt-5 grid gap-3 sm:grid-cols-2">
-					<a class="snapshot-action" href="/lembaga">
-						<Building2 class="h-4 w-4" strokeWidth={2.4} />
-						Kelola Lembaga
-					</a>
-					<a class="snapshot-action" href="/addon">
-						<CreditCard class="h-4 w-4" strokeWidth={2.4} />
-						Katalog Addon
-					</a>
-					<a class="snapshot-action" href="/coins">
-						<Coins class="h-4 w-4" strokeWidth={2.4} />
-						Coin
-					</a>
-					<a class="snapshot-action" href="/kitab/quran">
-						<BookOpenText class="h-4 w-4" strokeWidth={2.4} />
-						Mushaf
-					</a>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<section id="fitur" class="band">
-		<div class="mx-auto w-full max-w-7xl min-w-0 px-4 py-12 sm:px-6 md:py-16 lg:px-8">
-			<div class="section-head min-w-0">
-				<p class="eyebrow">Semua Fitur</p>
-				<h2 class="break-words">Fitur sistem dikelompokkan supaya mudah dipindai.</h2>
-				<p class="break-words">Setiap kartu mewakili modul yang sudah ada atau sudah disiapkan dalam aplikasi.</p>
-			</div>
-			<div class="mt-8 grid w-full min-w-0 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-				{#each featureGroups as feature}
-					<article class="feature-card">
-						<div class="feature-icon">
-							<svelte:component this={feature.icon} class="h-5 w-5" strokeWidth={2.25} />
+			<div class="relative z-10 rounded-[2rem] border border-white/14 bg-white/10 p-4 shadow-2xl backdrop-blur-xl md:p-5">
+				<div class="rounded-[1.5rem] border border-white/16 bg-[#fffaf0] p-4 text-[#183728] shadow-xl md:p-5">
+					<div class="flex items-center justify-between gap-3">
+						<div>
+							<p class="text-xs font-black uppercase tracking-[0.2em] text-[#a98418]">Mission Control</p>
+							<h2 class="mt-1 text-2xl font-black tracking-[-0.04em] text-[#123424]">Rapor Pembinaan</h2>
 						</div>
-						<h3>{feature.title}</h3>
-						<p>{feature.desc}</p>
-						<div class="mt-4 flex flex-wrap gap-2">
-							{#each feature.items as item}
-								<span class="mini-chip">{item}</span>
-							{/each}
+						<div class="grid h-12 w-12 place-items-center rounded-2xl bg-[#173d2c] text-[#f7d878]">
+							<Compass class="h-6 w-6" strokeWidth={2.4} />
 						</div>
-					</article>
-				{/each}
+					</div>
+
+					<div class="mt-5 grid gap-3 sm:grid-cols-2">
+						<div class="dash-card bg-[#173d2c] text-white">
+							<p>Habit Ibadah</p>
+							<strong>Streak Subuh + Qur’an</strong>
+							<span>misi harian santri</span>
+						</div>
+						<div class="dash-card">
+							<p>Akademik TPQ</p>
+							<strong>Setoran → Review</strong>
+							<span>guru dan pembimbing</span>
+						</div>
+						<div class="dash-card">
+							<p>Adab Digital</p>
+							<strong>Badge Amanah</strong>
+							<span>lisan, waktu, konten</span>
+						</div>
+						<div class="dash-card bg-[#f1dfaa]">
+							<p>Kitab Digital</p>
+							<strong>Rujukan Aswaja</strong>
+							<span>Qur’an, tafsir, turats</span>
+						</div>
+					</div>
+
+					<div class="mt-4 rounded-2xl border border-[#e8d9ad] bg-white p-4">
+						<div class="flex items-center gap-3">
+							<Medal class="h-5 w-5 text-[#b58a13]" strokeWidth={2.4} />
+							<p class="text-sm font-black text-[#173d2c]">Identitas santri digital: beradab, berilmu, disiplin, dan punya misi.</p>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</section>
 
-	<section class="band band-white">
-		<div class="mx-auto w-full max-w-7xl min-w-0 px-4 py-12 sm:px-6 md:py-16 lg:px-8">
-			<div class="section-head min-w-0">
-				<p class="eyebrow">Tipe Lembaga</p>
-				<h2 class="break-words">Satu akun dapat mengatur beberapa konteks lembaga.</h2>
-				<p class="break-words">Menu dan akses dibuat mengikuti jenis lembaga agar pengguna tidak melihat fitur yang tidak relevan.</p>
+	<section class="px-4 py-12 sm:px-6 lg:px-8">
+		<div class="mx-auto max-w-7xl">
+			<div class="section-head">
+				<p>Fondasi SantriOnline</p>
+				<h2>Lima pilar yang menjaga arah produk tetap tarbiyah.</h2>
+				<span>Setiap fitur harus membantu pembinaan, bukan hanya menambah menu.</span>
 			</div>
-			<div class="mt-8 grid w-full min-w-0 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-				{#each institutionTypes as item}
-					<article class="type-card">
-						<div class="flex items-center justify-between gap-3">
-							<span class="type-icon">
-								<svelte:component this={item.icon} class="h-5 w-5" strokeWidth={2.3} />
-							</span>
-							<span class="mini-chip">{item.status}</span>
-						</div>
-						<h3>{item.name}</h3>
-						<p>{item.desc}</p>
-					</article>
-				{/each}
-			</div>
-		</div>
-	</section>
-
-	<section class="band">
-		<div class="mx-auto w-full max-w-7xl min-w-0 px-4 py-12 sm:px-6 md:py-16 lg:px-8">
-			<div class="grid w-full min-w-0 gap-6 lg:grid-cols-3">
-				{#each operatingFlow as item}
-					<article class="flow-card">
-						<span>{item.step}</span>
+			<div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+				{#each pillars as item}
+					<article class="pillar-card">
+						<div class="icon-badge"><svelte:component this={item.icon} class="h-5 w-5" strokeWidth={2.4} /></div>
 						<h3>{item.title}</h3>
 						<p>{item.desc}</p>
 					</article>
@@ -343,65 +235,85 @@
 		</div>
 	</section>
 
-	<section id="addon" class="band band-white">
-		<div class="mx-auto grid w-full max-w-7xl min-w-0 gap-8 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
-			<div class="section-head min-w-0">
-				<p class="eyebrow">Addon & Pembayaran</p>
-				<h2 class="break-words">Bayar modul yang dipakai, mulai dari paket kecil.</h2>
-				<p class="break-words">
-					Katalog addon, billing, payment order, Midtrans Snap, webhook, dan topup coin sudah diarahkan ke
-					alur pembayaran yang sama.
-				</p>
-				<a class="btn-primary mt-8 h-12 w-full min-w-0 px-5 sm:w-fit" href="/addon">
-					<CreditCard class="h-4 w-4" strokeWidth={2.4} />
-					Lihat Addon
+	<section class="bg-white px-4 py-12 sm:px-6 lg:px-8">
+		<div class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+			<div class="section-head sticky-block">
+				<p>Ruang Kerja Lembaga</p>
+				<h2>Satu akun untuk mengelola lembaga, pembinaan, dan operasional.</h2>
+				<span>TPQ tetap prioritas, tapi arsitektur disiapkan untuk pondok, rumah tahfidz, masjid, dan musholla.</span>
+				<a class="btn-dark mt-7 h-12 w-fit px-5" href="/lembaga">
+					<Building2 class="h-4 w-4" strokeWidth={2.4} />
+					Kelola Lembaga
 				</a>
 			</div>
-			<div class="grid gap-3 sm:grid-cols-2">
-				{#each addonPlans as plan}
-					<div class="addon-row">
-						<p>{plan[0]}</p>
-						<span>{plan[1]}</span>
-					</div>
+
+			<div class="grid gap-4 sm:grid-cols-2">
+				{#each workspaces as item}
+					<article class="workspace-card">
+						<div class="icon-badge"><svelte:component this={item.icon} class="h-5 w-5" strokeWidth={2.4} /></div>
+						<h3>{item.title}</h3>
+						<p>{item.desc}</p>
+					</article>
 				{/each}
 			</div>
 		</div>
 	</section>
 
-	<section id="publik" class="band final-band">
-		<div class="mx-auto grid w-full max-w-7xl min-w-0 gap-8 px-4 py-12 sm:px-6 md:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
-			<div class="section-head min-w-0">
-				<p class="eyebrow">Akses Publik</p>
-				<h2 class="break-words">Ekosistem belajar tetap terbuka untuk pengunjung.</h2>
-				<p class="break-words">
-					Pengunjung dapat membaca Qur'an, kitab, buku, artikel, dan kalender. Pengguna login mendapat
-					progres baca, bookmark, coin, dan dashboard lembaga.
-				</p>
-				<div class="mt-8 grid w-full min-w-0 gap-3 sm:grid-cols-2 lg:max-w-2xl">
-					{#each publicLinks as link}
-						<a class="public-link" href={link.href}>
-							<ArrowRight class="h-4 w-4" strokeWidth={2.4} />
-							{link.label}
-						</a>
-					{/each}
+	<section class="px-4 py-12 sm:px-6 lg:px-8">
+		<div class="mx-auto max-w-7xl">
+			<div class="section-head max-w-3xl">
+				<p>Alur Produk</p>
+				<h2>Dari administrasi harian menuju pembentukan karakter.</h2>
+				<span>Fitur dibuat bertahap agar Mas Yogik bisa menjaga biaya, fokus, dan kualitas.</span>
+			</div>
+			<div class="mt-8 grid gap-5 lg:grid-cols-4">
+				{#each featureLanes as lane, index}
+					<article class="lane-card">
+						<span class="lane-number">0{index + 1}</span>
+						<p>{lane.eyebrow}</p>
+						<h3>{lane.title}</h3>
+						<span>{lane.desc}</span>
+					</article>
+				{/each}
+			</div>
+		</div>
+	</section>
+
+	<section class="bg-[#173d2c] px-4 py-12 text-white sm:px-6 lg:px-8">
+		<div class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
+			<div>
+				<p class="text-xs font-black uppercase tracking-[0.24em] text-[#f7d878]">Addon & Pembayaran</p>
+				<h2 class="mt-3 max-w-3xl text-3xl font-black tracking-[-0.05em] sm:text-4xl md:text-5xl">Aktifkan modul sesuai kebutuhan, tanpa memaksa lembaga kecil membayar besar.</h2>
+				<p class="mt-5 max-w-2xl text-sm font-semibold leading-7 text-white/75 md:text-base">Katalog addon sekarang diarahkan sebagai permintaan gratis/konfirmasi admin, sehingga lembaga bisa mulai dari kebutuhan paling mendesak.</p>
+				<div class="mt-7 flex flex-col gap-3 sm:flex-row">
+					<a class="btn-gold h-12 px-5" href="/addon"><CreditCard class="h-4 w-4" strokeWidth={2.4} />Lihat Addon</a>
+					<a class="btn-glass h-12 px-5" href="/coins"><WalletCards class="h-4 w-4" strokeWidth={2.4} />Coin & Wallet</a>
 				</div>
 			</div>
-			<div class="cta-panel min-w-0">
-				<Sparkles class="h-6 w-6 shrink-0 text-so-gold-2" strokeWidth={2.4} />
-				<h2 class="break-words">Mulai dari satu lembaga, lalu aktifkan fitur lain saat dibutuhkan.</h2>
-				<p class="break-words">
-					Halaman pertama sekarang menjadi pintu masuk singkat untuk melihat kemampuan sistem dan langsung
-					masuk ke dashboard, akun, addon, atau konten publik.
-				</p>
-				<div class="mt-8 flex w-full max-w-full min-w-0 flex-col gap-3 sm:flex-row">
-					<a class="btn-light h-12 w-full min-w-0 px-5 sm:w-auto" href={primaryAction.href}>
-						<svelte:component this={primaryAction.icon} class="h-4 w-4" strokeWidth={2.4} />
-						{primaryAction.label}
-					</a>
-					<a class="btn-ghost-light h-11 w-full px-4 sm:w-auto" href="/lembaga">
-						<Database class="h-4 w-4" strokeWidth={2.4} />
-						Data Lembaga
-					</a>
+			<div class="rounded-[1.6rem] border border-white/12 bg-white/8 p-5 backdrop-blur">
+				{#each readiness as item}
+					<div class="check-row"><CheckCircle2 class="h-5 w-5 text-[#f7d878]" strokeWidth={2.4} /><span>{item}</span></div>
+				{/each}
+			</div>
+		</div>
+	</section>
+
+	<section class="px-4 py-12 sm:px-6 lg:px-8">
+		<div class="mx-auto max-w-7xl rounded-[2rem] border border-[#eadfbe] bg-white p-5 shadow-sm md:p-8">
+			<div class="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+				<div>
+					<p class="text-xs font-black uppercase tracking-[0.22em] text-[#a98418]">Akses Cepat</p>
+					<h2 class="mt-3 text-3xl font-black tracking-[-0.05em] text-[#173d2c] md:text-4xl">Masuk ke bagian yang paling sering dipakai.</h2>
+					<p class="mt-4 text-sm font-semibold leading-7 text-[#647067]">Halaman depan dibuat lebih jelas sebagai pintu pembinaan, dashboard lembaga, kitab, addon, dan konten publik.</p>
+				</div>
+				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+					{#each quickLinks as link}
+						<a class="quick-link" href={link.href}>
+							<svelte:component this={link.icon} class="h-4 w-4" strokeWidth={2.4} />
+							<span>{link.label}</span>
+							<ArrowRight class="ml-auto h-4 w-4" strokeWidth={2.4} />
+						</a>
+					{/each}
 				</div>
 			</div>
 		</div>
@@ -413,378 +325,270 @@
 		font-family: var(--font-sans, 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif);
 	}
 
-	.hero-band {
-		min-height: min(720px, calc(100svh - 3rem));
-		display: flex;
-		align-items: end;
-	}
-
-	.hero-bg,
-	.hero-overlay {
-		position: absolute;
-		inset: 0;
-	}
-
-	.hero-bg {
-		background-image: url('https://images.unsplash.com/photo-1609599006353-e629aaabfeae?auto=format&fit=crop&w=1800&q=80');
-		background-position: center;
-		background-size: cover;
-		transform: scale(1.01);
-	}
-
-	.hero-overlay {
+	.hero {
 		background:
-			linear-gradient(90deg, rgba(10, 37, 28, 0.75) 0%, rgba(27, 67, 50, 0.65) 48%, rgba(27, 67, 50, 0.2) 100%),
-			linear-gradient(180deg, rgba(10, 37, 28, 0.15) 0%, rgba(10, 37, 28, 0.6) 100%);
+			radial-gradient(circle at 16% 18%, rgba(247, 216, 120, 0.22), transparent 28rem),
+			linear-gradient(135deg, #0b241a 0%, #173d2c 46%, #22553e 100%);
 	}
 
-	.band {
-		background: var(--color-so-cream);
+	.hero-glow {
+		position: absolute;
+		border-radius: 9999px;
+		filter: blur(48px);
+		opacity: 0.52;
+		pointer-events: none;
 	}
 
-	.band-white {
-		background: #ffffff;
+	.hero-glow-one {
+		right: -8rem;
+		top: 4rem;
+		height: 18rem;
+		width: 18rem;
+		background: #c9a84c;
 	}
 
-	.final-band {
-		border-top: 1px solid var(--color-so-border);
+	.hero-glow-two {
+		bottom: -7rem;
+		left: 20%;
+		height: 16rem;
+		width: 16rem;
+		background: #40755b;
 	}
 
-	.btn-primary,
-	.btn-secondary,
-	.btn-light,
-	.btn-ghost-light,
-	.snapshot-action,
-	.public-link {
+	.btn-gold,
+	.btn-glass,
+	.btn-dark,
+	.quick-link {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.5rem;
-		border-radius: 0.875rem;
-		font-size: 0.9375rem;
-		font-weight: 800;
-		letter-spacing: -0.01em;
+		gap: 0.55rem;
+		border-radius: 1rem;
+		font-size: 0.92rem;
+		font-weight: 900;
 		transition:
-			background-color 180ms ease,
-			border-color 180ms ease,
 			transform 180ms ease,
-			box-shadow 180ms ease;
+			box-shadow 180ms ease,
+			background-color 180ms ease,
+			border-color 180ms ease;
 	}
 
-	.btn-primary {
-		background: var(--color-so-gold);
-		color: #173525;
-		box-shadow: 0 4px 12px rgba(201, 168, 76, 0.25);
+	.btn-gold {
+		background: #f2cc61;
+		color: #173223;
+		box-shadow: 0 18px 34px rgba(9, 23, 16, 0.16);
 	}
 
-	.btn-primary:hover,
-	.btn-secondary:hover,
-	.btn-light:hover,
-	.btn-ghost-light:hover,
-	.snapshot-action:hover,
-	.public-link:hover {
-		transform: translateY(-2px);
-	}
-
-	.btn-primary:hover {
-		box-shadow: 0 6px 16px rgba(201, 168, 76, 0.35);
-	}
-
-	.btn-secondary {
-		border: 1px solid rgb(255 255 255 / 0.35);
+	.btn-glass {
+		border: 1px solid rgb(255 255 255 / 0.28);
 		background: rgb(255 255 255 / 0.1);
 		color: #ffffff;
-		backdrop-filter: blur(12px);
-	}
-
-	.btn-light {
-		background: #ffffff;
-		color: var(--color-so-green);
-	}
-
-	.btn-ghost-light {
-		border: 1px solid rgb(255 255 255 / 0.3);
-		color: #ffffff;
-	}
-
-	.chip,
-	.mini-chip,
-	.status-pill {
-		display: inline-flex;
-		align-items: center;
-		border-radius: 999px;
-		font-weight: 900;
-		letter-spacing: 0;
-		white-space: nowrap;
-	}
-
-	.chip {
-		border: 1px solid rgb(255 255 255 / 0.22);
-		background: rgb(255 255 255 / 0.12);
-		color: rgb(255 255 255 / 0.9);
-		padding: 0.5rem 0.72rem;
-		font-size: 0.72rem;
-		text-transform: uppercase;
-		backdrop-filter: blur(12px);
-	}
-
-	.chip-primary {
-		border-color: rgb(201 168 76 / 0.75);
-		background: rgb(201 168 76 / 0.2);
-		color: #fff7d6;
-	}
-
-	.mini-chip {
-		border: 1px solid var(--color-so-border);
-		background: #ffffff;
-		color: var(--color-so-muted);
-		padding: 0.34rem 0.56rem;
-		font-size: 0.72rem;
-	}
-
-	.status-pill {
-		background: rgb(27 67 50 / 0.1);
-		color: var(--color-so-green);
-		padding: 0.45rem 0.7rem;
-		font-size: 0.74rem;
-	}
-
-	.metric,
-	.command-panel,
-	.feature-card,
-	.type-card,
-	.flow-card,
-	.addon-row,
-	.cta-panel {
-		border: 1px solid var(--color-so-border);
-		background: #ffffff;
-		box-shadow: var(--shadow-card);
-	}
-
-	.metric {
-		border-color: rgb(255 255 255 / 0.22);
-		background: rgb(255 255 255 / 0.12);
-		border-radius: 1rem;
-		padding: 1rem;
 		backdrop-filter: blur(14px);
 	}
 
-	.metric p {
-		font-size: 1.9rem;
-		font-weight: 900;
-		line-height: 1;
+	.btn-dark {
+		background: #173d2c;
 		color: #ffffff;
+	}
+
+	.btn-gold:hover,
+	.btn-glass:hover,
+	.btn-dark:hover,
+	.quick-link:hover {
+		transform: translateY(-2px);
+	}
+
+	.metric {
+		border: 1px solid rgb(255 255 255 / 0.16);
+		border-radius: 1.25rem;
+		background: rgb(255 255 255 / 0.1);
+		padding: 1rem;
+		color: white;
+		backdrop-filter: blur(12px);
+	}
+
+	.metric strong {
+		display: block;
+		font-size: 2rem;
+		line-height: 1;
+		font-weight: 950;
+		color: #f7d878;
 	}
 
 	.metric span {
-		margin-top: 0.55rem;
+		margin-top: 0.35rem;
 		display: block;
-		font-size: 0.82rem;
+		font-size: 0.78rem;
 		font-weight: 800;
-		color: rgb(255 255 255 / 0.78);
+		color: rgb(255 255 255 / 0.74);
+	}
+
+	.dash-card {
+		min-height: 8rem;
+		border-radius: 1.25rem;
+		border: 1px solid #eadfbe;
+		background: white;
+		padding: 1rem;
+	}
+
+	.dash-card p,
+	.dash-card span {
+		font-size: 0.75rem;
+		font-weight: 800;
+		opacity: 0.72;
+	}
+
+	.dash-card strong {
+		margin-top: 1.2rem;
+		display: block;
+		font-size: 1rem;
+		font-weight: 950;
+		letter-spacing: -0.03em;
+	}
+
+	.section-head p {
+		font-size: 0.75rem;
+		font-weight: 950;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: #a98418;
 	}
 
 	.section-head h2 {
-		max-width: 48rem;
-		font-size: 1.875rem;
-		font-weight: 900;
-		line-height: 1.25;
-		letter-spacing: -0.02em;
-		color: var(--color-so-green);
-	}
-
-	.section-head p:not(.eyebrow) {
-		margin-top: 1rem;
-		max-width: 48rem;
-		font-size: 1rem;
-		line-height: 1.75;
-		color: var(--color-so-muted);
-	}
-
-	.eyebrow {
-		margin-bottom: 0.6rem;
-		font-size: 0.75rem;
-		font-weight: 900;
-		letter-spacing: 0;
-		text-transform: uppercase;
-		color: var(--color-so-gold);
-	}
-
-	.command-panel,
-	.feature-card,
-	.type-card,
-	.flow-card,
-	.cta-panel {
-		border-radius: 1.5rem;
-		padding: 1.5rem;
-	}
-
-	.panel-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		border-bottom: 1px solid var(--color-so-border);
-		padding-bottom: 1rem;
-	}
-
-	.snapshot-stat {
-		border-radius: 0.95rem;
-		background: var(--color-so-cream);
-		padding: 1rem;
-	}
-
-	.snapshot-stat span {
-		display: block;
-		font-size: 0.76rem;
-		font-weight: 800;
-		color: var(--color-so-muted);
-	}
-
-	.snapshot-stat strong {
-		margin-top: 0.45rem;
-		display: block;
-		font-size: 1.15rem;
-		font-weight: 900;
-		color: var(--color-so-green);
-	}
-
-	.snapshot-action,
-	.public-link {
-		min-height: 2.75rem;
-		border: 1px solid var(--color-so-border);
-		background: #ffffff;
-		color: var(--color-so-green);
-	}
-
-	.snapshot-action:hover,
-	.public-link:hover {
-		border-color: rgb(27 67 50 / 0.35);
-		background: rgb(27 67 50 / 0.04);
-	}
-
-	.feature-icon,
-	.type-icon {
-		display: inline-grid;
-		place-items: center;
-		border-radius: 0.85rem;
-		background: rgb(201 168 76 / 0.16);
-		color: var(--color-so-green);
-	}
-
-	.feature-icon {
-		height: 2.6rem;
-		width: 2.6rem;
-	}
-
-	.type-icon {
-		height: 2.35rem;
-		width: 2.35rem;
-	}
-
-	.feature-card h3,
-	.type-card h3,
-	.flow-card h3 {
-		margin-top: 1rem;
-		font-size: 1.125rem;
-		font-weight: 800;
-		line-height: 1.4;
-		color: var(--color-so-green);
-	}
-
-	.feature-card p,
-	.type-card p,
-	.flow-card p {
 		margin-top: 0.75rem;
-		font-size: 0.9375rem;
-		line-height: 1.65;
-		color: var(--color-so-muted);
+		max-width: 54rem;
+		font-size: clamp(2rem, 4.8vw, 3.6rem);
+		font-weight: 950;
+		line-height: 0.98;
+		letter-spacing: -0.055em;
+		color: #173d2c;
 	}
 
-	.flow-card span {
-		display: inline-flex;
-		border-radius: 0.8rem;
-		background: rgb(201 168 76 / 0.16);
-		padding: 0.45rem 0.65rem;
-		font-size: 0.8rem;
-		font-weight: 900;
-		color: var(--color-so-green);
-	}
-
-	.addon-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		border-radius: 1rem;
-		padding: 1rem;
-	}
-
-	.addon-row p {
-		min-width: 0;
-		font-size: 0.9rem;
-		font-weight: 900;
-		line-height: 1.4;
-		color: var(--color-so-green);
-	}
-
-	.addon-row span {
-		white-space: nowrap;
-		font-size: 0.78rem;
-		font-weight: 900;
-		color: var(--color-so-muted);
-	}
-
-	.public-link {
-		justify-content: flex-start;
-		padding: 0.75rem 0.9rem;
-	}
-
-	.cta-panel {
-		background: linear-gradient(135deg, var(--color-so-green-3), var(--color-so-green));
-		color: #ffffff;
-	}
-
-	.cta-panel h2 {
+	.section-head span {
 		margin-top: 1rem;
-		font-size: 1.5rem;
-		font-weight: 900;
-		line-height: 1.3;
-		letter-spacing: -0.01em;
+		display: block;
+		max-width: 42rem;
+		font-size: 0.96rem;
+		font-weight: 650;
+		line-height: 1.8;
+		color: #647067;
 	}
 
-	.cta-panel p {
+	.sticky-block {
+		position: sticky;
+		top: 1rem;
+	}
+
+	.pillar-card,
+	.workspace-card,
+	.lane-card {
+		border: 1px solid #eadfbe;
+		border-radius: 1.5rem;
+		background: #fffdf7;
+		padding: 1.25rem;
+		box-shadow: 0 14px 38px rgba(31, 45, 36, 0.06);
+	}
+
+	.pillar-card h3,
+	.workspace-card h3,
+	.lane-card h3 {
 		margin-top: 1rem;
-		font-size: 1rem;
+		font-size: 1.08rem;
+		font-weight: 950;
+		letter-spacing: -0.035em;
+		color: #173d2c;
+	}
+
+	.pillar-card p,
+	.workspace-card p,
+	.lane-card span {
+		margin-top: 0.55rem;
+		font-size: 0.875rem;
+		font-weight: 620;
 		line-height: 1.7;
-		color: rgb(255 255 255 / 0.85);
+		color: #647067;
 	}
 
-	@media (max-width: 639px) {
-		.hero-band {
-			min-height: auto;
-		}
+	.icon-badge {
+		display: grid;
+		height: 2.75rem;
+		width: 2.75rem;
+		place-items: center;
+		border-radius: 1rem;
+		background: #173d2c;
+		color: #f7d878;
+	}
 
-		.addon-row {
-			align-items: flex-start;
-			flex-direction: column;
-			gap: 0.35rem;
-		}
+	.workspace-card {
+		background: linear-gradient(180deg, #fffdf7, #f8f3e7);
+	}
 
-		.addon-row span {
-			white-space: normal;
+	.lane-card {
+		position: relative;
+		overflow: hidden;
+		min-height: 16rem;
+	}
+
+	.lane-number {
+		position: absolute;
+		right: 1rem;
+		top: 0.6rem;
+		font-size: 3.8rem;
+		font-weight: 950;
+		letter-spacing: -0.08em;
+		color: rgba(23, 61, 44, 0.08);
+	}
+
+	.lane-card > p {
+		font-size: 0.72rem;
+		font-weight: 950;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: #a98418;
+	}
+
+	.check-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		border-bottom: 1px solid rgb(255 255 255 / 0.1);
+		padding: 1rem 0;
+		font-weight: 800;
+		line-height: 1.65;
+		color: rgb(255 255 255 / 0.82);
+	}
+
+	.check-row:last-child {
+		border-bottom: 0;
+	}
+
+	.quick-link {
+		min-height: 3.25rem;
+		justify-content: flex-start;
+		border: 1px solid #eadfbe;
+		background: #fffaf0;
+		padding: 0 1rem;
+		color: #173d2c;
+	}
+
+	.quick-link:hover {
+		border-color: #d4b24d;
+		box-shadow: 0 12px 22px rgba(31, 45, 36, 0.08);
+	}
+
+	@media (max-width: 1023px) {
+		.sticky-block {
+			position: static;
 		}
 	}
 
-	@media (min-width: 768px) {
+	@media (max-width: 640px) {
+		.hero {
+			padding-top: 1rem;
+		}
+
 		.section-head h2 {
-			font-size: 2.5rem;
-			line-height: 1.2;
-		}
-
-		.cta-panel h2 {
-			font-size: 2rem;
-			line-height: 1.25;
+			letter-spacing: -0.045em;
 		}
 	}
 </style>
