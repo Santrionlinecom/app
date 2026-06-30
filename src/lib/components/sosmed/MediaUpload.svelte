@@ -3,10 +3,19 @@
 
 	export let mediaUrl: string | null = null;
 
-	const dispatch = createEventDispatcher<{ uploaded: { url: string }; clear: void }>();
+	const dispatch = createEventDispatcher<{
+		uploaded: { url: string };
+		clear: void;
+		uploading: { isUploading: boolean };
+	}>();
 	let fileInput: HTMLInputElement;
 	let isUploading = false;
 	let errorMessage = '';
+
+	const setUploading = (value: boolean) => {
+		isUploading = value;
+		dispatch('uploading', { isUploading: value });
+	};
 
 	const handleFile = async (event: Event) => {
 		const input = event.currentTarget as HTMLInputElement;
@@ -14,7 +23,7 @@
 		if (!file) return;
 
 		errorMessage = '';
-		isUploading = true;
+		setUploading(true);
 		const formData = new FormData();
 		formData.set('file', file);
 
@@ -26,7 +35,7 @@
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Upload foto gagal.';
 		} finally {
-			isUploading = false;
+			setUploading(false);
 			input.value = '';
 		}
 	};
