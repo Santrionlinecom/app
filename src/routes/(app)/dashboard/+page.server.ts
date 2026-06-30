@@ -11,6 +11,7 @@ import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logg
 import { assertLoggedIn, assertOrgMember, assertOrgRoleAllowed } from '$lib/server/auth/rbac';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import { listOrgAssets } from '$lib/server/org-assets';
+import { listOrgMedia } from '$lib/server/org-media';
 import {
 	canInputSetoran,
 	canReviewSetoran,
@@ -21,7 +22,7 @@ import {
 import { isTeachingRole, isMentoringRole } from '$lib/utils/role-helpers';
 import * as XLSX from 'xlsx';
 
-const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
+const allowedRoles = new Set(['admin', 'takmir', 'bendahara', 'operator']);
 const isMissingTableError = (err: unknown) =>
 	`${(err as Error)?.message ?? err}`.toLowerCase().includes('no such table');
 
@@ -556,7 +557,8 @@ const requireCommunityContext = async (locals: App.Locals) => {
 
 const loadCommunityManagerData = async (db: D1Database, orgId: string) => {
 	const assets = await listOrgAssets(db, orgId);
-	return { assets };
+	const media = await listOrgMedia(db, orgId);
+	return { assets, media };
 };
 
 export const load: PageServerLoad = async ({ locals, request, platform }) => {
@@ -598,7 +600,7 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 	const communityManagerData =
 		canManageCommunity && orgId
 			? await loadCommunityManagerData(db, orgId)
-			: { assets: [] };
+			: { assets: [], media: [] };
 
 	const loadCommunityWidgets = async () => {
 		if (!isCommunityMember || !orgId) {

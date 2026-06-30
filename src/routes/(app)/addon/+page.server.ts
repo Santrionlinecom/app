@@ -78,11 +78,13 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 					created_at AS createdAt
 				 FROM addon_lembaga
 				 WHERE lembaga_id = ?
-				   AND status = 'aktif'
 				   AND (
-					berlaku_hingga IS NULL
-					OR berlaku_hingga > ?
-					OR (berlaku_hingga < 100000000000 AND berlaku_hingga > ?)
+					(status = 'aktif' AND (
+						berlaku_hingga IS NULL
+						OR berlaku_hingga > ?
+						OR (berlaku_hingga < 100000000000 AND berlaku_hingga > ?)
+					))
+					OR status = 'pending'
 				   )
 				 ORDER BY created_at DESC`
 			)
@@ -112,8 +114,6 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const addonTipe = readFormString(formData, 'addon_tipe');
 		const lembagaId = readFormString(formData, 'lembaga_id');
-		const nominalRaw = readFormString(formData, 'nominal');
-		const nominal = Number(nominalRaw);
 
 		if (!isAddonTipe(addonTipe)) {
 			return fail(400, { message: 'Tipe addon tidak valid.' });
@@ -121,10 +121,6 @@ export const actions: Actions = {
 
 		if (!lembagaId) {
 			return fail(400, { message: 'Lembaga wajib dipilih.' });
-		}
-
-		if (!Number.isInteger(nominal) || nominal <= 0 || nominal !== ADDON_PRICES[addonTipe]) {
-			return fail(400, { message: 'Nominal addon tidak valid.' });
 		}
 
 		const lembaga = await db
@@ -136,103 +132,81 @@ export const actions: Actions = {
 			return fail(403, { message: 'Lembaga tidak ditemukan atau bukan milik akun ini.' });
 		}
 
-		// Ensure coin wallet exists
-		await ensureCoinWallet(db, locals.user.id);
+		// Check if there's already a pending request for this addon
+		const existingPending = await db
+			.prepare(
+				`SELECT id FROM addon_lembaga
+				 WHERE lembaga_id = ? AND tipe_addon = ? AND status = 'pending'
+				 LIMIT 1`
+			)
+			.bind(lembagaId, addonTipe)
+			.first<{ id: string }>();
 
-		// Convert rupiah to coin (1:1 conversion)
-		const coinRequired = rupiahToCoin(nominal);
-
-		// Check coin balance
-		const balanceCheck = await checkCoinBalance(db, locals.user.id, coinRequired);
-		if (!balanceCheck.hasEnough) {
+		if (existingPending) {
 			return fail(400, {
-				type: 'insufficient_coin',
-				message: 'Saldo coin tidak cukup.',
-				currentBalance: balanceCheck.currentBalance,
-				requiredAmount: balanceCheck.required,
-				shortfall: balanceCheck.shortfall,
-				productName: ADDON_NAMES[addonTipe]
+				type: 'already_pending',
+				message: 'Permintaan addon ini sedang menunggu konfirmasi admin.'
+			});
+		}
+
+		// Check if addon is already active
+		const existingActive = await db
+			.prepare(
+				`SELECT id FROM addon_lembaga
+				 WHERE lembaga_id = ? AND tipe_addon = ? AND status = 'aktif'
+				   AND (berlaku_hingga IS NULL OR berlaku_hingga > ?)
+				 LIMIT 1`
+			)
+			.bind(lembagaId, addonTipe, Date.now())
+			.first<{ id: string }>();
+
+		if (existingActive) {
+			return fail(400, {
+				type: 'already_active',
+				message: 'Addon ini sudah aktif.'
 			});
 		}
 
 		const orderId = crypto.randomUUID();
-		const packageName = `Addon ${ADDON_NAMES[addonTipe]} Bulanan`;
 		const now = Date.now();
 
 		try {
-			// Deduct coins
-			const deductResult = await deductCoins(
-				db,
-				locals.user.id,
-				coinRequired,
-				`Pembelian ${packageName}`,
-				'addon',
-				orderId
-			);
-
-			if (!deductResult.success) {
-				return fail(400, {
-					type: 'deduct_failed',
-					message: deductResult.error || 'Gagal memproses pembayaran coin.'
-				});
-			}
-
-			// Calculate expiry (30 days from now)
-			const expiryMs = now + 30 * 24 * 60 * 60 * 1000;
-
-			// Create addon record and billing record
-			await db.batch([
-				db
-					.prepare(
-						`INSERT INTO addon_lembaga (
-							id,
-							lembaga_id,
-							tipe_addon,
-							status,
-							berlaku_hingga,
-							created_at
-						)
-						VALUES (?, ?, ?, 'aktif', ?, ?)`
+			// Create addon request with pending status (no payment needed)
+			await db
+				.prepare(
+					`INSERT INTO addon_lembaga (
+						id,
+						lembaga_id,
+						tipe_addon,
+						status,
+						berlaku_hingga,
+						created_at
 					)
-					.bind(orderId, lembagaId, addonTipe, expiryMs, now),
-				db
-					.prepare(
-						`INSERT INTO billing (
-							id,
-							akun_admin_id,
-							lembaga_id,
-							addon_tipe,
-							nominal,
-							metode,
-							status
-						)
-						VALUES (?, ?, ?, ?, ?, 'coin', 'lunas')`
-					)
-					.bind(orderId, locals.user.id, lembagaId, addonTipe, nominal)
-			]);
+					VALUES (?, ?, ?, 'pending', NULL, ?)`
+				)
+				.bind(orderId, lembagaId, addonTipe, now)
+				.run();
 
-			console.info('addon_order_success_coin', {
+			console.info('addon_request_success', {
 				order_id: orderId,
 				addon_type: addonTipe,
-				coin_amount: coinRequired,
-				new_balance: deductResult.newBalance
+				lembaga_id: lembagaId
 			});
 
 			return {
 				type: 'success',
-				message: `Berhasil mengaktifkan ${packageName}!`,
-				newBalance: deductResult.newBalance,
+				message: `Permintaan ${ADDON_NAMES[addonTipe]} berhasil dikirim! Menunggu konfirmasi admin. Pastikan Anda sudah bergabung ke grup WhatsApp.`,
 				orderId
 			};
 		} catch (err: any) {
-			console.error('addon_order_error', {
+			console.error('addon_request_error', {
 				order_id: orderId,
 				addon_type: addonTipe,
 				error: err.message
 			});
 			return fail(500, {
 				type: 'error',
-				message: 'Terjadi kesalahan saat memproses pesanan. Silakan coba lagi.'
+				message: 'Terjadi kesalahan saat memproses permintaan. Silakan coba lagi.'
 			});
 		}
 	}

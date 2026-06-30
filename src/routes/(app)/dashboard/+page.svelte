@@ -120,6 +120,17 @@
 	let canManageCommunity = false;
 	let isCommunityManager = false;
 	let assets: AssetRow[] = [];
+
+	type MediaItem = {
+		id: string;
+		url: string;
+		createdAt?: number;
+	};
+	let mediaItems: MediaItem[] = [];
+	let uploadingMedia = false;
+	let uploadMediaError = '';
+	let mediaFileInput: HTMLInputElement | null = null;
+
 	let tpqDashboard: any = null;
 	let tpqCards: TpqSummaryCard[] = [];
 	let tpqRecentSetoran: any[] = [];
@@ -551,6 +562,7 @@
 		canManageCommunity = Boolean(data?.canManageCommunity);
 		isCommunityManager = canManageCommunity;
 		assets = (data?.assets ?? []) as AssetRow[];
+		mediaItems = (data?.media ?? []) as MediaItem[];
 		tpqDashboard = data?.tpqDashboard ?? null;
 		tpqRecentSetoran = tpqDashboard?.recentSetoran ?? [];
 		tpqPendingSetoran = tpqRecentSetoran.filter((item: any) => item.status === 'submitted');
@@ -1346,6 +1358,62 @@
 		assetLocation = '';
 		assetNotes = '';
 		assetAcquiredAt = '';
+	};
+
+	const uploadOrgMedia = async (event: Event) => {
+		const input = event.target as HTMLInputElement;
+		const file = input?.files?.[0];
+		if (!file) return;
+
+		uploadingMedia = true;
+		uploadMediaError = '';
+
+		try {
+			const formData = new FormData();
+			formData.append('file', file);
+
+			const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+			const uploadData = await uploadRes.json();
+
+			if (!uploadRes.ok || !uploadData.url) {
+				uploadMediaError = uploadData.error || 'Gagal upload gambar.';
+				return;
+			}
+
+			const saveRes = await fetch('/api/org/media', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ url: uploadData.url })
+			});
+			const saveData = await saveRes.json();
+
+			if (!saveRes.ok) {
+				uploadMediaError = saveData.error || 'Gagal menyimpan media.';
+				return;
+			}
+
+			if (saveData.item) {
+				mediaItems = [saveData.item, ...mediaItems];
+			}
+			if (mediaFileInput) mediaFileInput.value = '';
+		} catch (err) {
+			uploadMediaError = 'Terjadi kesalahan saat upload.';
+		} finally {
+			uploadingMedia = false;
+		}
+	};
+
+	const deleteOrgMedia = async (id: string) => {
+		if (!confirm('Hapus foto ini?')) return;
+
+		try {
+			const res = await fetch(`/api/org/media/${id}`, { method: 'DELETE' });
+			if (res.ok) {
+				mediaItems = mediaItems.filter((m) => m.id !== id);
+			}
+		} catch (err) {
+			console.error('Gagal hapus media:', err);
+		}
 	};
 
 	const refreshOnSuccess = () => {
@@ -2221,6 +2289,59 @@
 						</div>
 					{/if}
 				</div>
+			</section>
+
+			<section class="admin-card min-w-0 overflow-hidden p-5 sm:p-6">
+				<div class="flex min-w-0 items-center justify-between gap-3">
+					<div class="min-w-0">
+						<h3 class="font-display break-words text-xl font-bold text-so-green">Galeri Lembaga</h3>
+						<p class="text-xs text-so-muted">Foto kegiatan dan suasana lembaga yang ditampilkan di halaman publik.</p>
+					</div>
+					<span class="text-xs text-so-muted">{mediaItems.length} foto</span>
+				</div>
+
+				<div class="mt-4 rounded-xl border border-dashed border-so-green/25 bg-so-green/8 p-4">
+					<label for="dashboard-media-upload" class="text-sm font-semibold text-so-green">Upload Foto Baru</label>
+					<p class="mt-1 text-xs text-so-muted">Format: JPG, PNG, WEBP. Maks 10MB.</p>
+					<input
+						id="dashboard-media-upload"
+						type="file"
+						accept="image/jpeg,image/png,image/webp"
+						class="mt-2 file-input file-input-bordered w-full file-input-sm"
+						on:change={uploadOrgMedia}
+						bind:this={mediaFileInput}
+						disabled={uploadingMedia}
+					/>
+					{#if uploadingMedia}
+						<p class="mt-2 text-xs text-so-green animate-pulse">Mengupload...</p>
+					{/if}
+					{#if uploadMediaError}
+						<p class="mt-2 text-xs text-red-600">{uploadMediaError}</p>
+					{/if}
+				</div>
+
+				{#if mediaItems.length === 0}
+					<div class="mt-4 rounded-xl border border-dashed border-so-border bg-so-cream/70 p-6 text-center text-sm text-so-muted">
+						Belum ada foto yang ditampilkan.
+					</div>
+				{:else}
+					<div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+						{#each mediaItems as item}
+							<div class="group relative overflow-hidden rounded-xl border border-so-border bg-so-cream">
+								<div class="aspect-video">
+									<img src={item.url} alt="Foto lembaga" class="h-full w-full object-cover" loading="lazy" />
+								</div>
+								<button
+									type="button"
+									class="absolute top-2 right-2 btn btn-xs btn-error text-white opacity-0 group-hover:opacity-100 transition-opacity"
+									on:click={() => deleteOrgMedia(item.id)}
+								>
+									Hapus
+								</button>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			</section>
 		{/if}
 	{:else if isEducationalOrg && isStudent}

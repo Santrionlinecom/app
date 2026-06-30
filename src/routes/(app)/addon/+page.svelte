@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { deserialize } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { BadgeCheck, Clock3, Coins, Loader2, Settings } from 'lucide-svelte';
-	import InsufficientCoinNotice from '$lib/components/InsufficientCoinNotice.svelte';
+	import { BadgeCheck, Clock3, Loader2, MessageCircle, Settings } from 'lucide-svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -50,42 +49,42 @@
 			type: 'santri_unlimited',
 			emoji: '👥',
 			name: 'Santri Unlimited',
-			price: 20000,
+			price: 0,
 			features: ['Hapus batas 30 santri aktif']
 		},
 		{
 			type: 'raport_premium',
 			emoji: '📄',
 			name: 'Raport PDF Premium',
-			price: 15000,
+			price: 0,
 			features: ['Template custom', 'Kirim ke wali via WhatsApp']
 		},
 		{
 			type: 'modul_masjid',
 			emoji: '🕌',
 			name: 'Modul Masjid',
-			price: 25000,
+			price: 0,
 			features: ['Zakat', 'Qurban', 'Agenda jamaah']
 		},
 		{
 			type: 'modul_tahfidz',
 			emoji: '📖',
 			name: 'Modul Rumah Tahfidz',
-			price: 20000,
+			price: 0,
 			features: ['Halaqoh detail', 'Ujian', 'Ijazah']
 		},
 		{
 			type: 'modul_musholla',
 			emoji: '🏠',
 			name: 'Modul Musholla',
-			price: 15000,
+			price: 0,
 			features: ['Kas musholla', 'Kegiatan rutin']
 		},
 		{
 			type: 'lembaga_tambahan',
 			emoji: '➕',
 			name: 'Lembaga Tambahan',
-			price: 15000,
+			price: 0,
 			features: ['Tambah lembaga ke-2', 'Tambah lembaga ke-3 dan seterusnya']
 		}
 	] satisfies AddonCatalogItem[];
@@ -93,12 +92,6 @@
 	let activatingAddon: AddonTipe | null = null;
 	let toast: ToastState | null = null;
 	let toastTimer: ReturnType<typeof setTimeout> | null = null;
-	let insufficientCoinData: {
-		currentBalance: number;
-		requiredAmount: number;
-		shortfall: number;
-		productName: string;
-	} | null = null;
 
 	const formatCoin = (amount: number) => new Intl.NumberFormat('id-ID').format(amount);
 
@@ -120,16 +113,12 @@
 			return;
 		}
 
-		// Clear previous insufficient coin notice
-		insufficientCoinData = null;
-
 		activatingAddon = addon.type;
 
 		try {
 			const formData = new FormData();
 			formData.set('addon_tipe', addon.type);
 			formData.set('lembaga_id', data.lembagaId);
-			formData.set('nominal', String(addon.price));
 
 			const response = await fetch('?/order', {
 				method: 'POST',
@@ -139,24 +128,11 @@
 
 			if (result.type === 'failure') {
 				const payload = result.data as OrderResponse | undefined;
-				
-				// Check if it's insufficient coin error
-				if (payload?.type === 'insufficient_coin') {
-					insufficientCoinData = {
-						currentBalance: payload.currentBalance ?? 0,
-						requiredAmount: payload.requiredAmount ?? addon.price,
-						shortfall: payload.shortfall ?? 0,
-						productName: payload.productName ?? addon.name
-					};
-					showToast('error', 'Saldo coin tidak cukup. Silakan isi saldo terlebih dahulu.');
-					return;
-				}
-				
-				throw new Error(payload?.message ?? 'Gagal membuat order addon.');
+				throw new Error(payload?.message ?? 'Gagal membuat permintaan addon.');
 			}
 
 			if (result.type === 'error') {
-				throw new Error(result.error?.message ?? 'Gagal membuat order addon.');
+				throw new Error(result.error?.message ?? 'Gagal membuat permintaan addon.');
 			}
 
 			if (result.type === 'redirect') {
@@ -166,15 +142,13 @@
 
 			const payload = result.data as OrderResponse | undefined;
 			if (result.type === 'success' && payload?.type === 'success') {
-				showToast('success', payload.message ?? 'Addon berhasil diaktifkan!');
-				// Update coin balance in UI
-				data.coinBalance = payload.newBalance ?? data.coinBalance;
+				showToast('success', payload.message ?? 'Permintaan addon berhasil dikirim!');
 				void invalidateAll();
 			} else {
-				throw new Error(payload?.message ?? 'Gagal mengaktifkan addon.');
+				throw new Error(payload?.message ?? 'Gagal mengirim permintaan addon.');
 			}
 		} catch (err) {
-			showToast('error', err instanceof Error ? err.message : 'Gagal memproses addon.');
+			showToast('error', err instanceof Error ? err.message : 'Gagal memproses permintaan.');
 		} finally {
 			activatingAddon = null;
 		}
@@ -182,6 +156,12 @@
 
 	$: activeTypes = new Set(
 		((data.addonAktif ?? []) as AddonAktif[]).map((addon) => addon.tipeAddon)
+	);
+
+	$: pendingTypes = new Set(
+		((data.addonAktif ?? []) as AddonAktif[])
+			.filter((addon) => addon.status === 'pending')
+			.map((addon) => addon.tipeAddon)
 	);
 </script>
 
@@ -194,14 +174,15 @@
 	<header
 		class="rounded-so-lg border border-so-border bg-white/88 p-5 shadow-card backdrop-blur md:p-6"
 	>
-		<p class="text-xs font-bold uppercase tracking-[0.22em] text-so-muted">Addon Berbayar</p>
+		<p class="text-xs font-bold uppercase tracking-[0.22em] text-so-muted">Addon Gratis</p>
 		<div class="mt-2 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
 			<div class="min-w-0">
 				<h1 class="text-2xl font-black tracking-tight text-so-green md:text-3xl">
 					Katalog Addon
 				</h1>
 				<p class="mt-2 max-w-2xl text-sm leading-6 text-so-muted">
-					Aktivasi fitur tambahan untuk {data.lembagaNama ?? 'lembaga aktif'}.
+					Aktivasi fitur tambahan untuk {data.lembagaNama ?? 'lembaga aktif'}. Gratis! 
+					Perlu konfirmasi admin.
 				</p>
 			</div>
 			<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -211,58 +192,45 @@
 					<BadgeCheck size={15} strokeWidth={2.4} />
 					{activeTypes.size} addon aktif
 				</div>
-				<a
-					href="/coins"
-					class="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100"
-				>
-					<Coins size={15} strokeWidth={2.4} />
-					Saldo: {formatCoin(data.coinBalance)} Coin
-				</a>
 			</div>
 		</div>
 	</header>
-
-	{#if insufficientCoinData}
-		<InsufficientCoinNotice
-			currentBalance={insufficientCoinData.currentBalance}
-			requiredAmount={insufficientCoinData.requiredAmount}
-			shortfall={insufficientCoinData.shortfall}
-			productName={insufficientCoinData.productName}
-		/>
-	{/if}
 
 	<div
 		class="flex flex-col gap-3 rounded-so-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 shadow-card md:flex-row md:items-center"
 	>
 		<div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-600 text-white">
-			<Coins size={19} strokeWidth={2.2} />
+			<MessageCircle size={19} strokeWidth={2.2} />
 		</div>
 		<div class="min-w-0 flex-1">
 			<p class="text-sm font-semibold leading-6">
-				Semua addon dibeli menggunakan Coin. Pastikan saldo Coin Anda mencukupi sebelum melakukan pembelian.
+				Semua addon <strong>GRATIS</strong>! Permintaan akan dikirim ke admin untuk diverifikasi.
 			</p>
-			<a href="/coins/topup" class="mt-1 text-xs font-bold text-emerald-700 underline hover:text-emerald-900">
-				Isi Saldo Coin →
-			</a>
+			<p class="mt-1 text-xs text-emerald-700">
+				<strong>Syarat:</strong> Anda harus bergabung ke grup WhatsApp SantriOnline terlebih dahulu.
+				<a href="https://chat.whatsapp.com/santrionline" target="_blank" rel="noopener" class="font-bold underline hover:text-emerald-900">
+					Gabung Grup WA →
+				</a>
+			</p>
 		</div>
 	</div>
 
 	<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 		{#each addonCatalog as addon}
-			{@const isActive = activeTypes.has(addon.type)}
-			{@const canAfford = data.coinBalance >= addon.price}
+			{@const isActive = activeTypes.has(addon.type) && !pendingTypes.has(addon.type)}
+			{@const isPending = pendingTypes.has(addon.type)}
 			<article
 				class={`flex min-h-[18rem] flex-col rounded-so-lg border bg-white p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-soft ${
-					isActive ? 'border-so-green/45' : 'border-so-border hover:border-so-gold/60'
+					isActive ? 'border-so-green/45' : isPending ? 'border-amber-300' : 'border-so-border hover:border-so-gold/60'
 				}`}
 			>
 				<div class="flex items-start justify-between gap-4">
 					<div class="min-w-0">
 						<div class="text-4xl leading-none" aria-hidden="true">{addon.emoji}</div>
 						<h2 class="mt-4 text-lg font-black text-so-green">{addon.name}</h2>
-						<p class="mt-1 flex items-center gap-1 text-sm font-bold text-so-gold">
-							<Coins size={14} strokeWidth={2.4} />
-							{formatCoin(addon.price)} Coin/bulan
+						<p class="mt-1 flex items-center gap-1 text-sm font-bold text-emerald-600">
+							<BadgeCheck size={14} strokeWidth={2.4} />
+							Gratis
 						</p>
 					</div>
 
@@ -272,6 +240,13 @@
 						>
 							<BadgeCheck size={14} strokeWidth={2.4} />
 							Aktif
+						</span>
+					{:else if isPending}
+						<span
+							class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700"
+						>
+							<Clock3 size={14} strokeWidth={2.4} />
+							Menunggu
 						</span>
 					{:else}
 						<span
@@ -302,14 +277,11 @@
 							<Settings size={17} strokeWidth={2.3} />
 							Kelola
 						</button>
-					{:else if !canAfford}
-						<a
-							href="/coins/topup"
-							class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-500 bg-amber-50 px-4 text-sm font-black text-amber-700 transition hover:bg-amber-100"
-						>
-							<Coins size={17} strokeWidth={2.4} />
-							Isi Saldo Coin
-						</a>
+					{:else if isPending}
+						<div class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm font-bold text-amber-700">
+							<Clock3 size={17} strokeWidth={2.3} />
+							Menunggu Konfirmasi Admin
+						</div>
 					{:else}
 						<button
 							type="button"
@@ -323,10 +295,10 @@
 						>
 							{#if activatingAddon === addon.type}
 								<Loader2 size={17} strokeWidth={2.4} class="animate-spin" />
-								Memproses...
+								Mengirim...
 							{:else}
-								<Coins size={17} strokeWidth={2.4} />
-								Aktifkan — {formatCoin(addon.price)} Coin
+								<MessageCircle size={17} strokeWidth={2.4} />
+								Minta Addon
 							{/if}
 						</button>
 					{/if}
