@@ -10,12 +10,17 @@
 	let content = '';
 	let mediaUrl: string | null = null;
 	let isPosting = false;
+	let isUploadingMedia = false;
 	let errorMessage = '';
 
 	$: charCount = content.length;
-	$: canPost = content.trim().length > 0 && charCount <= 500 && !isPosting;
+	$: canPost = content.trim().length > 0 && charCount <= 500 && !isPosting && !isUploadingMedia;
 
 	const submitPost = async () => {
+		if (isUploadingMedia) {
+			errorMessage = 'Tunggu upload foto selesai sebelum memposting.';
+			return;
+		}
 		if (!canPost) return;
 		isPosting = true;
 		errorMessage = '';
@@ -60,6 +65,7 @@
 				<MediaUpload
 					{mediaUrl}
 					on:uploaded={(event) => (mediaUrl = event.detail.url)}
+					on:uploading={(event) => (isUploadingMedia = event.detail.isUploading)}
 					on:clear={() => (mediaUrl = null)}
 				/>
 			</div>
@@ -73,7 +79,7 @@
 					disabled={!canPost}
 					on:click={submitPost}
 				>
-					{isPosting ? 'Memposting...' : 'Posting'}
+					{isPosting ? 'Memposting...' : isUploadingMedia ? 'Mengupload foto...' : 'Posting'}
 				</button>
 			</div>
 			{#if errorMessage}
