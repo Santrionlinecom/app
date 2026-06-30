@@ -68,6 +68,7 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 		{ label: 'Data Jamaah', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['musholla'], allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'bendahara', 'operator'] },
 		{ label: 'Kas Musholla', href: '/keuangan', icon: ICONS.wallet, allowedTypes: ['musholla'], permission: 'finance.read', allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'bendahara'] },
 		{ label: 'Jadwal Imam', href: '/dashboard/jadwal', icon: ICONS.calendar, allowedTypes: ['musholla'], allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'imam', 'muadzin', 'operator'] },
+		{ label: 'Qurban', href: fallbackHref('Qurban'), icon: ICONS.star, allowedTypes: ['musholla'], permission: 'zakat.manage', allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'bendahara'] },
 		{ label: 'Pengumuman', href: fallbackHref('Pengumuman Musholla'), icon: ICONS.megaphone, allowedTypes: ['musholla'] },
 		{ label: 'Sosial', href: '/beranda', icon: ICONS.message, allowedTypes: ['musholla'] }
 	],

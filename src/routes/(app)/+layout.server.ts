@@ -72,6 +72,19 @@ const layoutPermissions = (locals: App.Locals) => ({
 	canWriteAnnouncement: locals.can('announcement.write')
 });
 
+const withOrgScopedNavigation = (
+	items: ReturnType<typeof getAppNavigation>,
+	orgSlug?: string | null
+) => {
+	if (!orgSlug) return items;
+	const ummahHref = `/org/${encodeURIComponent(orgSlug)}/ummah`;
+	return items.map((item) =>
+		item.label === 'Qurban' || item.label === 'Zakat & Qurban'
+			? { ...item, href: ummahHref }
+			: item
+	);
+};
+
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const user = assertLoggedIn({ locals });
 	const superAdmin = isSuperAdminRole(user.role);
@@ -135,7 +148,10 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		user,
 		org,
 		lembagaList: await listManagedLembaga(locals.db, user.id),
-		appMenu: getAppNavigation(org?.type ?? null, user.role, locals.can),
+		appMenu: withOrgScopedNavigation(
+			getAppNavigation(org?.type ?? null, user.role, locals.can),
+			org?.slug
+		),
 		featureAccess,
 		permissions: layoutPermissions(locals)
 	};

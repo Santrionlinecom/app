@@ -106,6 +106,7 @@
 	let displayName = 'Pengguna';
 	let orgName = 'Lembaga';
 	let orgType: string | null = null;
+	let ummahHref = '/fitur-belum-tersedia?fitur=Qurban';
 	let dashboardTitle = 'Dashboard Lembaga';
 	let dashboardModeLabel = 'Institution Mode';
 
@@ -323,6 +324,9 @@
 		displayName = data?.currentUser?.username || data?.currentUser?.email || 'Pengguna';
 		orgName = data?.org?.name || 'Lembaga';
 		orgType = data?.org?.type ?? null;
+		ummahHref = data?.org?.slug
+			? `/org/${encodeURIComponent(data.org.slug)}/ummah`
+			: '/fitur-belum-tersedia?fitur=Qurban';
 		roleLabel = getRoleLabel(role);
 		orgTypeLabel = getOrgTypeLabel(orgType);
 		dashboardTitle = isSuperAdmin
@@ -383,7 +387,7 @@
 						{
 							label: 'Qurban',
 							desc: 'Pendataan program qurban lembaga.',
-							href: '/fitur-belum-tersedia?fitur=Qurban',
+							href: ummahHref,
 							tone: 'from-rose-50 to-pink-100 text-rose-900'
 						},
 						{
@@ -418,6 +422,12 @@
 								desc: 'Atur jadwal imam dan kegiatan ibadah.',
 								href: '/dashboard/jadwal',
 								tone: 'from-sky-50 to-cyan-100 text-sky-900'
+							},
+							{
+								label: 'Qurban',
+								desc: 'Pendataan program qurban musholla.',
+								href: ummahHref,
+								tone: 'from-rose-50 to-pink-100 text-rose-900'
 							},
 							{
 								label: 'Pengumuman',
