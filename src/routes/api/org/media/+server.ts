@@ -2,7 +2,7 @@ import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { addOrgMedia, listOrgMedia } from '$lib/server/org-media';
 
-const allowedRoles = new Set(['admin', 'ustadz', 'ustadzah', 'tamir', 'bendahara']);
+const allowedRoles = new Set(['admin', 'pengajar', 'takmir', 'bendahara', 'operator']);
 
 const requireOrgAccess = (locals: App.Locals) => {
 	if (!locals.user) {

@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { assertLoggedIn, assertOrgMember, assertOrgRoleAllowed } from '$lib/server/auth/rbac';
 import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
 import { listOrgAssets } from '$lib/server/org-assets';
+import { listOrgMedia } from '$lib/server/org-media';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import * as XLSX from 'xlsx';
 
@@ -118,12 +119,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const { orgId, org } = await requireOrgContext(locals);
 
 	const assets = await listOrgAssets(locals.db, orgId);
+	const media = await listOrgMedia(locals.db, orgId);
 
 	return {
 		mode: 'org',
 		org,
 		orgs: [],
-		assets
+		assets,
+		media
 	};
 };
 

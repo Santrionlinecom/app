@@ -7,6 +7,75 @@
 	const mode = data.mode ?? 'super';
 	const isSuperAdminView = mode === 'super';
 
+	type MediaItem = {
+		id: string;
+		url: string;
+		createdAt?: number;
+	};
+
+	let mediaItems: MediaItem[] = (data.media ?? []) as MediaItem[];
+	let uploading = false;
+	let uploadError = '';
+	let fileInput: HTMLInputElement | null = null;
+
+	const uploadMedia = async (event: Event) => {
+		const input = event.target as HTMLInputElement;
+		const file = input?.files?.[0];
+		if (!file) return;
+
+		uploading = true;
+		uploadError = '';
+
+		try {
+			const formData = new FormData();
+			formData.append('file', file);
+
+			const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+			const uploadData = await uploadRes.json();
+
+			if (!uploadRes.ok || !uploadData.url) {
+				uploadError = uploadData.error || 'Gagal upload gambar.';
+				uploading = false;
+				return;
+			}
+
+			const saveRes = await fetch('/api/org/media', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ url: uploadData.url })
+			});
+			const saveData = await saveRes.json();
+
+			if (!saveRes.ok) {
+				uploadError = saveData.error || 'Gagal menyimpan media.';
+				uploading = false;
+				return;
+			}
+
+			if (saveData.item) {
+				mediaItems = [saveData.item, ...mediaItems];
+			}
+			if (fileInput) fileInput.value = '';
+		} catch (err) {
+			uploadError = 'Terjadi kesalahan saat upload.';
+		} finally {
+			uploading = false;
+		}
+	};
+
+	const deleteMedia = async (id: string) => {
+		if (!confirm('Hapus foto ini?')) return;
+
+		try {
+			const res = await fetch(`/api/org/media/${id}`, { method: 'DELETE' });
+			if (res.ok) {
+				mediaItems = mediaItems.filter((m) => m.id !== id);
+			}
+		} catch (err) {
+			console.error('Gagal hapus media:', err);
+		}
+	};
+
 	type OrgRow = {
 		id: string;
 		name: string;
@@ -425,6 +494,59 @@
 					</div>
 				{/if}
 			</div>
+		</section>
+
+		<section class="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
+			<div class="flex items-center justify-between">
+				<div>
+					<h2 class="text-lg font-semibold text-slate-900">Galeri Lembaga</h2>
+					<p class="text-xs text-slate-500">Foto kegiatan dan suasana lembaga yang ditampilkan di halaman publik.</p>
+				</div>
+				<span class="text-xs text-slate-400">{mediaItems.length} foto</span>
+			</div>
+
+			<div class="rounded-xl border border-dashed border-emerald-300 bg-emerald-50/40 p-4">
+				<label for="org-media-upload" class="text-sm font-medium text-emerald-700">Upload Foto Baru</label>
+				<p class="mt-1 text-xs text-emerald-700/80">Format: JPG, PNG, WEBP. Maks 10MB.</p>
+				<input
+					id="org-media-upload"
+					type="file"
+					accept="image/jpeg,image/png,image/webp"
+					class="mt-2 file-input file-input-bordered w-full file-input-sm"
+					on:change={uploadMedia}
+					bind:this={fileInput}
+					disabled={uploading}
+				/>
+				{#if uploading}
+					<p class="mt-2 text-xs text-emerald-600 animate-pulse">Mengupload...</p>
+				{/if}
+				{#if uploadError}
+					<p class="mt-2 text-xs text-red-600">{uploadError}</p>
+				{/if}
+			</div>
+
+			{#if mediaItems.length === 0}
+				<div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+					Belum ada foto yang ditampilkan.
+				</div>
+			{:else}
+				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+					{#each mediaItems as item}
+						<div class="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+							<div class="aspect-video">
+								<img src={item.url} alt="Foto lembaga" class="h-full w-full object-cover" loading="lazy" />
+							</div>
+							<button
+								type="button"
+								class="absolute top-2 right-2 btn btn-xs btn-error text-white opacity-0 group-hover:opacity-100 transition-opacity"
+								on:click={() => deleteMedia(item.id)}
+							>
+								Hapus
+							</button>
+						</div>
+					{/each}
+				</div>
+			{/if}
 		</section>
 
 	</section>
