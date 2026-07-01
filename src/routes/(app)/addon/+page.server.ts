@@ -69,9 +69,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const [lembaga, addonResult] = await Promise.all([
 		locals.db
-			.prepare('SELECT id, name FROM organizations WHERE id = ? AND akun_admin_id = ?')
+			.prepare('SELECT id, name, slug, type FROM organizations WHERE id = ? AND akun_admin_id = ?')
 			.bind(lembagaId, locals.user.id)
-			.first<{ id: string; name: string }>(),
+			.first<{ id: string; name: string; slug: string | null; type: string | null }>(),
 		locals.db
 			.prepare(
 				`SELECT
@@ -100,6 +100,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		addonAktif: addonResult.results ?? [],
 		lembagaNama: lembaga?.name ?? null,
 		lembagaId: lembaga?.id ?? null,
+		lembagaSlug: lembaga?.slug ?? null,
+		lembagaType: lembaga?.type ?? null,
 		coinBalance
 	};
 };

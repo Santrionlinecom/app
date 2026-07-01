@@ -95,6 +95,26 @@
 
 	const formatCoin = (amount: number) => new Intl.NumberFormat('id-ID').format(amount);
 
+	const getAddonManageHref = (addonType: AddonTipe) => {
+		const addonData = data as PageData & { lembagaSlug?: string | null; lembagaType?: string | null };
+		const orgSlug = addonData.lembagaSlug ? encodeURIComponent(addonData.lembagaSlug) : '';
+		switch (addonType) {
+			case 'santri_unlimited':
+				return '/dashboard/kelola-santri';
+			case 'raport_premium':
+				return addonData.lembagaType === 'tpq' ? '/tpq/hafalan-rapor' : '/dashboard/rapor-hafalan';
+			case 'modul_masjid':
+			case 'modul_musholla':
+				return orgSlug ? `/org/${orgSlug}/ummah` : '/keuangan';
+			case 'modul_tahfidz':
+				return '/dashboard/halaqoh';
+			case 'lembaga_tambahan':
+				return '/lembaga/tambah';
+			default:
+				return '/dashboard';
+		}
+	};
+
 	const showToast = (kind: ToastKind, message: string) => {
 		if (toastTimer) {
 			clearTimeout(toastTimer);
@@ -271,14 +291,13 @@
 
 				<div class="mt-auto pt-6">
 					{#if isActive}
-						<button
-							type="button"
-							class="inline-flex h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-so-green px-4 text-sm font-bold text-white opacity-75"
-							disabled
+						<a
+							href={getAddonManageHref(addon.type)}
+							class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-so-green px-4 text-sm font-bold text-white shadow-sm transition hover:bg-so-green-2"
 						>
 							<Settings size={17} strokeWidth={2.3} />
 							Kelola
-						</button>
+						</a>
 					{:else if isPending}
 						<div class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-300 bg-amber-50 px-4 text-sm font-bold text-amber-700">
 							<Clock3 size={17} strokeWidth={2.3} />
