@@ -418,13 +418,86 @@
 
 	const eightIntermazhabSchools = ['Hanafi', 'Maliki', 'Syafi’i', 'Hanbali', 'Ja’fari', 'Zaydi', 'Ibadi', 'Zahiri'];
 
+
+	const pageQuickLinks = [
+		{ href: '#afiliasi-indonesia', label: 'Afiliasi Indonesia' },
+		{ href: '#ormas-indonesia', label: 'Ormas Indonesia' },
+		{ href: '#ormas-dunia', label: 'Gerakan Dunia' },
+		{ href: '#dialog-intermazhab', label: 'Dialog Intermazhab' },
+		{ href: '#sumber-rujukan', label: 'Sumber' }
+	];
+
+	const intermazhabQuickLinks = [
+		{ href: '#sejarah-awal', label: 'Sejarah Awal' },
+		{ href: '#linimasa-intermazhab', label: 'Linimasa' },
+		{ href: '#fatwa-syaltut', label: 'Fatwa Syaltut' },
+		{ href: '#amman-message', label: 'Risalah Amman' },
+		{ href: '#nusantara', label: 'Nusantara' },
+		{ href: '#adab-membaca', label: 'Adab Membaca' }
+	];
+
+	const expandedIntermazhabMilestones: TimelineItem[] = [
+		{
+			year: '632 M',
+			title: 'Wafat Rasulullah ﷺ dan musyawarah kepemimpinan',
+			desc: 'Perbedaan awal berkaitan dengan imamah/kepemimpinan umat. Pada fase ini, istilah Sunni-Syiah belum menjadi sistem mazhab seperti yang dikenal kemudian.'
+		},
+		{
+			year: '656–661 M',
+			title: 'Masa Sayyidina Ali dan fitnah politik awal',
+			desc: 'Perang Jamal, Shiffin, dan Tahkim meninggalkan luka politik yang kelak dibaca ulang oleh berbagai tradisi teologi dan sejarah.'
+		},
+		{
+			year: '680 M',
+			title: 'Tragedi Karbala',
+			desc: 'Wafatnya Sayyidina Husain bin Ali radhiyallahu ‘anhuma menjadi peristiwa besar dalam memori umat Islam, terutama dalam pembentukan identitas Syiah.'
+		},
+		{
+			year: 'Abad 8–10 M',
+			title: 'Kodifikasi fikih dan teologi',
+			desc: 'Mazhab fikih Sunni menguat melalui jaringan ulama, sementara tradisi Ja’fari berkembang dalam komunitas Imamiyah. Pada masa ini perbedaan makin memiliki struktur keilmuan.'
+		},
+		{
+			year: '1947',
+			title: 'Dar at-Taqrib di Kairo',
+			desc: 'Forum pendekatan antarmadzhab mempertemukan ulama Al-Azhar dan ulama Syiah. Majalah Risalat al-Islam menjadi salah satu kanal gagasan taqrib.'
+		},
+		{
+			year: '1959',
+			title: 'Fatwa Mahmud Syaltut',
+			desc: 'Mazhab Ja’fari diakui dalam ranah fikih sebagai mazhab yang dapat diamalkan, tanpa menghapus perbedaan teologis Sunni-Syiah.'
+		},
+		{
+			year: '1980-an',
+			title: 'Ketegangan politik pasca-Revolusi Iran',
+			desc: 'Revolusi Iran 1979 dan perang Iran-Irak membuat isu Sunni-Syiah sering bercampur dengan geopolitik, bukan semata kajian keilmuan.'
+		},
+		{
+			year: '2004–2005',
+			title: 'Risalah Amman',
+			desc: 'Ulama dunia menegaskan pengakuan delapan mazhab besar dan larangan takfir sembarangan untuk menjaga darah, kehormatan, dan persatuan umat.'
+		},
+		{
+			year: '2016',
+			title: 'Deklarasi Marrakesh',
+			desc: 'Deklarasi ini tidak khusus Sunni-Syiah, tetapi penting dalam wacana toleransi, perlindungan minoritas, dan hidup berdampingan dalam negara modern.'
+		}
+	];
+
+	const readingPrinciples = [
+		'Teguh dalam aqidah Ahlussunnah wal Jama’ah tanpa mencaci dan merendahkan manusia.',
+		'Bedakan kajian ilmiah, kritik aqidah, konflik politik, dan provokasi media sosial.',
+		'Jangan melakukan takfir tanpa ilmu, otoritas, dan kaidah ulama.',
+		'Dahulukan maslahat bangsa, keselamatan masyarakat, dan adab ukhuwah Islamiyah.'
+	];
+
 </script>
 
 <svelte:head>
 	<title>Ormas Islam Dunia dan Indonesia - Santri Online</title>
 	<meta
 		name="description"
-		content="Peta ormas Islam terbesar di Indonesia dan dunia, asal-usul, pendiri, basis massa, dan klasifikasi afiliasi publik NU, Muhammadiyah, serta ormas lain."
+		content="Peta ormas Islam, afiliasi Indonesia, gerakan Islam dunia, serta edukasi sejarah dialog intermazhab Sunni-Syiah yang wasathiyah."
 	/>
 </svelte:head>
 
@@ -440,6 +513,11 @@
 					Halaman ini merangkum organisasi dan gerakan Islam besar di Indonesia serta dunia. Fokusnya bukan
 					hanya jumlah, tetapi juga asal-usul, pendiri, corak dakwah, dan cara membaca angka afiliasi publik.
 				</p>
+				<div class="mt-6 flex flex-wrap gap-2">
+					{#each pageQuickLinks as link}
+						<a class="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold text-white/85 transition hover:border-amber-200 hover:bg-amber-200 hover:text-slate-950" href={link.href}>{link.label}</a>
+					{/each}
+				</div>
 			</div>
 			<div class="rounded-[1.5rem] border border-white/15 bg-white/10 p-5 backdrop-blur">
 				<p class="text-sm font-semibold text-emerald-50">Cara membaca ranking</p>
@@ -452,7 +530,7 @@
 		</div>
 	</section>
 
-	<section class="grid gap-4 md:grid-cols-4">
+	<section id="ringkasan-cepat" class="grid scroll-mt-24 gap-4 md:grid-cols-4">
 		<div class="rounded-[1.5rem] border border-emerald-200 bg-white p-5 shadow-sm">
 			<p class="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-700">Indonesia</p>
 			<p class="mt-3 text-3xl font-bold text-slate-900">NU</p>
@@ -475,7 +553,7 @@
 		</div>
 	</section>
 
-	<section class="rounded-[1.75rem] border border-emerald-200 bg-white p-6 shadow-sm">
+	<section id="afiliasi-indonesia" class="rounded-[1.75rem] scroll-mt-24 border border-emerald-200 bg-white p-6 shadow-sm">
 		<div class="grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
 			<div>
 				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-700">Klasifikasi Populasi Indonesia</p>
@@ -506,7 +584,7 @@
 		</div>
 	</section>
 
-	<section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+	<section id="ormas-indonesia" class="rounded-[1.75rem] scroll-mt-24 border border-slate-200 bg-white p-6 shadow-sm">
 		<div class="flex flex-wrap items-end justify-between gap-4">
 			<div>
 				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Indonesia</p>
@@ -542,7 +620,7 @@
 		</div>
 	</section>
 
-	<section class="rounded-[1.75rem] border border-amber-200 bg-amber-50 p-6 shadow-sm">
+	<section id="timeline-indonesia" class="rounded-[1.75rem] scroll-mt-24 border border-amber-200 bg-amber-50 p-6 shadow-sm">
 		<p class="text-xs font-semibold uppercase tracking-[0.3em] text-amber-700">Garis Waktu Indonesia</p>
 		<h2 class="mt-3 text-2xl font-semibold text-slate-900">Dari tajdid, pesantren, sampai dakwah kader</h2>
 		<div class="mt-5 grid gap-4">
@@ -558,7 +636,7 @@
 		</div>
 	</section>
 
-	<section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+	<section id="ormas-dunia" class="rounded-[1.75rem] scroll-mt-24 border border-slate-200 bg-white p-6 shadow-sm">
 		<div class="flex flex-wrap items-end justify-between gap-4">
 			<div>
 				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Dunia</p>
@@ -595,7 +673,7 @@
 	</section>
 
 
-	<section class="rounded-[1.75rem] border border-emerald-200 bg-white p-6 shadow-sm">
+	<section id="dialog-intermazhab" class="rounded-[1.75rem] scroll-mt-24 border border-emerald-200 bg-white p-6 shadow-sm">
 		<div class="flex flex-wrap items-start justify-between gap-4">
 			<div>
 				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-700">Edukasi Intermazhab</p>
@@ -608,6 +686,15 @@
 			</p>
 		</div>
 
+		<nav class="mt-6 rounded-[1.5rem] border border-emerald-100 bg-emerald-50/60 p-4" aria-label="Navigasi internal dialog intermazhab">
+			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Peta baca cepat</p>
+			<div class="mt-3 flex flex-wrap gap-2">
+				{#each intermazhabQuickLinks as link}
+					<a class="rounded-full border border-emerald-200 bg-white px-4 py-2 text-xs font-semibold text-emerald-800 shadow-sm transition hover:border-emerald-500 hover:bg-emerald-600 hover:text-white" href={link.href}>{link.label}</a>
+				{/each}
+			</div>
+		</nav>
+
 		<div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 			{#each intermazhabStats as stat}
 				<article class="rounded-2xl border border-emerald-100 bg-emerald-50/55 p-4">
@@ -618,8 +705,27 @@
 			{/each}
 		</div>
 
+
+		<div class="mt-6 grid gap-4 lg:grid-cols-3">
+			<a href="#fatwa-syaltut" class="rounded-[1.25rem] border border-amber-200 bg-amber-50 p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+				<p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-700">Monumen 1959</p>
+				<h3 class="mt-2 text-lg font-semibold text-slate-900">Fatwa Syaltut</h3>
+				<p class="mt-2 text-sm leading-6 text-slate-600">Jembatan fikih antara Al-Azhar dan Mazhab Ja’fari.</p>
+			</a>
+			<a href="#amman-message" class="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+				<p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Monumen 2004–2005</p>
+				<h3 class="mt-2 text-lg font-semibold text-slate-900">Risalah Amman</h3>
+				<p class="mt-2 text-sm leading-6 text-slate-600">Delapan mazhab besar dan larangan takfir sembarangan.</p>
+			</a>
+			<a href="#nusantara" class="rounded-[1.25rem] border border-emerald-200 bg-emerald-50 p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+				<p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">Konteks Indonesia</p>
+				<h3 class="mt-2 text-lg font-semibold text-slate-900">Aswaja & Ukhuwah</h3>
+				<p class="mt-2 text-sm leading-6 text-slate-600">Menjaga aqidah tanpa kehilangan adab sosial-keumatan.</p>
+			</a>
+		</div>
+
 		<div class="mt-8 space-y-8">
-			<div class="rounded-[1.5rem] bg-slate-50 p-5">
+			<div id="sejarah-awal" class="rounded-[1.5rem] scroll-mt-24 bg-slate-50 p-5">
 				<h3 class="text-xl font-semibold text-slate-900">1. Pendahuluan dan sejarah awal</h3>
 				<div class="mt-4 space-y-4 text-sm leading-7 text-slate-700">
 					<p>Dalam sejarah Islam, Sunni atau Ahlussunnah wal Jama’ah menjadi arus mayoritas umat. Sunni bertumpu pada kesinambungan ajaran Al-Qur’an, Sunnah, ijma’ ulama, dan tradisi empat mazhab fikih besar: Hanafi, Maliki, Syafi’i, dan Hanbali. Di Nusantara, tradisi Sunni tumbuh melalui pesantren, tarekat mu’tabarah, kajian kitab, dan adab bermasyarakat.</p>
@@ -634,8 +740,8 @@
 				</div>
 			</div>
 
-			<div class="grid gap-4">
-				{#each intermazhabTimeline as item}
+			<div id="linimasa-intermazhab" class="grid scroll-mt-24 gap-4">
+				{#each expandedIntermazhabMilestones as item}
 					<article class="grid gap-3 rounded-2xl border border-emerald-100 bg-white p-5 md:grid-cols-[8rem_1fr]">
 						<p class="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">{item.year}</p>
 						<div>
@@ -646,7 +752,7 @@
 				{/each}
 			</div>
 
-			<div class="rounded-[1.5rem] bg-amber-50 p-5">
+			<div id="fatwa-syaltut" class="rounded-[1.5rem] scroll-mt-24 bg-amber-50 p-5">
 				<h3 class="text-xl font-semibold text-slate-900">2. Monumen sejarah 1 — Fatwa Mahmud Syaltut (1959)</h3>
 				<div class="mt-4 space-y-4 text-sm leading-7 text-slate-700">
 					<p>Salah satu monumen penting dialog intermazhab abad modern adalah gerakan <em>Dar at-Taqrib bayna al-Madzahib al-Islamiyyah</em> di Kairo. Lembaga ini berdiri pada tahun 1947 sebagai ruang temu antara sebagian ulama Al-Azhar dan ulama Syiah. Tujuannya bukan menyamakan seluruh aqidah dan identitas, melainkan mengurangi prasangka, membuka dialog ilmiah, dan mencari titik temu dalam maslahat umat.</p>
@@ -656,7 +762,7 @@
 				</div>
 			</div>
 
-			<div class="rounded-[1.5rem] bg-slate-900 p-5 text-white">
+			<div id="amman-message" class="rounded-[1.5rem] scroll-mt-24 bg-slate-900 p-5 text-white">
 				<h3 class="text-xl font-semibold text-amber-200">3. Monumen sejarah 2 — Risalah Amman / Amman Message (2004–2005)</h3>
 				<div class="mt-4 space-y-4 text-sm leading-7 text-white/78">
 					<p>Risalah Amman berawal dari inisiatif Raja Abdullah II dari Yordania pada tahun 2004. Konteksnya adalah meningkatnya kekerasan sektarian, ekstremisme, dan penyalahgunaan takfir di berbagai tempat. Inisiatif ini berkembang menjadi deklarasi ulama dunia pada 2005 yang menegaskan batas perbedaan mazhab dan bahaya mengkafirkan sesama Muslim tanpa otoritas ilmu.</p>
@@ -670,7 +776,7 @@
 				<p class="mt-4 text-sm leading-7 text-white/78">Isi penting Risalah Amman adalah pengakuan terhadap delapan mazhab besar Islam, meliputi mazhab-mazhab Sunni, Syiah, Ibadi, dan Zahiri. Deklarasi ini juga menegaskan larangan mengkafirkan pengikut mazhab-mazhab yang diakui selama mereka berada dalam pokok-pokok Islam.</p>
 			</div>
 
-			<div class="rounded-[1.5rem] bg-emerald-50 p-5">
+			<div id="nusantara" class="rounded-[1.5rem] scroll-mt-24 bg-emerald-50 p-5">
 				<h3 class="text-xl font-semibold text-slate-900">4. Perspektif ulama Nusantara dan konteks Indonesia</h3>
 				<div class="mt-4 space-y-4 text-sm leading-7 text-slate-700">
 					<p>Di Indonesia, lanskap keagamaan sangat dipengaruhi oleh tradisi Sunni Ahlussunnah wal Jama’ah. Nahdlatul Ulama, pesantren, jaringan kiai, majelis taklim, dan tradisi kitab kuning menjadi penjaga penting aqidah Aswaja. NU sering dipahami memiliki basis kultural sangat besar, dengan estimasi sekitar 90–150 juta warga atau simpatisan kultural.</p>
@@ -684,6 +790,19 @@
 				</div>
 			</div>
 
+			<div id="adab-membaca" class="rounded-[1.5rem] scroll-mt-24 border border-sky-100 bg-sky-50 p-5">
+				<h3 class="text-xl font-semibold text-slate-900">5. Adab membaca perbedaan mazhab</h3>
+				<div class="mt-4 grid gap-3 md:grid-cols-2">
+					{#each readingPrinciples as principle}
+						<p class="rounded-2xl bg-white p-4 text-sm font-semibold leading-7 text-slate-700">{principle}</p>
+					{/each}
+				</div>
+				<div class="mt-5 flex flex-wrap gap-2">
+					<a href="#ormas-indonesia" class="rounded-full bg-white px-4 py-2 text-xs font-semibold text-sky-700 hover:bg-sky-700 hover:text-white">Lihat ormas Indonesia</a>
+					<a href="#sumber-rujukan" class="rounded-full bg-white px-4 py-2 text-xs font-semibold text-sky-700 hover:bg-sky-700 hover:text-white">Lihat sumber rujukan</a>
+				</div>
+			</div>
+
 			<div class="rounded-[1.5rem] border border-emerald-100 bg-white p-5">
 				<h3 class="text-xl font-semibold text-slate-900">Penutup: teguh Aswaja, lapang dalam ukhuwah</h3>
 				<p class="mt-4 text-sm leading-7 text-slate-700">SantriOnline memandang materi ini sebagai pendidikan literasi mazhab. Seorang santri harus kokoh dalam aqidah Ahlussunnah wal Jama’ah, mencintai para sahabat dan Ahlul Bait, menghormati ulama, serta berhati-hati dalam perkara takfir. Dialog intermazhab yang benar bukan berarti menghapus perbedaan, tetapi mengelolanya dengan ilmu, adab, dan maslahat umat.</p>
@@ -691,7 +810,7 @@
 		</div>
 	</section>
 
-	<section class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+	<section id="sumber-rujukan" class="grid scroll-mt-24 gap-6 lg:grid-cols-[0.9fr_1.1fr]">
 		<div class="rounded-[1.75rem] border border-rose-200 bg-rose-50 p-6 shadow-sm">
 			<p class="text-xs font-semibold uppercase tracking-[0.3em] text-rose-700">Kesimpulan</p>
 			<h2 class="mt-3 text-2xl font-semibold text-slate-900">NU paling besar secara afiliasi publik Indonesia</h2>
@@ -700,6 +819,10 @@
 				tetapi sangat besar dalam kualitas organisasi, amal usaha, pendidikan, kesehatan, dan pengaruh pemikiran.
 				Ormas lain sering tidak besar secara nasional, namun kuat secara regional dan membentuk keragaman umat.
 			</p>
+			<div class="mt-5 flex flex-wrap gap-2">
+				<a href="#afiliasi-indonesia" class="rounded-full bg-white px-4 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-700 hover:text-white">Bandingkan afiliasi</a>
+				<a href="#dialog-intermazhab" class="rounded-full bg-white px-4 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-700 hover:text-white">Baca dialog mazhab</a>
+			</div>
 		</div>
 
 		<div class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
