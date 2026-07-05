@@ -369,6 +369,55 @@
 			note: 'Sejarah Jamiat Ulama-i-Hind sebagai organisasi Muslim India.'
 		}
 	];
+
+	const intermazhabStats = [
+		{
+			label: 'Sunni / Ahlussunnah wal Jama’ah',
+			value: '±85–90% Muslim dunia',
+			desc: 'Mayoritas umat Islam global; basis kuat di Indonesia, Asia Tenggara, Afrika Utara, Timur Tengah, Turki, Asia Selatan, dan banyak komunitas diaspora.'
+		},
+		{
+			label: 'Syiah secara global',
+			value: '±10–15% Muslim dunia',
+			desc: 'Populasi besar terdapat di Iran, Irak, Azerbaijan, Bahrain, Lebanon, sebagian Yaman, Pakistan, India, dan diaspora dunia.'
+		},
+		{
+			label: 'NU di Indonesia',
+			value: '±90–150 juta warga/kultural',
+			desc: 'Perkiraan luas karena NU berbasis kultural, jamaah, pesantren, dan jaringan sosial-keagamaan, bukan hanya kartu anggota formal.'
+		},
+		{
+			label: 'Syiah lokal Indonesia',
+			value: '±200 ribu–2,5 juta',
+			desc: 'Kisaran estimasi bervariasi karena sebagian komunitas tidak tercatat formal dan kondisi sosial-politik lokal berbeda-beda.'
+		}
+	];
+
+	const intermazhabTimeline: TimelineItem[] = [
+		{
+			year: 'Abad ke-7 M',
+			title: 'Awal perbedaan politik pasca-wafat Rasulullah ﷺ',
+			desc: 'Perbedaan mula-mula terkait kepemimpinan umat setelah Rasulullah ﷺ wafat. Seiring waktu, perbedaan politik itu berkembang menjadi tradisi teologis, fikih, dan identitas mazhab yang berbeda.'
+		},
+		{
+			year: '1947',
+			title: 'Dar at-Taqrib bayna al-Madzahib al-Islamiyyah di Kairo',
+			desc: 'Forum pendekatan antarmadzhab mempertemukan ulama Al-Azhar dan ulama Syiah untuk meredakan ketegangan, memperkuat literasi ilmiah, dan mencari titik temu fikih-keumatan.'
+		},
+		{
+			year: '1959',
+			title: 'Fatwa Grand Syekh Al-Azhar Mahmud Syaltut',
+			desc: 'Fatwa yang masyhur dikaitkan dengan 17 Rabiul Awal 1378 H ini mengakui Mazhab Ja’fari Imamiyah Itsna ‘Asyariyah dalam ranah fikih dan ibadah sebagai mazhab yang boleh diikuti sebagaimana mazhab-mazhab fikih lain.'
+		},
+		{
+			year: '2004–2005',
+			title: 'Risalah Amman / Amman Message',
+			desc: 'Inisiatif Raja Abdullah II dari Yordania mengundang otoritas ulama dunia untuk menegaskan pengakuan delapan mazhab besar Islam dan larangan takfir sembarangan terhadap sesama Muslim.'
+		}
+	];
+
+	const eightIntermazhabSchools = ['Hanafi', 'Maliki', 'Syafi’i', 'Hanbali', 'Ja’fari', 'Zaydi', 'Ibadi', 'Zahiri'];
+
 </script>
 
 <svelte:head>
@@ -542,6 +591,103 @@
 					</div>
 				</article>
 			{/each}
+		</div>
+	</section>
+
+
+	<section class="rounded-[1.75rem] border border-emerald-200 bg-white p-6 shadow-sm">
+		<div class="flex flex-wrap items-start justify-between gap-4">
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-700">Edukasi Intermazhab</p>
+				<h2 class="mt-3 max-w-3xl text-2xl font-semibold text-slate-900 md:text-3xl">
+					Sejarah dialog Sunni-Syiah: dari Dar at-Taqrib, Fatwa Syaltut, sampai Risalah Amman
+				</h2>
+			</div>
+			<p class="max-w-2xl text-sm leading-7 text-slate-600">
+				Bagian ini disusun dengan bahasa ilmiah, objektif, santun, dan wasathiyah. Tujuannya membantu santri memahami sejarah mazhab secara jernih: teguh menjaga aqidah Ahlussunnah wal Jama’ah, tetapi tidak mudah terseret kebencian dan takfir.
+			</p>
+		</div>
+
+		<div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+			{#each intermazhabStats as stat}
+				<article class="rounded-2xl border border-emerald-100 bg-emerald-50/55 p-4">
+					<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">{stat.label}</p>
+					<strong class="mt-3 block text-xl font-bold text-slate-950">{stat.value}</strong>
+					<p class="mt-2 text-sm leading-6 text-slate-600">{stat.desc}</p>
+				</article>
+			{/each}
+		</div>
+
+		<div class="mt-8 space-y-8">
+			<div class="rounded-[1.5rem] bg-slate-50 p-5">
+				<h3 class="text-xl font-semibold text-slate-900">1. Pendahuluan dan sejarah awal</h3>
+				<div class="mt-4 space-y-4 text-sm leading-7 text-slate-700">
+					<p>Dalam sejarah Islam, Sunni atau Ahlussunnah wal Jama’ah menjadi arus mayoritas umat. Sunni bertumpu pada kesinambungan ajaran Al-Qur’an, Sunnah, ijma’ ulama, dan tradisi empat mazhab fikih besar: Hanafi, Maliki, Syafi’i, dan Hanbali. Di Nusantara, tradisi Sunni tumbuh melalui pesantren, tarekat mu’tabarah, kajian kitab, dan adab bermasyarakat.</p>
+					<p>Syiah muncul sebagai komunitas yang sejak awal memberi perhatian khusus pada kepemimpinan Ahlul Bait, terutama Sayyidina Ali bin Abi Thalib karramallahu wajhah dan keturunannya. Perbedaan ini mula-mula berakar pada persoalan politik pasca-wafat Rasulullah ﷺ pada abad ke-7 Masehi. Dalam perjalanan sejarah, ia berkembang menjadi perbedaan teologis, fikih, spiritualitas, dan struktur otoritas keagamaan.</p>
+					<ul class="space-y-2">
+						<li><strong>Sunni global:</strong> sekitar 85–90% populasi Muslim dunia.</li>
+						<li><strong>Syiah global:</strong> sekitar 10–15% populasi Muslim dunia.</li>
+						<li><strong>Basis Sunni:</strong> tersebar luas di Asia Tenggara, Afrika, Timur Tengah, Turki, Asia Selatan, dan diaspora.</li>
+						<li><strong>Basis Syiah:</strong> kuat di Iran, Irak, Azerbaijan, Bahrain, Lebanon, sebagian Yaman, serta komunitas Asia Selatan dan diaspora.</li>
+					</ul>
+					<p>Bagi santri, memahami sejarah ini bukan untuk menyalakan permusuhan, melainkan agar tidak membaca konflik mazhab secara dangkal. Aqidah Ahlussunnah wal Jama’ah tetap perlu dijaga, dan adab ilmiah menuntut kita membedakan antara kajian kritis, perbedaan fikih, perbedaan teologi, konflik politik, serta perilaku takfir yang berbahaya.</p>
+				</div>
+			</div>
+
+			<div class="grid gap-4">
+				{#each intermazhabTimeline as item}
+					<article class="grid gap-3 rounded-2xl border border-emerald-100 bg-white p-5 md:grid-cols-[8rem_1fr]">
+						<p class="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">{item.year}</p>
+						<div>
+							<h3 class="text-lg font-semibold text-slate-900">{item.title}</h3>
+							<p class="mt-2 text-sm leading-7 text-slate-600">{item.desc}</p>
+						</div>
+					</article>
+				{/each}
+			</div>
+
+			<div class="rounded-[1.5rem] bg-amber-50 p-5">
+				<h3 class="text-xl font-semibold text-slate-900">2. Monumen sejarah 1 — Fatwa Mahmud Syaltut (1959)</h3>
+				<div class="mt-4 space-y-4 text-sm leading-7 text-slate-700">
+					<p>Salah satu monumen penting dialog intermazhab abad modern adalah gerakan <em>Dar at-Taqrib bayna al-Madzahib al-Islamiyyah</em> di Kairo. Lembaga ini berdiri pada tahun 1947 sebagai ruang temu antara sebagian ulama Al-Azhar dan ulama Syiah. Tujuannya bukan menyamakan seluruh aqidah dan identitas, melainkan mengurangi prasangka, membuka dialog ilmiah, dan mencari titik temu dalam maslahat umat.</p>
+					<p>Di antara nama yang sering dikaitkan dengan gerakan ini adalah Grand Syekh Al-Azhar, Syekh Mahmud Syaltut. Fatwa beliau yang masyhur, tertanggal 17 Rabiul Awal 1378 H dan banyak dirujuk dalam literatur tahun 1959 M, menyatakan bahwa Mazhab Ja’fari atau Syiah Dua Belas Imam memiliki kedudukan sebagai mazhab fikih yang boleh diikuti dalam ibadah dan muamalah, sebagaimana mazhab fikih lain dalam Islam.</p>
+					<p class="rounded-2xl border-l-4 border-amber-400 bg-white p-4"><strong>Pokok makna fatwa:</strong> pengakuan ini berada pada wilayah fikih dan keabsahan beramal menurut mazhab Ja’fari, bukan berarti menghapus seluruh perbedaan teologis antara Sunni dan Syiah.</p>
+					<p>Bagi pembaca Ahlussunnah wal Jama’ah, posisi yang adil adalah memahami fatwa ini sebagai ikhtiar meredakan pertikaian dan menata dialog ilmiah. Fatwa tersebut tidak mengharuskan seorang Sunni berpindah mazhab, tidak membatalkan kewajiban menjaga aqidah Aswaja, dan tidak menutup ruang kritik terhadap pandangan yang menyelisihi prinsip Ahlussunnah.</p>
+				</div>
+			</div>
+
+			<div class="rounded-[1.5rem] bg-slate-900 p-5 text-white">
+				<h3 class="text-xl font-semibold text-amber-200">3. Monumen sejarah 2 — Risalah Amman / Amman Message (2004–2005)</h3>
+				<div class="mt-4 space-y-4 text-sm leading-7 text-white/78">
+					<p>Risalah Amman berawal dari inisiatif Raja Abdullah II dari Yordania pada tahun 2004. Konteksnya adalah meningkatnya kekerasan sektarian, ekstremisme, dan penyalahgunaan takfir di berbagai tempat. Inisiatif ini berkembang menjadi deklarasi ulama dunia pada 2005 yang menegaskan batas perbedaan mazhab dan bahaya mengkafirkan sesama Muslim tanpa otoritas ilmu.</p>
+					<p>Tokoh-tokoh besar dari berbagai negeri, lembaga fatwa, dan tradisi keilmuan terlibat. Dalam konteks Syiah, Ayatollah Sayyid Ali Khamenei dari Iran dan Ayatollah Sayyid Ali Al-Sistani dari Irak tidak hadir secara fisik karena pertimbangan protokol keamanan dan situasi politik, tetapi mengirimkan fatwa resmi tertulis. Fatwa tertulis tersebut menjadi salah satu pilar hukum penting dalam legitimasi deklarasi lintas mazhab ini.</p>
+				</div>
+				<div class="mt-5 grid gap-2 sm:grid-cols-2 md:grid-cols-4">
+					{#each eightIntermazhabSchools as school}
+						<span class="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-center text-sm font-bold">{school}</span>
+					{/each}
+				</div>
+				<p class="mt-4 text-sm leading-7 text-white/78">Isi penting Risalah Amman adalah pengakuan terhadap delapan mazhab besar Islam, meliputi mazhab-mazhab Sunni, Syiah, Ibadi, dan Zahiri. Deklarasi ini juga menegaskan larangan mengkafirkan pengikut mazhab-mazhab yang diakui selama mereka berada dalam pokok-pokok Islam.</p>
+			</div>
+
+			<div class="rounded-[1.5rem] bg-emerald-50 p-5">
+				<h3 class="text-xl font-semibold text-slate-900">4. Perspektif ulama Nusantara dan konteks Indonesia</h3>
+				<div class="mt-4 space-y-4 text-sm leading-7 text-slate-700">
+					<p>Di Indonesia, lanskap keagamaan sangat dipengaruhi oleh tradisi Sunni Ahlussunnah wal Jama’ah. Nahdlatul Ulama, pesantren, jaringan kiai, majelis taklim, dan tradisi kitab kuning menjadi penjaga penting aqidah Aswaja. NU sering dipahami memiliki basis kultural sangat besar, dengan estimasi sekitar 90–150 juta warga atau simpatisan kultural.</p>
+					<ul class="space-y-2">
+						<li><strong>NU Indonesia:</strong> sekitar 90–150 juta warga/simpatisan kultural, tergantung metode penghitungan.</li>
+						<li><strong>Syiah Indonesia:</strong> sekitar 200 ribu–2,5 juta, tergantung sumber estimasi dan definisi komunitas.</li>
+						<li><strong>Kesimpulan demografis:</strong> Syiah adalah minoritas sangat kecil dibanding arus besar Sunni-Aswaja di Indonesia.</li>
+					</ul>
+					<p>Sikap moderat ulama Nusantara, termasuk tradisi para pendiri NU, dapat diringkas dalam dua amanah: membentengi aqidah Ahlussunnah wal Jama’ah melalui ilmu, sanad, kitab, pesantren, dan adab; serta menjaga persaudaraan sesama Muslim dan kedamaian bangsa. Umat tidak diarahkan menjadi longgar tanpa prinsip, tetapi juga tidak diarahkan menjadi keras tanpa ilmu.</p>
+					<p>Ukhuwah Islamiyah bukan berarti semua perbedaan dianggap sama. Ukhuwah berarti perbedaan dikelola dengan akhlak, hukum, dan kemaslahatan. Santri perlu mengenal batas aqidah, memahami sejarah, mampu membaca sumber, dan tidak mudah terseret provokasi. Dalam masyarakat majemuk seperti Indonesia, kedewasaan bermazhab adalah bagian dari adab kebangsaan dan adab keilmuan.</p>
+				</div>
+			</div>
+
+			<div class="rounded-[1.5rem] border border-emerald-100 bg-white p-5">
+				<h3 class="text-xl font-semibold text-slate-900">Penutup: teguh Aswaja, lapang dalam ukhuwah</h3>
+				<p class="mt-4 text-sm leading-7 text-slate-700">SantriOnline memandang materi ini sebagai pendidikan literasi mazhab. Seorang santri harus kokoh dalam aqidah Ahlussunnah wal Jama’ah, mencintai para sahabat dan Ahlul Bait, menghormati ulama, serta berhati-hati dalam perkara takfir. Dialog intermazhab yang benar bukan berarti menghapus perbedaan, tetapi mengelolanya dengan ilmu, adab, dan maslahat umat.</p>
+			</div>
 		</div>
 	</section>
 
