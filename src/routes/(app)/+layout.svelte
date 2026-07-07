@@ -320,6 +320,56 @@
 		}
 	];
 
+
+	const quickAccessCatalog: MenuItem[] = [
+		{
+			label: 'Lanjut Belajar',
+			href: '/belajar',
+			icon: 'M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM8 7h8M8 11h7M8 15h6',
+			description: 'Buka kelas atau modul terakhir'
+		},
+		{
+			label: 'Riwayat',
+			href: '/tpq/akademik/riwayat',
+			icon: 'M4 6h16M4 12h16M4 18h10',
+			description: 'Jejak setoran dan aktivitas',
+			feature: 'setoran'
+		},
+		{
+			label: 'Progress',
+			href: '/dashboard/pencapaian-hafalan',
+			icon: 'M4 17l5-5 4 4 7-7',
+			description: 'Pantau perkembangan harian',
+			feature: 'raport'
+		},
+		{
+			label: 'Target Harian',
+			href: '/tpq/akademik/setoran',
+			icon: 'M12 6v6l4 2M12 3a9 9 0 100 18 9 9 0 000-18z',
+			description: 'Setoran dan tugas hari ini',
+			feature: 'setoran'
+		},
+		{
+			label: 'Kitab / Materi',
+			href: '/kitab',
+			icon: 'M5 4h10l4 4v12H5V4zm10 0v5h5M8 12h8M8 16h5',
+			description: 'Rujukan belajar cepat'
+		},
+		{
+			label: 'Jadwal',
+			href: '/dashboard/jadwal',
+			icon: 'M7 2v4M17 2v4M3 8h18M5 5h14a2 2 0 012 2v13a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z',
+			description: 'Agenda lembaga dan kelas',
+			feature: 'jadwal_kegiatan'
+		},
+		{
+			label: 'Akun Santri',
+			href: '/akun',
+			icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0H5z',
+			description: 'Profil dan pengaturan akun'
+		}
+	];
+
 	const featureAllowed = (item: MenuItem) => !item.feature || Boolean(featureAccess[item.feature]);
 
 	const resolveRoleItems = () => {
@@ -342,6 +392,7 @@
 	let menuItems: MenuItem[] = [];
 	let dashboardShellMenuItems: MenuItem[] = [];
 	let mobileQuickItems: MenuItem[] = [];
+	let quickAccessItems: MenuItem[] = [];
 	$: {
 		isDashboardRoute = $page.url.pathname === '/dashboard';
 		role = data?.user?.role ?? '';
@@ -431,6 +482,10 @@
 			...(socialItem ? [{ ...socialItem, label: 'Sosial' }] : []),
 			{ ...accountItem, label: 'Akun' }
 		].slice(0, 5);
+		quickAccessItems = quickAccessCatalog
+			.filter(featureAllowed)
+			.filter((item) => (hasOrg ? true : item.href === '/belajar' || item.href === '/kitab' || item.href === '/akun'))
+			.slice(0, 6);
 	}
 
 	let sidebarOpen = false;
@@ -1023,6 +1078,48 @@
 			</div>
 		{/if}
 	</div>
+{/if}
+
+
+{#if quickAccessItems.length > 0}
+	<aside
+		class="fixed right-4 top-28 z-30 hidden w-72 rounded-[1.35rem] border border-emerald-100/80 bg-white/92 p-3 shadow-2xl shadow-emerald-900/10 backdrop-blur-xl 2xl:block"
+		aria-label="Quick access member"
+	>
+		<div class="flex items-start justify-between gap-3 border-b border-emerald-50 px-2 pb-3">
+			<div>
+				<p class="text-[11px] font-black uppercase tracking-[0.18em] text-emerald-600">Quick Access</p>
+				<h2 class="mt-1 text-base font-black text-slate-900">Pintasan Member</h2>
+				<p class="mt-1 text-xs leading-5 text-slate-500">Akses cepat untuk aktivitas penting setelah login.</p>
+			</div>
+			<span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-emerald-700">⚡</span>
+		</div>
+
+		<div class="mt-3 grid gap-2">
+			{#each quickAccessItems as item}
+				<a
+					href={item.href}
+					class={`group flex items-center gap-3 rounded-2xl border px-3 py-3 transition-all hover:-translate-y-0.5 hover:shadow-md ${
+						isActive(item)
+							? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+							: 'border-slate-100 bg-slate-50/80 text-slate-700 hover:border-emerald-100 hover:bg-white hover:text-emerald-800'
+					}`}
+				>
+					<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-emerald-700 shadow-sm ring-1 ring-slate-100 group-hover:ring-emerald-100">
+						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+							<path d={item.icon} />
+						</svg>
+					</span>
+					<span class="min-w-0">
+						<span class="block truncate text-sm font-black">{item.label}</span>
+						{#if item.description}
+							<span class="mt-0.5 block truncate text-xs text-slate-500">{item.description}</span>
+						{/if}
+					</span>
+				</a>
+			{/each}
+		</div>
+	</aside>
 {/if}
 
 <style>

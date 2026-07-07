@@ -23,8 +23,12 @@ binding = "AI"
 
 [vars]
 GROQ_MODEL = "llama-3.3-70b-versatile"
+GEMINI_TEXT_MODEL = "gemini-2.5-flash"
+GEMINI_IMAGE_MODEL = "gemini-3.1-flash-image"
+ARTICLE_MAX_TOKENS = "3600"
 R2_PUBLIC_BASE_URL = "https://files.santrionline.com"
 
 # Secrets:
+# wrangler secret put GEMINI_API_KEY --config workers/news-fetcher/wrangler.toml
 # wrangler secret put GROQ_API_KEY --config workers/news-fetcher/wrangler.toml
 # wrangler secret put NEWS_FETCH_SECRET --config workers/news-fetcher/wrangler.toml

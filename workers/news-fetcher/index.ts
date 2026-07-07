@@ -4,8 +4,12 @@ export interface Env {
 	DB: D1Database;
 	R2: R2Bucket;
 	AI: Ai;
-	GROQ_API_KEY: string;
+	GROQ_API_KEY?: string;
 	GROQ_MODEL?: string;
+	GEMINI_API_KEY?: string;
+	GEMINI_TEXT_MODEL?: string;
+	GEMINI_IMAGE_MODEL?: string;
+	ARTICLE_MAX_TOKENS?: string;
 	NEWS_FETCH_SECRET: string;
 	R2_PUBLIC_BASE_URL?: string;
 }
@@ -22,7 +26,11 @@ type NewsSource = {
 };
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile';
+const DEFAULT_GEMINI_TEXT_MODEL = 'gemini-2.5-flash';
+const DEFAULT_GEMINI_IMAGE_MODEL = 'gemini-3.1-flash-image';
+const DEFAULT_ARTICLE_MAX_TOKENS = 3600;
 const IMAGE_MODEL = '@cf/bytedance/stable-diffusion-xl-lightning';
 const MAX_ITEMS_PER_SOURCE = 5;
 const REQUEST_DELAY_MS = 2000;
@@ -112,6 +120,62 @@ const RSS_SOURCES: NewsSource[] = [
 		language: 'en',
 		category: 'dakwah',
 		priority: 'medium'
+	},
+	{
+		url: 'https://www.islamicity.org/rss/news.xml',
+		name: 'IslamiCity News',
+		language: 'en',
+		category: 'internasional',
+		priority: 'medium'
+	},
+	{
+		url: 'https://www.islamicity.org/rss/articles.xml',
+		name: 'IslamiCity Articles',
+		language: 'en',
+		category: 'dakwah',
+		priority: 'medium'
+	},
+	{
+		url: 'https://yaqeeninstitute.org/feed',
+		name: 'Yaqeen Institute',
+		language: 'en',
+		category: 'dakwah',
+		priority: 'medium'
+	},
+	{
+		url: 'https://islamqa.org/feed/',
+		name: 'IslamQA.org',
+		language: 'en',
+		category: 'dakwah',
+		priority: 'medium'
+	},
+	{
+		url: 'https://aboutislam.net/feed/',
+		name: 'About Islam',
+		language: 'en',
+		category: 'dakwah',
+		priority: 'medium'
+	},
+	{
+		url: 'https://www.muslimheritage.com/feed/',
+		name: 'Muslim Heritage',
+		language: 'en',
+		category: 'dakwah',
+		priority: 'medium'
+	},
+	{
+		url: 'https://bincangsyariah.com/feed/',
+		name: 'Bincang Syariah',
+		language: 'id',
+		category: 'dakwah',
+		priority: 'medium'
+	},
+	{
+		url: 'https://islam.nu.or.id/rss',
+		name: 'NU Online Islam',
+		language: 'id',
+		category: 'dakwah',
+		priority: 'high'
 	}
 ];
 
@@ -171,7 +235,13 @@ const BLOCKED_KEYWORDS = [
 	'gambling',
 	'alcohol',
 	'porn',
-	'nude'
+	'nude',
+	'football',
+	'soccer',
+	'world cup',
+	'fifa',
+	'sepak bola',
+	'piala dunia'
 ];
 
 const ALLOWED_CATEGORIES = new Set<ProcessedNews['kategori']>([
@@ -195,8 +265,8 @@ export default {
 			if (!env.NEWS_FETCH_SECRET || auth !== env.NEWS_FETCH_SECRET) {
 				return jsonResponse({ success: false, error: 'Unauthorized' }, 401);
 			}
-			if (!env.GROQ_API_KEY) {
-				return jsonResponse({ success: false, error: 'GROQ_API_KEY belum dikonfigurasi.' }, 500);
+			if (!env.GEMINI_API_KEY && !env.GROQ_API_KEY) {
+				return jsonResponse({ success: false, error: 'GEMINI_API_KEY atau GROQ_API_KEY belum dikonfigurasi.' }, 500);
 			}
 
 			ctx.waitUntil(runNewsFetcher(env));
@@ -215,8 +285,8 @@ export default {
 };
 
 async function runNewsFetcher(env: Env) {
-	if (!env.GROQ_API_KEY) {
-		console.error('[news-fetcher] GROQ_API_KEY belum dikonfigurasi.');
+	if (!env.GEMINI_API_KEY && !env.GROQ_API_KEY) {
+		console.error('[news-fetcher] GEMINI_API_KEY atau GROQ_API_KEY belum dikonfigurasi.');
 		return;
 	}
 
@@ -404,17 +474,24 @@ async function processWithGroq(
 
 	const systemPrompt = `Kamu adalah jurnalis Islam Ahlus Sunnah wal Jamaah (Aswaja) untuk SantriOnline News.
 Tulis ulang berita dengan bahasa Indonesia yang lugas, informatif, edukatif, tidak sensasional, dan tidak menyerang kelompok lain.
-Jangan mengarang fakta baru di luar judul/deskripsi sumber. Jika informasi sumber terbatas, tulis ringkas dan nyatakan konteks secara hati-hati.
-Tambahkan perspektif Islam Aswaja di akhir secara proporsional.
+Jangan mengarang fakta spesifik baru di luar judul/deskripsi sumber. Jika informasi sumber terbatas, panjangkan artikel dengan konteks umum yang aman, edukasi literasi, pelajaran adab, dan refleksi keumatan — bukan dengan klaim faktual baru.
+Gunakan framing Aswaja yang santun, moderat, dan membangun cinta kepada ilmu, adab, dan tanggung jawab umat.
+
+Struktur isi wajib:
+- pembuka 1-2 paragraf
+- inti berita 2-3 paragraf
+- konteks umum/latar belakang 2-3 paragraf
+- pelajaran/adab/refleksi Aswaja 2-3 paragraf
+- penutup singkat
 
 Balas hanya JSON valid tanpa markdown:
 {
-  "judul": "judul berita menarik dalam bahasa Indonesia, 50-70 karakter",
-  "ringkasan": "ringkasan 2 kalimat bahasa Indonesia",
-  "isi": "isi berita 300-500 kata dalam HTML sederhana dengan tag <p> dan <h3>",
+  "judul": "judul berita menarik dalam bahasa Indonesia, 50-80 karakter",
+  "ringkasan": "ringkasan 2-3 kalimat bahasa Indonesia",
+  "isi": "isi berita 700-1000 kata dalam HTML sederhana dengan tag <p> dan <h3>",
   "meta_description": "deskripsi SEO 140-160 karakter",
   "focus_keyword": "kata kunci utama 2-4 kata",
-  "image_prompt": "prompt bahasa Inggris untuk generate gambar, Islamic editorial style, no faces, max 30 kata",
+  "image_prompt": "prompt bahasa Inggris untuk foto realistis editorial Islami, natural light, no identifiable faces, no text, max 45 kata",
   "kategori": "internasional|nasional|dakwah|palestina|teknologi",
   "tags": ["tag1", "tag2", "tag3"]
 }`;
@@ -422,6 +499,17 @@ Balas hanya JSON valid tanpa markdown:
 	const userPrompt = isEnglish
 		? `Terjemahkan dan tulis ulang berita ini ke Bahasa Indonesia.\n\nSumber: ${source.name}\nKategori default: ${source.category}\n\n${sourceText}`
 		: `Tulis ulang berita ini dengan perspektif Islam Aswaja.\n\nSumber: ${source.name}\nKategori default: ${source.category}\n\n${sourceText}`;
+
+	if (env.GEMINI_API_KEY) {
+		const geminiResult = await processWithGemini(systemPrompt, userPrompt, item, source, env);
+		if (geminiResult) return geminiResult;
+		console.warn('[news-fetcher] Gemini gagal, mencoba fallback Groq bila tersedia.');
+	}
+
+	if (!env.GROQ_API_KEY) {
+		console.error('[news-fetcher] Tidak ada GROQ_API_KEY untuk fallback.');
+		return null;
+	}
 
 	try {
 		const response = await fetch(GROQ_API_URL, {
@@ -436,8 +524,8 @@ Balas hanya JSON valid tanpa markdown:
 					{ role: 'system', content: systemPrompt },
 					{ role: 'user', content: userPrompt }
 				],
-				temperature: 0.6,
-				max_tokens: 1800,
+				temperature: 0.55,
+				max_tokens: parsePositiveInt(env.ARTICLE_MAX_TOKENS, DEFAULT_ARTICLE_MAX_TOKENS),
 				response_format: { type: 'json_object' }
 			})
 		});
@@ -455,6 +543,52 @@ Balas hanya JSON valid tanpa markdown:
 		return normalizeProcessedNews(parsed, item, source);
 	} catch (err) {
 		console.error('[news-fetcher] Groq processing failed:', err);
+		return null;
+	}
+}
+
+async function processWithGemini(
+	systemPrompt: string,
+	userPrompt: string,
+	item: RSSItem,
+	source: NewsSource,
+	env: Env
+): Promise<ProcessedNews | null> {
+	if (!env.GEMINI_API_KEY) return null;
+
+	try {
+		const model = encodeURIComponent(env.GEMINI_TEXT_MODEL || DEFAULT_GEMINI_TEXT_MODEL);
+		const response = await fetch(`${GEMINI_API_BASE}/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				contents: [
+					{
+						role: 'user',
+						parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
+					}
+				],
+				generationConfig: {
+					temperature: 0.55,
+					maxOutputTokens: parsePositiveInt(env.ARTICLE_MAX_TOKENS, DEFAULT_ARTICLE_MAX_TOKENS),
+					responseMimeType: 'application/json'
+				}
+			})
+		});
+
+		const data = (await response.json().catch(() => ({}))) as GeminiTextResponse;
+		if (!response.ok) {
+			console.error('[news-fetcher] Gemini API error:', response.status, data.error?.message || 'unknown');
+			return null;
+		}
+
+		const content = data.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
+		if (!content) return null;
+
+		const parsed = extractJson(content) as Partial<ProcessedNews>;
+		return normalizeProcessedNews(parsed, item, source);
+	} catch (err) {
+		console.error('[news-fetcher] Gemini processing failed:', err);
 		return null;
 	}
 }
@@ -520,11 +654,17 @@ function inferCategory(
 }
 
 async function generateThumbnail(news: ProcessedNews, env: Env): Promise<string> {
+	if (env.GEMINI_API_KEY) {
+		const geminiUrl = await generateGeminiThumbnail(news, env);
+		if (geminiUrl) return geminiUrl;
+		console.warn('[news-fetcher] Gemini image gagal, fallback ke Cloudflare Workers AI.');
+	}
+
 	try {
-		const prompt = `${news.image_prompt}, Islamic news illustration, arabesque pattern, professional editorial style, warm tones, no human faces, no text`;
+		const prompt = `${news.image_prompt}, realistic Islamic editorial photo, natural documentary photography, professional news website hero image, no identifiable faces, no text, no watermark`;
 		const result = await env.AI.run(IMAGE_MODEL as any, {
 			prompt,
-			negative_prompt: 'human face, person, portrait, text, watermark, logo, low quality',
+			negative_prompt: 'painting, illustration, cartoon, anime, human face, identifiable person, portrait, text, watermark, logo, low quality',
 			width: 1024,
 			height: 576,
 			num_steps: 4
@@ -545,6 +685,83 @@ async function generateThumbnail(news: ProcessedNews, env: Env): Promise<string>
 		console.error('[news-fetcher] Thumbnail generation failed:', err);
 		return buildR2PublicUrl(`news/default-${news.kategori}.png`, env);
 	}
+}
+
+async function generateGeminiThumbnail(news: ProcessedNews, env: Env): Promise<string | null> {
+	if (!env.GEMINI_API_KEY) return null;
+
+	try {
+		const prompt = `${news.image_prompt}. Create a realistic editorial photo for an Islamic news article. Use natural lighting, documentary style, real-world setting, no identifiable faces, no text, no logos, 16:9 aspect ratio.`;
+		const response = await fetch(`${GEMINI_API_BASE}/interactions`, {
+			method: 'POST',
+			headers: {
+				'x-goog-api-key': env.GEMINI_API_KEY,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				model: env.GEMINI_IMAGE_MODEL || DEFAULT_GEMINI_IMAGE_MODEL,
+				input: [{ type: 'text', text: prompt }],
+				response_format: {
+					type: 'image',
+					mime_type: 'image/png',
+					aspect_ratio: '16:9'
+				}
+			})
+		});
+
+		const data = (await response.json().catch(() => ({}))) as GeminiImageResponse;
+		if (!response.ok) {
+			console.error('[news-fetcher] Gemini image API error:', response.status, data.error?.message || 'unknown');
+			return null;
+		}
+
+		const image = findGeminiImage(data);
+		if (!image) return null;
+
+		const filename = `news/gemini-${Date.now()}-${slugify(news.judul).slice(0, 32) || 'berita'}.png`;
+		await env.R2.put(filename, base64ToArrayBuffer(image.data), {
+			httpMetadata: {
+				contentType: image.mime_type || 'image/png',
+				cacheControl: 'public, max-age=31536000'
+			}
+		});
+
+		return buildR2PublicUrl(filename, env);
+	} catch (err) {
+		console.error('[news-fetcher] Gemini thumbnail generation failed:', err);
+		return null;
+	}
+}
+
+function findGeminiImage(value: unknown): { data: string; mime_type?: string } | null {
+	if (!value || typeof value !== 'object') return null;
+	const record = value as Record<string, unknown>;
+	const data = record.data;
+	const mimeType = record.mime_type || record.mimeType;
+	if (typeof data === 'string' && typeof mimeType === 'string' && mimeType.startsWith('image/')) {
+		return { data, mime_type: mimeType };
+	}
+
+	for (const child of Object.values(record)) {
+		if (Array.isArray(child)) {
+			for (const item of child) {
+				const found = findGeminiImage(item);
+				if (found) return found;
+			}
+		} else if (child && typeof child === 'object') {
+			const found = findGeminiImage(child);
+			if (found) return found;
+		}
+	}
+
+	return null;
+}
+
+function base64ToArrayBuffer(value: string): ArrayBuffer {
+	const binary = atob(value.replace(/^data:image\/\w+;base64,/, ''));
+	const bytes = new Uint8Array(binary.length);
+	for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+	return bytes.buffer;
 }
 
 async function aiResultToArrayBuffer(result: unknown): Promise<ArrayBuffer> {
@@ -642,6 +859,11 @@ function readString(value: unknown, maxLength: number): string {
 	return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
 }
 
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+	const parsed = Number.parseInt(value || '', 10);
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
 function stripDangerousText(value: string) {
 	return cleanXmlText(value).replace(/[\u0000-\u001f\u007f]/g, ' ');
 }
@@ -695,4 +917,14 @@ interface ProcessedNews {
 type GroqResponse = {
 	choices?: Array<{ message?: { content?: string } }>;
 	error?: { message?: string };
+};
+
+type GeminiTextResponse = {
+	candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+	error?: { message?: string };
+};
+
+type GeminiImageResponse = {
+	error?: { message?: string };
+	[key: string]: unknown;
 };
