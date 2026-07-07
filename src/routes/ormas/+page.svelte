@@ -77,7 +77,7 @@
 		{
 			name: 'Nahdlatul Ulama',
 			country: 'Indonesia',
-			founded: '31 Januari 1926, Surabaya',
+			founded: '31 Januari 1926 M / 16 Rajab 1344 H, Surabaya',
 			founder: "KH Hasyim Asy'ari bersama ulama pesantren seperti KH Abdul Wahab Chasbullah dan KH Bisri Syansuri",
 			scale: 'Afiliasi publik terbesar di Indonesia',
 			type: 'Aswaja pesantren, Syafiiyah, sosial-keagamaan',
@@ -88,7 +88,7 @@
 		{
 			name: 'Muhammadiyah',
 			country: 'Indonesia',
-			founded: '18 November 1912, Kauman Yogyakarta',
+			founded: '18 November 1912 M / 8 Dzulhijjah 1330 H, Kauman Yogyakarta',
 			founder: 'KH Ahmad Dahlan, kemudian diperkuat Nyai Ahmad Dahlan dan Aisyiyah',
 			scale: 'Ormas Islam modernis terbesar kedua di Indonesia',
 			type: 'Tajdid, pendidikan, kesehatan, amal usaha',
@@ -99,7 +99,7 @@
 		{
 			name: 'Persatuan Islam (Persis)',
 			country: 'Indonesia',
-			founded: '12 September 1923, Bandung',
+			founded: '12 September 1923 M / ±1342 H, Bandung',
 			founder: 'Haji Zamzam dan Haji Muhammad Yunus; kemudian kuat melalui Ahmad Hassan dan Mohammad Natsir',
 			scale: 'Kuat di Jawa Barat dan jejaring pendidikan pembaru',
 			type: 'Tajdid, kajian dalil, pendidikan',
@@ -110,7 +110,7 @@
 		{
 			name: "Al-Jam'iyatul Washliyah",
 			country: 'Indonesia',
-			founded: '30 November 1930, Medan',
+			founded: '30 November 1930 M / ±1349 H, Medan',
 			founder: 'Pelajar Maktab Islamiyah Tapanuli, dengan tokoh seperti Ismail Banda, Abdurrahman Sjihab, M. Arsjad Th. Lubis, dan Syekh Muhammad Yunus',
 			scale: 'Basis kuat Sumatera Utara dan jaringan madrasah',
 			type: 'Pendidikan, dakwah, sosial, Aswaja',
@@ -121,7 +121,7 @@
 		{
 			name: 'Nahdlatul Wathan',
 			country: 'Indonesia',
-			founded: '1 Maret 1953, Pancor Lombok',
+			founded: '1 Maret 1953 M / ±1372 H, Pancor Lombok',
 			founder: 'TGKH Muhammad Zainuddin Abdul Madjid',
 			scale: 'Basis sangat kuat di NTB dan diaspora Lombok',
 			type: 'Pesantren, pendidikan, dakwah regional',
@@ -132,18 +132,18 @@
 		{
 			name: 'Lembaga Dakwah Islam Indonesia (LDII)',
 			country: 'Indonesia',
-			founded: '1972 sebagai YAKARI; 1990 menjadi LDII',
+			founded: '1972 M / ±1392 H sebagai YAKARI; 1990 M / ±1411 H menjadi LDII',
 			founder: 'Berawal dari Yayasan Lembaga Karyawan Islam; nama LDII ditetapkan setelah perubahan organisasi',
 			scale: 'Jaringan nasional dengan pembinaan warga dan masjid',
 			type: 'Dakwah, pendidikan warga, pengajian terstruktur',
-			origin: 'Mengalami beberapa fase nama organisasi sebelum memakai nama Lembaga Dakwah Islam Indonesia pada 1990.',
+			origin: 'Mengalami beberapa fase nama organisasi sebelum memakai nama Lembaga Dakwah Islam Indonesia pada 1990 M / ±1411 H.',
 			legacy: 'Pengajian rutin, pembinaan keluarga, masjid, pesantren, kader dakwah, dan program kebangsaan.',
 			tone: 'border-teal-200 bg-teal-50 text-teal-700'
 		},
 		{
 			name: 'Hidayatullah',
 			country: 'Indonesia',
-			founded: '5 Februari 1973, Balikpapan',
+			founded: '5 Februari 1973 M / ±1393 H, Balikpapan',
 			founder: 'Ustadz Abdullah Said',
 			scale: 'Jaringan pesantren dan dai nasional',
 			type: 'Pesantren, dakwah, kaderisasi dai',
@@ -154,7 +154,7 @@
 		{
 			name: 'Persatuan Ummat Islam (PUI)',
 			country: 'Indonesia',
-			founded: 'Akar 1917; fusi nasional 5 April 1952, Bogor',
+			founded: 'Akar 1917 M / ±1335 H; fusi nasional 5 April 1952 M / ±1371 H, Bogor',
 			founder: 'KH Abdul Halim dan KH Ahmad Sanusi melalui penggabungan dua arus organisasi Islam Jawa Barat',
 			scale: 'Basis kuat Jawa Barat, terutama Majalengka dan Sukabumi',
 			type: 'Pendidikan, dakwah, persatuan umat',
@@ -165,7 +165,7 @@
 		{
 			name: 'Al-Irsyad Al-Islamiyyah',
 			country: 'Indonesia',
-			founded: '6 September 1914, Batavia',
+			founded: '6 September 1914 M / ±1332 H, Batavia',
 			founder: 'Syekh Ahmad Surkati dan tokoh komunitas Arab-Hadrami di Hindia Belanda',
 			scale: 'Jaringan pendidikan dan pembaruan Islam perkotaan',
 			type: 'Tajdid, pendidikan, dakwah tauhid',
@@ -176,7 +176,7 @@
 		{
 			name: "Mathla'ul Anwar",
 			country: 'Indonesia',
-			founded: '10 Juli 1916, Menes Banten',
+			founded: '10 Juli 1916 M / ±1334 H, Menes Banten',
 			founder: 'KH Mas Abdurrahman, KH Tb. Mohammad Sholeh, KH E. Mohammad Yasin, dan ulama Menes',
 			scale: 'Basis kuat Banten dan jaringan pendidikan',
 			type: 'Pendidikan, dakwah, sosial',
@@ -190,7 +190,7 @@
 		{
 			name: "Tablighi Jamaat",
 			country: 'India, Pakistan, Bangladesh, dan diaspora global',
-			founded: '1926, Mewat India',
+			founded: '1926 M / ±1344–1345 H, Mewat India',
 			founder: 'Maulana Muhammad Ilyas Kandhlawi',
 			scale: 'Salah satu gerakan dakwah Islam terbesar di dunia; estimasi pengikut sangat beragam karena tidak memakai keanggotaan formal rapi.',
 			type: 'Gerakan dakwah transnasional non-partai',
@@ -201,7 +201,7 @@
 		{
 			name: 'Nahdlatul Ulama',
 			country: 'Indonesia',
-			founded: '1926, Surabaya',
+			founded: '1926 M / 1344 H, Surabaya',
 			founder: "KH Hasyim Asy'ari dan ulama pesantren",
 			scale: 'Sering disebut ormas Islam formal terbesar berdasarkan afiliasi publik Indonesia.',
 			type: 'Ormas sosial-keagamaan tradisionalis',
@@ -212,7 +212,7 @@
 		{
 			name: 'Muhammadiyah',
 			country: 'Indonesia',
-			founded: '1912, Yogyakarta',
+			founded: '1912 M / ±1330 H, Yogyakarta',
 			founder: 'KH Ahmad Dahlan',
 			scale: 'Salah satu ormas Islam modernis terbesar dengan jaringan sekolah, kampus, rumah sakit, dan layanan sosial sangat luas.',
 			type: 'Ormas pembaruan sosial-keagamaan',
@@ -223,18 +223,18 @@
 		{
 			name: 'Ikhwanul Muslimin / Muslim Brotherhood',
 			country: 'Mesir dan cabang transnasional',
-			founded: '1928, Ismailia Mesir',
+			founded: '1928 M / ±1346–1347 H, Ismailia Mesir',
 			founder: 'Hasan al-Banna',
 			scale: 'Gerakan sosial-politik Islam paling berpengaruh di Timur Tengah modern; status hukumnya berbeda-beda antar negara.',
 			type: 'Gerakan dakwah, sosial, dan politik',
 			origin: 'Muncul sebagai respons terhadap kolonialisme, modernitas, krisis sosial, dan perdebatan peran Islam dalam negara.',
-			legacy: 'Jaringan pendidikan, amal sosial, partai/gerakan politik, dan pengaruh pada banyak gerakan Islam abad ke-20.',
+			legacy: 'Jaringan pendidikan, amal sosial, partai/gerakan politik, dan pengaruh pada banyak gerakan Islam abad ke-20 M / ±abad 14 H.',
 			tone: 'border-rose-200 bg-rose-50 text-rose-700'
 		},
 		{
 			name: "Jamaat-e-Islami",
 			country: 'Pakistan, India, Bangladesh, dan diaspora Asia Selatan',
-			founded: '1941, Lahore India Britania',
+			founded: '1941 M / ±1359–1360 H, Lahore India Britania',
 			founder: "Abul A'la Maududi",
 			scale: 'Gerakan ideologis-politik besar di Asia Selatan dengan cabang berbeda setelah pemisahan India-Pakistan.',
 			type: 'Gerakan dakwah, pemikiran, dan politik',
@@ -245,7 +245,7 @@
 		{
 			name: "Jamiat Ulama-i-Hind",
 			country: 'India',
-			founded: '1919, India',
+			founded: '1919 M / ±1337–1338 H, India',
 			founder: 'Ulama Deobandi dan tokoh gerakan Khilafat/anti-kolonial',
 			scale: 'Salah satu organisasi Muslim India paling tua dan berpengaruh.',
 			type: 'Organisasi ulama, pendidikan, advokasi umat',
@@ -256,7 +256,7 @@
 		{
 			name: "Dawat-e-Islami",
 			country: 'Pakistan dan jaringan global',
-			founded: '1981, Karachi Pakistan',
+			founded: '1981 M / ±1401 H, Karachi Pakistan',
 			founder: 'Muhammad Ilyas Attar Qadri',
 			scale: 'Gerakan dakwah Sunni Barelvi/Qadiri yang menyebar melalui madrasah, majelis, media, dan diaspora.',
 			type: 'Dakwah, pendidikan, media Islam',
@@ -267,7 +267,7 @@
 		{
 			name: 'Muslim World League',
 			country: 'Arab Saudi dan kantor global',
-			founded: '1962, Makkah',
+			founded: '1962 M / ±1381–1382 H, Makkah',
 			founder: 'Konferensi Islam di Makkah dengan dukungan Arab Saudi',
 			scale: 'Lembaga Islam internasional besar, tetapi bukan ormas massa berbasis anggota seperti NU atau Muhammadiyah.',
 			type: 'NGO internasional dan diplomasi keagamaan',
@@ -278,9 +278,9 @@
 		{
 			name: 'Hizmet / Gulen Movement',
 			country: 'Turki dan diaspora',
-			founded: 'Akhir 1960-an, Izmir Turki',
+			founded: 'Akhir 1960-an M / ±1380-an H, Izmir Turki',
 			founder: 'Fethullah Gulen',
-			scale: 'Jaringan pendidikan dan masyarakat sipil transnasional; sangat kontroversial dan dibatasi keras oleh pemerintah Turki setelah 2016.',
+			scale: 'Jaringan pendidikan dan masyarakat sipil transnasional; sangat kontroversial dan dibatasi keras oleh pemerintah Turki setelah 2016 M / ±1437–1438 H.',
 			type: 'Pendidikan, filantropi, dialog, jejaring sosial',
 			origin: 'Bermula dari kelompok baca dan pembinaan pelajar yang dipengaruhi gagasan Said Nursi dan dakwah pendidikan.',
 			legacy: 'Sekolah, asrama, media, dialog antaragama, jaringan diaspora, sekaligus kontroversi politik besar di Turki.',
@@ -289,7 +289,7 @@
 		{
 			name: "Jama'atu Nasril Islam",
 			country: 'Nigeria',
-			founded: '1962, Nigeria Utara',
+			founded: '1962 M / ±1381–1382 H, Nigeria Utara',
 			founder: 'Ahmadu Bello, Sardauna of Sokoto',
 			scale: 'Payung penting organisasi Islam di Nigeria, terutama kawasan utara.',
 			type: 'Organisasi payung, dakwah, advokasi umat',
@@ -301,27 +301,27 @@
 
 	const indonesiaTimeline: TimelineItem[] = [
 		{
-			year: '1912',
+			year: '1912 M / ±1330 H',
 			title: 'Muhammadiyah dan pembaruan amal usaha',
 			desc: 'Gerakan sekolah, kesehatan, dan dakwah modern menjadi model baru organisasi Islam di Hindia Belanda.'
 		},
 		{
-			year: '1914-1923',
+			year: '1914–1923 M / ±1332–1342 H',
 			title: 'Al-Irsyad, Mathlaul Anwar, dan Persis',
 			desc: 'Muncul jaringan pendidikan, tajdid, dan kajian dalil di Batavia, Banten, dan Bandung.'
 		},
 		{
-			year: '1926',
+			year: '1926 M / ±1344–1345 H',
 			title: 'NU dan konsolidasi pesantren',
 			desc: 'Ulama pesantren membangun wadah nasional untuk menjaga mazhab, tradisi kitab, dan kepentingan umat.'
 		},
 		{
-			year: '1930-1953',
+			year: '1930–1953 M / ±1349–1372 H',
 			title: 'Ormas regional tumbuh kuat',
 			desc: 'Al-Washliyah di Sumatera Utara, PUI di Jawa Barat, dan Nahdlatul Wathan di Lombok menguatkan pendidikan daerah.'
 		},
 		{
-			year: '1970-an',
+			year: '1970-an M / ±1390-an H',
 			title: 'Dakwah kader dan pembinaan warga',
 			desc: 'LDII dan Hidayatullah menunjukkan bentuk baru pembinaan jamaah, pesantren, dai, dan organisasi nasional.'
 		}
@@ -329,17 +329,17 @@
 
 	const sourceLinks: SourceLink[] = [
 		{
-			label: 'LSI 2019 dikutip Suara Muhammadiyah',
+			label: 'LSI 2019 M / ±1440–1441 H dikutip Suara Muhammadiyah',
 			href: 'https://web.suaramuhammadiyah.id/2022/05/26/memperbarui-pola-gerakan-muhammadiyah/',
 			note: 'Rujukan angka 49,5% NU dan 4,3% Muhammadiyah dalam afiliasi publik.'
 		},
 		{
-			label: 'LSI Denny JA 2023 via Kompas',
+			label: 'LSI Denny JA 2023 M / ±1444–1445 H via Kompas',
 			href: 'https://nasional.kompas.com/read/2023/09/21/06150011/survei-lsi-denny-ja-popularitas-prabowo-di-warga-nu-muhammadiyah-mendominasi',
 			note: 'Rujukan afiliasi 56,9% NU, 5,7% Muhammadiyah, dan 3% ormas lain.'
 		},
 		{
-			label: 'Indikator Politik 2024',
+			label: 'Indikator Politik 2024 M / ±1445–1446 H',
 			href: 'https://indikator.co.id/wp-content/uploads/2024/05/RILIS-INDIKATOR-14-MEI-2024-1.pdf',
 			note: 'Pembanding survei terbaru yang menunjukkan distribusi afiliasi berbeda.'
 		},
@@ -351,7 +351,7 @@
 		{
 			label: 'Sejarah NU - NU Jabar',
 			href: 'https://jabar.nu.or.id/sejarah/nu-berdiri-pada-tanggal-31-januari-1926-m-bertepatan-dengan-16-rajab-1344-h-GocuL',
-			note: 'Tanggal berdiri NU, Komite Hijaz, dan daftar ulama pendiri.'
+			note: 'Tanggal berdiri NU: 31 Januari 1926 M / 16 Rajab 1344 H, Komite Hijaz, dan daftar ulama pendiri.'
 		},
 		{
 			label: 'Pew Research - Tablighi Jamaat',
@@ -395,22 +395,22 @@
 
 	const intermazhabTimeline: TimelineItem[] = [
 		{
-			year: 'Abad ke-7 M',
+			year: 'Abad ke-7 M / abad 1 H',
 			title: 'Awal perbedaan politik pasca-wafat Rasulullah ﷺ',
 			desc: 'Perbedaan mula-mula terkait kepemimpinan umat setelah Rasulullah ﷺ wafat. Seiring waktu, perbedaan politik itu berkembang menjadi tradisi teologis, fikih, dan identitas mazhab yang berbeda.'
 		},
 		{
-			year: '1947',
+			year: '1947 M / ±1366 H',
 			title: 'Dar at-Taqrib bayna al-Madzahib al-Islamiyyah di Kairo',
 			desc: 'Forum pendekatan antarmadzhab mempertemukan ulama Al-Azhar dan ulama Syiah untuk meredakan ketegangan, memperkuat literasi ilmiah, dan mencari titik temu fikih-keumatan.'
 		},
 		{
-			year: '1959',
+			year: '1959 M / ±1378–1379 H',
 			title: 'Fatwa Grand Syekh Al-Azhar Mahmud Syaltut',
-			desc: 'Fatwa yang masyhur dikaitkan dengan 17 Rabiul Awal 1378 H ini mengakui Mazhab Ja’fari Imamiyah Itsna ‘Asyariyah dalam ranah fikih dan ibadah sebagai mazhab yang boleh diikuti sebagaimana mazhab-mazhab fikih lain.'
+			desc: 'Fatwa yang masyhur dikaitkan dengan 17 Rabiul Awal 1378 H / 1959 M ini mengakui Mazhab Ja’fari Imamiyah Itsna ‘Asyariyah dalam ranah fikih dan ibadah sebagai mazhab yang boleh diikuti sebagaimana mazhab-mazhab fikih lain.'
 		},
 		{
-			year: '2004–2005',
+			year: '2004–2005 M / ±1424–1426 H',
 			title: 'Risalah Amman / Amman Message',
 			desc: 'Inisiatif Raja Abdullah II dari Yordania mengundang otoritas ulama dunia untuk menegaskan pengakuan delapan mazhab besar Islam dan larangan takfir sembarangan terhadap sesama Muslim.'
 		}
@@ -438,47 +438,47 @@
 
 	const expandedIntermazhabMilestones: TimelineItem[] = [
 		{
-			year: '632 M',
+			year: '632 M / 11 H',
 			title: 'Wafat Rasulullah ﷺ dan musyawarah kepemimpinan',
 			desc: 'Perbedaan awal berkaitan dengan imamah/kepemimpinan umat. Pada fase ini, istilah Sunni-Syiah belum menjadi sistem mazhab seperti yang dikenal kemudian.'
 		},
 		{
-			year: '656–661 M',
+			year: '656–661 M / ±35–41 H',
 			title: 'Masa Sayyidina Ali dan fitnah politik awal',
 			desc: 'Perang Jamal, Shiffin, dan Tahkim meninggalkan luka politik yang kelak dibaca ulang oleh berbagai tradisi teologi dan sejarah.'
 		},
 		{
-			year: '680 M',
+			year: '680 M / ±60–61 H',
 			title: 'Tragedi Karbala',
 			desc: 'Wafatnya Sayyidina Husain bin Ali radhiyallahu ‘anhuma menjadi peristiwa besar dalam memori umat Islam, terutama dalam pembentukan identitas Syiah.'
 		},
 		{
-			year: 'Abad 8–10 M',
+			year: 'Abad 8–10 M / ±abad 2–4 H',
 			title: 'Kodifikasi fikih dan teologi',
 			desc: 'Mazhab fikih Sunni menguat melalui jaringan ulama, sementara tradisi Ja’fari berkembang dalam komunitas Imamiyah. Pada masa ini perbedaan makin memiliki struktur keilmuan.'
 		},
 		{
-			year: '1947',
+			year: '1947 M / ±1366 H',
 			title: 'Dar at-Taqrib di Kairo',
 			desc: 'Forum pendekatan antarmadzhab mempertemukan ulama Al-Azhar dan ulama Syiah. Majalah Risalat al-Islam menjadi salah satu kanal gagasan taqrib.'
 		},
 		{
-			year: '1959',
+			year: '1959 M / ±1378–1379 H',
 			title: 'Fatwa Mahmud Syaltut',
 			desc: 'Mazhab Ja’fari diakui dalam ranah fikih sebagai mazhab yang dapat diamalkan, tanpa menghapus perbedaan teologis Sunni-Syiah.'
 		},
 		{
-			year: '1980-an',
+			year: '1980-an M / ±1400-an H',
 			title: 'Ketegangan politik pasca-Revolusi Iran',
-			desc: 'Revolusi Iran 1979 dan perang Iran-Irak membuat isu Sunni-Syiah sering bercampur dengan geopolitik, bukan semata kajian keilmuan.'
+			desc: 'Revolusi Iran 1979 M / ±1399 H dan perang Iran-Irak membuat isu Sunni-Syiah sering bercampur dengan geopolitik, bukan semata kajian keilmuan.'
 		},
 		{
-			year: '2004–2005',
+			year: '2004–2005 M / ±1424–1426 H',
 			title: 'Risalah Amman',
 			desc: 'Ulama dunia menegaskan pengakuan delapan mazhab besar dan larangan takfir sembarangan untuk menjaga darah, kehormatan, dan persatuan umat.'
 		},
 		{
-			year: '2016',
+			year: '2016 M / ±1437–1438 H',
 			title: 'Deklarasi Marrakesh',
 			desc: 'Deklarasi ini tidak khusus Sunni-Syiah, tetapi penting dalam wacana toleransi, perlindungan minoritas, dan hidup berdampingan dalam negara modern.'
 		}
@@ -708,12 +708,12 @@
 
 		<div class="mt-6 grid gap-4 lg:grid-cols-3">
 			<a href="#fatwa-syaltut" class="rounded-[1.25rem] border border-amber-200 bg-amber-50 p-5 transition hover:-translate-y-0.5 hover:shadow-md">
-				<p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-700">Monumen 1959</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.22em] text-amber-700">Monumen 1959 M / ±1378–1379 H</p>
 				<h3 class="mt-2 text-lg font-semibold text-slate-900">Fatwa Syaltut</h3>
 				<p class="mt-2 text-sm leading-6 text-slate-600">Jembatan fikih antara Al-Azhar dan Mazhab Ja’fari.</p>
 			</a>
 			<a href="#amman-message" class="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:shadow-md">
-				<p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Monumen 2004–2005</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Monumen 2004–2005 M / ±1424–1426 H</p>
 				<h3 class="mt-2 text-lg font-semibold text-slate-900">Risalah Amman</h3>
 				<p class="mt-2 text-sm leading-6 text-slate-600">Delapan mazhab besar dan larangan takfir sembarangan.</p>
 			</a>
@@ -729,7 +729,7 @@
 				<h3 class="text-xl font-semibold text-slate-900">1. Pendahuluan dan sejarah awal</h3>
 				<div class="mt-4 space-y-4 text-sm leading-7 text-slate-700">
 					<p>Dalam sejarah Islam, Sunni atau Ahlussunnah wal Jama’ah menjadi arus mayoritas umat. Sunni bertumpu pada kesinambungan ajaran Al-Qur’an, Sunnah, ijma’ ulama, dan tradisi empat mazhab fikih besar: Hanafi, Maliki, Syafi’i, dan Hanbali. Di Nusantara, tradisi Sunni tumbuh melalui pesantren, tarekat mu’tabarah, kajian kitab, dan adab bermasyarakat.</p>
-					<p>Syiah muncul sebagai komunitas yang sejak awal memberi perhatian khusus pada kepemimpinan Ahlul Bait, terutama Sayyidina Ali bin Abi Thalib karramallahu wajhah dan keturunannya. Perbedaan ini mula-mula berakar pada persoalan politik pasca-wafat Rasulullah ﷺ pada abad ke-7 Masehi. Dalam perjalanan sejarah, ia berkembang menjadi perbedaan teologis, fikih, spiritualitas, dan struktur otoritas keagamaan.</p>
+					<p>Syiah muncul sebagai komunitas yang sejak awal memberi perhatian khusus pada kepemimpinan Ahlul Bait, terutama Sayyidina Ali bin Abi Thalib karramallahu wajhah dan keturunannya. Perbedaan ini mula-mula berakar pada persoalan politik pasca-wafat Rasulullah ﷺ pada abad ke-7 Masehi / abad 1 Hijriah. Dalam perjalanan sejarah, ia berkembang menjadi perbedaan teologis, fikih, spiritualitas, dan struktur otoritas keagamaan.</p>
 					<ul class="space-y-2">
 						<li><strong>Sunni global:</strong> sekitar 85–90% populasi Muslim dunia.</li>
 						<li><strong>Syiah global:</strong> sekitar 10–15% populasi Muslim dunia.</li>
@@ -753,19 +753,19 @@
 			</div>
 
 			<div id="fatwa-syaltut" class="rounded-[1.5rem] scroll-mt-24 bg-amber-50 p-5">
-				<h3 class="text-xl font-semibold text-slate-900">2. Monumen sejarah 1 — Fatwa Mahmud Syaltut (1959)</h3>
+				<h3 class="text-xl font-semibold text-slate-900">2. Monumen sejarah 1 — Fatwa Mahmud Syaltut (1959 M / ±1378–1379 H)</h3>
 				<div class="mt-4 space-y-4 text-sm leading-7 text-slate-700">
-					<p>Salah satu monumen penting dialog intermazhab abad modern adalah gerakan <em>Dar at-Taqrib bayna al-Madzahib al-Islamiyyah</em> di Kairo. Lembaga ini berdiri pada tahun 1947 sebagai ruang temu antara sebagian ulama Al-Azhar dan ulama Syiah. Tujuannya bukan menyamakan seluruh aqidah dan identitas, melainkan mengurangi prasangka, membuka dialog ilmiah, dan mencari titik temu dalam maslahat umat.</p>
-					<p>Di antara nama yang sering dikaitkan dengan gerakan ini adalah Grand Syekh Al-Azhar, Syekh Mahmud Syaltut. Fatwa beliau yang masyhur, tertanggal 17 Rabiul Awal 1378 H dan banyak dirujuk dalam literatur tahun 1959 M, menyatakan bahwa Mazhab Ja’fari atau Syiah Dua Belas Imam memiliki kedudukan sebagai mazhab fikih yang boleh diikuti dalam ibadah dan muamalah, sebagaimana mazhab fikih lain dalam Islam.</p>
+					<p>Salah satu monumen penting dialog intermazhab abad modern adalah gerakan <em>Dar at-Taqrib bayna al-Madzahib al-Islamiyyah</em> di Kairo. Lembaga ini berdiri pada tahun 1947 M / ±1366 H sebagai ruang temu antara sebagian ulama Al-Azhar dan ulama Syiah. Tujuannya bukan menyamakan seluruh aqidah dan identitas, melainkan mengurangi prasangka, membuka dialog ilmiah, dan mencari titik temu dalam maslahat umat.</p>
+					<p>Di antara nama yang sering dikaitkan dengan gerakan ini adalah Grand Syekh Al-Azhar, Syekh Mahmud Syaltut. Fatwa beliau yang masyhur, tertanggal 17 Rabiul Awal 1378 H dan banyak dirujuk dalam literatur tahun 1959 M / ±1378–1379 H, menyatakan bahwa Mazhab Ja’fari atau Syiah Dua Belas Imam memiliki kedudukan sebagai mazhab fikih yang boleh diikuti dalam ibadah dan muamalah, sebagaimana mazhab fikih lain dalam Islam.</p>
 					<p class="rounded-2xl border-l-4 border-amber-400 bg-white p-4"><strong>Pokok makna fatwa:</strong> pengakuan ini berada pada wilayah fikih dan keabsahan beramal menurut mazhab Ja’fari, bukan berarti menghapus seluruh perbedaan teologis antara Sunni dan Syiah.</p>
 					<p>Bagi pembaca Ahlussunnah wal Jama’ah, posisi yang adil adalah memahami fatwa ini sebagai ikhtiar meredakan pertikaian dan menata dialog ilmiah. Fatwa tersebut tidak mengharuskan seorang Sunni berpindah mazhab, tidak membatalkan kewajiban menjaga aqidah Aswaja, dan tidak menutup ruang kritik terhadap pandangan yang menyelisihi prinsip Ahlussunnah.</p>
 				</div>
 			</div>
 
 			<div id="amman-message" class="rounded-[1.5rem] scroll-mt-24 bg-slate-900 p-5 text-white">
-				<h3 class="text-xl font-semibold text-amber-200">3. Monumen sejarah 2 — Risalah Amman / Amman Message (2004–2005)</h3>
+				<h3 class="text-xl font-semibold text-amber-200">3. Monumen sejarah 2 — Risalah Amman / Amman Message (2004–2005 M / ±1424–1426 H)</h3>
 				<div class="mt-4 space-y-4 text-sm leading-7 text-white/78">
-					<p>Risalah Amman berawal dari inisiatif Raja Abdullah II dari Yordania pada tahun 2004. Konteksnya adalah meningkatnya kekerasan sektarian, ekstremisme, dan penyalahgunaan takfir di berbagai tempat. Inisiatif ini berkembang menjadi deklarasi ulama dunia pada 2005 yang menegaskan batas perbedaan mazhab dan bahaya mengkafirkan sesama Muslim tanpa otoritas ilmu.</p>
+					<p>Risalah Amman berawal dari inisiatif Raja Abdullah II dari Yordania pada tahun 2004 M / ±1424–1425 H. Konteksnya adalah meningkatnya kekerasan sektarian, ekstremisme, dan penyalahgunaan takfir di berbagai tempat. Inisiatif ini berkembang menjadi deklarasi ulama dunia pada 2005 M / ±1425–1426 H yang menegaskan batas perbedaan mazhab dan bahaya mengkafirkan sesama Muslim tanpa otoritas ilmu.</p>
 					<p>Tokoh-tokoh besar dari berbagai negeri, lembaga fatwa, dan tradisi keilmuan terlibat. Dalam konteks Syiah, Ayatollah Sayyid Ali Khamenei dari Iran dan Ayatollah Sayyid Ali Al-Sistani dari Irak tidak hadir secara fisik karena pertimbangan protokol keamanan dan situasi politik, tetapi mengirimkan fatwa resmi tertulis. Fatwa tertulis tersebut menjadi salah satu pilar hukum penting dalam legitimasi deklarasi lintas mazhab ini.</p>
 				</div>
 				<div class="mt-5 grid gap-2 sm:grid-cols-2 md:grid-cols-4">
