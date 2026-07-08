@@ -247,9 +247,9 @@
 	> = {
 		green: {
 			card: 'border-emerald-100 bg-white hover:border-emerald-200',
-			icon: 'bg-emerald-50 text-emerald-700',
+			icon: 'bg-emerald-50 text-emerald-600',
 			accent: 'bg-emerald-500',
-			badge: 'bg-emerald-50 text-emerald-700'
+			badge: 'bg-emerald-50 text-emerald-600'
 		},
 		gold: {
 			card: 'border-amber-100 bg-white hover:border-amber-200',
@@ -664,7 +664,7 @@
 						label: 'Kalender',
 						desc: 'Agenda kegiatan komunitas',
 						href: '/kalender',
-						tone: 'from-teal-50 to-emerald-100 text-emerald-800'
+						tone: 'from-teal-50 to-emerald-100 text-emerald-600'
 					},
 					{
 						label: 'Akun',
@@ -697,7 +697,7 @@
 						label: 'Kalender',
 						desc: 'Lihat agenda kegiatan komunitas',
 						href: '/kalender',
-						tone: 'from-teal-50 to-emerald-100 text-emerald-800'
+						tone: 'from-teal-50 to-emerald-100 text-emerald-600'
 					},
 					{
 						label: 'Dashboard',
@@ -737,7 +737,7 @@
 					label: 'Riwayat Setoran',
 					desc: 'Lihat status setoran resmi',
 					href: '/tpq/akademik/riwayat',
-					tone: 'from-emerald-50 to-teal-100 text-emerald-800'
+					tone: 'from-emerald-50 to-teal-100 text-emerald-600'
 				},
 				{
 					label: 'Pencapaian Hafalan',
@@ -777,7 +777,7 @@
 					label: 'Input Setoran',
 					desc: 'Catat setoran resmi hari ini',
 					href: '/tpq/akademik/setoran',
-					tone: 'from-emerald-50 to-teal-100 text-emerald-800'
+					tone: 'from-emerald-50 to-teal-100 text-emerald-600'
 				});
 			}
 			if (tpqDashboard?.canReviewSetoran) {
@@ -802,7 +802,7 @@
 					label: 'Kelola Santri',
 					desc: 'Data santri dan status',
 					href: '/dashboard/kelola-santri',
-					tone: 'from-teal-50 to-emerald-100 text-emerald-800'
+					tone: 'from-teal-50 to-emerald-100 text-emerald-600'
 				},
 				{
 					label: 'Pencapaian Hafalan',
@@ -1338,7 +1338,7 @@
 	};
 
 	const getSetoranStatusClass = (status: string) => {
-		if (status === 'approved') return 'bg-emerald-100 text-emerald-700';
+		if (status === 'approved') return 'bg-emerald-100 text-emerald-600';
 		if (status === 'rejected') return 'bg-rose-100 text-rose-700';
 		return 'bg-amber-100 text-amber-700';
 	};
@@ -1979,7 +1979,7 @@
 								</div>
 								<div class="min-w-0 sm:text-right">
 									<p
-										class={`break-words text-sm font-semibold ${entry.tipe === 'masuk' ? 'text-emerald-700' : 'text-rose-700'}`}
+										class={`break-words text-sm font-semibold ${entry.tipe === 'masuk' ? 'text-emerald-600' : 'text-rose-700'}`}
 									>
 										{entry.tipe === 'masuk' ? '+' : '-'}{formatCurrency(entry.nominal)}
 									</p>

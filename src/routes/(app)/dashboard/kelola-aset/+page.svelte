@@ -298,8 +298,8 @@
 				<h2 class="text-lg font-semibold text-slate-900">Data Aset</h2>
 				<p class="text-xs text-slate-500">Tambah atau perbarui aset yang dimiliki lembaga.</p>
 				<div class="mt-4 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4">
-					<h4 class="text-sm font-semibold text-emerald-700">Import Excel</h4>
-					<p class="mt-1 text-xs text-emerald-700/80">
+					<h4 class="text-sm font-semibold text-emerald-600">Import Excel</h4>
+					<p class="mt-1 text-xs text-emerald-600/80">
 						Kolom wajib: <strong>name</strong>, <strong>quantity</strong>. Opsional:
 						<strong>category</strong>, <strong>condition</strong>, <strong>location</strong>, <strong>acquired_at</strong>, <strong>notes</strong>.
 					</p>
@@ -506,8 +506,8 @@
 			</div>
 
 			<div class="rounded-xl border border-dashed border-emerald-300 bg-emerald-50/40 p-4">
-				<label for="org-media-upload" class="text-sm font-medium text-emerald-700">Upload Foto Baru</label>
-				<p class="mt-1 text-xs text-emerald-700/80">Format: JPG, PNG, WEBP. Maks 10MB.</p>
+				<label for="org-media-upload" class="text-sm font-medium text-emerald-600">Upload Foto Baru</label>
+				<p class="mt-1 text-xs text-emerald-600/80">Format: JPG, PNG, WEBP. Maks 10MB.</p>
 				<input
 					id="org-media-upload"
 					type="file"

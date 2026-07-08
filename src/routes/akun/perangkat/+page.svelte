@@ -78,7 +78,7 @@
 
 <div class="mx-auto max-w-4xl space-y-6 pb-10">
 	<header class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
-		<a href="/akun" class="text-sm font-semibold text-emerald-700 hover:text-emerald-800">Kembali ke Akun</a>
+		<a href="/akun" class="text-sm font-semibold text-emerald-600 hover:text-emerald-600">Kembali ke Akun</a>
 		<div class="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
 			<div>
 				<p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Akun</p>
@@ -88,7 +88,7 @@
 					perangkat.
 				</p>
 			</div>
-			<div class="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
+			<div class="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-600">
 				{devices.length}/3 perangkat
 			</div>
 		</div>

@@ -93,7 +93,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-    <div class="rounded-3xl border bg-gradient-to-r from-slate-900 via-emerald-700 to-emerald-500 px-6 py-7 text-white shadow-xl">
+    <div class="rounded-3xl border bg-gradient-to-r from-slate-900 via-emerald-600 to-emerald-500 px-6 py-7 text-white shadow-xl">
         <p class="text-xs uppercase tracking-[0.25em] text-white/70">Panel Sertifikat</p>
         <h1 class="mt-2 text-3xl font-semibold">Terbitkan Sertifikat Santri</h1>
         <p class="mt-2 max-w-3xl text-sm text-emerald-50">
@@ -188,7 +188,7 @@
                                     <a class="btn btn-sm btn-primary" href={cert.downloadUrl || cert.certificate_url} target="_blank">
                                         Unduh
                                     </a>
-                                    <span class="rounded-full bg-emerald-50 px-2 py-1 text-[11px] text-emerald-700">PDF</span>
+                                    <span class="rounded-full bg-emerald-50 px-2 py-1 text-[11px] text-emerald-600">PDF</span>
                                 </div>
                             </div>
                         </div>

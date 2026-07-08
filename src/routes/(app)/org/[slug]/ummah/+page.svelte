@@ -384,8 +384,8 @@
 				<p class="text-xs text-slate-500">Catat pemasukan dan pengeluaran untuk laporan transparan.</p>
 				<div class="mt-4 grid gap-3 md:grid-cols-3">
 					<div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-						<p class="text-xs uppercase text-emerald-700">Saldo</p>
-						<p class="text-base font-bold text-emerald-700 tabular-nums tracking-tight leading-tight break-words sm:text-lg">
+						<p class="text-xs uppercase text-emerald-600">Saldo</p>
+						<p class="text-base font-bold text-emerald-600 tabular-nums tracking-tight leading-tight break-words sm:text-lg">
 							{formatCurrency(data.kasSummary?.saldo)}
 						</p>
 					</div>

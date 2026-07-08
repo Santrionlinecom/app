@@ -270,7 +270,7 @@
 					<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
 						<div class="flex items-center justify-between">
 							<div>
-								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">
 									Total Pembayaran
 								</p>
 								<p class="mt-1 flex items-center gap-1 text-2xl font-bold text-emerald-900">
@@ -279,7 +279,7 @@
 								</p>
 							</div>
 							<div class="text-right">
-								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+								<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">
 									Saldo Anda
 								</p>
 								<p
@@ -326,7 +326,7 @@
 					<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Metode Pembayaran</p>
 					<div class="mt-3 flex items-center gap-2">
 						<div class="rounded-full bg-emerald-100 p-2">
-							<Coins class="h-5 w-5 text-emerald-700" />
+							<Coins class="h-5 w-5 text-emerald-600" />
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-slate-900">Coin SantriOnline</p>
@@ -380,7 +380,7 @@
 	<div
 		class={`fixed bottom-5 right-5 z-50 w-[calc(100vw-2rem)] max-w-sm rounded-xl border px-4 py-3 text-sm font-bold shadow-soft ${
 			toast.kind === 'success'
-				? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+				? 'border-emerald-200 bg-emerald-50 text-emerald-600'
 				: 'border-red-200 bg-red-50 text-red-800'
 		}`}
 	>

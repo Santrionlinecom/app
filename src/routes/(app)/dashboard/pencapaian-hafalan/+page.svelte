@@ -103,7 +103,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-	<section class="rounded-3xl border border-emerald-500/20 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-6 text-white shadow-xl">
+	<section class="rounded-3xl border border-emerald-500/20 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 p-6 text-white shadow-xl">
 		<div class="flex flex-wrap items-start justify-between gap-4">
 			<div>
 				<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100">Akademik TPQ</p>
@@ -154,8 +154,8 @@
 					<p class="mt-2 text-2xl font-semibold text-amber-700">{data.summaries.today.submitted}</p>
 				</div>
 				<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
-					<p class="text-xs uppercase tracking-wide text-emerald-700">Disetujui Hari Ini</p>
-					<p class="mt-2 text-2xl font-semibold text-emerald-700">{data.summaries.today.approved}</p>
+					<p class="text-xs uppercase tracking-wide text-emerald-600">Disetujui Hari Ini</p>
+					<p class="mt-2 text-2xl font-semibold text-emerald-600">{data.summaries.today.approved}</p>
 				</div>
 				<div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 shadow-sm">
 					<p class="text-xs uppercase tracking-wide text-rose-700">Perlu Perbaikan</p>
@@ -174,8 +174,8 @@
 						<p class="mt-2 text-2xl font-semibold text-slate-900">{officialProgressPercent}%</p>
 					</div>
 					<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
-						<p class="text-xs uppercase tracking-wide text-emerald-700">Kualitas Lancar</p>
-						<p class="mt-2 text-2xl font-semibold text-emerald-700">{data.official.quality.lancar}</p>
+						<p class="text-xs uppercase tracking-wide text-emerald-600">Kualitas Lancar</p>
+						<p class="mt-2 text-2xl font-semibold text-emerald-600">{data.official.quality.lancar}</p>
 					</div>
 					<div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 shadow-sm">
 						<p class="text-xs uppercase tracking-wide text-rose-700">Perlu Penguatan</p>
@@ -207,7 +207,7 @@
 										<tr>
 											<td class="font-medium">{row.surahNumber}. {getSurahName(row.surahNumber)}</td>
 											<td class="text-right">{row.totalAyat ?? 0}</td>
-											<td class="text-right text-emerald-700">{row.lancar ?? 0}</td>
+											<td class="text-right text-emerald-600">{row.lancar ?? 0}</td>
 											<td class="text-right text-amber-700">{row.cukup ?? 0}</td>
 											<td class="text-right text-rose-700">{row.belum ?? 0}</td>
 										</tr>
@@ -337,8 +337,8 @@
 					<p class="mt-2 text-2xl font-semibold text-slate-900">{data.murojaStats.totalMuroja}</p>
 				</div>
 				<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
-					<p class="text-xs uppercase tracking-wide text-emerald-700">Lancar</p>
-					<p class="mt-2 text-2xl font-semibold text-emerald-700">{data.murojaStats.lancar}</p>
+					<p class="text-xs uppercase tracking-wide text-emerald-600">Lancar</p>
+					<p class="mt-2 text-2xl font-semibold text-emerald-600">{data.murojaStats.lancar}</p>
 				</div>
 				<div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
 					<p class="text-xs uppercase tracking-wide text-amber-700">Kurang Lancar</p>

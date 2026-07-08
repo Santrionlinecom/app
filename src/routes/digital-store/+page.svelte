@@ -133,7 +133,7 @@
 							</div>
 							<div class="p-6">
 								<div class="flex flex-wrap items-center gap-2">
-									<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">
+									<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-600">
 										Featured
 									</span>
 									<span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-600">
@@ -144,7 +144,7 @@
 								<p class="mt-2 text-sm leading-7 text-slate-600">
 									{shortText(product.summary || product.description, 210)}
 								</p>
-								<p class="mt-5 flex items-center gap-1 text-2xl font-semibold text-emerald-700">
+								<p class="mt-5 flex items-center gap-1 text-2xl font-semibold text-emerald-600">
 									<Coins class="h-6 w-6" />
 									{formatCoin(product.price)} Coin
 								</p>
@@ -225,7 +225,7 @@
 
 							<div class={`rounded-2xl p-4 ${affordable ? 'bg-emerald-50' : 'bg-slate-50'}`}>
 								<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Harga</p>
-								<p class={`mt-2 flex items-center gap-1 text-2xl font-semibold ${affordable ? 'text-emerald-700' : 'text-slate-700'}`}>
+								<p class={`mt-2 flex items-center gap-1 text-2xl font-semibold ${affordable ? 'text-emerald-600' : 'text-slate-700'}`}>
 									<Coins class="h-6 w-6" />
 									{formatCoin(product.price)} Coin
 								</p>

@@ -1610,10 +1610,10 @@
 					{/if}
 				</p>
 				{#if navigationMessage}
-					<p class="font-medium text-emerald-700 md:col-span-2">{navigationMessage}</p>
+					<p class="font-medium text-emerald-600 md:col-span-2">{navigationMessage}</p>
 				{/if}
 				{#if isLoggedIn}
-					<p class="text-emerald-800 md:col-span-2">
+					<p class="text-emerald-600 md:col-span-2">
 						{memorizationLoading
 							? 'Memuat progres hafalan akun...'
 							: `${memorizedAyahs.length} ayat hafalan tervalidasi di akun ini, ${memorizedInCurrentJuz} ayat ada di juz aktif.`}
@@ -1694,7 +1694,7 @@
 							</button>
 						</div>
 						{#if tafsirIndexError}
-							<p class="mt-2 text-xs leading-5 text-emerald-700">{tafsirIndexError}</p>
+							<p class="mt-2 text-xs leading-5 text-emerald-600">{tafsirIndexError}</p>
 						{:else if tafsirIndexItems.length}
 							<p class="mt-2 text-xs leading-5 text-emerald-900/80">
 								{tafsirIndexCount || tafsirIndexItems.length} entry tafsir tersedia.
@@ -1803,7 +1803,7 @@
 											{surahName(verse.surahNumber)} {verse.ayahNumber}
 										</span>
 										{#if isVerseMemorized(verse)}
-											<span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
+											<span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
 												<CheckCircle2 class="h-3.5 w-3.5" />
 												Sudah hafal
 											</span>
@@ -1825,7 +1825,7 @@
 								{surahName(selectedVerse.surahNumber)} {selectedVerse.ayahNumber}
 							</p>
 							{#if selectedVerseMemorized}
-								<p class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-emerald-800">
+								<p class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
 									<CheckCircle2 class="h-3.5 w-3.5" />
 									Ayat ini sudah tercatat hafal.
 								</p>
@@ -2194,7 +2194,7 @@
 							{#each QURAN_REVELATION_TIMELINE as item}
 								<article class="relative">
 									<span class="absolute -left-[1.35rem] top-1 h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span>
-									<p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">{item.period}</p>
+									<p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">{item.period}</p>
 									<h4 class="mt-1 text-base font-semibold text-slate-900">{item.title}</h4>
 									<p class="mt-2 text-sm leading-7 text-slate-700">{item.detail}</p>
 									<ul class="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600">
@@ -2234,7 +2234,7 @@
 						<div class="grid gap-3 md:grid-cols-2">
 							{#each QURAN_NUSANTARA_MILESTONES as item}
 								<article class="rounded-lg border border-slate-200 p-4">
-									<p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">{item.period}</p>
+									<p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">{item.period}</p>
 									<h4 class="mt-1 text-sm font-semibold text-slate-950">{item.title}</h4>
 									<p class="mt-2 text-sm leading-7 text-slate-700">{item.detail}</p>
 									<ul class="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600">
@@ -2263,7 +2263,7 @@
 						<div class="mt-3 space-y-2">
 							{#each QURAN_HISTORY_REFERENCES as item}
 								<a
-									class="block rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-6 text-emerald-800 transition hover:border-emerald-200 hover:bg-emerald-50"
+									class="block rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-6 text-emerald-600 transition hover:border-emerald-200 hover:bg-emerald-50"
 									href={item.href}
 									target="_blank"
 									rel="noreferrer"

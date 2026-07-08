@@ -38,7 +38,7 @@
 		</div>
 		<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 			<p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Lembaga Aktif</p>
-			<p class="mt-3 text-3xl font-bold text-emerald-700">{formatNumber(stats.aktif)}</p>
+			<p class="mt-3 text-3xl font-bold text-emerald-600">{formatNumber(stats.aktif)}</p>
 		</div>
 		<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 			<p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Menunggu Verifikasi</p>
@@ -60,7 +60,7 @@
 			<span class="text-xs font-semibold text-slate-400">{formatNumber(lembagaTanpaKoordinat.length)} item</span>
 		</div>
 		{#if lembagaTanpaKoordinat.length === 0}
-			<p class="mt-4 rounded-xl border border-dashed border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+			<p class="mt-4 rounded-xl border border-dashed border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-600">
 				Semua lembaga yang terdata sudah memiliki koordinat.
 			</p>
 		{:else}

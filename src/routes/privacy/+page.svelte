@@ -17,7 +17,7 @@
 
 		<section class="grid md:grid-cols-2 gap-6">
 			<div class="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
-				<h2 class="text-xl font-bold text-emerald-800 mb-3">Data yang Kami Simpan</h2>
+				<h2 class="text-xl font-bold text-emerald-600 mb-3">Data yang Kami Simpan</h2>
 				<ul class="space-y-2 text-gray-700">
 					<li>• Akun dasar: email, nama/username, serta metode login (email atau Google).</li>
 					<li>• Kata sandi disimpan dalam bentuk terlindungi, bukan teks asli.</li>
@@ -66,9 +66,9 @@
 			<div class="text-gray-700 space-y-2">
 				<p>Jika ada pertanyaan atau permintaan terkait privasi, silakan hubungi:</p>
 				<ul class="space-y-1">
-					<li>• <a class="text-emerald-700 font-semibold hover:underline" href="mailto:masyogik@santrionline.com">masyogik@santrionline.com</a></li>
-					<li>• <a class="text-emerald-700 font-semibold hover:underline" href="mailto:hanifah@santrionline.com">hanifah@santrionline.com</a></li>
-					<li>• <a class="text-emerald-700 font-semibold hover:underline" href="mailto:sarah@santrionline.com">sarah@santrionline.com</a></li>
+					<li>• <a class="text-emerald-600 font-semibold hover:underline" href="mailto:masyogik@santrionline.com">masyogik@santrionline.com</a></li>
+					<li>• <a class="text-emerald-600 font-semibold hover:underline" href="mailto:hanifah@santrionline.com">hanifah@santrionline.com</a></li>
+					<li>• <a class="text-emerald-600 font-semibold hover:underline" href="mailto:sarah@santrionline.com">sarah@santrionline.com</a></li>
 				</ul>
 			</div>
 			<p class="text-sm text-gray-600">

@@ -78,7 +78,7 @@
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-slate-950">Privasi dan Cookie</p>
-							<p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700">SantriOnline</p>
+							<p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-600">SantriOnline</p>
 						</div>
 					</div>
 
@@ -93,7 +93,7 @@
 									<p class="text-xs font-semibold text-slate-900">Necessary</p>
 									<p class="mt-1 text-[11px] leading-4 text-slate-600">Wajib untuk keamanan, sesi, dan fungsi dasar website.</p>
 								</div>
-								<span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">Selalu aktif</span>
+								<span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600">Selalu aktif</span>
 							</div>
 
 							<label class="flex cursor-pointer items-start justify-between gap-3">
@@ -108,10 +108,10 @@
 				</div>
 
 				<div class="flex flex-col gap-1.5 sm:min-w-44">
-					<button type="button" class="btn btn-sm min-h-9 bg-emerald-600 text-xs text-white hover:bg-emerald-700" on:click={() => saveConsent(true)}>
+					<button type="button" class="btn btn-sm min-h-9 bg-emerald-600 text-xs text-white hover:bg-emerald-600" on:click={() => saveConsent(true)}>
 						Terima Analytics
 					</button>
-					<button type="button" class="btn btn-outline btn-sm min-h-9 border-emerald-200 text-xs text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50" on:click={() => saveConsent(false)}>
+					<button type="button" class="btn btn-outline btn-sm min-h-9 border-emerald-200 text-xs text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50" on:click={() => saveConsent(false)}>
 						Tolak Analytics
 					</button>
 					{#if showPreferences}

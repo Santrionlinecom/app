@@ -93,7 +93,7 @@
 					<p class="mt-2 text-lg font-semibold text-slate-900">{org.name}</p>
 					<p class="text-sm text-slate-500">{formatOrgType(org.type)}</p>
 					{#if orgLink}
-						<a class="mt-3 inline-flex items-center text-sm font-semibold text-emerald-700 hover:text-emerald-800" href={orgLink}>
+						<a class="mt-3 inline-flex items-center text-sm font-semibold text-emerald-600 hover:text-emerald-600" href={orgLink}>
 							Kunjungi profil lembaga >
 						</a>
 					{/if}

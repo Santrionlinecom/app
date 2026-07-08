@@ -68,7 +68,7 @@
 </svelte:head>
 
 <div class="space-y-6">
-    <div class="overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-700 px-6 py-8 shadow-xl text-white">
+    <div class="overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-600 px-6 py-8 shadow-xl text-white">
         <p class="text-xs uppercase tracking-[0.2em] text-white/80">Sertifikat Otomatis</p>
         <h1 class="mt-2 text-3xl font-semibold">Halo, {data.user?.username || data.user?.email}</h1>
         <p class="mt-2 max-w-3xl text-sm text-emerald-50">
@@ -112,7 +112,7 @@
                     <h2 class="text-lg font-semibold text-slate-900">Buat Sertifikat</h2>
                     <p class="text-sm text-slate-500">Sistem akan mengecek syarat otomatis.</p>
                 </div>
-                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700">PDF</span>
+                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-600">PDF</span>
             </div>
             <div class="mt-4 space-y-3">
                 <label class="flex flex-col gap-1 text-sm text-slate-700">
@@ -185,7 +185,7 @@
                                     >
                                         Unduh
                                     </a>
-                                    <span class="rounded-full bg-emerald-50 px-2 py-1 text-[11px] text-emerald-700">PDF</span>
+                                    <span class="rounded-full bg-emerald-50 px-2 py-1 text-[11px] text-emerald-600">PDF</span>
                                 </div>
                             </div>
                         </div>

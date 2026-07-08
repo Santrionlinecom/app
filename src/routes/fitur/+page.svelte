@@ -42,7 +42,7 @@
 							</li>
 						{/each}
 					</ul>
-					<div class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
+					<div class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-600">
 						{feature.cta}
 						<span>→</span>
 					</div>

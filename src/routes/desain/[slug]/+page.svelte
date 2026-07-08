@@ -35,7 +35,7 @@
 			</div>
 			<div class="rounded-[2rem] bg-white/95 p-5 text-slate-950 shadow-2xl">
 				<div class="rounded-[1.5rem] border-4 border-slate-950/10 p-8 text-center">
-					<p class="text-sm font-black uppercase tracking-[0.3em] text-emerald-700">{template.formats[0]} siap edit</p>
+					<p class="text-sm font-black uppercase tracking-[0.3em] text-emerald-600">{template.formats[0]} siap edit</p>
 					<h2 class="mt-6 text-4xl font-black leading-tight">{template.previewLines[0]}</h2>
 					<p class="mx-auto mt-5 max-w-lg text-lg font-semibold text-slate-600">{template.previewLines[1]}</p>
 					<div class="mt-8 rounded-2xl bg-slate-950 px-5 py-4 text-lg font-black text-white">{template.previewLines[2]}</div>
@@ -65,7 +65,7 @@
 	<section class="bg-white py-14 text-slate-950">
 		<div class="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
 			<div>
-				<p class="text-sm font-black uppercase tracking-[0.25em] text-emerald-700">Field yang bisa diedit</p>
+				<p class="text-sm font-black uppercase tracking-[0.25em] text-emerald-600">Field yang bisa diedit</p>
 				<h2 class="mt-3 text-3xl font-black">Siapkan data ini sebelum cetak</h2>
 				<ul class="mt-6 grid gap-3 sm:grid-cols-2">
 					{#each template.editableFields as field}<li class="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-bold">{field}</li>{/each}
@@ -75,7 +75,7 @@
 				<p class="text-sm font-black uppercase tracking-[0.25em] text-sky-700">Keyword SEO</p>
 				<h2 class="mt-3 text-3xl font-black">Halaman ini ditargetkan untuk Google Search dan Google Images</h2>
 				<div class="mt-6 flex flex-wrap gap-2">
-					{#each template.keywords as keyword}<span class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-800">{keyword}</span>{/each}
+					{#each template.keywords as keyword}<span class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-600">{keyword}</span>{/each}
 				</div>
 				<a href={printUrl} class="mt-8 inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-6 py-4 font-black text-white">
 					Pesan edit / cetak desain ini <ArrowRight class="h-5 w-5" />

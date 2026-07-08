@@ -31,7 +31,7 @@
 	<p class="mt-4 text-sm font-medium text-so-muted">{label}</p>
 	<div class="mt-1 flex items-end gap-2">
 		<p class="font-display text-3xl font-bold tracking-tight text-so-ink">{value}</p>
-		{#if trend}<span class="mb-1 text-xs font-bold text-emerald-700">{trend}</span>{/if}
+		{#if trend}<span class="mb-1 text-xs font-bold text-emerald-600">{trend}</span>{/if}
 	</div>
 	{#if helper}<p class="mt-2 text-xs text-so-muted">{helper}</p>{/if}
 </article>

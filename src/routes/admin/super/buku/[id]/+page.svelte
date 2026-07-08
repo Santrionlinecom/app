@@ -16,7 +16,7 @@
 		({
 			draft: 'bg-slate-100 text-slate-700 border-slate-200',
 			pending: 'bg-amber-100 text-amber-700 border-amber-200',
-			published: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+			published: 'bg-emerald-100 text-emerald-600 border-emerald-200',
 			rejected: 'bg-rose-100 text-rose-700 border-rose-200',
 			archived: 'bg-zinc-100 text-zinc-700 border-zinc-200'
 		})[status] ?? 'bg-slate-100 text-slate-700 border-slate-200';
@@ -55,7 +55,7 @@
 				{/if}
 			</div>
 			<div class="p-6 md:p-8">
-				<a href={`/admin/super/buku?status=${book.status}`} class="text-sm font-medium text-emerald-700 hover:text-emerald-700">
+				<a href={`/admin/super/buku?status=${book.status}`} class="text-sm font-medium text-emerald-600 hover:text-emerald-600">
 					Kembali ke daftar {statusLabel[book.status]}
 				</a>
 				<div class="mt-4 flex flex-wrap gap-2">
@@ -81,7 +81,7 @@
 					</div>
 					<div class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-4">
 						<p class="text-xs uppercase tracking-[0.22em] text-emerald-600">Bab Published</p>
-						<p class="mt-2 text-xl font-semibold text-emerald-700">{book.publishedChapterCount}</p>
+						<p class="mt-2 text-xl font-semibold text-emerald-600">{book.publishedChapterCount}</p>
 					</div>
 					<div class="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-4">
 						<p class="text-xs uppercase tracking-[0.22em] text-amber-600">Bab Gratis</p>
@@ -103,7 +103,7 @@
 	{/if}
 
 	{#if data.saved}
-		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-600">
 			Status buku berhasil diperbarui: {data.saved}.
 		</div>
 	{/if}
@@ -204,7 +204,7 @@
 									<span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-600">
 										Bab {chapter.chapterNumber}
 									</span>
-									<span class={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${chapter.status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>
+									<span class={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${chapter.status === 'published' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-700'}`}>
 										{chapter.status === 'published' ? 'Published' : 'Draft'}
 									</span>
 								</div>

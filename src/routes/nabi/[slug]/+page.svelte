@@ -23,7 +23,7 @@
 
 <div class="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 py-12">
 	<div class="max-w-4xl mx-auto px-4">
-		<a href="/nabi" class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 mb-6">
+		<a href="/nabi" class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-600 mb-6">
 			← Kembali ke Daftar Nabi
 		</a>
 

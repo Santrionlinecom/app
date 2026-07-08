@@ -435,7 +435,7 @@
 							</div>
 							<div class="p-6">
 								<div class="flex flex-wrap items-center gap-2">
-									<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">
+									<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-600">
 										Unggulan
 									</span>
 									<span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-600">

@@ -155,7 +155,7 @@
 		</form>
 		<p class="mt-2 text-xs text-slate-500">Pengecekan dilakukan otomatis dengan konfigurasi keamanan yang terlindungi.</p>
 		{#if infoMessage}
-			<p class="mt-3 text-sm text-emerald-700">{infoMessage}</p>
+			<p class="mt-3 text-sm text-emerald-600">{infoMessage}</p>
 		{/if}
 		{#if errorMessage}
 			<p class="mt-3 text-sm text-red-600">{errorMessage}</p>

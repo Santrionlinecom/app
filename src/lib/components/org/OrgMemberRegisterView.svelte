@@ -48,7 +48,7 @@
 		{#if isLoggedIn}
 			<div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-900">
 				<p class="font-semibold">Daftar memakai akun yang sedang login</p>
-				<p class="mt-1 text-emerald-700">{currentUser?.username || currentUser?.email}</p>
+				<p class="mt-1 text-emerald-600">{currentUser?.username || currentUser?.email}</p>
 			</div>
 		{:else}
 			<div class="form-control">
@@ -90,9 +90,9 @@
 			</label>
 			{#if lockedRole}
 				<input type="hidden" name="role" value={lockedRole.value} />
-				<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+				<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-600">
 					<p class="font-semibold">{lockedRole.label}</p>
-					<p class="text-xs text-emerald-700">Peran otomatis dari link pendaftaran.</p>
+					<p class="text-xs text-emerald-600">Peran otomatis dari link pendaftaran.</p>
 				</div>
 			{:else}
 				<select id="role" name="role" class="select select-bordered" bind:value={selectedRole} required>

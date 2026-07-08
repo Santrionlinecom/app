@@ -130,7 +130,7 @@
 
 	const seoScore = $derived(seoChecks().filter((item) => item.met).length * 25);
 	const seoTone = $derived(() => {
-		if (seoScore >= 75) return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+		if (seoScore >= 75) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
 		if (seoScore >= 50) return 'text-amber-700 bg-amber-50 border-amber-200';
 		return 'text-rose-700 bg-rose-50 border-rose-200';
 	});
@@ -378,7 +378,7 @@
 <div class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
 	<div class="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
 		<div>
-			<a href="/admin/posts" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-emerald-700">
+			<a href="/admin/posts" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-emerald-600">
 				<ArrowLeft class="h-4 w-4" />
 				Kembali ke daftar post
 			</a>
@@ -422,7 +422,7 @@
 								<span class="rounded-md border border-slate-200 bg-white px-2 py-1 font-mono text-xs text-slate-700">
 									/blog/{slug || 'judul-post'}
 								</span>
-								<button type="button" class="rounded-md border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700" onclick={() => (editingSlug = true)}>
+								<button type="button" class="rounded-md border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-600" onclick={() => (editingSlug = true)}>
 									Sunting
 								</button>
 							{:else}
@@ -480,7 +480,7 @@
 				<section class="overflow-hidden rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-amber-50 p-4 shadow-sm">
 					<div class="flex items-start justify-between gap-3">
 						<div>
-							<div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
+							<div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-600">
 								<Sparkles class="h-3.5 w-3.5" />
 								Asisten Konten AI
 							</div>
@@ -560,15 +560,15 @@
 
 						{#if aiLoading && aiAction === 'complete'}
 							<div class="space-y-2 border-t border-emerald-100 pt-3">
-								<div class={`flex items-center gap-2 text-xs font-semibold ${aiGenerateStep.includes('artikel') ? 'text-emerald-700' : 'text-slate-500'}`}>
+								<div class={`flex items-center gap-2 text-xs font-semibold ${aiGenerateStep.includes('artikel') ? 'text-emerald-600' : 'text-slate-500'}`}>
 									<WandSparkles class="h-3.5 w-3.5" />
 									Menulis artikel
 								</div>
-								<div class={`flex items-center gap-2 text-xs font-semibold ${isGeneratingThumb || aiGenerateStep.includes('thumbnail') ? 'text-emerald-700' : 'text-slate-500'}`}>
+								<div class={`flex items-center gap-2 text-xs font-semibold ${isGeneratingThumb || aiGenerateStep.includes('thumbnail') ? 'text-emerald-600' : 'text-slate-500'}`}>
 									<ImagePlus class="h-3.5 w-3.5" />
 									Membuat thumbnail
 								</div>
-								<div class={`flex items-center gap-2 text-xs font-semibold ${isGeneratingAudio || aiGenerateStep.includes('audio') || aiGenerateStep.includes('narasi') ? 'text-emerald-700' : 'text-slate-500'}`}>
+								<div class={`flex items-center gap-2 text-xs font-semibold ${isGeneratingAudio || aiGenerateStep.includes('audio') || aiGenerateStep.includes('narasi') ? 'text-emerald-600' : 'text-slate-500'}`}>
 									<FileAudio2 class="h-3.5 w-3.5" />
 									Membuat audio
 								</div>
@@ -579,13 +579,13 @@
 							<div class="space-y-2 border-t border-emerald-100 pt-3">
 								<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Aset AI</p>
 								{#if audioIdUrl}
-									<a href={audioIdUrl} target="_blank" rel="noreferrer" class="flex items-center gap-2 text-xs font-semibold text-emerald-700 hover:text-emerald-700">
+									<a href={audioIdUrl} target="_blank" rel="noreferrer" class="flex items-center gap-2 text-xs font-semibold text-emerald-600 hover:text-emerald-600">
 										<Volume2 class="h-3.5 w-3.5" />
 										Narasi Indonesia
 									</a>
 								{/if}
 								{#if audioArabUrl}
-									<a href={audioArabUrl} target="_blank" rel="noreferrer" class="flex items-center gap-2 text-xs font-semibold text-emerald-700 hover:text-emerald-700">
+									<a href={audioArabUrl} target="_blank" rel="noreferrer" class="flex items-center gap-2 text-xs font-semibold text-emerald-600 hover:text-emerald-600">
 										<FileAudio2 class="h-3.5 w-3.5" />
 										Audio bacaan Arab
 									</a>
@@ -598,7 +598,7 @@
 
 						<button
 							type="button"
-							class="btn btn-outline w-full gap-2 border-emerald-200 bg-white text-emerald-700 hover:border-emerald-500 hover:bg-emerald-50"
+							class="btn btn-outline w-full gap-2 border-emerald-200 bg-white text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50"
 							onclick={optimizeSeoWithAi}
 							disabled={aiLoading || !title.trim() || !plainContent.trim()}
 						>
@@ -617,7 +617,7 @@
 							</p>
 						{/if}
 						{#if aiNotice}
-							<p class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+							<p class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-600">
 								{aiNotice}
 							</p>
 						{/if}

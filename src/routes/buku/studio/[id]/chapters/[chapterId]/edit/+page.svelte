@@ -22,7 +22,7 @@
 
 <div class="mx-auto max-w-4xl space-y-6 pb-10">
 	<header class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-		<a href={`/buku/studio/${data.book.id}/edit#chapters`} class="text-sm font-medium text-emerald-700 hover:text-emerald-800">
+		<a href={`/buku/studio/${data.book.id}/edit#chapters`} class="text-sm font-medium text-emerald-600 hover:text-emerald-600">
 			Kembali ke Buku
 		</a>
 		<div class="mt-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -42,7 +42,7 @@
 				{form.error}
 			</div>
 		{:else if data.saved}
-			<div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+			<div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-600">
 				Perubahan bab tersimpan.
 			</div>
 		{/if}

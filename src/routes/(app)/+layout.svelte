@@ -830,9 +830,9 @@
 					{#each menuItems as item, idx}
 						<a
 							href={item.href}
-							class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-sm"
+							class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600 hover:shadow-sm"
 							class:bg-emerald-100={isActive(item)}
-							class:text-emerald-700={isActive(item)}
+							class:text-emerald-600={isActive(item)}
 							class:shadow-sm={isActive(item)}
 							class:font-semibold={isActive(item)}
 							style={`animation-delay: ${idx * 50}ms;`}
@@ -979,7 +979,7 @@
 					<a
 						href={item.href}
 						class="flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 text-xs text-slate-600 transition-all duration-200 active:scale-95"
-						class:text-emerald-700={isActive(item)}
+						class:text-emerald-600={isActive(item)}
 						class:font-semibold={isActive(item)}
 						class:bg-emerald-50={isActive(item)}
 						style="min-height: 44px;"
@@ -1043,9 +1043,9 @@
 						{#each menuItems as item, idx}
 							<a
 								href={item.href}
-								class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.98]"
+								class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600 active:scale-[0.98]"
 								class:bg-emerald-100={isActive(item)}
-								class:text-emerald-700={isActive(item)}
+								class:text-emerald-600={isActive(item)}
 								class:shadow-sm={isActive(item)}
 								class:font-semibold={isActive(item)}
 								style={`animation-delay: ${idx * 50}ms; min-height: 44px;`}
@@ -1092,7 +1092,7 @@
 				<h2 class="mt-1 text-base font-black text-slate-900">Pintasan Member</h2>
 				<p class="mt-1 text-xs leading-5 text-slate-500">Akses cepat untuk aktivitas penting setelah login.</p>
 			</div>
-			<span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-emerald-700">⚡</span>
+			<span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-emerald-600">⚡</span>
 		</div>
 
 		<div class="mt-3 grid gap-2">
@@ -1101,11 +1101,11 @@
 					href={item.href}
 					class={`group flex items-center gap-3 rounded-2xl border px-3 py-3 transition-all hover:-translate-y-0.5 hover:shadow-md ${
 						isActive(item)
-							? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-							: 'border-slate-100 bg-slate-50/80 text-slate-700 hover:border-emerald-100 hover:bg-white hover:text-emerald-700'
+							? 'border-emerald-200 bg-emerald-50 text-emerald-600'
+							: 'border-slate-100 bg-slate-50/80 text-slate-700 hover:border-emerald-100 hover:bg-white hover:text-emerald-600'
 					}`}
 				>
-					<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-emerald-700 shadow-sm ring-1 ring-slate-100 group-hover:ring-emerald-100">
+					<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-emerald-600 shadow-sm ring-1 ring-slate-100 group-hover:ring-emerald-100">
 						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
 							<path d={item.icon} />
 						</svg>

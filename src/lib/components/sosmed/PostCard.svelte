@@ -98,7 +98,7 @@
 					dispatch('changed', { post });
 				}}
 			/>
-			<button type="button" class="text-sm font-semibold text-emerald-700" on:click={openComments}>
+			<button type="button" class="text-sm font-semibold text-emerald-600" on:click={openComments}>
 				{commentsOpen ? 'Tutup komentar' : `Lihat ${post.comment_count} komentar`}
 			</button>
 		</div>

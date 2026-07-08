@@ -44,7 +44,7 @@ export const KITAB_CATEGORY_ORDER: KitabCategoryKey[] = KITAB_CATEGORY_OPTIONS.m
 );
 
 export const KITAB_CATEGORY_TONE_CLASS: Record<KitabCategoryKey, string> = {
-	'quran-tahsin': 'border-emerald-200 bg-emerald-50 text-emerald-700',
+	'quran-tahsin': 'border-emerald-200 bg-emerald-50 text-emerald-600',
 	aqidah: 'border-sky-200 bg-sky-50 text-sky-700',
 	fiqih: 'border-amber-200 bg-amber-50 text-amber-700',
 	hadits: 'border-teal-200 bg-teal-50 text-teal-700',

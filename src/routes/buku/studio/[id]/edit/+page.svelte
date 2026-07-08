@@ -23,7 +23,7 @@
 			.replace(/-{2,}/g, '-');
 
 	const chapterStatusTone = (status: string) =>
-		status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700';
+		status === 'published' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-700';
 	const bookStatusLabel = (status: string) =>
 		({
 			draft: 'Draft',
@@ -36,7 +36,7 @@
 		({
 			draft: 'bg-slate-100 text-slate-700',
 			pending: 'bg-amber-100 text-amber-700',
-			published: 'bg-emerald-100 text-emerald-700',
+			published: 'bg-emerald-100 text-emerald-600',
 			rejected: 'bg-rose-100 text-rose-700',
 			archived: 'bg-zinc-100 text-zinc-700'
 		})[status] ?? 'bg-slate-100 text-slate-700';
@@ -105,7 +105,7 @@
 
 <div class="mx-auto max-w-5xl space-y-6 pb-10">
 	<header class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-		<a href="/buku/studio" class="text-sm font-medium text-emerald-700 hover:text-emerald-800">Kembali ke Studio</a>
+		<a href="/buku/studio" class="text-sm font-medium text-emerald-600 hover:text-emerald-600">Kembali ke Studio</a>
 		<div class="mt-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
 			<div>
 				<h1 class="text-3xl font-semibold text-slate-900 md:text-4xl">Edit buku</h1>
@@ -135,7 +135,7 @@
 				{form.error}
 			</div>
 		{:else if data.saved}
-			<div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+			<div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-600">
 				Perubahan buku tersimpan.
 			</div>
 		{:else if data.reviewSubmitted}
@@ -181,7 +181,7 @@
 			</div>
 
 			<div class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-				<p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Slug Otomatis Saat Disimpan</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">Slug Otomatis Saat Disimpan</p>
 				<p class="mt-2 break-all text-sm font-semibold text-slate-900">/buku/{slugPreview}</p>
 			</div>
 
@@ -240,7 +240,7 @@
 						Format JPG, PNG, atau WebP maksimal 2MB. URL cover akan terisi otomatis setelah upload.
 					</p>
 					{#if isCoverUploading}
-						<p class="mt-2 text-xs font-semibold text-emerald-700">Mengupload cover...</p>
+						<p class="mt-2 text-xs font-semibold text-emerald-600">Mengupload cover...</p>
 					{/if}
 					{#if coverUploadError}
 						<p class="mt-2 text-xs font-semibold text-rose-600">{coverUploadError}</p>

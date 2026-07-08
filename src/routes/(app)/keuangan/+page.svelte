@@ -89,8 +89,8 @@
 		<p class="text-xs text-slate-500">Catat pemasukan dan pengeluaran untuk laporan transparan.</p>
 		<div class="mt-4 grid gap-3 md:grid-cols-3">
 			<div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-				<p class="text-xs uppercase text-emerald-700">Saldo</p>
-				<p class="text-base font-bold text-emerald-700 tabular-nums tracking-tight leading-tight break-words sm:text-lg">
+				<p class="text-xs uppercase text-emerald-600">Saldo</p>
+				<p class="text-base font-bold text-emerald-600 tabular-nums tracking-tight leading-tight break-words sm:text-lg">
 					{formatCurrency(data.kasSummary?.saldo)}
 				</p>
 			</div>
@@ -109,8 +109,8 @@
 		</div>
 
 		<div class="mt-6 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-4">
-			<h4 class="text-sm font-semibold text-emerald-700">Import Excel</h4>
-			<p class="mt-1 text-xs text-emerald-700/80">
+			<h4 class="text-sm font-semibold text-emerald-600">Import Excel</h4>
+			<p class="mt-1 text-xs text-emerald-600/80">
 				Kolom wajib: <strong>tanggal</strong>, <strong>tipe</strong>, <strong>kategori</strong>, <strong>nominal</strong>.
 				Opsional: <strong>keterangan</strong>.
 			</p>

@@ -9,7 +9,7 @@
 <div class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-amber-50 py-12">
 	<article class="max-w-4xl mx-auto px-4">
 		<div class="mb-8">
-			<a href="/blog" class="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-800">
+			<a href="/blog" class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-600">
 				← Kembali ke Blog
 			</a>
 		</div>
@@ -29,7 +29,7 @@
 
 		<header class="mb-8">
 			<div class="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-4">
-				<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded">Sejarah Islam</span>
+				<span class="px-2 py-1 bg-emerald-100 text-emerald-600 rounded">Sejarah Islam</span>
 				<span>•</span>
 				<time>29 November 2025</time>
 				<span>•</span>
@@ -45,7 +45,7 @@
 
 		<section class="prose prose-lg max-w-none space-y-6 text-gray-700 leading-relaxed">
 			<div class="p-5 border border-emerald-100 bg-white rounded-xl shadow-sm">
-				<p class="font-semibold text-emerald-700 mb-2">Tahukah kamu?</p>
+				<p class="font-semibold text-emerald-600 mb-2">Tahukah kamu?</p>
 				<p class="mb-1">
 					Universitas tertua di dunia yang diakui UNESCO bukanlah Oxford atau Harvard, melainkan <strong>Al-Qarawiyyin</strong> di Fez, Maroko.
 				</p>
@@ -84,7 +84,7 @@
 			<p>
 				Hingga kini, shalat berjamaah masih tegak di Masjid Al-Qarawiyyin, dan aktivitas belajar tetap hidup. Kampus tertua di dunia lahir dari rahim masjid—menegaskan bahwa dalam Islam tidak ada dikotomi ilmu agama vs ilmu umum. Semua berakar di Rumah Allah.
 			</p>
-			<p class="font-semibold text-emerald-700">
+			<p class="font-semibold text-emerald-600">
 				Pelajaran untuk santri: jika Fatima bisa membangun peradaban dengan harta, kita bisa mulai dengan hafalan, akhlak, dan keterampilan yang bermanfaat.
 			</p>
 

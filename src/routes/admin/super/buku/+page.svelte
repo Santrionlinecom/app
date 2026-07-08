@@ -15,7 +15,7 @@
 		({
 			draft: 'bg-slate-100 text-slate-700',
 			pending: 'bg-amber-100 text-amber-700',
-			published: 'bg-emerald-100 text-emerald-700',
+			published: 'bg-emerald-100 text-emerald-600',
 			rejected: 'bg-rose-100 text-rose-700',
 			archived: 'bg-zinc-100 text-zinc-700'
 		})[status] ?? 'bg-slate-100 text-slate-700';
@@ -110,7 +110,7 @@
 								</div>
 								<div class="rounded-2xl bg-emerald-50 px-4 py-3">
 									<p class="text-xs uppercase tracking-[0.2em] text-emerald-600">Published</p>
-									<p class="mt-1 text-lg font-semibold text-emerald-700">{book.publishedChapterCount}</p>
+									<p class="mt-1 text-lg font-semibold text-emerald-600">{book.publishedChapterCount}</p>
 								</div>
 								<div class="rounded-2xl bg-amber-50 px-4 py-3">
 									<p class="text-xs uppercase tracking-[0.2em] text-amber-600">Harga</p>

@@ -45,8 +45,8 @@ const DEFAULT_DETAIL: FeatureDetail = {
 		hero: 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600',
 		border: 'border-emerald-200',
 		soft: 'bg-emerald-50',
-		accent: 'text-emerald-700',
-		chip: 'bg-emerald-100 text-emerald-700'
+		accent: 'text-emerald-600',
+		chip: 'bg-emerald-100 text-emerald-600'
 	}
 };
 
@@ -75,8 +75,8 @@ const FEATURE_DETAILS: Record<string, FeatureDetail> = {
 			hero: 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600',
 			border: 'border-emerald-200',
 			soft: 'bg-emerald-50',
-			accent: 'text-emerald-700',
-			chip: 'bg-emerald-100 text-emerald-700'
+			accent: 'text-emerald-600',
+			chip: 'bg-emerald-100 text-emerald-600'
 		}
 	},
 	'sholat-jamaah': {
@@ -146,11 +146,11 @@ const FEATURE_DETAILS: Record<string, FeatureDetail> = {
 			{ label: 'Jejak Ulama', desc: 'Belajar dari sanad ulama Ahlussunnah.', href: '/ulama' }
 		],
 		theme: {
-			hero: 'bg-gradient-to-r from-emerald-700 via-green-700 to-lime-600',
+			hero: 'bg-gradient-to-r from-emerald-600 via-green-700 to-lime-600',
 			border: 'border-emerald-200',
 			soft: 'bg-emerald-50',
-			accent: 'text-emerald-800',
-			chip: 'bg-emerald-100 text-emerald-800'
+			accent: 'text-emerald-600',
+			chip: 'bg-emerald-100 text-emerald-600'
 		}
 	},
 	'khataman-rutin': {

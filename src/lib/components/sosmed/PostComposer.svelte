@@ -75,7 +75,7 @@
 				</p>
 				<button
 					type="button"
-					class="inline-flex items-center justify-center rounded-full bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+					class="inline-flex items-center justify-center rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-300"
 					disabled={!canPost}
 					on:click={submitPost}
 				>

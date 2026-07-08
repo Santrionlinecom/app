@@ -155,7 +155,7 @@ export function getRoleBadgeColor(role: string): string {
 		humas: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300',
 		kurikulum: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300',
 		pembina: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300',
-		santri: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300',
+		santri: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300',
 		wali: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
 		alumni: 'bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-300',
 		jamaah: 'bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-300',

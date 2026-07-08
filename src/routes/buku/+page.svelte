@@ -82,7 +82,7 @@
 		<section class="rounded-[1.5rem] border border-emerald-100 bg-white p-4 shadow-sm md:p-5">
 			<div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
 				<div>
-					<p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-700">Lanjut Baca</p>
+					<p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">Lanjut Baca</p>
 					<h2 class="mt-1 text-xl font-semibold text-slate-900">Bacaan terakhir Anda</h2>
 				</div>
 				<p class="text-sm text-slate-500">Progress hanya tampil untuk akun Anda.</p>
@@ -103,12 +103,12 @@
 									loading="lazy"
 								/>
 							{:else}
-								<div class="flex h-16 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-xs font-semibold text-emerald-700">
+								<div class="flex h-16 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-xs font-semibold text-emerald-600">
 									Buku
 								</div>
 							{/if}
 							<div class="min-w-0 flex-1">
-								<p class="truncate text-sm font-semibold text-slate-900 group-hover:text-emerald-700">
+								<p class="truncate text-sm font-semibold text-slate-900 group-hover:text-emerald-600">
 									{progress.bookTitle}
 								</p>
 								<p class="mt-1 truncate text-xs text-slate-500">
@@ -149,7 +149,7 @@
 							Sorotan
 						</span>
 						{#if featuredBook.category}
-							<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
+							<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-600">
 								{featuredBook.category}
 							</span>
 						{/if}
@@ -165,7 +165,7 @@
 						</div>
 						<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
 							<p class="text-xs uppercase tracking-[0.22em] text-slate-400">Bab Gratis</p>
-							<p class="mt-2 text-xl font-semibold text-emerald-700">{featuredBook.freeChapterLimit}</p>
+							<p class="mt-2 text-xl font-semibold text-emerald-600">{featuredBook.freeChapterLimit}</p>
 						</div>
 						<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
 							<p class="text-xs uppercase tracking-[0.22em] text-slate-400">Harga Bab</p>
@@ -235,7 +235,7 @@
 								</div>
 								<div class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-4">
 									<p class="text-xs uppercase tracking-[0.22em] text-emerald-600">Gratis</p>
-									<p class="mt-2 text-lg font-semibold text-emerald-800">{book.freeChapterLimit} bab</p>
+									<p class="mt-2 text-lg font-semibold text-emerald-600">{book.freeChapterLimit} bab</p>
 								</div>
 							</div>
 

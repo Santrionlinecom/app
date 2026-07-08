@@ -20,7 +20,7 @@
 
 <div class="mx-auto max-w-4xl space-y-6 pb-10">
 	<header class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-		<a href={`/buku/studio/${data.book.id}/edit#chapters`} class="text-sm font-medium text-emerald-700 hover:text-emerald-800">
+		<a href={`/buku/studio/${data.book.id}/edit#chapters`} class="text-sm font-medium text-emerald-600 hover:text-emerald-600">
 			Kembali ke Buku
 		</a>
 		<h1 class="mt-4 text-3xl font-semibold text-slate-900 md:text-4xl">Tambah bab baru</h1>

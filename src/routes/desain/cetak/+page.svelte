@@ -36,7 +36,7 @@
 			</div>
 			<div class="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6">
 				<div class="rounded-3xl bg-white p-6 text-slate-950">
-					<UploadCloud class="h-10 w-10 text-emerald-700" />
+					<UploadCloud class="h-10 w-10 text-emerald-600" />
 					<h2 class="mt-4 text-2xl font-black">Data yang perlu dikirim</h2>
 					<ul class="mt-5 space-y-3 text-sm font-semibold text-slate-700">
 						<li>1. Nama lembaga / panitia</li>
@@ -53,13 +53,13 @@
 
 	<section class="bg-white py-14 text-slate-950">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-			<p class="text-sm font-black uppercase tracking-[0.3em] text-emerald-700">Produk cetak</p>
+			<p class="text-sm font-black uppercase tracking-[0.3em] text-emerald-600">Produk cetak</p>
 			<h2 class="mt-3 text-3xl font-black">Paket yang bisa dijadikan funnel dari template</h2>
 			<div class="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 				{#each printProducts as product}
 					<div class="rounded-3xl border border-slate-200 bg-slate-50 p-6">
 						<p class="text-xl font-black">{product.name}</p>
-						<p class="mt-2 text-sm font-black text-emerald-700">{product.price}</p>
+						<p class="mt-2 text-sm font-black text-emerald-600">{product.price}</p>
 						<p class="mt-3 text-sm leading-6 text-slate-600">{product.note}</p>
 					</div>
 				{/each}

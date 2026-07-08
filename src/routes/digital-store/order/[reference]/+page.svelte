@@ -32,7 +32,7 @@
 	const statusTone = (status: string) => {
 		switch (status) {
 			case 'paid':
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+				return 'border-emerald-200 bg-emerald-50 text-emerald-600';
 			case 'failed':
 				return 'border-rose-200 bg-rose-50 text-rose-700';
 			case 'refunded':
@@ -166,7 +166,7 @@
 				</div>
 			{/if}
 			{#if data.proofUpdated || (form && 'success' in form && form.success)}
-				<div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+				<div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-600">
 					Bukti bayar berhasil diunggah. Status order tetap menunggu verifikasi admin.
 				</div>
 			{/if}

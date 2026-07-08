@@ -88,7 +88,7 @@
 	<section class="rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm md:p-6">
 		<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Rapor Hafalan</p>
+				<p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Rapor Hafalan</p>
 				<h1 class="mt-2 text-2xl font-bold text-slate-900">{data.santri.nama}</h1>
 				<p class="mt-2 text-sm text-slate-600">Pantau pencapaian hafalan yang sudah dinilai guru.</p>
 			</div>

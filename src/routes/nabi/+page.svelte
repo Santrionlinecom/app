@@ -31,7 +31,7 @@
 							<span class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white font-bold">
 								{item.order}
 							</span>
-							<h2 class="text-xl font-bold text-emerald-700">{item.name}</h2>
+							<h2 class="text-xl font-bold text-emerald-600">{item.name}</h2>
 						</div>
 						<p class="text-gray-700 mb-4 line-clamp-3">{item.summary}</p>
 						<span class="inline-flex items-center gap-2 text-emerald-600 font-semibold group-hover:gap-3 transition-all">

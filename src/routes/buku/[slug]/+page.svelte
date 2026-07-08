@@ -164,7 +164,7 @@
 		</article>
 
 		<article class="rounded-[1.75rem] border border-emerald-100 bg-emerald-50 p-6 shadow-sm">
-			<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-700">Akses Baca</p>
+			<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Akses Baca</p>
 			<h2 class="mt-3 text-2xl font-semibold text-slate-900">Bab gratis lebih dulu</h2>
 			<p class="mt-4 text-sm leading-7 text-slate-700">
 				Bab dengan nomor sampai {book.freeChapterLimit} dapat dibaca penuh. Bab setelahnya dapat dibuka
@@ -201,11 +201,11 @@
 									<span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-600">
 										Bab {chapter.chapterNumber}
 									</span>
-									<span class={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${isFree ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+									<span class={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] ${isFree ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-700'}`}>
 										{isFree ? 'Gratis' : 'Terkunci'}
 									</span>
 								</div>
-								<h3 class="mt-3 text-lg font-semibold text-slate-900 group-hover:text-emerald-700">
+								<h3 class="mt-3 text-lg font-semibold text-slate-900 group-hover:text-emerald-600">
 									{chapter.title}
 								</h3>
 							</div>

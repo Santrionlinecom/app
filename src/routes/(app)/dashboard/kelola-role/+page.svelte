@@ -21,7 +21,7 @@
 
 	const roleColors: Record<string, string> = {
 		admin: 'bg-purple-100 text-purple-800 border-purple-300',
-		ustadz: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+		ustadz: 'bg-emerald-100 text-emerald-600 border-emerald-300',
 		ustadzah: 'bg-pink-100 text-pink-800 border-pink-300',
 		santri: 'bg-blue-100 text-blue-800 border-blue-300',
 		alumni: 'bg-amber-100 text-amber-800 border-amber-300',

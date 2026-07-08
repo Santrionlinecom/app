@@ -181,7 +181,7 @@
 <section class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
-			<p class="text-sm font-semibold text-emerald-700">Admin</p>
+			<p class="text-sm font-semibold text-emerald-600">Admin</p>
 			<h1 class="text-2xl font-bold text-slate-950">Shortlink Analytics</h1>
 		</div>
 		<div class="flex flex-wrap gap-2">
@@ -203,7 +203,7 @@
 			</a>
 			<a
 				href="/api/reports/shortlinks/template"
-				class="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+				class="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-600 shadow-sm transition hover:bg-emerald-100"
 				download
 			>
 				<FileSpreadsheet size={16} strokeWidth={2.2} />
@@ -223,11 +223,11 @@
 				{form.error}
 			</div>
 		{:else if form?.updated}
-			<div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+			<div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-600">
 				Status shortlink diperbarui.
 			</div>
 		{:else if form?.imported}
-			<div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+			<div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-600">
 				Import berhasil: {form.importSummary?.inserted ?? 0} shortlink masuk, {form.importSummary?.duplicateRows ?? 0} duplikat,
 				{form.importSummary?.invalidRows ?? 0} invalid.
 				{#if form.importSummary?.truncatedRows}
@@ -305,12 +305,12 @@
 			</div>
 			<div class="flex flex-col gap-4 lg:col-span-2 sm:flex-row sm:items-center sm:justify-between">
 				<label class="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700">
-					<input name="is_active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-emerald-700" checked={values.isActive} />
+					<input name="is_active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-emerald-600" checked={values.isActive} />
 					Is Active
 				</label>
 				<button
 					type="submit"
-					class="inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
+					class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
 				>
 					Simpan Shortlink
 				</button>
@@ -334,7 +334,7 @@
 				/>
 				<button
 					type="submit"
-					class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
+					class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
 				>
 					<Upload size={16} strokeWidth={2.2} />
 					Upload
@@ -381,7 +381,7 @@
 					<div class="flex h-full min-w-0 flex-1 flex-col justify-end gap-2">
 						<div class="flex h-full items-end">
 							<div
-								class="w-full rounded-t bg-emerald-600 transition hover:bg-emerald-700"
+								class="w-full rounded-t bg-emerald-600 transition hover:bg-emerald-600"
 								style={`height: ${Math.max((row.clicks / maxDailyClicks) * 100, row.clicks > 0 ? 5 : 0)}%`}
 								title={`${row.dateKey}: ${formatNumber(row.clicks)} klik`}
 							></div>
@@ -490,7 +490,7 @@
 						<tr class="align-top">
 							<td class="px-4 py-4">
 								<div class="flex items-center gap-2">
-									<a href={`/admin/shortlinks/${link.slug}`} class="font-semibold text-slate-950 hover:text-emerald-700">
+									<a href={`/admin/shortlinks/${link.slug}`} class="font-semibold text-slate-950 hover:text-emerald-600">
 										/{link.slug}
 									</a>
 									{#if link.hasNotes}
@@ -513,7 +513,7 @@
 							<td class="px-4 py-4 text-slate-600">
 								<a
 									href={link.targetUrl}
-									class="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap hover:text-emerald-700"
+									class="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap hover:text-emerald-600"
 									target="_blank"
 									rel="noreferrer"
 									title={link.targetUrl}
@@ -529,7 +529,7 @@
 										type="submit"
 										class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold transition ${
 											link.isActive
-												? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+												? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
 												: 'bg-slate-100 text-slate-600 hover:bg-slate-200'
 										}`}
 										title="Toggle active/inactive"
@@ -570,7 +570,7 @@
 								</div>
 							</td>
 							<td class="px-4 py-4 text-right">
-								<a href={`/admin/shortlinks/${link.slug}`} class="text-sm font-semibold text-emerald-700 hover:text-emerald-700">
+								<a href={`/admin/shortlinks/${link.slug}`} class="text-sm font-semibold text-emerald-600 hover:text-emerald-600">
 									Kelola
 								</a>
 							</td>
@@ -653,7 +653,7 @@
 					</button>
 					<button
 						type="button"
-						class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+						class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
 						onclick={() => qrModalSlug && qrModalShortUrl && downloadQrPng(qrModalSlug, qrModalShortUrl)}
 						disabled={!qrModalSlug || !qrModalShortUrl}
 					>

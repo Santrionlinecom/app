@@ -10,7 +10,7 @@
 	<main class="min-h-screen bg-slate-50 px-6 py-12 text-slate-900">
 		<section class="mx-auto max-w-xl space-y-6">
 			<div>
-				<p class="text-sm font-semibold uppercase tracking-wide text-emerald-700">Development</p>
+				<p class="text-sm font-semibold uppercase tracking-wide text-emerald-600">Development</p>
 				<h1 class="mt-2 text-3xl font-bold">Sentry Test</h1>
 			</div>
 

@@ -107,7 +107,7 @@
 	<section class="space-y-4">
 		<div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-700">Lanjut Baca</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Lanjut Baca</p>
 				<h2 class="mt-2 text-2xl font-semibold text-slate-900">Bacaan terakhir</h2>
 			</div>
 			<p class="text-sm text-slate-500">Disusun dari aktivitas baca terbaru.</p>
@@ -127,7 +127,7 @@
 	<section class="space-y-4">
 		<div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-700">Buku Tersimpan</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Buku Tersimpan</p>
 				<h2 class="mt-2 text-2xl font-semibold text-slate-900">Bookmark buku</h2>
 			</div>
 			<p class="text-sm text-slate-500">Hanya buku published yang tampil di rak pembaca.</p>
@@ -147,7 +147,7 @@
 	<section class="space-y-4">
 		<div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-700">Bab Tersimpan</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Bab Tersimpan</p>
 				<h2 class="mt-2 text-2xl font-semibold text-slate-900">Bookmark bab</h2>
 			</div>
 			<p class="text-sm text-slate-500">Bab draft atau buku non-published tidak ditampilkan.</p>
@@ -167,7 +167,7 @@
 	<section class="space-y-4">
 		<div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-700">Bab Terbuka / Sudah Dibeli</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Bab Terbuka / Sudah Dibeli</p>
 				<h2 class="mt-2 text-2xl font-semibold text-slate-900">Bab premium yang sudah di-unlock</h2>
 			</div>
 			<p class="text-sm text-slate-500">Unlock lama tetap dicatat untuk akun Anda.</p>
@@ -197,7 +197,7 @@
 	{#if coverUrl}
 		<img src={coverUrl} alt={coverAlt(title)} class="h-24 w-16 rounded-xl object-cover shadow-sm" loading="lazy" />
 	{:else}
-		<div class="flex h-24 w-16 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-xs font-semibold text-emerald-700">
+		<div class="flex h-24 w-16 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-xs font-semibold text-emerald-600">
 			Buku
 		</div>
 	{/if}
@@ -231,7 +231,7 @@
 			{@render Cover(item.bookTitle, item.bookCoverUrl)}
 			<div class="min-w-0 flex-1">
 				<div class="flex flex-wrap gap-2">
-					<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
+					<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600">
 						Buku
 					</span>
 					{#if item.bookCategory}
@@ -273,7 +273,7 @@
 					<span class="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700">
 						{item.coinSpent} coin
 					</span>
-					<span class={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${item.isAvailable ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+					<span class={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${item.isAvailable ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600'}`}>
 						{item.isAvailable ? 'Tersedia' : item.chapterStatus !== 'published' ? 'Tidak tersedia' : statusText[item.bookStatus] ?? 'Tidak tersedia'}
 					</span>
 				</div>

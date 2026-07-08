@@ -22,7 +22,7 @@
 				<div class="absolute top-0 right-0 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 opacity-50 blur-2xl"></div>
 				<div class="relative">
 					<span class="text-4xl mb-3 block">1️⃣</span>
-					<h2 class="text-2xl font-bold text-emerald-700 mb-2">Sunan Gresik</h2>
+					<h2 class="text-2xl font-bold text-emerald-600 mb-2">Sunan Gresik</h2>
 					<p class="text-sm text-gray-600 mb-3">Maulana Malik Ibrahim (w. 1419)</p>
 					<p class="text-gray-700 mb-4">Pembuka dakwah Walisongo di Gresik, membangun komunitas Muslim awal di Jawa Timur.</p>
 					<span class="inline-flex items-center gap-2 text-emerald-600 font-semibold group-hover:gap-3 transition-all">

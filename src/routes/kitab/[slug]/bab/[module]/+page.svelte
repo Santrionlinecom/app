@@ -168,7 +168,7 @@
 	{#if readingMode === 'santri'}
 		<section class="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
 			<article class="rounded-[1.75rem] border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
-				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-700">Mode Santri</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-600">Mode Santri</p>
 				<h2 class="mt-3 text-3xl font-semibold text-slate-900">{santriTitle}</h2>
 				<p class="mt-4 text-base leading-8 text-slate-700">{moduleItem.overview}</p>
 
@@ -192,7 +192,7 @@
 				<div class="mt-6 space-y-3">
 					{#each santriCorePoints as point, index}
 						<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-							<p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
+							<p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600">
 								Inti {index + 1}
 							</p>
 							<p class="mt-2 text-sm leading-7 text-slate-700">{point}</p>
@@ -244,7 +244,7 @@
 				</div>
 
 				<div class="mt-6 rounded-[1.5rem] border border-emerald-100 bg-emerald-50 px-5 py-5">
-					<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Catatan Guru</p>
+					<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-600">Catatan Guru</p>
 					<p class="mt-2 text-sm leading-7 text-emerald-950/80">
 						Untuk TPQ, cukup tuntaskan satu bab sekali duduk. Jangan pindah ke bab berikutnya sebelum
 						anak paham inti dan berani membaca contoh.
@@ -409,7 +409,7 @@
 				href={moduleHref(nextModule.id)}
 				class="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 px-5 py-5 shadow-sm transition hover:bg-emerald-100"
 			>
-				<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Bab Berikutnya</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-600">Bab Berikutnya</p>
 				<p class="mt-2 text-lg font-semibold text-slate-900">{nextModule.title}</p>
 				<p class="mt-2 text-sm leading-6 text-slate-700">{nextModule.overview}</p>
 			</a>

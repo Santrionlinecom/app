@@ -20,7 +20,7 @@
 		({
 			draft: 'bg-slate-100 text-slate-700',
 			pending: 'bg-amber-100 text-amber-700',
-			published: 'bg-emerald-100 text-emerald-700',
+			published: 'bg-emerald-100 text-emerald-600',
 			rejected: 'bg-rose-100 text-rose-700',
 			archived: 'bg-zinc-100 text-zinc-700'
 		})[status] ?? 'bg-slate-100 text-slate-700';
@@ -115,7 +115,7 @@
 					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Daftar Folder</p>
 					<h2 class="mt-2 text-2xl font-semibold text-slate-900">Kelola folder</h2>
 				</div>
-				<span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">{folders.length} folder</span>
+				<span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">{folders.length} folder</span>
 			</div>
 
 			{#if folders.length === 0}
@@ -183,7 +183,7 @@
 										</span>
 									{/if}
 									{#if book.folderName}
-										<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
+										<span class="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-600">
 											Folder: {book.folderName}
 										</span>
 									{/if}
@@ -204,7 +204,7 @@
 									</div>
 									<div class="rounded-2xl bg-emerald-50 px-4 py-3">
 										<p class="text-xs uppercase tracking-[0.2em] text-emerald-600">Live</p>
-										<p class="mt-1 text-lg font-semibold text-emerald-800">{book.publishedChapterCount}</p>
+										<p class="mt-1 text-lg font-semibold text-emerald-600">{book.publishedChapterCount}</p>
 									</div>
 									<div class="rounded-2xl bg-amber-50 px-4 py-3">
 										<p class="text-xs uppercase tracking-[0.2em] text-amber-600">Gratis</p>

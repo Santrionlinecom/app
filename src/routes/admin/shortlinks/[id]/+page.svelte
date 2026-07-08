@@ -137,7 +137,7 @@
 <section class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 	<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
 		<div>
-			<a href="/admin/shortlinks" class="text-sm font-semibold text-emerald-700 hover:text-emerald-700">Shortlinks</a>
+			<a href="/admin/shortlinks" class="text-sm font-semibold text-emerald-600 hover:text-emerald-600">Shortlinks</a>
 			<h1 class="mt-2 text-2xl font-bold text-slate-950">{data.link.title}</h1>
 			<div class="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-600">
 				<span class="rounded-full bg-slate-100 px-3 py-1">/{data.link.slug}</span>
@@ -146,7 +146,7 @@
 				</span>
 				<span
 					class={`rounded-full px-3 py-1 font-semibold ${
-						data.link.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'
+						data.link.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-600'
 					}`}
 				>
 					{data.link.isActive ? 'Aktif' : 'Nonaktif'}
@@ -156,7 +156,7 @@
 				href={data.link.targetUrl}
 				target="_blank"
 				rel="noreferrer"
-				class="mt-3 block max-w-3xl overflow-hidden text-ellipsis whitespace-nowrap text-sm text-slate-600 hover:text-emerald-700"
+				class="mt-3 block max-w-3xl overflow-hidden text-ellipsis whitespace-nowrap text-sm text-slate-600 hover:text-emerald-600"
 				title={data.link.targetUrl}
 			>
 				{data.link.targetUrl}
@@ -191,7 +191,7 @@
 			href={data.link.shortUrl}
 			target="_blank"
 				rel="noreferrer"
-				class="inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
+				class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
 			>
 				Buka
 			</a>
@@ -203,7 +203,7 @@
 			{form.error}
 		</div>
 	{:else if form?.updated}
-		<div class="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+		<div class="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-600">
 			Shortlink berhasil diperbarui.
 		</div>
 	{/if}
@@ -275,12 +275,12 @@
 				</div>
 				<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<label class="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-3 text-sm font-semibold text-slate-700">
-						<input name="is_active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-emerald-700" checked={values.isActive} />
+						<input name="is_active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-emerald-600" checked={values.isActive} />
 						Is Active
 					</label>
 					<button
 						type="submit"
-						class="inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
+						class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
 					>
 						Simpan Perubahan
 					</button>
@@ -368,7 +368,7 @@
 					<div class="flex h-full min-w-0 flex-1 flex-col justify-end gap-2">
 						<div class="flex h-full items-end">
 							<div
-								class="w-full rounded-t bg-emerald-600 transition hover:bg-emerald-700"
+								class="w-full rounded-t bg-emerald-600 transition hover:bg-emerald-600"
 								style={`height: ${Math.max((row.clicks / maxDailyClicks) * 100, row.clicks > 0 ? 5 : 0)}%`}
 								title={`${row.dateKey}: ${formatNumber(row.clicks)} klik`}
 							></div>
@@ -526,7 +526,7 @@
 					</button>
 					<button
 						type="button"
-						class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+						class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
 						onclick={() => qrModalSlug && qrModalShortUrl && downloadQrPng(qrModalSlug, qrModalShortUrl)}
 						disabled={!qrModalSlug || !qrModalShortUrl}
 					>

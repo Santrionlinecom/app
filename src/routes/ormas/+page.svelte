@@ -83,7 +83,7 @@
 			type: 'Aswaja pesantren, Syafiiyah, sosial-keagamaan',
 			origin: 'Lahir dari jaringan kiai pesantren, Komite Hijaz, dan kebutuhan menjaga tradisi Ahlussunnah wal Jamaah di tengah arus modernisme, kolonialisme, dan perubahan politik Hijaz.',
 			legacy: 'Pesantren, bahtsul masail, tahlil, maulid, tradisi kitab kuning, gerakan sosial, kaderisasi ulama, serta model Islam Nusantara.',
-			tone: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+			tone: 'border-emerald-200 bg-emerald-50 text-emerald-600'
 		},
 		{
 			name: 'Muhammadiyah',
@@ -196,7 +196,7 @@
 			type: 'Gerakan dakwah transnasional non-partai',
 			origin: 'Muncul di Mewat untuk menghidupkan kembali praktik dasar Islam di tengah masyarakat Muslim pedesaan India Utara.',
 			legacy: 'Khuruj, halaqah masjid, dakwah dari rumah ke rumah, ijtima besar, dan jaringan lintas negara.',
-			tone: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+			tone: 'border-emerald-200 bg-emerald-50 text-emerald-600'
 		},
 		{
 			name: 'Nahdlatul Ulama',
@@ -532,7 +532,7 @@
 
 	<section id="ringkasan-cepat" class="grid scroll-mt-24 gap-4 md:grid-cols-4">
 		<div class="rounded-[1.5rem] border border-emerald-200 bg-white p-5 shadow-sm">
-			<p class="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-700">Indonesia</p>
+			<p class="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-600">Indonesia</p>
 			<p class="mt-3 text-3xl font-bold text-slate-900">NU</p>
 			<p class="mt-2 text-sm leading-6 text-slate-600">Afiliasi publik Muslim terbesar dalam survei nasional.</p>
 		</div>
@@ -556,7 +556,7 @@
 	<section id="afiliasi-indonesia" class="rounded-[1.75rem] scroll-mt-24 border border-emerald-200 bg-white p-6 shadow-sm">
 		<div class="grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-700">Klasifikasi Populasi Indonesia</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">Klasifikasi Populasi Indonesia</p>
 				<h2 class="mt-3 text-2xl font-semibold text-slate-900">Afiliasi publik Muslim Indonesia</h2>
 				<p class="mt-4 text-sm leading-7 text-slate-600">
 					Survei yang menanyakan kedekatan responden dengan ormas Islam menunjukkan distribusi yang timpang.
@@ -570,7 +570,7 @@
 						<div class="flex flex-wrap items-start justify-between gap-3">
 							<div>
 								<h3 class="text-lg font-semibold text-slate-900">{segment.label}</h3>
-								<p class="mt-1 text-sm font-semibold text-emerald-700">{segment.range}</p>
+								<p class="mt-1 text-sm font-semibold text-emerald-600">{segment.range}</p>
 							</div>
 							<p class="max-w-sm text-xs leading-5 text-slate-500">{segment.estimate}</p>
 						</div>
@@ -676,7 +676,7 @@
 	<section id="dialog-intermazhab" class="rounded-[1.75rem] scroll-mt-24 border border-emerald-200 bg-white p-6 shadow-sm">
 		<div class="flex flex-wrap items-start justify-between gap-4">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-700">Edukasi Intermazhab</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">Edukasi Intermazhab</p>
 				<h2 class="mt-3 max-w-3xl text-2xl font-semibold text-slate-900 md:text-3xl">
 					Sejarah dialog Sunni-Syiah: dari Dar at-Taqrib, Fatwa Syaltut, sampai Risalah Amman
 				</h2>
@@ -687,10 +687,10 @@
 		</div>
 
 		<nav class="mt-6 rounded-[1.5rem] border border-emerald-100 bg-emerald-50/60 p-4" aria-label="Navigasi internal dialog intermazhab">
-			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Peta baca cepat</p>
+			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-600">Peta baca cepat</p>
 			<div class="mt-3 flex flex-wrap gap-2">
 				{#each intermazhabQuickLinks as link}
-					<a class="rounded-full border border-emerald-200 bg-white px-4 py-2 text-xs font-semibold text-emerald-800 shadow-sm transition hover:border-emerald-500 hover:bg-emerald-600 hover:text-white" href={link.href}>{link.label}</a>
+					<a class="rounded-full border border-emerald-200 bg-white px-4 py-2 text-xs font-semibold text-emerald-600 shadow-sm transition hover:border-emerald-500 hover:bg-emerald-600 hover:text-white" href={link.href}>{link.label}</a>
 				{/each}
 			</div>
 		</nav>
@@ -698,7 +698,7 @@
 		<div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 			{#each intermazhabStats as stat}
 				<article class="rounded-2xl border border-emerald-100 bg-emerald-50/55 p-4">
-					<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">{stat.label}</p>
+					<p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">{stat.label}</p>
 					<strong class="mt-3 block text-xl font-bold text-slate-950">{stat.value}</strong>
 					<p class="mt-2 text-sm leading-6 text-slate-600">{stat.desc}</p>
 				</article>
@@ -718,7 +718,7 @@
 				<p class="mt-2 text-sm leading-6 text-slate-600">Delapan mazhab besar dan larangan takfir sembarangan.</p>
 			</a>
 			<a href="#nusantara" class="rounded-[1.25rem] border border-emerald-200 bg-emerald-50 p-5 transition hover:-translate-y-0.5 hover:shadow-md">
-				<p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">Konteks Indonesia</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600">Konteks Indonesia</p>
 				<h3 class="mt-2 text-lg font-semibold text-slate-900">Aswaja & Ukhuwah</h3>
 				<p class="mt-2 text-sm leading-6 text-slate-600">Menjaga aqidah tanpa kehilangan adab sosial-keumatan.</p>
 			</a>
@@ -743,7 +743,7 @@
 			<div id="linimasa-intermazhab" class="grid scroll-mt-24 gap-4">
 				{#each expandedIntermazhabMilestones as item}
 					<article class="grid gap-3 rounded-2xl border border-emerald-100 bg-white p-5 md:grid-cols-[8rem_1fr]">
-						<p class="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">{item.year}</p>
+						<p class="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-600">{item.year}</p>
 						<div>
 							<h3 class="text-lg font-semibold text-slate-900">{item.title}</h3>
 							<p class="mt-2 text-sm leading-7 text-slate-600">{item.desc}</p>

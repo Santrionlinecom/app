@@ -40,7 +40,7 @@
 				<LockKeyhole class="h-4 w-4" />
 			</div>
 		{:else if isDone}
-			<span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-700">
+			<span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-600">
 				SELESAI
 			</span>
 		{/if}

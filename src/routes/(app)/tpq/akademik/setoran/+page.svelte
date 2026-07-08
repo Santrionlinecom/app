@@ -89,7 +89,7 @@
 					</div>
 				{/if}
 				{#if form?.createMessage}
-					<div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+					<div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-600">
 						{form.createMessage}
 					</div>
 				{/if}
@@ -269,7 +269,7 @@
 					</div>
 				{/if}
 				{#if form?.halaqohMessage}
-					<div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+					<div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-600">
 						{form.halaqohMessage}
 					</div>
 				{/if}

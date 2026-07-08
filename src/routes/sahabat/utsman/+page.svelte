@@ -7,7 +7,7 @@
 		<p class="text-xs uppercase tracking-[0.2em] text-emerald-500">Khulafaur Rasyidin</p>
 		<h1 class="text-3xl font-bold text-slate-900">Utsman bin Affan (576–656 M)</h1>
 		<p class="text-sm text-slate-600">Khalifah ketiga, dermawan dan penghafal Al-Qur'an.</p>
-		<a class="text-emerald-700 underline text-sm" href="/sahabat">← Kembali ke halaman Sahabat</a>
+		<a class="text-emerald-600 underline text-sm" href="/sahabat">← Kembali ke halaman Sahabat</a>
 	</header>
 
 	<div class="space-y-3 text-slate-700">

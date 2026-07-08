@@ -464,7 +464,7 @@
 										<div class="text-[10px]">🌟</div>
 									{/if}
 								</div>
-								<div class="text-center text-[12px] font-semibold text-emerald-700 leading-none">
+								<div class="text-center text-[12px] font-semibold text-emerald-600 leading-none">
 									{toArabicNumeral(hijriDayNumber(cell.date) ?? '')}
 								</div>
 								<div class="text-center">

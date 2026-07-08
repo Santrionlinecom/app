@@ -79,7 +79,7 @@
 	<section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 md:p-6">
 		<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Akademik TPQ</p>
+				<p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Akademik TPQ</p>
 				<h1 class="mt-2 text-2xl font-bold text-slate-900">Rapor Hafalan Santri</h1>
 				<p class="mt-2 text-sm text-slate-600">
 					Input pencapaian hafalan per kategori. Role aktif: {displayRole(data.role)}.

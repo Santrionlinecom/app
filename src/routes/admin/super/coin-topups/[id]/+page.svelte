@@ -41,7 +41,7 @@
 			case 'pending':
 				return 'bg-amber-100 text-amber-700 border-amber-200';
 			case 'approved':
-				return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+				return 'bg-emerald-100 text-emerald-600 border-emerald-200';
 			case 'rejected':
 				return 'bg-red-100 text-red-700 border-red-200';
 			default:
@@ -150,7 +150,7 @@
 							href={req.proofUrl}
 							target="_blank"
 							rel="noreferrer"
-							class="mt-2 inline-flex break-all text-sm font-semibold text-emerald-700 hover:text-emerald-700"
+							class="mt-2 inline-flex break-all text-sm font-semibold text-emerald-600 hover:text-emerald-600"
 						>
 							Buka bukti transfer
 						</a>

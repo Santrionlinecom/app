@@ -6,7 +6,7 @@
 	<article class="max-w-4xl mx-auto px-4">
 		<!-- Header -->
 		<div class="mb-8">
-			<a href="/blog" class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 mb-4">
+			<a href="/blog" class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-600 mb-4">
 				← Kembali ke Blog
 			</a>
 			<h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -123,7 +123,7 @@
 
 			<!-- Surat Yasin -->
 			<div class="bg-white rounded-2xl border-2 border-emerald-200 p-6 mb-6 shadow-lg">
-				<h2 class="text-2xl font-bold text-emerald-800 mb-4 flex items-center gap-3">
+				<h2 class="text-2xl font-bold text-emerald-600 mb-4 flex items-center gap-3">
 					<span>4️⃣</span> Surat Yasin (36)
 				</h2>
 				

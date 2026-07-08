@@ -24,7 +24,7 @@
 	const statusTone = (status: string) =>
 		({
 			pending: 'bg-amber-100 text-amber-700',
-			paid: 'bg-emerald-100 text-emerald-700',
+			paid: 'bg-emerald-100 text-emerald-600',
 			reversed: 'bg-rose-100 text-rose-700'
 		})[status] ?? 'bg-slate-100 text-slate-700';
 
@@ -69,9 +69,9 @@
 			<p class="mt-1 text-sm text-amber-700">coin belum payout</p>
 		</div>
 		<div class="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
-			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Paid</p>
-			<p class="mt-3 text-3xl font-bold text-emerald-800">{summary.paidCoin.toLocaleString('id-ID')}</p>
-			<p class="mt-1 text-sm text-emerald-700">coin sudah ditandai paid</p>
+			<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-600">Paid</p>
+			<p class="mt-3 text-3xl font-bold text-emerald-600">{summary.paidCoin.toLocaleString('id-ID')}</p>
+			<p class="mt-1 text-sm text-emerald-600">coin sudah ditandai paid</p>
 		</div>
 	</section>
 
@@ -127,7 +127,7 @@
 							</div>
 							<div class="rounded-2xl bg-emerald-50 px-3 py-3">
 								<p class="text-[10px] uppercase tracking-[0.18em] text-emerald-600">Penulis</p>
-								<p class="mt-1 font-bold text-emerald-800">{item.authorCoin}</p>
+								<p class="mt-1 font-bold text-emerald-600">{item.authorCoin}</p>
 							</div>
 							<div class="rounded-2xl bg-amber-50 px-3 py-3">
 								<p class="text-[10px] uppercase tracking-[0.18em] text-amber-600">Platform</p>

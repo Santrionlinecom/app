@@ -45,7 +45,7 @@
 		</div>
 
 		{#if statusMessage}
-			<p class="rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+			<p class="rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-600">
 				{statusMessage}
 			</p>
 		{/if}

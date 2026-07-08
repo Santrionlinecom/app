@@ -68,7 +68,7 @@
 		const category = (post.kategori || '').toString().toLowerCase();
 		if (category.includes('palestina')) return 'border-rose-200 bg-rose-50 text-rose-700';
 		if (category.includes('nasional')) return 'border-sky-200 bg-sky-50 text-sky-700';
-		if (category.includes('dakwah')) return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+		if (category.includes('dakwah')) return 'border-emerald-200 bg-emerald-50 text-emerald-600';
 		if (category.includes('teknologi')) return 'border-violet-200 bg-violet-50 text-violet-700';
 		return 'border-slate-200 bg-slate-50 text-slate-700';
 	};
@@ -132,7 +132,7 @@
 		<section class="border-b border-slate-200 pb-4">
 			<div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
 				<div>
-					<p class="text-sm font-semibold text-emerald-700">Santri Online News</p>
+					<p class="text-sm font-semibold text-emerald-600">Santri Online News</p>
 					<h1 class="mt-1 text-2xl font-bold text-slate-950 md:text-4xl">Berita Islam Terkini</h1>
 				</div>
 				<div class="flex items-center gap-3 text-sm text-slate-500">
@@ -219,7 +219,7 @@
 									{postCategory(post)}
 								</span>
 								<h3 class="clamp-3 mt-2 text-sm font-bold leading-snug text-slate-950">
-									<a href={`/blog/${post.slug}`} class="hover:text-emerald-700">{post.title}</a>
+									<a href={`/blog/${post.slug}`} class="hover:text-emerald-600">{post.title}</a>
 								</h3>
 								<p class="mt-2 text-[11px] text-slate-500">{postDate(post)}</p>
 							</div>
@@ -249,7 +249,7 @@
 									{postCategory(featured)}
 								</span>
 								<h2 class="mt-3 break-words text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
-									<a href={`/blog/${featured.slug}`} class="hover:text-emerald-700">{featured.title}</a>
+									<a href={`/blog/${featured.slug}`} class="hover:text-emerald-600">{featured.title}</a>
 								</h2>
 								<p class="mt-3 text-sm leading-6 text-slate-600">{postSummary(featured, 220)}</p>
 								<div class="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-3 text-xs text-slate-500">
@@ -282,7 +282,7 @@
 										{postCategory(post)}
 									</span>
 									<h3 class="clamp-3 mt-2 text-base font-bold leading-snug text-slate-950">
-										<a href={`/blog/${post.slug}`} class="hover:text-emerald-700">{post.title}</a>
+										<a href={`/blog/${post.slug}`} class="hover:text-emerald-600">{post.title}</a>
 									</h3>
 									<p class="mt-2 text-[11px] text-slate-500">{postDate(post)}</p>
 								</div>
@@ -323,7 +323,7 @@
 									<span class="text-[11px] text-slate-400">{postDate(post)}</span>
 								</div>
 								<h3 class="clamp-3 mt-2 break-words text-base font-bold leading-snug text-slate-950 sm:text-lg">
-									<a href={`/blog/${post.slug}`} class="hover:text-emerald-700">{post.title}</a>
+									<a href={`/blog/${post.slug}`} class="hover:text-emerald-600">{post.title}</a>
 								</h3>
 								<p class="clamp-2 mt-2 hidden text-sm leading-6 text-slate-600 sm:block">
 									{postSummary(post, 120)}

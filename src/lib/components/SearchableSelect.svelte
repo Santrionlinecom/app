@@ -162,7 +162,7 @@
 							role="option"
 							aria-selected={index === highlightedIndex}
 							class={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm ${
-								index === highlightedIndex ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700'
+								index === highlightedIndex ? 'bg-emerald-50 text-emerald-600' : 'text-slate-700'
 							} ${option.disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-emerald-50'}`}
 							on:mousedown|preventDefault={() => selectOption(option)}
 						>

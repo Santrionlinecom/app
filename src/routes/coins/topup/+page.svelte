@@ -145,7 +145,7 @@
 
 		<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Top Up Koin</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-600">Top Up Koin</p>
 				<h1 class="mt-3 text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">
 					Tambah Saldo Koin
 				</h1>
@@ -176,7 +176,7 @@
 	{/if}
 
 	{#if successMessage === 'topup-created'}
-		<div class="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-700">
+		<div class="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-600">
 			<CheckCircle2 class="mt-0.5 h-5 w-5 shrink-0" />
 			<p class="text-sm font-medium">
 				Permintaan top up berhasil dikirim. Admin akan memverifikasi bukti transfer Anda.
@@ -239,7 +239,7 @@
 								</div>
 								<div class="text-right">
 									<p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Diterima</p>
-									<p class="mt-1 text-lg font-bold text-emerald-700">
+									<p class="mt-1 text-lg font-bold text-emerald-600">
 										{pkg.coinAmount.toLocaleString('id-ID')} koin
 									</p>
 								</div>
@@ -248,7 +248,7 @@
 							<div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
 								<span class="font-medium text-slate-500">Bonus</span>
 								{#if pkg.bonusCoin > 0}
-									<span class="font-semibold text-emerald-700">
+									<span class="font-semibold text-emerald-600">
 										+{pkg.bonusCoin.toLocaleString('id-ID')} koin
 									</span>
 								{:else}
@@ -269,7 +269,7 @@
 							diterima.
 						</p>
 					</div>
-					<CreditCard class="mt-1 h-5 w-5 shrink-0 text-emerald-700" />
+					<CreditCard class="mt-1 h-5 w-5 shrink-0 text-emerald-600" />
 				</div>
 			</section>
 
@@ -319,7 +319,7 @@
 						</div>
 						<div class="flex items-center justify-between gap-4">
 							<span class="text-sm text-slate-500">Bonus</span>
-							<span class="text-right text-sm font-semibold text-emerald-700">
+							<span class="text-right text-sm font-semibold text-emerald-600">
 								{selectedPackage.bonusCoin > 0
 									? `+${selectedPackage.bonusCoin.toLocaleString('id-ID')} koin`
 									: 'Tidak ada'}
@@ -342,10 +342,10 @@
 
 			<section class="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
 				<div class="flex items-start gap-3">
-					<BadgeCheck class="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
+					<BadgeCheck class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
 					<div>
 						<h2 class="text-sm font-semibold text-emerald-950">Alur Verifikasi</h2>
-						<ol class="mt-3 space-y-2 text-sm leading-6 text-emerald-800">
+						<ol class="mt-3 space-y-2 text-sm leading-6 text-emerald-600">
 							<li>1. Transfer sesuai nominal paket.</li>
 							<li>2. Unggah bukti transfer dari formulir ini.</li>
 							<li>3. Admin memeriksa pembayaran dan menambahkan saldo.</li>
@@ -381,7 +381,7 @@
 	<div
 		class={`fixed bottom-24 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm rounded-xl border px-4 py-3 text-sm font-bold shadow-soft md:bottom-5 ${
 			toast.kind === 'success'
-				? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+				? 'border-emerald-200 bg-emerald-50 text-emerald-600'
 				: toast.kind === 'pending'
 					? 'border-amber-200 bg-amber-50 text-amber-800'
 					: 'border-red-200 bg-red-50 text-red-800'

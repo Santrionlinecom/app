@@ -137,7 +137,7 @@
 			return 'border-amber-200 bg-amber-50 text-amber-700';
 		}
 		return post.status === 'published'
-			? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+			? 'border-emerald-200 bg-emerald-50 text-emerald-600'
 			: 'border-slate-200 bg-slate-100 text-slate-600';
 	};
 </script>
@@ -192,7 +192,7 @@
 					<p class="text-xs font-black uppercase tracking-[0.22em] text-emerald-600">Published</p>
 					<Send class="h-5 w-5 text-emerald-500" />
 				</div>
-				<strong class="mt-3 block text-3xl font-black text-emerald-700">{publishedCount}</strong>
+				<strong class="mt-3 block text-3xl font-black text-emerald-600">{publishedCount}</strong>
 				<p class="mt-1 text-xs leading-5 text-slate-500">Artikel aktif pada halaman data saat ini.</p>
 			</div>
 			<div class="rounded-[1.5rem] border border-amber-200 bg-white p-5 shadow-sm">
@@ -244,12 +244,12 @@
 
 		{#if filtered().length === 0}
 			<section class="rounded-[1.75rem] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
-				<div class="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-emerald-50 text-emerald-700">
+				<div class="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-emerald-50 text-emerald-600">
 					<Search class="h-7 w-7" />
 				</div>
 				<h2 class="mt-4 text-xl font-black text-slate-900">Belum ada artikel yang cocok</h2>
 				<p class="mx-auto mt-2 max-w-md text-sm leading-7 text-slate-500">Coba ubah kata kunci/filter, atau buat artikel baru untuk konten dakwah SantriOnline.</p>
-				<a href="/admin/posts/new" class="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-emerald-600/20 transition hover:-translate-y-0.5 hover:bg-emerald-700">
+				<a href="/admin/posts/new" class="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-emerald-600/20 transition hover:-translate-y-0.5 hover:bg-emerald-600">
 					<Plus class="h-4 w-4" /> Buat Artikel Baru
 				</a>
 			</section>
@@ -263,7 +263,7 @@
 									{#if post.thumbnail_url}
 										<img src={post.thumbnail_url} alt={post.title} class="h-full min-h-44 w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" />
 									{:else}
-										<div class="grid h-full min-h-44 place-items-center bg-gradient-to-br from-emerald-50 via-slate-50 to-amber-50 text-emerald-700">
+										<div class="grid h-full min-h-44 place-items-center bg-gradient-to-br from-emerald-50 via-slate-50 to-amber-50 text-emerald-600">
 											<ImageIcon class="h-9 w-9" />
 										</div>
 									{/if}
@@ -284,14 +284,14 @@
 										<span>{formatShortDate(post.created_at)}</span>
 									</div>
 
-									<a href={`/admin/posts/${post.id}/edit`} class="mt-3 line-clamp-2 text-xl font-black leading-tight text-slate-950 transition hover:text-emerald-700">
+									<a href={`/admin/posts/${post.id}/edit`} class="mt-3 line-clamp-2 text-xl font-black leading-tight text-slate-950 transition hover:text-emerald-600">
 										{post.title}
 									</a>
 									<p class="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">{post.excerpt || post.meta_description || 'Belum ada ringkasan. Tambahkan excerpt agar admin dan pembaca mudah memahami isi artikel.'}</p>
 
 									<div class="mt-3 flex flex-wrap gap-2">
 										{#each safeTags(post.tags) as tag}
-											<span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">#{tag}</span>
+											<span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-600">#{tag}</span>
 										{/each}
 										{#if post.seo_keyword}
 											<span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">SEO: {post.seo_keyword}</span>
@@ -303,7 +303,7 @@
 											<CalendarClock class="h-4 w-4 text-slate-400" /> Update: {formatDate(post.updated_at)}
 										</p>
 										{#if post.source_name || post.source_url}
-											<a href={post.source_url || undefined} target="_blank" rel="noreferrer" class="truncate rounded-2xl bg-slate-50 px-3 py-2 font-semibold text-slate-600 hover:text-emerald-700">
+											<a href={post.source_url || undefined} target="_blank" rel="noreferrer" class="truncate rounded-2xl bg-slate-50 px-3 py-2 font-semibold text-slate-600 hover:text-emerald-600">
 												Sumber: {post.source_name || post.source_url}
 											</a>
 										{:else}
@@ -312,16 +312,16 @@
 									</div>
 
 									<div class="mt-5 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
-										<a href={`/admin/posts/${post.id}/edit`} class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-emerald-700">
+										<a href={`/admin/posts/${post.id}/edit`} class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-black text-white transition hover:-translate-y-0.5 hover:bg-emerald-600">
 											<Edit3 class="h-4 w-4" /> Edit
 										</a>
-										<a href={`/blog/${post.slug}`} target="_blank" rel="noreferrer" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700">
+										<a href={`/blog/${post.slug}`} target="_blank" rel="noreferrer" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 transition hover:border-emerald-200 hover:text-emerald-600">
 											<Eye class="h-4 w-4" /> Preview
 										</a>
 										<form method="POST" action="?/toggle" use:enhance>
 											<input type="hidden" name="id" value={post.id} />
 											<input type="hidden" name="next" value={post.status === 'published' ? 'draft' : 'published'} />
-											<button type="submit" class={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition hover:-translate-y-0.5 ${post.status === 'published' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}>
+											<button type="submit" class={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition hover:-translate-y-0.5 ${post.status === 'published' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'}`}>
 												{post.status === 'published' ? 'Jadikan Draft' : 'Publish'}
 											</button>
 										</form>
@@ -371,8 +371,8 @@
 			<nav class="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 text-sm shadow-sm" aria-label="Navigasi halaman artikel">
 				<p class="font-semibold text-slate-500">Halaman {pagination.page} dari {totalPages}</p>
 				<div class="flex flex-wrap gap-2">
-					<a class={`rounded-full px-4 py-2 font-black transition ${pagination.page <= 1 ? 'pointer-events-none bg-slate-100 text-slate-300' : 'bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-700'}`} href={pageHref(Math.max(1, pagination.page - 1))}>Sebelumnya</a>
-					<a class={`rounded-full px-4 py-2 font-black transition ${pagination.page >= totalPages ? 'pointer-events-none bg-slate-100 text-slate-300' : 'bg-slate-900 text-white hover:bg-emerald-700'}`} href={pageHref(Math.min(totalPages, pagination.page + 1))}>Berikutnya</a>
+					<a class={`rounded-full px-4 py-2 font-black transition ${pagination.page <= 1 ? 'pointer-events-none bg-slate-100 text-slate-300' : 'bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-600'}`} href={pageHref(Math.max(1, pagination.page - 1))}>Sebelumnya</a>
+					<a class={`rounded-full px-4 py-2 font-black transition ${pagination.page >= totalPages ? 'pointer-events-none bg-slate-100 text-slate-300' : 'bg-slate-900 text-white hover:bg-emerald-600'}`} href={pageHref(Math.min(totalPages, pagination.page + 1))}>Berikutnya</a>
 				</div>
 			</nav>
 		{/if}

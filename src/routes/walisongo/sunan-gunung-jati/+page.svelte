@@ -56,7 +56,7 @@
 			</a>
 			<a href="/walisongo" class="rounded-2xl border-2 border-emerald-200 bg-white p-6 hover:shadow-lg transition">
 				<p class="text-sm text-gray-600 mb-2">Kembali ke Awal</p>
-				<h3 class="text-xl font-bold text-emerald-700">Daftar Walisongo</h3>
+				<h3 class="text-xl font-bold text-emerald-600">Daftar Walisongo</h3>
 			</a>
 		</div>
 	</div>

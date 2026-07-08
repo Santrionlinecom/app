@@ -22,7 +22,7 @@
 	{#if actionLabel && actionHref}
 		<a
 			href={actionHref}
-			class={`mt-6 inline-flex min-h-[44px] items-center justify-center rounded-xl border-2 border-emerald-600 bg-emerald-600 font-bold text-white shadow-sm transition hover:bg-emerald-700 hover:border-emerald-700 active:scale-95 ${compact ? 'px-4 py-2 text-xs' : 'px-6 py-3 text-sm'}`}
+			class={`mt-6 inline-flex min-h-[44px] items-center justify-center rounded-xl border-2 border-emerald-600 bg-emerald-600 font-bold text-white shadow-sm transition hover:bg-emerald-600 hover:border-emerald-600 active:scale-95 ${compact ? 'px-4 py-2 text-xs' : 'px-6 py-3 text-sm'}`}
 		>
 			{actionLabel}
 		</a>

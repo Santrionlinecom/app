@@ -52,7 +52,7 @@
 		<div class="mt-8 grid gap-4 md:grid-cols-2">
 			<a href="/walisongo/sunan-gresik" class="rounded-2xl border-2 border-emerald-200 bg-white p-6 hover:shadow-lg transition">
 				<p class="text-sm text-gray-600 mb-2">← Sebelumnya</p>
-				<h3 class="text-xl font-bold text-emerald-700">Sunan Gresik</h3>
+				<h3 class="text-xl font-bold text-emerald-600">Sunan Gresik</h3>
 			</a>
 			<a href="/walisongo/sunan-bonang" class="rounded-2xl border-2 border-purple-200 bg-white p-6 hover:shadow-lg transition">
 				<p class="text-sm text-gray-600 mb-2">Selanjutnya →</p>

@@ -141,7 +141,7 @@
 			label: 'Pondok Pesantren',
 			group: 'education',
 			tone: 'from-emerald-400/80 to-teal-500/80',
-			accent: 'text-emerald-700'
+			accent: 'text-emerald-600'
 		},
 		tpq: {
 			label: 'TPQ',
@@ -257,7 +257,7 @@
 	const statusBadgeClass = (status?: string | null) => {
 		switch ((status ?? '').toLowerCase()) {
 			case 'active':
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+				return 'border-emerald-200 bg-emerald-50 text-emerald-600';
 			case 'pending':
 				return 'border-amber-200 bg-amber-50 text-amber-700';
 			case 'rejected':
@@ -306,7 +306,7 @@
 			value: formatNumber(data.stats.totalInstitutions),
 			note: 'Seluruh organisasi terdaftar',
 			accent: 'from-emerald-400 to-teal-500',
-			tone: 'text-emerald-700',
+			tone: 'text-emerald-600',
 			icon: iconPaths.building
 		},
 		{
@@ -681,7 +681,7 @@
 								<p class="mt-1 text-sm text-so-muted">Aktivitas terbaru dari seluruh sistem</p>
 							</div>
 							<div class="flex flex-wrap items-center gap-2">
-								<span class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{recentActivities.length} event</span>
+								<span class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">{recentActivities.length} event</span>
 								<button class="inline-flex h-9 items-center gap-2 rounded-xl border border-so-border bg-white px-3 text-xs font-bold text-so-green shadow-sm transition hover:border-so-green" type="button" on:click={refreshLive} disabled={isRefreshing}>
 									<svg class={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
 										<path d="M21 12a9 9 0 0 1-9 9 9.8 9.8 0 0 1-6.74-2.74L3 16M3 12a9 9 0 0 1 9-9 9.8 9.8 0 0 1 6.74 2.74L21 8" />
@@ -760,7 +760,7 @@
 								<h2 class="font-display text-xl font-bold text-so-green">System Pulse</h2>
 								<p class="mt-1 text-sm text-so-muted">{todayLabel}</p>
 							</div>
-							<span class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">LIVE</span>
+							<span class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">LIVE</span>
 						</div>
 						<div class="mt-5 grid grid-cols-2 gap-3">
 							<div class="rounded-xl border border-so-border bg-so-cream p-3">

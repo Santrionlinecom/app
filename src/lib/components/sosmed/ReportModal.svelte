@@ -63,7 +63,7 @@
 				</button>
 				<button
 					type="button"
-					class="rounded-full bg-emerald-700 px-4 py-2 text-sm font-bold text-white disabled:bg-slate-300"
+					class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white disabled:bg-slate-300"
 					disabled={isSubmitting}
 					on:click={submit}
 				>

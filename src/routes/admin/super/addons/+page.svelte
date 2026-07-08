@@ -21,7 +21,7 @@
 
 	const statusClasses: Record<string, string> = {
 		trial: 'border-amber-200 bg-amber-50 text-amber-700',
-		aktif: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+		aktif: 'border-emerald-200 bg-emerald-50 text-emerald-600',
 		expired: 'border-red-200 bg-red-50 text-red-700'
 	};
 
@@ -76,7 +76,7 @@
 	</section>
 
 	{#if success}
-		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
+		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-600">
 			{success}
 		</div>
 	{/if}

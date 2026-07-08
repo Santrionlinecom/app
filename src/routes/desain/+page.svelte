@@ -73,7 +73,7 @@
 				<a href={`/desain/${template.slug}`} class="group overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] transition hover:-translate-y-1 hover:border-emerald-300/60 hover:bg-white/[0.09]">
 					<div class={`bg-gradient-to-br ${template.palette} p-6`}>
 						<div class="rounded-2xl bg-white/90 p-5 text-slate-950 shadow-2xl">
-							<p class="text-xs font-black uppercase tracking-[0.25em] text-emerald-700">{template.formats[0]}</p>
+							<p class="text-xs font-black uppercase tracking-[0.25em] text-emerald-600">{template.formats[0]}</p>
 							<h3 class="mt-3 text-2xl font-black leading-tight">{template.previewLines[0]}</h3>
 							<p class="mt-3 text-sm font-semibold text-slate-600">{template.previewLines[1]}</p>
 							<p class="mt-6 rounded-xl bg-slate-950 px-4 py-3 text-center text-sm font-black text-white">{template.previewLines[2]}</p>
@@ -96,7 +96,7 @@
 
 	<section class="bg-white py-14 text-slate-950">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-			<p class="text-sm font-black uppercase tracking-[0.3em] text-emerald-700">Kategori SEO</p>
+			<p class="text-sm font-black uppercase tracking-[0.3em] text-emerald-600">Kategori SEO</p>
 			<h2 class="mt-3 text-3xl font-black">Peta kategori desain SantriOnline</h2>
 			<div class="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 				{#each categoryEntries as [key, category]}

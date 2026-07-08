@@ -12,7 +12,7 @@
 				itemtype="https://schema.org/ListItem"
 			>
 				{#if i < items.length - 1}
-					<a itemprop="item" href={item.url} class="font-semibold text-emerald-700 hover:text-emerald-900">
+					<a itemprop="item" href={item.url} class="font-semibold text-emerald-600 hover:text-emerald-900">
 						<span itemprop="name">{item.name}</span>
 					</a>
 					<span aria-hidden="true" class="text-slate-300">/</span>

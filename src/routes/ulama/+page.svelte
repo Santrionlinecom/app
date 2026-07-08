@@ -9,8 +9,8 @@
 			desc: 'Maulana Malik Ibrahim — Gresik',
 			classes: {
 				border: 'border-emerald-300',
-				text: 'text-emerald-700',
-				hover: 'group-hover:text-emerald-800'
+				text: 'text-emerald-600',
+				hover: 'group-hover:text-emerald-600'
 			}
 		},
 		{
@@ -161,7 +161,7 @@
 			<div class="flex items-center gap-3 mb-6">
 				<span class="text-4xl">🕌</span>
 				<div>
-					<h2 class="text-3xl font-bold text-emerald-800">Jejak Walisongo di Tanah Jawa</h2>
+					<h2 class="text-3xl font-bold text-emerald-600">Jejak Walisongo di Tanah Jawa</h2>
 					<p class="text-gray-700">9 Wali penyebar Islam dengan pendekatan budaya, seni, dan kearifan lokal</p>
 				</div>
 			</div>
@@ -177,7 +177,7 @@
 			</div>
 
 			<div class="flex justify-center">
-				<a href="/walisongo" class="btn bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg">
+				<a href="/walisongo" class="btn bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 shadow-lg">
 					📖 Lihat Pembahasan Lengkap Walisongo
 				</a>
 			</div>

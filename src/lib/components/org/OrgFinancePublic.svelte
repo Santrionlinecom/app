@@ -124,11 +124,11 @@
 	{:else}
 		<div class="grid gap-4 md:grid-cols-3">
 			<div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-				<p class="text-xs uppercase text-emerald-700">Saldo Kas</p>
-				<p class="text-xl font-bold text-emerald-700 tabular-nums tracking-tight leading-tight break-words sm:text-2xl">
+				<p class="text-xs uppercase text-emerald-600">Saldo Kas</p>
+				<p class="text-xl font-bold text-emerald-600 tabular-nums tracking-tight leading-tight break-words sm:text-2xl">
 					{formatCurrency(kas.saldo)}
 				</p>
-				<p class="text-xs text-emerald-700/80">Update: {formatDate(kas.updatedAt)}</p>
+				<p class="text-xs text-emerald-600/80">Update: {formatDate(kas.updatedAt)}</p>
 			</div>
 			<div class="rounded-2xl border border-blue-100 bg-blue-50 p-4">
 				<p class="text-xs uppercase text-blue-700">Pemasukan</p>
@@ -154,8 +154,8 @@
 				</div>
 				<div class="mt-4 grid gap-3 md:grid-cols-3">
 					<div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-						<p class="text-xs uppercase text-emerald-700">Zakat Beras</p>
-						<p class="text-lg font-bold text-emerald-700">{formatNumber(zakat.beras)} kg</p>
+						<p class="text-xs uppercase text-emerald-600">Zakat Beras</p>
+						<p class="text-lg font-bold text-emerald-600">{formatNumber(zakat.beras)} kg</p>
 					</div>
 					<div class="rounded-xl border border-blue-100 bg-blue-50 p-3">
 						<p class="text-xs uppercase text-blue-700">Zakat Uang</p>
@@ -242,7 +242,7 @@
 	<div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 		<div class="flex items-center justify-between">
 			<h3 class="text-lg font-semibold text-slate-900">{activityTitle}</h3>
-			<a href="/kalender" class="text-xs font-semibold text-emerald-700">Lihat kalender</a>
+			<a href="/kalender" class="text-xs font-semibold text-emerald-600">Lihat kalender</a>
 		</div>
 		<p class="text-xs text-slate-500 mt-2">
 			Kegiatan {orgLabelLower} terjadwal agar jamaah mengetahui agenda dan layanan yang tersedia.
@@ -257,7 +257,7 @@
 						<div>
 							<p class="text-sm font-semibold text-slate-900">{item.title}</p>
 							<p class="text-xs text-slate-500 mt-1">{item.desc}</p>
-							<span class="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700">
+							<span class="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-emerald-600">
 								Lihat detail
 								<span>-></span>
 							</span>

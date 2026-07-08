@@ -119,7 +119,7 @@
 	const cmsStatusClass = (status?: string | null) => {
 		switch ((status ?? '').toLowerCase()) {
 			case 'published':
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+				return 'border-emerald-200 bg-emerald-50 text-emerald-600';
 			case 'draft':
 				return 'border-amber-200 bg-amber-50 text-amber-700';
 			default:
@@ -130,7 +130,7 @@
 	const productStatusClass = (status?: string | null) => {
 		switch ((status ?? '').toLowerCase()) {
 			case 'published':
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+				return 'border-emerald-200 bg-emerald-50 text-emerald-600';
 			case 'draft':
 				return 'border-sky-200 bg-sky-50 text-sky-700';
 			case 'archived':
@@ -143,7 +143,7 @@
 	const kitabStatusClass = (status?: string | null) => {
 		switch ((status ?? '').toLowerCase()) {
 			case 'published':
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+				return 'border-emerald-200 bg-emerald-50 text-emerald-600';
 			case 'draft':
 				return 'border-sky-200 bg-sky-50 text-sky-700';
 			case 'archived':
@@ -158,14 +158,14 @@
 			case 'drive':
 				return 'border-amber-200 bg-amber-50 text-amber-700';
 			default:
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+				return 'border-emerald-200 bg-emerald-50 text-emerald-600';
 		}
 	};
 
 	const saleStatusClass = (status?: string | null) => {
 		switch ((status ?? '').toLowerCase()) {
 			case 'paid':
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+				return 'border-emerald-200 bg-emerald-50 text-emerald-600';
 			case 'pending':
 				return 'border-amber-200 bg-amber-50 text-amber-700';
 			case 'failed':
@@ -184,7 +184,7 @@
 			case 'ewallet':
 				return 'border-violet-200 bg-violet-50 text-violet-700';
 			case 'qris':
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+				return 'border-emerald-200 bg-emerald-50 text-emerald-600';
 			default:
 				return 'border-amber-200 bg-amber-50 text-amber-700';
 		}
@@ -621,7 +621,7 @@
 			</button>
 			<a
 				href="/admin/super/overview"
-				class="inline-flex h-11 items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700"
+				class="inline-flex h-11 items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-600"
 			>
 				<ArrowLeft class="h-4 w-4" aria-hidden="true" />
 				Overview
@@ -639,7 +639,7 @@
 				<aside class="absolute left-0 top-0 h-full w-[min(88vw,23rem)] overflow-y-auto bg-white p-4 shadow-2xl">
 					<div class="flex items-center justify-between gap-3">
 						<div>
-							<p class="text-xs font-bold uppercase text-emerald-700">Super Admin</p>
+							<p class="text-xs font-bold uppercase text-emerald-600">Super Admin</p>
 							<h2 class="text-lg font-bold text-slate-950">CMS Hub</h2>
 						</div>
 						<button
@@ -679,13 +679,13 @@
 					<div class="rounded-[2rem] border border-white/70 bg-white/86 p-5 shadow-xl backdrop-blur">
 						<a
 							href="/admin/super/overview"
-							class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-emerald-700"
+							class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-emerald-600"
 						>
 							<ArrowLeft class="h-4 w-4" aria-hidden="true" />
 							Kembali ke overview
 						</a>
 						<div class="mt-5">
-							<p class="text-xs font-bold uppercase text-emerald-700">Pusat Kerja</p>
+							<p class="text-xs font-bold uppercase text-emerald-600">Pusat Kerja</p>
 							<h2 class="mt-2 text-2xl font-black text-slate-950">CMS Hub</h2>
 							<p class="mt-2 text-sm leading-6 text-slate-500">
 								Kelola artikel, produk digital, kitab publik, metode bayar, dan order dari satu panel.
@@ -708,14 +708,14 @@
 					</div>
 
 					<div class="rounded-[2rem] border border-emerald-200 bg-emerald-50/92 p-5 shadow-sm">
-						<p class="text-sm font-bold text-emerald-700">Prioritas hari ini</p>
-						<p class="mt-2 text-sm leading-6 text-emerald-700/80">
+						<p class="text-sm font-bold text-emerald-600">Prioritas hari ini</p>
+						<p class="mt-2 text-sm leading-6 text-emerald-600/80">
 							{formatNumber(data.digitalCommerce.pendingSales.length)} order menunggu verifikasi dan
 							{formatNumber(data.cms.stats.draftPosts)} artikel masih draft.
 						</p>
 						<a
 							href="#sales-chart"
-							class="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white"
+							class="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white"
 						>
 							Cek penjualan
 						</a>
@@ -726,7 +726,7 @@
 			<main class="min-w-0 space-y-8">
 				<section id="ringkasan" class="cms-hero">
 					<div class="max-w-3xl">
-						<p class="text-sm font-bold uppercase text-emerald-700">Super Admin</p>
+						<p class="text-sm font-bold uppercase text-emerald-600">Super Admin</p>
 						<h1 class="mt-3 text-3xl font-black leading-tight text-slate-950 md:text-5xl">
 							Pusat konten SantriOnline
 						</h1>
@@ -804,7 +804,7 @@
 								fetchNewsStatus === 'error'
 									? 'border-rose-200 bg-rose-50 text-rose-700'
 									: fetchNewsStatus === 'success'
-										? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+										? 'border-emerald-200 bg-emerald-50 text-emerald-600'
 										: 'border-white/15 bg-white/10 text-white/75'
 							}`}
 							aria-live="polite"
@@ -940,7 +940,7 @@
 				<a href="#payment-methods" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
 					Atur Metode Bayar
 				</a>
-				<a href="#sales-chart" class="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
+				<a href="#sales-chart" class="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-100">
 					Grafik Penjualan
 				</a>
 			</div>
@@ -1214,7 +1214,7 @@
 										<p class="text-lg font-semibold text-slate-900">{product.title}</p>
 										<p class="mt-1 text-xs uppercase text-slate-400">/{product.slug}</p>
 									</div>
-									<p class="shrink-0 text-sm font-semibold text-emerald-700">{formatCurrency(product.price)}</p>
+									<p class="shrink-0 text-sm font-semibold text-emerald-600">{formatCurrency(product.price)}</p>
 								</div>
 
 								<p class="mt-3 text-sm text-slate-600">{shortText(product.summary || product.description, 120)}</p>
@@ -1275,7 +1275,7 @@
 				<a href="/kitab" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
 					Lihat Halaman Publik
 				</a>
-				<a href="/kitab/quran" class="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
+				<a href="/kitab/quran" class="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-100">
 					Mushaf Al-Qur'an
 				</a>
 			</div>
@@ -1286,7 +1286,7 @@
 				class={`mb-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${
 					openitiImportStatus === 'error'
 						? 'border-rose-200 bg-rose-50 text-rose-700'
-						: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+						: 'border-emerald-200 bg-emerald-50 text-emerald-600'
 				}`}
 				aria-live="polite"
 			>
@@ -1320,7 +1320,7 @@
 					</div>
 					<div class="flex flex-wrap gap-2">
 						{#if data.kitabLibrary.editingKitab?.status === 'published'}
-							<a href={`/kitab/${data.kitabLibrary.editingKitab.slug}`} class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">
+							<a href={`/kitab/${data.kitabLibrary.editingKitab.slug}`} class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-100">
 								Lihat Publik
 							</a>
 						{/if}
@@ -1590,7 +1590,7 @@
 										<p class="mt-1 text-xs uppercase text-slate-400">/{item.slug}</p>
 									</div>
 									{#if item.featured}
-										<span class="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+										<span class="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-600">
 											Unggulan
 										</span>
 									{/if}
@@ -1603,7 +1603,7 @@
 										Edit
 									</a>
 									{#if item.status === 'published'}
-										<a href={`/kitab/${item.slug}`} class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">
+										<a href={`/kitab/${item.slug}`} class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-100">
 											Lihat Publik
 										</a>
 									{/if}
@@ -1650,7 +1650,7 @@
 			</div>
 			<div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
 				<div class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-					<p class="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">Aktif</p>
+					<p class="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-600">Aktif</p>
 					<p class="mt-1 text-2xl font-black text-slate-950">{formatNumber(data.digitalCommerce.stats.activeMethods)}</p>
 				</div>
 				<div class="rounded-2xl border border-slate-200 bg-white px-4 py-3">
@@ -1745,7 +1745,7 @@
 				</div>
 
 				<div class="mt-6 flex flex-col gap-2 sm:flex-row">
-					<button type="submit" class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 to-cyan-600 px-5 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:from-emerald-700 hover:to-cyan-700">
+					<button type="submit" class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 to-cyan-600 px-5 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:from-emerald-600 hover:to-cyan-700">
 						<CreditCard class="h-4 w-4" />
 						{data.digitalCommerce.editingPaymentMethod ? 'Update Metode' : 'Simpan Metode'}
 					</button>
@@ -1821,7 +1821,7 @@
 										<div class="flex flex-wrap items-center gap-2">
 											<p class="text-base font-black text-slate-950">{method.name}</p>
 											<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-black ${paymentTone(method.type)}`}>{paymentTypeLabel[method.type] ?? method.type}</span>
-											<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-black ${method.isActive ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-100 text-slate-500'}`}>{method.isActive ? 'Aktif' : 'Nonaktif'}</span>
+											<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-black ${method.isActive ? 'border-emerald-200 bg-emerald-50 text-emerald-600' : 'border-slate-200 bg-slate-100 text-slate-500'}`}>{method.isActive ? 'Aktif' : 'Nonaktif'}</span>
 										</div>
 										<p class="mt-2 text-sm text-slate-600">{method.accountName || '-'} • {method.accountNumber || '-'}</p>
 										<p class="mt-1 text-xs leading-5 text-slate-500">{shortText(method.instructions, 130)}</p>
@@ -1889,7 +1889,7 @@
 										{sale.paymentMethodName || 'Metode manual'} • {formatDateTime(sale.createdAt)}
 									</p>
 								</div>
-								<p class="shrink-0 text-lg font-semibold text-emerald-700">{formatCurrency(sale.amount)}</p>
+								<p class="shrink-0 text-lg font-semibold text-emerald-600">{formatCurrency(sale.amount)}</p>
 							</div>
 
 							{#if sale.proofUrl}
@@ -1937,7 +1937,7 @@
 			<div class="grid gap-4 md:grid-cols-3">
 				<div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
 					<p class="text-[11px] uppercase text-slate-400">Total Penjualan</p>
-					<p class="mt-3 text-3xl font-semibold text-emerald-700">{formatNumber(data.digitalCommerce.stats.totalSales)}</p>
+					<p class="mt-3 text-3xl font-semibold text-emerald-600">{formatNumber(data.digitalCommerce.stats.totalSales)}</p>
 					<p class="mt-1 text-xs text-slate-600">Order tercatat</p>
 				</div>
 				<div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
@@ -1995,7 +1995,7 @@
 											<p class="mt-1 text-xs text-slate-500">{sale.paymentMethodName}</p>
 										{/if}
 										{#if sale.proofUrl}
-											<a href={sale.proofUrl} target="_blank" rel="noreferrer" class="mt-1 inline-flex text-xs font-semibold text-emerald-700 hover:text-emerald-700">
+											<a href={sale.proofUrl} target="_blank" rel="noreferrer" class="mt-1 inline-flex text-xs font-semibold text-emerald-600 hover:text-emerald-600">
 												Lihat bukti bayar
 											</a>
 										{/if}
@@ -2009,7 +2009,7 @@
 										{/if}
 										<p class="mt-1 text-xs text-slate-500">{formatDateTime(sale.paidAt || sale.createdAt)}</p>
 									</div>
-									<p class="shrink-0 text-lg font-semibold text-emerald-700">{formatCurrency(sale.amount)}</p>
+									<p class="shrink-0 text-lg font-semibold text-emerald-600">{formatCurrency(sale.amount)}</p>
 								</div>
 							</div>
 						{/each}

@@ -11,7 +11,7 @@
 
 <article class="mx-auto max-w-4xl space-y-6">
 	<header class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-		<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Legal</p>
+		<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-600">Legal</p>
 		<h1 class="mt-2 text-3xl font-semibold text-slate-950">Syarat dan Ketentuan</h1>
 		<p class="mt-3 text-sm leading-6 text-slate-600">
 			Dengan menggunakan SantriOnline, pengguna menyetujui ketentuan layanan yang mengatur akses akun,

@@ -179,8 +179,8 @@
 				class="group rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
 			>
 				<p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">{card.label}</p>
-				<h2 class="mt-3 text-2xl font-semibold text-slate-900 group-hover:text-emerald-700">{card.era}</h2>
-				<p class="mt-3 text-sm font-medium text-emerald-700">{card.count}</p>
+				<h2 class="mt-3 text-2xl font-semibold text-slate-900 group-hover:text-emerald-600">{card.era}</h2>
+				<p class="mt-3 text-sm font-medium text-emerald-600">{card.count}</p>
 				<p class="mt-3 text-sm leading-7 text-slate-600">{card.desc}</p>
 				<span class="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
 					Buka halaman
@@ -221,7 +221,7 @@
 					{#each ahlulBaitFigures as figure}
 						<article class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 							<p class="text-lg font-semibold text-slate-900">{figure.name}</p>
-							<p class="mt-1 text-sm font-medium text-emerald-700">{figure.role}</p>
+							<p class="mt-1 text-sm font-medium text-emerald-600">{figure.role}</p>
 							<p class="mt-3 text-sm leading-7 text-slate-600">{figure.desc}</p>
 						</article>
 					{/each}
@@ -239,7 +239,7 @@
 				<div class="mt-4 grid gap-4">
 					{#each ahlulBaitTimeline as item}
 						<article class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-[8rem_1fr]">
-							<p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">{item.period}</p>
+							<p class="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-600">{item.period}</p>
 							<div>
 								<h4 class="text-lg font-semibold text-slate-900">{item.title}</h4>
 								<p class="mt-2 text-sm leading-7 text-slate-600">{item.desc}</p>

@@ -28,7 +28,7 @@ let toggling = new Set<number>();
 	};
 
 	const qualityColors: Record<string, string> = {
-		lancar: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+		lancar: 'bg-emerald-100 text-emerald-600 border-emerald-300',
 		kurang_lancar: 'bg-amber-100 text-amber-800 border-amber-300',
 		belum_lancar: 'bg-red-100 text-red-800 border-red-300'
 	};

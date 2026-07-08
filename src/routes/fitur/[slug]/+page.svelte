@@ -11,7 +11,7 @@
 
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 py-12">
 	<div class="mx-auto max-w-6xl px-4 space-y-10">
-		<a href="/fitur" class="inline-flex items-center gap-2 text-sm text-emerald-700 hover:text-emerald-800">
+		<a href="/fitur" class="inline-flex items-center gap-2 text-sm text-emerald-600 hover:text-emerald-600">
 			← Kembali ke Semua Fitur
 		</a>
 
@@ -167,7 +167,7 @@
 					<a href={item.href} class="group rounded-2xl border border-slate-200 p-4 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-lg">
 						<p class="text-sm font-semibold text-slate-900">{item.label}</p>
 						<p class="text-xs text-slate-600 mt-2">{item.desc}</p>
-						<span class="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700">
+						<span class="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-emerald-600">
 							Buka halaman
 							<span>→</span>
 						</span>

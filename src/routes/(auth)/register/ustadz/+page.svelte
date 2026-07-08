@@ -49,7 +49,7 @@
 <div class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-100/60 py-12 px-4 sm:px-6 lg:px-10">
 	<div class="mx-auto w-full max-w-4xl space-y-8">
 		<header class="space-y-3 text-center">
-			<p class="text-xs uppercase tracking-[0.25em] text-emerald-700">Santri Online</p>
+			<p class="text-xs uppercase tracking-[0.25em] text-emerald-600">Santri Online</p>
 			<h1 class="text-3xl md:text-4xl font-extrabold text-slate-900">Registrasi Ustadz / Pengajar</h1>
 			<p class="text-base text-slate-600">
 				Buat akun ustadz dan pilih status kerja agar alur pendaftaran sesuai kebutuhan Anda.
@@ -197,7 +197,7 @@
 			<Turnstile siteKey={data.turnstileSiteKey} />
 
 			<button 
-				class="w-full min-h-[44px] rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-3 text-base font-bold text-white shadow-lg shadow-emerald-600/30 transition-all hover:from-emerald-700 hover:to-emerald-800 hover:shadow-xl hover:shadow-emerald-600/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 disabled:opacity-60 disabled:cursor-not-allowed" 
+				class="w-full min-h-[44px] rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-600 px-6 py-3 text-base font-bold text-white shadow-lg shadow-emerald-600/30 transition-all hover:from-emerald-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-emerald-600/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 disabled:opacity-60 disabled:cursor-not-allowed" 
 				type="submit"
 			>
 				Daftar Sebagai Ustadz
@@ -205,7 +205,7 @@
 		</form>
 
 		<p class="text-center text-sm text-slate-500">
-			Sudah punya akun? <a href="/auth" class="font-semibold text-emerald-700 hover:underline">Masuk di sini</a>
+			Sudah punya akun? <a href="/auth" class="font-semibold text-emerald-600 hover:underline">Masuk di sini</a>
 		</p>
 	</div>
 </div>

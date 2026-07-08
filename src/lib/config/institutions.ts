@@ -69,8 +69,8 @@ export const INSTITUTIONS: InstitutionConfig[] = [
 		highlights: ['Kas transparan', 'Zakat dan qurban', 'Agenda jamaah'],
 		classes: {
 			card: 'border-emerald-200/70 bg-white/90',
-			accent: 'text-emerald-700',
-			badge: 'bg-emerald-100 text-emerald-700'
+			accent: 'text-emerald-600',
+			badge: 'bg-emerald-100 text-emerald-600'
 		}
 	},
 	{

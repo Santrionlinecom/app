@@ -55,7 +55,7 @@
 				class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition active:scale-110 disabled:opacity-60"
 				class:border-emerald-300={userReaction === option.emoji}
 				class:bg-emerald-50={userReaction === option.emoji}
-				class:text-emerald-800={userReaction === option.emoji}
+				class:text-emerald-600={userReaction === option.emoji}
 				class:border-slate-200={userReaction !== option.emoji}
 				class:bg-white={userReaction !== option.emoji}
 				class:text-slate-600={userReaction !== option.emoji}

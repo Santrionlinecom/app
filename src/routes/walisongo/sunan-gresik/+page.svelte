@@ -4,7 +4,7 @@
 
 <div class="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 py-12">
 	<div class="mx-auto max-w-4xl px-4">
-		<a href="/walisongo" class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 mb-6">
+		<a href="/walisongo" class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-600 mb-6">
 			← Kembali ke Walisongo
 		</a>
 
@@ -12,7 +12,7 @@
 			<div class="flex items-start gap-6 mb-8">
 				<span class="text-7xl">1️⃣</span>
 				<div>
-					<h1 class="text-4xl font-bold text-emerald-700 mb-2">Sunan Gresik</h1>
+					<h1 class="text-4xl font-bold text-emerald-600 mb-2">Sunan Gresik</h1>
 					<p class="text-xl text-gray-600">Maulana Malik Ibrahim (w. 1419 M)</p>
 					<p class="text-lg text-gray-500 mt-2">🕌 Gresik, Jawa Timur</p>
 				</div>
@@ -46,7 +46,7 @@
 
 				<div class="bg-emerald-50 border-l-4 border-emerald-500 p-6 mt-8 rounded-r-xl">
 					<p class="text-emerald-900 font-semibold mb-2">🌟 Kata Bijak</p>
-					<p class="text-emerald-800 italic">"Dakwah yang baik adalah yang membawa manfaat dunia dan akhirat bagi umat."</p>
+					<p class="text-emerald-600 italic">"Dakwah yang baik adalah yang membawa manfaat dunia dan akhirat bagi umat."</p>
 				</div>
 			</div>
 		</div>

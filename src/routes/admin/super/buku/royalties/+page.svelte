@@ -25,7 +25,7 @@
 	const statusTone = (status: string) =>
 		({
 			pending: 'bg-amber-100 text-amber-700',
-			paid: 'bg-emerald-100 text-emerald-700',
+			paid: 'bg-emerald-100 text-emerald-600',
 			reversed: 'bg-rose-100 text-rose-700'
 		})[status] ?? 'bg-slate-100 text-slate-700';
 
@@ -64,8 +64,8 @@
 			<p class="mt-2 text-3xl font-bold text-slate-900">{summary.totalGrossCoin.toLocaleString('id-ID')}</p>
 		</div>
 		<div class="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
-			<p class="text-xs uppercase tracking-[0.22em] text-emerald-700">Royalti Penulis</p>
-			<p class="mt-2 text-3xl font-bold text-emerald-700">{summary.totalAuthorCoin.toLocaleString('id-ID')}</p>
+			<p class="text-xs uppercase tracking-[0.22em] text-emerald-600">Royalti Penulis</p>
+			<p class="mt-2 text-3xl font-bold text-emerald-600">{summary.totalAuthorCoin.toLocaleString('id-ID')}</p>
 		</div>
 		<div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-5 shadow-sm">
 			<p class="text-xs uppercase tracking-[0.22em] text-amber-700">Komisi Platform</p>
@@ -139,7 +139,7 @@
 									{/if}
 								</td>
 								<td class="px-4 py-4 font-semibold text-slate-900">{item.grossCoin}</td>
-								<td class="px-4 py-4 font-semibold text-emerald-700">{item.authorCoin}</td>
+								<td class="px-4 py-4 font-semibold text-emerald-600">{item.authorCoin}</td>
 								<td class="px-4 py-4 font-semibold text-amber-700">{item.platformCoin}</td>
 								<td class="px-4 py-4">
 									<span class={`rounded-full px-3 py-1 text-xs font-semibold ${statusTone(item.status)}`}>

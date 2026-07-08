@@ -219,7 +219,7 @@
 	</header>
 
 	<div
-		class="flex flex-col gap-3 rounded-so-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 shadow-card md:flex-row md:items-center"
+		class="flex flex-col gap-3 rounded-so-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-600 shadow-card md:flex-row md:items-center"
 	>
 		<div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-600 text-white">
 			<MessageCircle size={19} strokeWidth={2.2} />
@@ -228,7 +228,7 @@
 			<p class="text-sm font-semibold leading-6">
 				Semua addon <strong>GRATIS</strong>! Permintaan akan dikirim ke admin untuk diverifikasi.
 			</p>
-			<p class="mt-1 text-xs text-emerald-700">
+			<p class="mt-1 text-xs text-emerald-600">
 				<strong>Syarat:</strong> Anda harus bergabung ke grup WhatsApp SantriOnline terlebih dahulu.
 				<a href="https://chat.whatsapp.com/santrionline" target="_blank" rel="noopener" class="font-bold underline hover:text-emerald-900">
 					Gabung Grup WA →
@@ -333,7 +333,7 @@
 	<div
 		class={`fixed bottom-5 right-5 z-50 w-[calc(100vw-2rem)] max-w-sm rounded-xl border px-4 py-3 text-sm font-bold shadow-soft ${
 			toast.kind === 'success'
-				? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+				? 'border-emerald-200 bg-emerald-50 text-emerald-600'
 				: toast.kind === 'pending'
 					? 'border-amber-200 bg-amber-50 text-amber-800'
 					: 'border-red-200 bg-red-50 text-red-800'

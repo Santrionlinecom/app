@@ -7,7 +7,7 @@
 		<p class="text-xs uppercase tracking-[0.2em] text-emerald-500">Khulafaur Rasyidin</p>
 		<h1 class="text-3xl font-bold text-slate-900">Ali bin Abi Thalib (600–661 M)</h1>
 		<p class="text-sm text-slate-600">Khalifah keempat, pintu ilmu dan keberanian.</p>
-		<a class="text-emerald-700 underline text-sm" href="/sahabat">← Kembali ke halaman Sahabat</a>
+		<a class="text-emerald-600 underline text-sm" href="/sahabat">← Kembali ke halaman Sahabat</a>
 	</header>
 
 	<div class="space-y-3 text-slate-700">

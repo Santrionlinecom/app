@@ -89,7 +89,7 @@
 			<span class="text-xs text-slate-500">sisa {Math.max(0, 200 - content.length)} karakter</span>
 			<button
 				type="button"
-				class="rounded-full bg-emerald-700 px-4 py-2 text-sm font-bold text-white disabled:bg-slate-300"
+				class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white disabled:bg-slate-300"
 				disabled={!content.trim() || content.length > 200 || isSubmitting}
 				on:click={submit}
 			>

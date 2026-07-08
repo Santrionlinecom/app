@@ -147,7 +147,7 @@
 		</div>
 	{:else if isComplete || totalQuestions === 0}
 		<section class="rounded-xl border border-emerald-200 bg-white p-6 text-center shadow-sm">
-			<div class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-50 text-emerald-700">
+			<div class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-50 text-emerald-600">
 				<CheckCircle2 class="h-8 w-8" />
 			</div>
 			<h2 class="mt-4 text-2xl font-extrabold text-[#1B4332]">Latihan selesai</h2>

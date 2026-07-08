@@ -30,8 +30,8 @@
 			hero: 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600',
 			border: 'border-emerald-200',
 			soft: 'bg-emerald-50',
-			accent: 'text-emerald-700',
-			chip: 'bg-emerald-100 text-emerald-700'
+			accent: 'text-emerald-600',
+			chip: 'bg-emerald-100 text-emerald-600'
 		},
 		focus: [
 			{ icon: 'SAN', title: 'Manajemen Santri', desc: 'Data santri, ustadz, dan status keanggotaan.' },
@@ -90,8 +90,8 @@
 				hero: 'bg-gradient-to-r from-emerald-600 via-teal-600 to-lime-500',
 				border: 'border-emerald-200',
 				soft: 'bg-emerald-50',
-				accent: 'text-emerald-700',
-				chip: 'bg-emerald-100 text-emerald-700'
+				accent: 'text-emerald-600',
+				chip: 'bg-emerald-100 text-emerald-600'
 			},
 			focus: [
 				{ icon: 'TJD', title: 'Tahsin Dasar', desc: 'Iqra, tajwid dasar, dan pembiasaan makhraj.' },
@@ -185,7 +185,7 @@
 						<div>
 							<p class="text-sm font-semibold text-slate-900">{module.title}</p>
 							<p class="text-xs text-slate-500 mt-1">{module.desc}</p>
-							<span class="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700">
+							<span class="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-emerald-600">
 								Buka modul
 								<span>-></span>
 							</span>

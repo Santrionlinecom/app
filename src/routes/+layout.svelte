@@ -690,7 +690,7 @@ const adminNav = [
 		href: '/admin/super/overview',
 		icon: 'M4 13h7V4H4v9zM13 20h7V4h-7v16zM4 20h7v-5H4v5z',
 		description: 'Ringkasan',
-		tone: 'from-slate-700 to-emerald-700',
+		tone: 'from-slate-700 to-emerald-600',
 		isActive: (path: string) => path === '/admin/super/overview' || path.startsWith('/admin/super/overview/')
 	},
 	{
@@ -784,13 +784,13 @@ const mobileExploreLinks = [
 		label: 'Semua Fitur',
 		href: '/fitur',
 		note: 'Program pembinaan aktif',
-		tone: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+		tone: 'border-emerald-200 bg-emerald-50 text-emerald-600'
 	},
 	{
 		label: 'Buku',
 		href: '/buku',
 		note: 'Buku digital dan bab premium',
-		tone: 'border-emerald-200 bg-white text-emerald-700'
+		tone: 'border-emerald-200 bg-white text-emerald-600'
 	},
 	{
 		label: 'Blog',
@@ -814,7 +814,7 @@ const mobileExploreLinks = [
 		label: 'Ormas',
 		href: '/ormas',
 		note: 'Afiliasi dan asal-usul',
-		tone: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+		tone: 'border-emerald-200 bg-emerald-50 text-emerald-600'
 	},
 	{
 		label: 'Mushaf',
@@ -1105,7 +1105,7 @@ $: mobilePublicTabs = data?.user
 					? 'M12 3l7 3v5c0 4.5-2.9 8.4-7 10-4.1-1.6-7-5.5-7-10V6l7-3zM9 12l2 2 4-4M8 7.5h8'
 					: 'M4 13h7V4H4v9zM13 20h7V4h-7v16zM4 20h7v-5H4v5z',
 				description: isSuperAdmin ? 'Panel kontrol' : 'Aktivitas belajar',
-				tone: isSuperAdmin ? 'from-violet-500 to-fuchsia-500' : 'from-slate-700 to-emerald-700',
+				tone: isSuperAdmin ? 'from-violet-500 to-fuchsia-500' : 'from-slate-700 to-emerald-600',
 				isActive: (path: string) =>
 					isSuperAdmin ? isAdminRoute(path) : path === '/dashboard' || path.startsWith('/dashboard/')
 			}
@@ -1168,13 +1168,13 @@ $: if (pathname !== previousPathname) {
 						<div class="flex items-center gap-2">
 							<a
 								href={mobilePrimaryAction.href}
-								class="inline-flex h-11 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 shadow-sm"
+								class="inline-flex h-11 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-600 shadow-sm"
 							>
 								{mobilePrimaryAction.label}
 							</a>
 							<button
 								type="button"
-								class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-emerald-200 hover:text-emerald-700"
+								class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-emerald-200 hover:text-emerald-600"
 								aria-label="Buka menu mobile"
 								on:click={() => (mobileMenuOpen = true)}
 							>
@@ -1232,7 +1232,7 @@ $: if (pathname !== previousPathname) {
 							<div class="mt-2 border-t border-slate-200/80 pt-2">
 								<a
 									href={activeMobileTopMenu.footerHref}
-									class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700"
+									class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600"
 									on:click={() => (mobileTopMenuOpen = null)}
 								>
 									{activeMobileTopMenu.footerLabel}
@@ -1278,7 +1278,7 @@ $: if (pathname !== previousPathname) {
 									<div class="desktop-dropdown-panel">
 									<a href="/buku" class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm transition hover:bg-emerald-100">
 										<p class="font-semibold text-emerald-900">Baca Buku</p>
-										<p class="mt-1 text-xs leading-5 text-emerald-700">Bab gratis dan premium pakai coin.</p>
+										<p class="mt-1 text-xs leading-5 text-emerald-600">Bab gratis dan premium pakai coin.</p>
 									</a>
 									<div class="mt-2 grid gap-1">
 										{#each bookMenuItems as item}
@@ -1384,7 +1384,7 @@ $: if (pathname !== previousPathname) {
 										<div class="grid gap-3 md:grid-cols-2">
 											<div class="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-3">
 												<p class="text-sm font-semibold text-emerald-950">Daftarkan Lembaga</p>
-												<p class="mt-1 text-xs leading-5 text-emerald-700">
+												<p class="mt-1 text-xs leading-5 text-emerald-600">
 													Untuk admin TPQ, pondok, masjid, musholla, atau rumah tahfidz.
 												</p>
 												<div class="mt-2 grid gap-1">
@@ -1478,7 +1478,7 @@ $: if (pathname !== previousPathname) {
 							<div class="grid gap-3">
 								<div class="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/80 p-4">
 									<p class="text-sm font-semibold text-emerald-950">Daftarkan Lembaga</p>
-									<p class="mt-1 text-xs leading-5 text-emerald-700">
+									<p class="mt-1 text-xs leading-5 text-emerald-600">
 										Untuk admin TPQ, pondok, masjid, musholla, dan rumah tahfidz.
 									</p>
 									<div class="mt-3 grid gap-2">
@@ -1513,7 +1513,7 @@ $: if (pathname !== previousPathname) {
 								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Jalur cepat</p>
 								<h3 class="mt-1 text-lg font-semibold text-slate-950">Area utama produk</h3>
 							</div>
-							<a href="/fitur" class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Semua fitur</a>
+							<a href="/fitur" class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">Semua fitur</a>
 						</div>
 
 						<div class="grid grid-cols-2 gap-3">
@@ -1534,14 +1534,14 @@ $: if (pathname !== previousPathname) {
 								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Buku dan coin</p>
 								<h3 class="mt-1 text-lg font-semibold text-slate-950">Buku Digital SantriOnline</h3>
 							</div>
-							<a href="/buku" class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Buka buku</a>
+							<a href="/buku" class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">Buka buku</a>
 						</div>
 
 						<div class="grid grid-cols-2 gap-3">
 							{#each bookMenuItems as item}
 								<a href={item.href} class="rounded-[1.35rem] border border-emerald-100 bg-emerald-50/70 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
 									<p class="text-sm font-semibold text-emerald-950">{item.label}</p>
-									<p class="mt-2 text-xs leading-5 text-emerald-700">{item.note}</p>
+									<p class="mt-2 text-xs leading-5 text-emerald-600">{item.note}</p>
 								</a>
 							{/each}
 						</div>
@@ -1666,7 +1666,7 @@ $: if (pathname !== previousPathname) {
 								<a href="/auth" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
 									Login
 								</a>
-								<a href="/register" class="rounded-[1.3rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm">
+								<a href="/register" class="rounded-[1.3rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-600 shadow-sm">
 									Daftarkan Lembaga
 								</a>
 								<a href="/tpq" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
@@ -1697,12 +1697,12 @@ $: if (pathname !== previousPathname) {
 					</p>
 				</div>
 				<nav aria-label="Footer" class="grid gap-2 text-sm font-semibold text-slate-600 sm:grid-cols-2 md:min-w-[22rem]">
-					<a href="/tentang" class="hover:text-emerald-700">Tentang SantriOnline</a>
-					<a href="/kontak" class="hover:text-emerald-700">Kontak</a>
-					<a href="/privacy" class="hover:text-emerald-700">Kebijakan Privasi</a>
-					<a href="/syarat" class="hover:text-emerald-700">Syarat dan Ketentuan</a>
-					<a href="/buku" class="hover:text-emerald-700">Buku Digital</a>
-					<a href="/blog" class="hover:text-emerald-700">Blog SantriOnline</a>
+					<a href="/tentang" class="hover:text-emerald-600">Tentang SantriOnline</a>
+					<a href="/kontak" class="hover:text-emerald-600">Kontak</a>
+					<a href="/privacy" class="hover:text-emerald-600">Kebijakan Privasi</a>
+					<a href="/syarat" class="hover:text-emerald-600">Syarat dan Ketentuan</a>
+					<a href="/buku" class="hover:text-emerald-600">Buku Digital</a>
+					<a href="/blog" class="hover:text-emerald-600">Blog SantriOnline</a>
 				</nav>
 			</div>
 		</footer>
@@ -1858,7 +1858,7 @@ $: if (pathname !== previousPathname) {
 				<div class="max-h-[calc(100vh-10rem)] min-h-0 overflow-y-auto px-3 py-3 sm:max-h-[calc(100vh-7rem)] sm:px-4">
 					<div class="grid gap-2 sm:grid-cols-3">
 						<div class="rounded-lg border border-emerald-100 bg-emerald-50 p-2">
-							<Smartphone class="h-3.5 w-3.5 text-emerald-700" />
+							<Smartphone class="h-3.5 w-3.5 text-emerald-600" />
 							<p class="mt-1.5 text-[11px] font-semibold text-slate-950">Shortcut app</p>
 							<p class="mt-0.5 text-[10px] leading-3.5 text-slate-600">Buka dari home screen.</p>
 						</div>
@@ -1902,7 +1902,7 @@ $: if (pathname !== previousPathname) {
 						{#if deferredInstallPrompt}
 							<button
 								type="button"
-								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-700 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 disabled:cursor-wait disabled:bg-emerald-700/70 sm:h-11"
+								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-600 disabled:cursor-wait disabled:bg-emerald-600/70 sm:h-11"
 								on:click={handleNativeInstall}
 								disabled={installActionBusy}
 							>
@@ -1912,7 +1912,7 @@ $: if (pathname !== previousPathname) {
 						{:else if installMode === 'android'}
 							<a
 								href={apkUrl}
-								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-700 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 sm:h-11"
+								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-600 sm:h-11"
 								target="_blank"
 								rel="noopener"
 								on:click={() => dismissInstallPopup('dismiss')}
@@ -1923,7 +1923,7 @@ $: if (pathname !== previousPathname) {
 						{:else}
 							<button
 								type="button"
-								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-700 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 sm:h-11"
+								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-600 sm:h-11"
 								on:click={() => dismissInstallPopup('dismiss')}
 							>
 								<Smartphone class="h-4 w-4" />
@@ -1933,7 +1933,7 @@ $: if (pathname !== previousPathname) {
 
 						<button
 							type="button"
-							class="inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-700"
+							class="inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-600"
 							on:click={() => dismissInstallPopup('snooze')}
 						>
 							Nanti saja

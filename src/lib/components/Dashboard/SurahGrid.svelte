@@ -11,7 +11,7 @@
 	function getStatusColor(row: typeof checklist[0]) {
 		if (row.disetujui === row.totalAyah) return 'bg-emerald-500 text-white border-emerald-600';
 		if (row.setor > row.disetujui) return 'bg-amber-400 text-white border-amber-500';
-		if (row.disetujui > 0) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+		if (row.disetujui > 0) return 'bg-emerald-100 text-emerald-600 border-emerald-200';
 		return 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300';
 	}
 </script>

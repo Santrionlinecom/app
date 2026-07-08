@@ -80,7 +80,7 @@
 
 <div class="mx-auto max-w-4xl space-y-6 pb-10">
 	<header class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-		<a href="/buku/studio" class="text-sm font-medium text-emerald-700 hover:text-emerald-800">Kembali ke Studio</a>
+		<a href="/buku/studio" class="text-sm font-medium text-emerald-600 hover:text-emerald-600">Kembali ke Studio</a>
 		<h1 class="mt-4 text-3xl font-semibold text-slate-900 md:text-4xl">Buat buku baru</h1>
 		<p class="mt-3 text-sm leading-7 text-slate-600">
 			Buku baru otomatis dibuat sebagai draft. Slug dibuat dari judul dan akan dibuat unik otomatis.
@@ -109,7 +109,7 @@
 			</label>
 
 			<div class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-				<p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Slug Otomatis</p>
+				<p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">Slug Otomatis</p>
 				<p class="mt-2 break-all text-sm font-semibold text-slate-900">/buku/{slugPreview}</p>
 			</div>
 
@@ -163,7 +163,7 @@
 						Format JPG, PNG, atau WebP maksimal 2MB. URL cover akan terisi otomatis setelah upload.
 					</p>
 					{#if isCoverUploading}
-						<p class="mt-2 text-xs font-semibold text-emerald-700">Mengupload cover...</p>
+						<p class="mt-2 text-xs font-semibold text-emerald-600">Mengupload cover...</p>
 					{/if}
 					{#if coverUploadError}
 						<p class="mt-2 text-xs font-semibold text-rose-600">{coverUploadError}</p>

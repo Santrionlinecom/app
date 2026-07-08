@@ -38,7 +38,7 @@
 	<section class="rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm md:p-6">
 		<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Akademik TPQ</p>
+				<p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Akademik TPQ</p>
 				<h1 class="mt-2 text-2xl font-bold text-slate-900">Rekap Rapor Hafalan</h1>
 				<p class="mt-2 text-sm text-slate-600">
 					{data.totalKategori} kategori dan {data.totalItem} item hafalan untuk seluruh santri.
@@ -55,7 +55,7 @@
 		</div>
 		<div class="stat rounded-2xl border bg-white shadow-sm">
 			<div class="stat-title">Rata-rata Lulus</div>
-			<div class="stat-value text-emerald-700">{rataRata}%</div>
+			<div class="stat-value text-emerald-600">{rataRata}%</div>
 		</div>
 		<div class="stat rounded-2xl border bg-white shadow-sm">
 			<div class="stat-title">Santri Lengkap</div>

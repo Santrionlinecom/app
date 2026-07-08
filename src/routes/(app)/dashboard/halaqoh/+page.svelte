@@ -3,7 +3,7 @@
 </svelte:head>
 
 <div class="space-y-4">
-	<div class="rounded-3xl border bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-700 p-6 text-white shadow-xl">
+	<div class="rounded-3xl border bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 p-6 text-white shadow-xl">
 		<p class="text-xs uppercase tracking-[0.25em] text-white/80">Halaqoh</p>
 		<h1 class="mt-2 text-2xl font-semibold">Jadwal & Kehadiran</h1>
 		<p class="mt-1 text-sm text-white/90">Pantau halaqoh, absensi, dan target bacaan per pertemuan.</p>
