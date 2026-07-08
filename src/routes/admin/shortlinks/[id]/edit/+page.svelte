@@ -25,7 +25,7 @@
 </svelte:head>
 
 <section class="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 lg:px-8">
-	<a href={`/admin/shortlinks/${data.link.slug}`} class="text-sm font-semibold text-emerald-700 hover:text-emerald-800">Analytics</a>
+	<a href={`/admin/shortlinks/${data.link.slug}`} class="text-sm font-semibold text-emerald-700 hover:text-emerald-700">Analytics</a>
 	<div class="mt-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
 		<div>
 			<p class="text-sm font-semibold text-slate-500">/{data.link.slug}</p>
@@ -86,7 +86,7 @@
 				</a>
 				<button
 					type="submit"
-					class="inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800"
+					class="inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
 				>
 					Simpan
 				</button>

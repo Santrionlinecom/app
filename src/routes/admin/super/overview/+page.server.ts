@@ -5,14 +5,11 @@ import { Scrypt } from '$lib/server/password';
 import { getOrganizationById } from '$lib/server/organizations';
 import { logActivity } from '$lib/server/activity-logs';
 import { isSuperAdminRole, requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
-import { ensureCmsSchema, getAllPosts } from '$lib/server/cms';
-import { ensureDefaultManualPaymentMethods } from '$lib/server/domains/digital-store/manual-payments';
 import {
 	createDigitalSale,
 	deleteDigitalPaymentMethod,
 	deleteDigitalProduct,
 	ensureDigitalCommerceSchema,
-	getDigitalCommerceOverview,
 	updateDigitalProductStatus,
 	upsertDigitalPaymentMethod,
 	upsertDigitalProduct
@@ -85,17 +82,17 @@ const parseCurrency = (value: FormDataEntryValue | null) => {
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db } = requireSuperAdmin(locals);
-	await ensureCmsSchema(db);
-	await ensureDigitalCommerceSchema(db);
-	await ensureDefaultManualPaymentMethods(db);
-
-	const totalInstitutions = await countTable(db, 'organizations');
-	const totalUsers = await countTable(db, 'users');
-	const totalTransactions =
-		(await countTable(db, 'transactions')) +
-		(await countTable(db, 'transaksi_zakat')) +
-		(await countTable(db, 'data_qurban')) +
-		(await countTable(db, 'kas_masjid'));
+	const [totalInstitutions, totalUsers, transactionCounts] = await Promise.all([
+		countTable(db, 'organizations'),
+		countTable(db, 'users'),
+		Promise.all([
+			countTable(db, 'transactions'),
+			countTable(db, 'transaksi_zakat'),
+			countTable(db, 'data_qurban'),
+			countTable(db, 'kas_masjid')
+		])
+	]);
+	const totalTransactions = transactionCounts.reduce((total, count) => total + count, 0);
 
 	const hasAkunAdminColumn = await hasTableColumn(db, 'organizations', 'akun_admin_id');
 	const { results: rawOrgRows } = await db
@@ -401,31 +398,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		role: string | null;
 	}>);
 
-	const recentCmsPosts = await getAllPosts(db, { page: 1, limit: 6 });
-	const cmsStatsRow = await db
-		.prepare(
-			`SELECT
-				COUNT(1) as totalPosts,
-				COALESCE(SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END), 0) as publishedPosts,
-				COALESCE(SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END), 0) as draftPosts,
-				COALESCE(SUM(CASE WHEN scheduled_at IS NOT NULL AND scheduled_at > ? THEN 1 ELSE 0 END), 0) as scheduledPosts
-			 FROM cms_posts`
-		)
-		.bind(Date.now())
-		.first<{
-			totalPosts: number | null;
-			publishedPosts: number | null;
-			draftPosts: number | null;
-			scheduledPosts: number | null;
-		}>();
-
-	const digitalCommerce = await getDigitalCommerceOverview(db, { chartDays: 14 });
-	const editingProductId = (url.searchParams.get('product') ?? '').trim();
-	const editingPaymentMethodId = (url.searchParams.get('payment') ?? '').trim();
-	const editingProduct =
-		digitalCommerce.products.find((product) => product.id === editingProductId) ?? null;
-	const editingPaymentMethod =
-		digitalCommerce.paymentMethods.find((payment) => payment.id === editingPaymentMethodId) ?? null;
 	const { notifications, notificationCounts } = await getSuperAdminNotifications(db);
 
 	return {
@@ -446,20 +418,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		availableUsers: candidateUsers ?? [],
 		searchQuery,
 		searchResults,
-		cms: {
-			stats: {
-				totalPosts: Number(cmsStatsRow?.totalPosts ?? 0),
-				publishedPosts: Number(cmsStatsRow?.publishedPosts ?? 0),
-				draftPosts: Number(cmsStatsRow?.draftPosts ?? 0),
-				scheduledPosts: Number(cmsStatsRow?.scheduledPosts ?? 0)
-			},
-			posts: recentCmsPosts.posts
-		},
-		digitalCommerce: {
-			...digitalCommerce,
-			editingProduct,
-			editingPaymentMethod
-		},
 		notifications,
 		notificationCounts
 	};

@@ -579,13 +579,13 @@
 							<div class="space-y-2 border-t border-emerald-100 pt-3">
 								<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Aset AI</p>
 								{#if audioIdUrl}
-									<a href={audioIdUrl} target="_blank" rel="noreferrer" class="flex items-center gap-2 text-xs font-semibold text-emerald-700 hover:text-emerald-900">
+									<a href={audioIdUrl} target="_blank" rel="noreferrer" class="flex items-center gap-2 text-xs font-semibold text-emerald-700 hover:text-emerald-700">
 										<Volume2 class="h-3.5 w-3.5" />
 										Narasi Indonesia
 									</a>
 								{/if}
 								{#if audioArabUrl}
-									<a href={audioArabUrl} target="_blank" rel="noreferrer" class="flex items-center gap-2 text-xs font-semibold text-emerald-700 hover:text-emerald-900">
+									<a href={audioArabUrl} target="_blank" rel="noreferrer" class="flex items-center gap-2 text-xs font-semibold text-emerald-700 hover:text-emerald-700">
 										<FileAudio2 class="h-3.5 w-3.5" />
 										Audio bacaan Arab
 									</a>

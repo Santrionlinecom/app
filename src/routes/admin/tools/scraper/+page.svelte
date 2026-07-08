@@ -251,7 +251,7 @@
 					</p>
 				</div>
 
-				<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+				<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
 					<div class="flex items-center gap-2 font-semibold">
 						<ShieldCheck class="h-4 w-4" />
 						<span>Session aktif: {data.user.role}</span>
@@ -308,7 +308,7 @@
 			<button
 				type="submit"
 				disabled={loading}
-				class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+				class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-400"
 			>
 				{#if loading}
 					<Loader2 class="h-4 w-4 animate-spin" />
@@ -408,7 +408,7 @@
 						<button
 							type="button"
 							on:click={downloadJson}
-							class="inline-flex items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100"
+							class="inline-flex items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
 						>
 							<Download class="h-4 w-4" />
 							<span>Download JSON</span>

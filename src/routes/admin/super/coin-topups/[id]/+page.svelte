@@ -150,7 +150,7 @@
 							href={req.proofUrl}
 							target="_blank"
 							rel="noreferrer"
-							class="mt-2 inline-flex break-all text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+							class="mt-2 inline-flex break-all text-sm font-semibold text-emerald-700 hover:text-emerald-700"
 						>
 							Buka bukti transfer
 						</a>

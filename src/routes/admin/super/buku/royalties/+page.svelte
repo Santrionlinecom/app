@@ -65,7 +65,7 @@
 		</div>
 		<div class="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
 			<p class="text-xs uppercase tracking-[0.22em] text-emerald-700">Royalti Penulis</p>
-			<p class="mt-2 text-3xl font-bold text-emerald-800">{summary.totalAuthorCoin.toLocaleString('id-ID')}</p>
+			<p class="mt-2 text-3xl font-bold text-emerald-700">{summary.totalAuthorCoin.toLocaleString('id-ID')}</p>
 		</div>
 		<div class="rounded-[1.5rem] border border-amber-200 bg-amber-50 p-5 shadow-sm">
 			<p class="text-xs uppercase tracking-[0.22em] text-amber-700">Komisi Platform</p>

@@ -257,7 +257,7 @@
 			<section class="grid gap-4 xl:grid-cols-[1fr_24rem]">
 				<div class="space-y-3">
 					{#each filtered() as post}
-						<article class="group overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-900/5">
+						<article class="group overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-600/10">
 							<div class="grid gap-0 md:grid-cols-[13rem_1fr]">
 								<a href={`/admin/posts/${post.id}/edit`} class="relative block min-h-44 overflow-hidden bg-slate-100 md:min-h-full" aria-label={`Edit ${post.title}`}>
 									{#if post.thumbnail_url}
@@ -321,7 +321,7 @@
 										<form method="POST" action="?/toggle" use:enhance>
 											<input type="hidden" name="id" value={post.id} />
 											<input type="hidden" name="next" value={post.status === 'published' ? 'draft' : 'published'} />
-											<button type="submit" class={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition hover:-translate-y-0.5 ${post.status === 'published' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'}`}>
+											<button type="submit" class={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition hover:-translate-y-0.5 ${post.status === 'published' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}>
 												{post.status === 'published' ? 'Jadikan Draft' : 'Publish'}
 											</button>
 										</form>

@@ -11,11 +11,6 @@
 	type AvailableUser = PageData['availableUsers'][number];
 	type ActivityRow = PageData['liveStats']['recentActivities'][number];
 	type LiveActivity = ActivityRow & { role?: string | null };
-	type CmsPost = PageData['cms']['posts'][number];
-	type DigitalProduct = PageData['digitalCommerce']['products'][number];
-	type DigitalPaymentMethod = PageData['digitalCommerce']['paymentMethods'][number];
-	type DigitalSale = PageData['digitalCommerce']['recentSales'][number];
-	type DigitalSalesPoint = PageData['digitalCommerce']['salesChart'][number];
 	type NotificationItem = PageData['notifications'][number];
 	type NotificationCounts = PageData['notificationCounts'];
 	type AdminUser = { username?: string | null; email?: string | null; role?: string | null };
@@ -83,46 +78,39 @@
 		'https://files.santrionline.com/ICON%20SANTRI%20ONLINE%20COM%20kecil%20(1).png';
 
 	const iconPaths = {
-		dashboard: 'M3 13h8V3H3v10Zm10 8h8V11h-8v10ZM3 21h8v-6H3v6Zm10-12h8V3h-8v6Z',
-		building:
-			'M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 10h.01M12 10h.01M15 10h.01',
-		users:
-			'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
-		activity: 'M22 12h-4l-3 9L9 3l-3 9H2',
+		dashboard: 'M4 13h7V4H4v9zM13 20h7V4h-7v16zM4 20h7v-5H4v5z',
+		building: 'M3 21h18M5 21V8l7-4 7 4v13M9 21v-5h6v5M8.5 10h.01M12 10h.01M15.5 10h.01M8.5 13.5h.01M15.5 13.5h.01',
+		users: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 20a8 8 0 0116 0M17.5 7.5h3M19 6v3',
+		activity: 'M4 13h4l2-7 4 12 2-5h4',
 		search: 'M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z',
-		file: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm0 0v6h6M8 13h8M8 17h6',
-		book: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15Z',
-		coins:
-			'M12 8c4.97 0 9-1.34 9-3s-4.03-3-9-3-9 1.34-9 3 4.03 3 9 3Zm-9 1v4c0 1.66 4.03 3 9 3s9-1.34 9-3V9M3 14v4c0 1.66 4.03 3 9 3s9-1.34 9-3v-4',
-		bell:
-			'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
-		settings:
-			'M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Zm7.4-2.1a7.8 7.8 0 0 0 .05-2.8l2-1.5-2-3.46-2.38.96a7.1 7.1 0 0 0-2.42-1.4L14.3 2h-4l-.35 3.2a7.1 7.1 0 0 0-2.42 1.4l-2.38-.96-2 3.46 2 1.5a7.8 7.8 0 0 0 .05 2.8l-2.05 1.56 2 3.46 2.44-.98a7.1 7.1 0 0 0 2.36 1.36l.35 3.2h4l.35-3.2a7.1 7.1 0 0 0 2.36-1.36l2.44.98 2-3.46-2.05-1.56Z',
-		wallet:
-			'M19 7V4a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V5m15 8h.01',
-		shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z',
-		sparkles:
-			'M12 3l1.7 4.6L18 9.3l-4.3 1.7L12 15.5 10.3 11 6 9.3l4.3-1.7L12 3Zm6 10 1 2.6 2.5 1-2.5 1-1 2.4-1-2.4-2.5-1 2.5-1 1-2.6ZM5 13l.8 2.1L8 16l-2.2.9L5 19l-.8-2.1L2 16l2.2-.9L5 13Z'
+		file: 'M5 5.5A2.5 2.5 0 017.5 3h9A2.5 2.5 0 0119 5.5v13L15.5 16h-8A2.5 2.5 0 015 13.5v-8zM8 7h8M8 10.5h7M8 14h4',
+		book: 'M4.5 5.25A2.25 2.25 0 016.75 3H20v15.75H7A2.5 2.5 0 004.5 21V5.25zM7 6.75h9.5M7 10.25h8M7 13.75h5.5M4.5 18.75A2.25 2.25 0 016.75 16.5H20',
+		coins: 'M12 3c4.97 0 9 2.24 9 5s-4.03 5-9 5-9-2.24-9-5 4.03-5 9-5zM3 8v4c0 2.76 4.03 5 9 5s9-2.24 9-5V8M3 12v4c0 2.76 4.03 5 9 5s9-2.24 9-5v-4',
+		bell: 'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
+		settings: 'M12 8a4 4 0 100 8 4 4 0 000-8zM4 20a8 8 0 0116 0M18.5 5.5l1.5 1.5M20 5.5L18.5 7',
+		wallet: 'M4 7.5A2.5 2.5 0 016.5 5H18a2 2 0 012 2v10.5A2.5 2.5 0 0117.5 20h-11A2.5 2.5 0 014 17.5v-10zM16 12h5v4h-5a2 2 0 010-4zM17.5 14h.01M7 8h7',
+		shield: 'M12 3l7 3v5c0 4.5-2.9 8.4-7 10-4.1-1.6-7-5.5-7-10V6l7-3zM9 12l2 2 4-4',
+		sparkles: 'M12 3l2.1 5.1 5.4.45-4.1 3.55 1.25 5.25L12 14.55 7.35 17.35 8.6 12.1 4.5 8.55l5.4-.45L12 3zM19 15l1 2.2 2.2.3-1.7 1.5.5 2.2-2-1.15-2 1.15.5-2.2-1.7-1.5 2.2-.3L19 15z'
 	};
 
 	const adminNavItems = [
-		{ label: 'Dashboard', href: '/admin/super/overview', icon: iconPaths.dashboard, active: true },
-		{ label: 'Pencarian User', href: '#global-search', icon: iconPaths.search },
-		{ label: 'Admin Control', href: '#admin-control', icon: iconPaths.shield },
-		{ label: 'Daftar Lembaga', href: '#institution-list', icon: iconPaths.building },
-		{ label: 'CMS Hub', href: '/admin/super/cms-hub', icon: iconPaths.file },
-		{ label: 'Moderasi Buku', href: '/admin/super/buku', icon: iconPaths.book },
-		{ label: 'Approval Addon', href: '/admin/super/addons', icon: iconPaths.wallet },
-		{ label: 'Topup Coin', href: '/admin/super/coin-topups', icon: iconPaths.coins },
-		{ label: 'Akun', href: '/akun', icon: iconPaths.settings }
+		{ label: 'Dashboard', href: '/admin/super/overview', icon: iconPaths.dashboard, active: true, tone: 'from-emerald-500 to-teal-500' },
+		{ label: 'Pencarian User', href: '#global-search', icon: iconPaths.search, tone: 'from-cyan-500 to-blue-500' },
+		{ label: 'Admin Control', href: '#admin-control', icon: iconPaths.shield, tone: 'from-violet-500 to-fuchsia-500' },
+		{ label: 'Daftar Lembaga', href: '#institution-list', icon: iconPaths.building, tone: 'from-amber-500 to-orange-500' },
+		{ label: 'CMS Hub', href: '/admin/super/cms-hub', icon: iconPaths.file, tone: 'from-sky-500 to-cyan-500' },
+		{ label: 'Moderasi Buku', href: '/admin/super/buku', icon: iconPaths.book, tone: 'from-rose-500 to-pink-500' },
+		{ label: 'Approval Addon', href: '/admin/super/addons', icon: iconPaths.wallet, tone: 'from-indigo-500 to-violet-500' },
+		{ label: 'Topup Coin', href: '/admin/super/coin-topups', icon: iconPaths.coins, tone: 'from-amber-400 to-orange-500' },
+		{ label: 'Akun', href: '/akun', icon: iconPaths.settings, tone: 'from-slate-600 to-slate-800' }
 	];
 
 	const quickActions = [
-		{ label: 'CMS Hub', href: '/admin/super/cms-hub', icon: iconPaths.file },
-		{ label: 'Buku', href: '/admin/super/buku', icon: iconPaths.book },
-		{ label: 'Addon', href: '/admin/super/addons', icon: iconPaths.wallet },
-		{ label: 'Topup Coin', href: '/admin/super/coin-topups', icon: iconPaths.coins },
-		{ label: 'Akun', href: '/akun', icon: iconPaths.settings }
+		{ label: 'CMS Hub', href: '/admin/super/cms-hub', icon: iconPaths.file, tone: 'from-sky-500 to-cyan-500' },
+		{ label: 'Buku', href: '/admin/super/buku', icon: iconPaths.book, tone: 'from-rose-500 to-pink-500' },
+		{ label: 'Addon', href: '/admin/super/addons', icon: iconPaths.wallet, tone: 'from-indigo-500 to-violet-500' },
+		{ label: 'Topup Coin', href: '/admin/super/coin-topups', icon: iconPaths.coins, tone: 'from-amber-400 to-orange-500' },
+		{ label: 'Akun', href: '/akun', icon: iconPaths.settings, tone: 'from-slate-600 to-slate-800' }
 	];
 
 	let filterRole = 'all';
@@ -234,65 +222,6 @@
 		return source.length > length ? `${source.slice(0, length).trim()}...` : source;
 	};
 
-	const paymentTypeLabel: Record<string, string> = {
-		bank: 'Bank Transfer',
-		ewallet: 'E-Wallet',
-		qris: 'QRIS',
-		manual: 'Manual'
-	};
-
-	const cmsStatusClass = (status?: string | null) => {
-		switch ((status ?? '').toLowerCase()) {
-			case 'published':
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
-			case 'draft':
-				return 'border-amber-200 bg-amber-50 text-amber-700';
-			default:
-				return 'border-slate-200 bg-slate-100 text-slate-600';
-		}
-	};
-
-	const productStatusClass = (status?: string | null) => {
-		switch ((status ?? '').toLowerCase()) {
-			case 'published':
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
-			case 'draft':
-				return 'border-sky-200 bg-sky-50 text-sky-700';
-			case 'archived':
-				return 'border-slate-200 bg-slate-100 text-slate-600';
-			default:
-				return 'border-slate-200 bg-slate-100 text-slate-600';
-		}
-	};
-
-	const saleStatusClass = (status?: string | null) => {
-		switch ((status ?? '').toLowerCase()) {
-			case 'paid':
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
-			case 'pending':
-				return 'border-amber-200 bg-amber-50 text-amber-700';
-			case 'failed':
-				return 'border-rose-200 bg-rose-50 text-rose-700';
-			case 'refunded':
-				return 'border-indigo-200 bg-indigo-50 text-indigo-700';
-			default:
-				return 'border-slate-200 bg-slate-100 text-slate-600';
-		}
-	};
-
-	const paymentTone = (type?: string | null) => {
-		switch ((type ?? '').toLowerCase()) {
-			case 'bank':
-				return 'border-sky-200 bg-sky-50 text-sky-700';
-			case 'ewallet':
-				return 'border-violet-200 bg-violet-50 text-violet-700';
-			case 'qris':
-				return 'border-emerald-200 bg-emerald-50 text-emerald-700';
-			default:
-				return 'border-amber-200 bg-amber-50 text-amber-700';
-		}
-	};
-
 	const orgTypeName = (value?: string | null) => (value ? orgTypeLabel[value] ?? value : '-');
 	const orgLabel = (org: Institution) => `${org.name} (${orgTypeLabel[org.type] ?? org.type})`;
 	const orgsWithoutAdmin = (orgs: Institution[]) => orgs.filter((org) => !org.adminCount);
@@ -377,7 +306,7 @@
 			value: formatNumber(data.stats.totalInstitutions),
 			note: 'Seluruh organisasi terdaftar',
 			accent: 'from-emerald-400 to-teal-500',
-			tone: 'text-emerald-800',
+			tone: 'text-emerald-700',
 			icon: iconPaths.building
 		},
 		{
@@ -385,7 +314,7 @@
 			value: formatNumber(data.stats.totalUsers),
 			note: 'Akun lintas lembaga',
 			accent: 'from-sky-400 to-cyan-500',
-			tone: 'text-sky-800',
+			tone: 'text-sky-700',
 			icon: iconPaths.users
 		},
 		{
@@ -393,7 +322,7 @@
 			value: formatNumber(liveStats.loginsToday),
 			note: 'Akun aktif sepanjang hari ini',
 			accent: 'from-amber-400 to-orange-500',
-			tone: 'text-amber-800',
+			tone: 'text-amber-700',
 			icon: iconPaths.activity
 		},
 		{
@@ -401,7 +330,7 @@
 			value: formatNumber(noAdminCount),
 			note: 'Butuh perhatian segera',
 			accent: 'from-rose-400 to-pink-500',
-			tone: 'text-rose-800',
+			tone: 'text-rose-700',
 			icon: iconPaths.shield
 		}
 	];
@@ -430,9 +359,7 @@
 	$: {
 		const rows = data.institutionSummary ?? [];
 		institutionCards = orgTypeOrder.map((type) => {
-			const row =
-				rows.find((item) => item.type === type) ??
-				emptySummary(type);
+			const row = rows.find((item) => item.type === type) ?? emptySummary(type);
 			const config = orgTypeConfig[type];
 			const isCommunity = config.group === 'community';
 			const primaryLabel = isCommunity ? 'Jamaah' : 'Santri';
@@ -464,180 +391,6 @@
 		educationCards = institutionCards.filter((card) => card.group === 'education');
 		communityCards = institutionCards.filter((card) => card.group === 'community');
 	}
-
-	const cmsOverviewCards = [
-		{
-			label: 'Artikel',
-			value: data.cms.stats.totalPosts,
-			note: 'Semua konten blog'
-		},
-		{
-			label: 'Published',
-			value: data.cms.stats.publishedPosts,
-			note: 'Sudah tayang di /blog'
-		},
-		{
-			label: 'Terjadwal',
-			value: data.cms.stats.scheduledPosts,
-			note: 'Menunggu waktu publish'
-		}
-	];
-
-	const digitalCards = [
-		{
-			label: 'Produk Live',
-			value: data.digitalCommerce.stats.publishedProducts,
-			note: 'Siap dijual'
-		},
-		{
-			label: 'Metode Aktif',
-			value: data.digitalCommerce.stats.activeMethods,
-			note: 'Muncul di checkout'
-		},
-		{
-			label: 'Penjualan',
-			value: data.digitalCommerce.stats.totalSales,
-			note: 'Order tercatat'
-		},
-		{
-			label: 'Omzet',
-			value: data.digitalCommerce.stats.totalRevenue,
-			note: 'Total pemasukan'
-		}
-	];
-
-	let salesChartMax = 1;
-	$: salesChartMax = Math.max(
-		...data.digitalCommerce.salesChart.map((point: DigitalSalesPoint) => point.revenue),
-		1
-	);
-
-	let coverInput: HTMLInputElement | null = null;
-	let digitalFileInput: HTMLInputElement | null = null;
-	let uploadingCover = false;
-	let uploadingDigitalFile = false;
-
-	let productFormSeed = '';
-	let productId = '';
-	let productTitle = '';
-	let productSlug = '';
-	let productSummary = '';
-	let productDescription = '';
-	let productPrice = '';
-	let productCoverUrl = '';
-	let productFileUrl = '';
-	let productStatus: 'draft' | 'published' | 'archived' = 'draft';
-	let productFeatured = false;
-	let productPaymentMethodIds: string[] = [];
-
-	let paymentFormSeed = '';
-	let paymentMethodId = '';
-	let paymentMethodName = '';
-	let paymentMethodType: 'bank' | 'ewallet' | 'qris' | 'manual' = 'bank';
-	let paymentAccountName = '';
-	let paymentAccountNumber = '';
-	let paymentInstructions = '';
-	let paymentDisplayOrder = 0;
-	let paymentIsActive = true;
-
-	const syncProductForm = (product: DigitalProduct | null) => {
-		productId = product?.id ?? '';
-		productTitle = product?.title ?? '';
-		productSlug = product?.slug ?? '';
-		productSummary = product?.summary ?? '';
-		productDescription = product?.description ?? '';
-		productPrice = product ? String(product.price) : '';
-		productCoverUrl = product?.coverUrl ?? '';
-		productFileUrl = product?.fileUrl ?? '';
-		productStatus = (product?.status ?? 'draft') as 'draft' | 'published' | 'archived';
-		productFeatured = Boolean(product?.featured);
-		productPaymentMethodIds = [...(product?.paymentMethodIds ?? [])];
-	};
-
-	const syncPaymentForm = (payment: DigitalPaymentMethod | null) => {
-		paymentMethodId = payment?.id ?? '';
-		paymentMethodName = payment?.name ?? '';
-		paymentMethodType = (payment?.type ?? 'bank') as 'bank' | 'ewallet' | 'qris' | 'manual';
-		paymentAccountName = payment?.accountName ?? '';
-		paymentAccountNumber = payment?.accountNumber ?? '';
-		paymentInstructions = payment?.instructions ?? '';
-		paymentDisplayOrder = payment?.displayOrder ?? 0;
-		paymentIsActive = payment ? Boolean(payment.isActive) : true;
-	};
-
-	$: {
-		const nextSeed = data.digitalCommerce.editingProduct
-			? `edit:${data.digitalCommerce.editingProduct.id}:${data.digitalCommerce.editingProduct.updatedAt}`
-			: 'new';
-		if (nextSeed !== productFormSeed) {
-			productFormSeed = nextSeed;
-			syncProductForm(data.digitalCommerce.editingProduct);
-		}
-	}
-
-	$: {
-		const nextSeed = data.digitalCommerce.editingPaymentMethod
-			? `edit:${data.digitalCommerce.editingPaymentMethod.id}:${data.digitalCommerce.editingPaymentMethod.updatedAt}`
-			: 'new';
-		if (nextSeed !== paymentFormSeed) {
-			paymentFormSeed = nextSeed;
-			syncPaymentForm(data.digitalCommerce.editingPaymentMethod);
-		}
-	}
-
-	const generateProductSlug = () => {
-		productSlug = normalizeSlug(productSlug || productTitle);
-	};
-
-	const onPickCover = async (event: Event) => {
-		const target = event.target as HTMLInputElement;
-		const file = target.files?.[0];
-		if (!file) return;
-		uploadingCover = true;
-		const formData = new FormData();
-		formData.append('file', file);
-
-		try {
-			const response = await fetch('/api/upload', { method: 'POST', body: formData });
-			if (!response.ok) {
-				const payload = await response.json().catch(() => ({}));
-				throw new Error(payload?.error || 'Upload cover gagal');
-			}
-			const payload = await response.json();
-			productCoverUrl = payload.url ?? '';
-		} catch (err) {
-			console.error('Upload cover error:', err);
-			alert('Gagal mengunggah cover produk.');
-		} finally {
-			uploadingCover = false;
-			if (target) target.value = '';
-		}
-	};
-
-	const onPickDigitalFile = async (event: Event) => {
-		const target = event.target as HTMLInputElement;
-		const file = target.files?.[0];
-		if (!file) return;
-		uploadingDigitalFile = true;
-		const formData = new FormData();
-		formData.append('file', file);
-
-		try {
-			const response = await fetch('/api/upload/digital', { method: 'POST', body: formData });
-			if (!response.ok) {
-				const payload = await response.json().catch(() => ({}));
-				throw new Error(payload?.error || 'Upload file digital gagal');
-			}
-			const payload = await response.json();
-			productFileUrl = payload.url ?? '';
-		} catch (err) {
-			console.error('Upload digital file error:', err);
-			alert('Gagal mengunggah file digital.');
-		} finally {
-			uploadingDigitalFile = false;
-			if (target) target.value = '';
-		}
-	};
 
 	const toQuery = () => {
 		const params = new URLSearchParams();

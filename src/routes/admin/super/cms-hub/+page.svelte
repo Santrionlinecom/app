@@ -621,7 +621,7 @@
 			</button>
 			<a
 				href="/admin/super/overview"
-				class="inline-flex h-11 items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-800"
+				class="inline-flex h-11 items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700"
 			>
 				<ArrowLeft class="h-4 w-4" aria-hidden="true" />
 				Overview
@@ -679,7 +679,7 @@
 					<div class="rounded-[2rem] border border-white/70 bg-white/86 p-5 shadow-xl backdrop-blur">
 						<a
 							href="/admin/super/overview"
-							class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-emerald-800"
+							class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-emerald-700"
 						>
 							<ArrowLeft class="h-4 w-4" aria-hidden="true" />
 							Kembali ke overview
@@ -708,14 +708,14 @@
 					</div>
 
 					<div class="rounded-[2rem] border border-emerald-200 bg-emerald-50/92 p-5 shadow-sm">
-						<p class="text-sm font-bold text-emerald-900">Prioritas hari ini</p>
-						<p class="mt-2 text-sm leading-6 text-emerald-800/80">
+						<p class="text-sm font-bold text-emerald-700">Prioritas hari ini</p>
+						<p class="mt-2 text-sm leading-6 text-emerald-700/80">
 							{formatNumber(data.digitalCommerce.pendingSales.length)} order menunggu verifikasi dan
 							{formatNumber(data.cms.stats.draftPosts)} artikel masih draft.
 						</p>
 						<a
 							href="#sales-chart"
-							class="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-emerald-900 px-4 text-sm font-bold text-white"
+							class="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-emerald-700 px-4 text-sm font-bold text-white"
 						>
 							Cek penjualan
 						</a>
@@ -751,7 +751,7 @@
 	<section class="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-lg backdrop-blur">
 		<div class="grid gap-6 xl:grid-cols-[1.05fr,0.95fr]">
 			<!-- CMS Artikel Card -->
-			<div id="artikel-cms" class="overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-800 p-6 text-white shadow-xl">
+			<div id="artikel-cms" class="overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-slate-900 via-emerald-600 to-slate-800 p-6 text-white shadow-xl">
 				<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
 					<div class="max-w-xl">
 						<p class="text-xs uppercase text-white/60">CMS Artikel</p>
@@ -1995,7 +1995,7 @@
 											<p class="mt-1 text-xs text-slate-500">{sale.paymentMethodName}</p>
 										{/if}
 										{#if sale.proofUrl}
-											<a href={sale.proofUrl} target="_blank" rel="noreferrer" class="mt-1 inline-flex text-xs font-semibold text-emerald-700 hover:text-emerald-800">
+											<a href={sale.proofUrl} target="_blank" rel="noreferrer" class="mt-1 inline-flex text-xs font-semibold text-emerald-700 hover:text-emerald-700">
 												Lihat bukti bayar
 											</a>
 										{/if}

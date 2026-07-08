@@ -830,9 +830,9 @@
 					{#each menuItems as item, idx}
 						<a
 							href={item.href}
-							class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800 hover:shadow-sm"
+							class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-sm"
 							class:bg-emerald-100={isActive(item)}
-							class:text-emerald-900={isActive(item)}
+							class:text-emerald-700={isActive(item)}
 							class:shadow-sm={isActive(item)}
 							class:font-semibold={isActive(item)}
 							style={`animation-delay: ${idx * 50}ms;`}
@@ -1043,9 +1043,9 @@
 						{#each menuItems as item, idx}
 							<a
 								href={item.href}
-								class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-800 active:scale-[0.98]"
+								class="fade-in flex min-w-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.98]"
 								class:bg-emerald-100={isActive(item)}
-								class:text-emerald-900={isActive(item)}
+								class:text-emerald-700={isActive(item)}
 								class:shadow-sm={isActive(item)}
 								class:font-semibold={isActive(item)}
 								style={`animation-delay: ${idx * 50}ms; min-height: 44px;`}
@@ -1083,7 +1083,7 @@
 
 {#if quickAccessItems.length > 0}
 	<aside
-		class="fixed right-4 top-28 z-30 hidden w-72 rounded-[1.35rem] border border-emerald-100/80 bg-white/92 p-3 shadow-2xl shadow-emerald-900/10 backdrop-blur-xl 2xl:block"
+		class="fixed right-4 top-28 z-30 hidden w-72 rounded-[1.35rem] border border-emerald-100/80 bg-white/92 p-3 shadow-2xl shadow-emerald-600/10 backdrop-blur-xl 2xl:block"
 		aria-label="Quick access member"
 	>
 		<div class="flex items-start justify-between gap-3 border-b border-emerald-50 px-2 pb-3">
@@ -1101,8 +1101,8 @@
 					href={item.href}
 					class={`group flex items-center gap-3 rounded-2xl border px-3 py-3 transition-all hover:-translate-y-0.5 hover:shadow-md ${
 						isActive(item)
-							? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-							: 'border-slate-100 bg-slate-50/80 text-slate-700 hover:border-emerald-100 hover:bg-white hover:text-emerald-800'
+							? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+							: 'border-slate-100 bg-slate-50/80 text-slate-700 hover:border-emerald-100 hover:bg-white hover:text-emerald-700'
 					}`}
 				>
 					<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-emerald-700 shadow-sm ring-1 ring-slate-100 group-hover:ring-emerald-100">

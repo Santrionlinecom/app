@@ -93,7 +93,7 @@
 </svelte:head>
 
 <div class="mx-auto max-w-6xl space-y-5 px-3 py-4 sm:px-4 md:px-6">
-	<section class="rounded-2xl border bg-gradient-to-r from-emerald-900 via-teal-800 to-cyan-700 p-4 text-white shadow-sm sm:p-6">
+	<section class="rounded-2xl border bg-gradient-to-r from-emerald-600 via-teal-800 to-cyan-700 p-4 text-white shadow-sm sm:p-6">
 		<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 			<div>
 				<p class="text-xs uppercase tracking-[0.2em] text-white/70">SantriOnline Product License</p>
@@ -142,10 +142,10 @@
 				</label>
 
 				<div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-					<p class="text-xs font-semibold text-emerald-900">Features</p>
+					<p class="text-xs font-semibold text-emerald-700">Features</p>
 					<div class="mt-2 flex flex-wrap gap-2">
 						{#each selectedProduct?.features ?? [] as feature}
-							<span class="badge badge-outline border-emerald-300 text-emerald-800">{feature}</span>
+							<span class="badge badge-outline border-emerald-300 text-emerald-700">{feature}</span>
 						{/each}
 					</div>
 				</div>
@@ -163,7 +163,7 @@
 			{#if form?.success && form.licenseKey}
 				<div class="mt-4 space-y-4">
 					<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 sm:p-4">
-						<p class="text-xs font-medium uppercase tracking-wide text-emerald-800">License Key</p>
+						<p class="text-xs font-medium uppercase tracking-wide text-emerald-700">License Key</p>
 						<div class="mt-2 flex flex-col gap-2 sm:flex-row">
 							<textarea
 								class="textarea textarea-bordered min-h-[88px] w-full resize-none font-mono text-sm leading-6 sm:min-h-[52px]"
@@ -177,7 +177,7 @@
 								Copy
 							</button>
 						</div>
-						<p class="mt-2 text-xs text-emerald-800/80">
+						<p class="mt-2 text-xs text-emerald-700/80">
 							Key asli hanya tampil setelah generate. D1 menyimpan hash dan placeholder internal.
 						</p>
 					</div>

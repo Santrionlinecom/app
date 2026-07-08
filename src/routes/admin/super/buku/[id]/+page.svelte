@@ -55,7 +55,7 @@
 				{/if}
 			</div>
 			<div class="p-6 md:p-8">
-				<a href={`/admin/super/buku?status=${book.status}`} class="text-sm font-medium text-emerald-700 hover:text-emerald-800">
+				<a href={`/admin/super/buku?status=${book.status}`} class="text-sm font-medium text-emerald-700 hover:text-emerald-700">
 					Kembali ke daftar {statusLabel[book.status]}
 				</a>
 				<div class="mt-4 flex flex-wrap gap-2">
@@ -81,7 +81,7 @@
 					</div>
 					<div class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-4">
 						<p class="text-xs uppercase tracking-[0.22em] text-emerald-600">Bab Published</p>
-						<p class="mt-2 text-xl font-semibold text-emerald-800">{book.publishedChapterCount}</p>
+						<p class="mt-2 text-xl font-semibold text-emerald-700">{book.publishedChapterCount}</p>
 					</div>
 					<div class="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-4">
 						<p class="text-xs uppercase tracking-[0.22em] text-amber-600">Bab Gratis</p>
