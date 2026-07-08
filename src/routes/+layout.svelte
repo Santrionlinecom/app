@@ -727,21 +727,27 @@ const quranNavItem = {
 const bookNavItem = {
 	label: 'Buku',
 	href: '/buku',
-	icon: 'M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM8 7h8M8 11h7M6.5 19A2.5 2.5 0 014 16.5',
+	icon: 'M4.5 5.25A2.25 2.25 0 016.75 3H20v15.75H7A2.5 2.5 0 004.5 21V5.25zM7 6.75h9.5M7 10.25h8M7 13.75h5.5M4.5 18.75A2.25 2.25 0 016.75 16.5H20',
+	description: 'Baca buku digital',
+	tone: 'from-emerald-500 to-teal-500',
 	isActive: (path: string) => path === '/buku' || (path.startsWith('/buku/') && !path.startsWith('/buku/studio'))
 };
 
 const studioNavItem = {
 	label: 'Studio',
 	href: '/buku/studio',
-	icon: 'M4 19.5V5a2 2 0 012-2h9l5 5v11.5M14 3v6h6M8 13h8M8 17h5',
+	icon: 'M12 20h9M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4L16.5 3.5zM14 6l4 4M4 7h6M4 11h4',
+	description: 'Tulis karya',
+	tone: 'from-sky-500 to-cyan-500',
 	isActive: (path: string) => path === '/buku/studio' || path.startsWith('/buku/studio/')
 };
 
 const coinNavItem = {
 	label: 'Coin',
 	href: '/coins',
-	icon: 'M12 3a9 9 0 100 18 9 9 0 000-18zm0 5v8m-3-4h6',
+	icon: 'M12 3c4.97 0 9 2.24 9 5s-4.03 5-9 5-9-2.24-9-5 4.03-5 9-5zM3 8v4c0 2.76 4.03 5 9 5s9-2.24 9-5V8M3 12v4c0 2.76 4.03 5 9 5s9-2.24 9-5v-4M12 6.5v3M10.5 8h3',
+	description: 'Saldo & top up',
+	tone: 'from-amber-400 to-orange-500',
 	isActive: (path: string) => path === '/coins' || path.startsWith('/coins/')
 };
 
@@ -1050,6 +1056,16 @@ $: mobileHeroActions = [
 		tone: 'from-emerald-500 via-teal-500 to-cyan-500 text-white'
 	}
 ];
+type MobileTabItem = {
+	label: string;
+	href: string;
+	icon: string;
+	description?: string;
+	tone?: string;
+	isActive: (path: string) => boolean;
+};
+
+let mobilePublicTabs: MobileTabItem[] = [];
 $: activeMobileTopMenu = mobileTopMenus.find((menu) => menu.id === mobileTopMenuOpen) ?? null;
 $: mobilePublicTabs = data?.user
 	? [
@@ -1059,7 +1075,11 @@ $: mobilePublicTabs = data?.user
 			{
 				label: isSuperAdmin ? 'Admin' : 'Dashboard',
 				href: isSuperAdmin ? '/admin/super/overview' : '/dashboard',
-				icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z',
+				icon: isSuperAdmin
+					? 'M12 3l7 3v5c0 4.5-2.9 8.4-7 10-4.1-1.6-7-5.5-7-10V6l7-3zM9 12l2 2 4-4M8 7.5h8'
+					: 'M4 13h7V4H4v9zM13 20h7V4h-7v16zM4 20h7v-5H4v5z',
+				description: isSuperAdmin ? 'Panel kontrol' : 'Aktivitas belajar',
+				tone: isSuperAdmin ? 'from-violet-500 to-fuchsia-500' : 'from-slate-700 to-emerald-700',
 				isActive: (path: string) =>
 					isSuperAdmin ? isAdminRoute(path) : path === '/dashboard' || path.startsWith('/dashboard/')
 			}
@@ -1670,7 +1690,7 @@ $: if (pathname !== previousPathname) {
 			}`}
 		>
 			<div class="mx-auto max-w-xl px-3 py-3 pb-safe">
-				<div class="pointer-events-auto rounded-[1.7rem] border border-white/70 bg-white/92 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+				<div class="pointer-events-auto mobile-bottom-shell rounded-[1.7rem] border border-white/80 bg-white/95 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
 					{#if isAdminRouteActive && isSuperAdmin}
 						<div class="grid grid-cols-4 gap-1">
 							{#each adminNav as item}
@@ -1687,18 +1707,23 @@ $: if (pathname !== previousPathname) {
 							{/each}
 						</div>
 					{:else}
-						<!-- Scrollable bottom nav for logged-in users -->
-						<div class="mobile-scroll-row flex gap-1 overflow-x-auto pb-1">
+						<!-- Presisi: exactly four priority actions for logged-in users -->
+						<div class="grid grid-cols-4 items-stretch gap-1">
 							{#each mobilePublicTabs as item}
 								<a
 									href={item.href}
-									class="mobile-tab-link shrink-0"
+									class="mobile-tab-link"
 									class:mobile-tab-link-active={item.isActive(pathname)}
+									aria-current={item.isActive(pathname) ? 'page' : undefined}
+									aria-label={`${item.label}: ${item.description ?? 'Buka halaman'}`}
 								>
-									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-										<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
-									</svg>
-									<span class="text-[10px]">{item.label}</span>
+									<span class={`mobile-tab-icon bg-gradient-to-br ${item.tone ?? 'from-emerald-500 to-cyan-500'}`}>
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.85">
+											<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+										</svg>
+									</span>
+									<span class="leading-none text-[10.5px] font-extrabold tracking-[-0.01em]">{item.label}</span>
+									<span class="mobile-tab-hint">{item.description ?? 'Buka'}</span>
 								</a>
 							{/each}
 						</div>
@@ -1714,7 +1739,7 @@ $: if (pathname !== previousPathname) {
 			}`}
 		>
 			<div class="mx-auto max-w-xl px-3 py-3 pb-safe">
-				<div class="pointer-events-auto rounded-[1.7rem] border border-white/70 bg-white/92 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+				<div class="pointer-events-auto mobile-bottom-shell rounded-[1.7rem] border border-white/80 bg-white/95 p-2 shadow-[0_-10px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl">
 					<div class={`grid gap-1 ${mobilePublicTabs.length === 4 ? 'grid-cols-4' : 'grid-cols-5'}`}>
 						{#each mobilePublicTabs as item}
 							<a
@@ -2108,24 +2133,80 @@ $: if (pathname !== previousPathname) {
 		}
 	}
 
-		.mobile-tab-link {
-			display: flex;
+	.mobile-bottom-shell {
+		position: relative;
+		overflow: hidden;
+	}
+
+	.mobile-bottom-shell::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background:
+			radial-gradient(circle at 18% 0%, rgba(16, 185, 129, 0.12), transparent 34%),
+			radial-gradient(circle at 84% 18%, rgba(14, 165, 233, 0.1), transparent 30%);
+	}
+
+	.mobile-tab-link {
+		position: relative;
+		display: flex;
+		min-width: 0;
+		min-height: 4.35rem;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 0.35rem;
-		border-radius: 1rem;
-		padding: 0.65rem 0.5rem;
+		gap: 0.28rem;
+		border-radius: 1.15rem;
+		padding: 0.45rem 0.2rem 0.5rem;
 		font-size: 0.75rem;
-		font-weight: 600;
+		font-weight: 700;
 		color: #64748b;
-		transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+		text-align: center;
+		transition:
+			transform 0.18s ease,
+			background-color 0.18s ease,
+			color 0.18s ease,
+			box-shadow 0.18s ease;
+	}
+
+	.mobile-tab-icon {
+		display: inline-flex;
+		height: 2rem;
+		width: 2rem;
+		align-items: center;
+		justify-content: center;
+		border-radius: 0.95rem;
+		color: #fff;
+		box-shadow: 0 9px 20px rgba(15, 23, 42, 0.12);
+		transition: transform 0.18s ease, box-shadow 0.18s ease;
+	}
+
+	.mobile-tab-hint {
+		display: block;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 0.56rem;
+		font-weight: 700;
+		line-height: 1;
+		color: #94a3b8;
 	}
 
 	.mobile-tab-link-active {
-		background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(6, 182, 212, 0.12));
+		background: linear-gradient(135deg, rgba(16, 185, 129, 0.13), rgba(6, 182, 212, 0.11));
 		color: #047857;
-		box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.12);
+		box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.12), 0 10px 24px rgba(15, 23, 42, 0.05);
+	}
+
+	.mobile-tab-link-active .mobile-tab-icon {
+		transform: translateY(-1px) scale(1.03);
+		box-shadow: 0 12px 24px rgba(15, 118, 110, 0.2);
+	}
+
+	.mobile-tab-link-active .mobile-tab-hint {
+		color: #059669;
 	}
 
 	.mobile-tab-link:not(.mobile-tab-link-active):hover {
