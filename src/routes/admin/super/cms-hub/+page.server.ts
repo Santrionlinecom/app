@@ -86,31 +86,33 @@ const readManyValues = (formData: FormData, ...names: string[]) => {
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db } = requireSuperAdmin(locals);
-	await ensureCmsSchema(db);
-	await ensureDigitalCommerceSchema(db);
+
+	// Keep admin navigation responsive: schema checks and dashboard data reads are
+	// independent, so avoid serial round-trips on every admin click.
+	await Promise.all([ensureCmsSchema(db), ensureDigitalCommerceSchema(db), ensureKitabCatalogSchema(db)]);
 	await ensureDefaultManualPaymentMethods(db);
-	await ensureKitabCatalogSchema(db);
 
-	const recentCmsPosts = await getAllPosts(db, { page: 1, limit: 10 });
-	const cmsStatsRow = await db
-		.prepare(
-			`SELECT
-				COUNT(1) as totalPosts,
-				COALESCE(SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END), 0) as publishedPosts,
-				COALESCE(SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END), 0) as draftPosts,
-				COALESCE(SUM(CASE WHEN scheduled_at IS NOT NULL AND scheduled_at > ? THEN 1 ELSE 0 END), 0) as scheduledPosts
-			 FROM cms_posts`
-		)
-		.bind(Date.now())
-		.first<{
-			totalPosts: number | null;
-			publishedPosts: number | null;
-			draftPosts: number | null;
-			scheduledPosts: number | null;
-		}>();
-
-	const digitalCommerce = await getDigitalCommerceOverview(db, { chartDays: 14 });
-	const kitabLibrary = await getKitabOverview(db);
+	const [recentCmsPosts, cmsStatsRow, digitalCommerce, kitabLibrary] = await Promise.all([
+		getAllPosts(db, { page: 1, limit: 10 }),
+		db
+			.prepare(
+				`SELECT
+					COUNT(1) as totalPosts,
+					COALESCE(SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END), 0) as publishedPosts,
+					COALESCE(SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END), 0) as draftPosts,
+					COALESCE(SUM(CASE WHEN scheduled_at IS NOT NULL AND scheduled_at > ? THEN 1 ELSE 0 END), 0) as scheduledPosts
+				 FROM cms_posts`
+			)
+			.bind(Date.now())
+			.first<{
+				totalPosts: number | null;
+				publishedPosts: number | null;
+				draftPosts: number | null;
+				scheduledPosts: number | null;
+			}>(),
+		getDigitalCommerceOverview(db, { chartDays: 14 }),
+		getKitabOverview(db)
+	]);
 	const editingProductId = (url.searchParams.get('product') ?? '').trim();
 	const editingPaymentMethodId = (url.searchParams.get('payment') ?? '').trim();
 	const editingKitabId = (url.searchParams.get('kitab') ?? '').trim();

@@ -190,6 +190,32 @@
 		}
 	};
 
+	const paymentIconPath = (type?: string | null) => {
+		switch ((type ?? '').toLowerCase()) {
+			case 'bank':
+				return 'M3 10h18M5 10V8l7-4 7 4v2M6 10v8M10 10v8M14 10v8M18 10v8M4 18h16M3 21h18';
+			case 'ewallet':
+				return 'M4 7.5A2.5 2.5 0 016.5 5H18a2 2 0 012 2v10.5A2.5 2.5 0 0117.5 20h-11A2.5 2.5 0 014 17.5v-10zM16 12h5v4h-5a2 2 0 010-4zM17.5 14h.01M7 8h7';
+			case 'qris':
+				return 'M4 4h6v6H4V4zM14 4h6v6h-6V4zM4 14h6v6H4v-6zM14 14h2v2h-2v-2zM18 14h2v6h-6v-2h4v-4zM14 18h2v2h-2v-2zM6 6v2h2V6H6zM16 6v2h2V6h-2zM6 16v2h2v-2H6z';
+			default:
+				return 'M5 5.5A2.5 2.5 0 017.5 3h9A2.5 2.5 0 0119 5.5v13L15.5 16h-8A2.5 2.5 0 015 13.5v-8zM8 8h8M8 11.5h6M8 15h4';
+		}
+	};
+
+	const paymentGradient = (type?: string | null) => {
+		switch ((type ?? '').toLowerCase()) {
+			case 'bank':
+				return 'from-sky-500 to-blue-600';
+			case 'ewallet':
+				return 'from-violet-500 to-fuchsia-600';
+			case 'qris':
+				return 'from-emerald-500 to-teal-600';
+			default:
+				return 'from-amber-500 to-orange-600';
+		}
+	};
+
 	const cmsOverviewCards = [
 		{
 			label: 'Artikel',
@@ -1605,40 +1631,62 @@
 	</section>
 
 	<!-- Payment Methods Section -->
-	<section id="payment-methods" class="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-lg backdrop-blur">
-		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
-			<div class="max-w-2xl">
-				<p class="text-xs font-semibold uppercase text-slate-400">Metode Pembayaran</p>
-				<h2 class="section-title mt-2 text-2xl font-semibold text-slate-900">Atur cara pembayaran produk digital</h2>
-				<p class="mt-2 text-sm text-slate-500">
-					Aktifkan berbagai metode pembayaran untuk memudahkan pelanggan. Produk akan menampilkan metode yang sudah diaktifkan, termasuk rekening dan e-wallet manual yang sudah Anda set.
-				</p>
+	<section id="payment-methods" class="relative overflow-hidden rounded-[2.35rem] border border-white/80 bg-white/90 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.10)] backdrop-blur xl:p-7">
+		<div class="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl"></div>
+		<div class="pointer-events-none absolute -bottom-24 left-10 h-72 w-72 rounded-full bg-sky-200/35 blur-3xl"></div>
+
+		<div class="relative mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+			<div class="flex max-w-3xl gap-4">
+				<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-600 text-white shadow-lg shadow-emerald-500/20">
+					<CreditCard class="h-7 w-7" />
+				</div>
+				<div>
+					<p class="text-xs font-black uppercase tracking-[0.24em] text-emerald-600">Payment Control Center</p>
+					<h2 class="section-title mt-2 text-2xl font-black tracking-tight text-slate-950 md:text-3xl">Metode pembayaran produk digital</h2>
+					<p class="mt-2 text-sm leading-6 text-slate-600">
+						Atur rekening, e-wallet, QRIS, dan instruksi manual agar checkout terlihat rapi, terpercaya, dan mudah dipahami pelanggan.
+					</p>
+				</div>
+			</div>
+			<div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+				<div class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+					<p class="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">Aktif</p>
+					<p class="mt-1 text-2xl font-black text-slate-950">{formatNumber(data.digitalCommerce.stats.activeMethods)}</p>
+				</div>
+				<div class="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+					<p class="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Total</p>
+					<p class="mt-1 text-2xl font-black text-slate-950">{formatNumber(data.digitalCommerce.paymentMethods.length)}</p>
+				</div>
 			</div>
 		</div>
 
-		<div class="grid gap-6 xl:grid-cols-[1.2fr,0.8fr]">
-			<!-- Payment Form -->
-			<form method="POST" action="?/savePaymentMethod" class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+		<div class="relative grid gap-6 xl:grid-cols-[1.15fr,0.85fr]">
+			<form method="POST" action="?/savePaymentMethod" class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
 				<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-					<div>
-						<p class="text-sm font-semibold text-slate-900">
-							{data.digitalCommerce.editingPaymentMethod ? 'Edit Metode Pembayaran' : 'Metode Pembayaran Baru'}
-						</p>
-						<p class="text-xs text-slate-500">Tambah atau ubah detail metode pembayaran untuk produk digital Anda.</p>
+					<div class="flex items-start gap-3">
+						<div class={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${paymentGradient(paymentMethodType)} text-white shadow-lg shadow-slate-900/10`}>
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8">
+								<path d={paymentIconPath(paymentMethodType)} stroke-linecap="round" stroke-linejoin="round" />
+							</svg>
+						</div>
+						<div>
+							<p class="text-base font-black text-slate-950">{data.digitalCommerce.editingPaymentMethod ? 'Edit Metode Pembayaran' : 'Metode Pembayaran Baru'}</p>
+							<p class="mt-1 text-xs leading-5 text-slate-500">Isi data yang akan tampil di checkout produk digital.</p>
+						</div>
 					</div>
 					{#if data.digitalCommerce.editingPaymentMethod}
-						<a href="/admin/super/cms-hub#payment-methods" class="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
-							Batal
+						<a href="/admin/super/cms-hub#payment-methods" class="inline-flex items-center justify-center rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50">
+							Batal edit
 						</a>
 					{/if}
 				</div>
 
 				<input type="hidden" name="id" bind:value={paymentMethodId} />
 
-				<div class="mt-5 grid gap-4 md:grid-cols-2">
+				<div class="mt-6 grid gap-4 md:grid-cols-2">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase text-slate-400">Tipe Pembayaran</span>
-						<select name="type" class="select select-bordered mt-2 w-full" bind:value={paymentMethodType}>
+						<span class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">Tipe Pembayaran</span>
+						<select name="type" class="select select-bordered mt-2 w-full rounded-2xl border-slate-200 bg-slate-50 font-semibold" bind:value={paymentMethodType}>
 							<option value="bank">Bank Transfer</option>
 							<option value="ewallet">E-Wallet</option>
 							<option value="qris">QRIS</option>
@@ -1646,47 +1694,27 @@
 						</select>
 					</label>
 					<label class="block">
-						<span class="text-xs font-semibold uppercase text-slate-400">Nama Metode</span>
-						<input
-							name="name"
-							class="input input-bordered mt-2 w-full"
-							placeholder="Contoh: BCA Transfer"
-							bind:value={paymentMethodName}
-						/>
+						<span class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">Nama Metode</span>
+						<input name="name" class="input input-bordered mt-2 w-full rounded-2xl border-slate-200 bg-slate-50 font-semibold" placeholder="Contoh: BCA Transfer" bind:value={paymentMethodName} />
 					</label>
 				</div>
 
 				<div class="mt-4 grid gap-4 md:grid-cols-2">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase text-slate-400">Nama Pemilik Akun</span>
-						<input
-							name="accountName"
-							class="input input-bordered mt-2 w-full"
-							placeholder="Contoh: Pondok Pesantren Nurul Qur'an"
-							bind:value={paymentAccountName}
-						/>
+						<span class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">Nama Pemilik Akun</span>
+						<input name="accountName" class="input input-bordered mt-2 w-full rounded-2xl border-slate-200 bg-slate-50" placeholder="Contoh: SantriOnline" bind:value={paymentAccountName} />
 					</label>
 					<label class="block">
-						<span class="text-xs font-semibold uppercase text-slate-400">Nomor Akun/Rekening</span>
-						<input
-							name="accountNumber"
-							class="input input-bordered mt-2 w-full"
-							placeholder="Contoh: 123456789"
-							bind:value={paymentAccountNumber}
-						/>
+						<span class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">Nomor Akun/Rekening</span>
+						<input name="accountNumber" class="input input-bordered mt-2 w-full rounded-2xl border-slate-200 bg-slate-50" placeholder="Contoh: 123456789" bind:value={paymentAccountNumber} />
 					</label>
 				</div>
 
 				<div class="mt-4">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase text-slate-400">URL Aset Pembayaran</span>
-						<input
-							name="assetUrl"
-							class="input input-bordered mt-2 w-full"
-							placeholder="Khusus QRIS atau gambar referensi pembayaran"
-							bind:value={paymentAssetUrl}
-						/>
-						<p class="mt-2 text-xs text-slate-500">Gunakan untuk gambar QRIS atau aset visual lain yang ingin ditampilkan di checkout.</p>
+						<span class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">URL Aset Pembayaran</span>
+						<input name="assetUrl" class="input input-bordered mt-2 w-full rounded-2xl border-slate-200 bg-slate-50" placeholder="QRIS atau gambar instruksi pembayaran" bind:value={paymentAssetUrl} />
+						<p class="mt-2 text-xs text-slate-500">Gunakan untuk QRIS, logo pembayaran, atau gambar referensi checkout.</p>
 					</label>
 					{#if paymentAssetUrl}
 						<div class="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3">
@@ -1695,85 +1723,73 @@
 					{/if}
 				</div>
 
-				<div class="mt-4 grid gap-4 md:grid-cols-[0.8fr,1.2fr]">
+				<div class="mt-4 grid gap-4 md:grid-cols-[0.75fr,1.25fr]">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase text-slate-400">Urutan Tampil</span>
-						<input
-							name="displayOrder"
-							type="number"
-							min="0"
-							class="input input-bordered mt-2 w-full"
-							bind:value={paymentDisplayOrder}
-						/>
+						<span class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">Urutan</span>
+						<input name="displayOrder" type="number" min="0" class="input input-bordered mt-2 w-full rounded-2xl border-slate-200 bg-slate-50" bind:value={paymentDisplayOrder} />
 					</label>
-					<label class="flex items-center gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-4">
-						<input
-							type="checkbox"
-							name="isActive"
-							class="checkbox checkbox-sm border-slate-300"
-							bind:checked={paymentIsActive}
-						/>
+					<label class="flex items-center gap-3 rounded-[1.35rem] border border-emerald-100 bg-emerald-50 px-4 py-4">
+						<input type="checkbox" name="isActive" class="checkbox checkbox-sm border-emerald-300" bind:checked={paymentIsActive} />
 						<span class="min-w-0">
-							<span class="block text-sm font-semibold text-slate-900">Metode aktif</span>
-							<span class="mt-1 block text-xs text-slate-500">Hanya metode aktif yang sebaiknya dipilih di produk.</span>
+							<span class="block text-sm font-black text-slate-950">Metode aktif</span>
+							<span class="mt-1 block text-xs text-slate-600">Jika nonaktif, jangan tampilkan di checkout.</span>
 						</span>
 					</label>
 				</div>
 
 				<div class="mt-4">
 					<label class="block">
-						<span class="text-xs font-semibold uppercase text-slate-400">Instruksi Pembayaran</span>
-						<textarea
-							name="instructions"
-							class="textarea textarea-bordered mt-2 w-full"
-							placeholder="Instruksi detail untuk pembayaran..."
-							bind:value={paymentInstructions}
-						></textarea>
+						<span class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">Instruksi Pembayaran</span>
+						<textarea name="instructions" class="textarea textarea-bordered mt-2 min-h-32 w-full rounded-2xl border-slate-200 bg-slate-50" placeholder="Contoh: Transfer sesuai nominal, lalu upload bukti pembayaran..." bind:value={paymentInstructions}></textarea>
 					</label>
 				</div>
 
-				<div class="mt-6 flex gap-2">
-					<button type="submit" class="btn btn-primary">
+				<div class="mt-6 flex flex-col gap-2 sm:flex-row">
+					<button type="submit" class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 to-cyan-600 px-5 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:from-emerald-700 hover:to-cyan-700">
+						<CreditCard class="h-4 w-4" />
 						{data.digitalCommerce.editingPaymentMethod ? 'Update Metode' : 'Simpan Metode'}
 					</button>
 					{#if data.digitalCommerce.editingPaymentMethod}
-						<button
-							type="submit"
-							formaction="?/deletePaymentMethod"
-							formnovalidate
-							class="btn btn-outline btn-error"
-							on:click={(e) => {
-								if (!confirm('Hapus metode pembayaran ini?')) e.preventDefault();
-							}}
-						>
+						<button type="submit" formaction="?/deletePaymentMethod" formnovalidate class="inline-flex h-11 items-center justify-center rounded-full border border-rose-200 bg-rose-50 px-5 text-sm font-black text-rose-700 transition hover:bg-rose-100" on:click={(e) => { if (!confirm('Hapus metode pembayaran ini?')) e.preventDefault(); }}>
 							Hapus
 						</button>
 					{/if}
 				</div>
 			</form>
 
-			<!-- Payment Methods List -->
-			<div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
-				<h3 class="text-sm font-semibold text-slate-900">Metode Aktif</h3>
-				<div class="mt-4 space-y-3 max-h-96 overflow-y-auto">
+			<div class="rounded-[2rem] border border-slate-200 bg-slate-50/80 p-5">
+				<div class="flex items-center justify-between gap-3">
+					<div>
+						<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Quick Monitor</p>
+						<h3 class="mt-1 text-lg font-black text-slate-950">Metode aktif</h3>
+					</div>
+					<span class="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600 shadow-sm">{formatNumber(data.digitalCommerce.stats.activeMethods)} aktif</span>
+				</div>
+				<div class="mt-4 space-y-3 max-h-[28rem] overflow-y-auto pr-1">
 					{#if data.digitalCommerce.paymentMethods.length === 0}
-						<div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-4 text-center text-sm text-slate-500">
-							Belum ada metode pembayaran
-						</div>
+						<div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">Belum ada metode pembayaran</div>
 					{:else}
 						{#each data.digitalCommerce.paymentMethods as method}
-							<div class="rounded-2xl border border-slate-200 bg-white px-3 py-3">
-								<div class="flex items-start justify-between gap-2">
-									<div class="min-w-0 flex-1">
-										<p class="font-semibold text-slate-900 text-sm">{method.name}</p>
-										<p class="text-xs text-slate-600 mt-1">{paymentTypeLabel[method.type] ?? method.type}</p>
-										<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold mt-2 ${paymentTone(method.type)}`}>
-											{method.isActive ? 'Aktif' : 'Nonaktif'}
-										</span>
+							<div class="group rounded-2xl border border-white bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+								<div class="flex items-start gap-3">
+									<div class={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${paymentGradient(method.type)} text-white shadow-lg shadow-slate-900/10`}>
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
+											<path d={paymentIconPath(method.type)} stroke-linecap="round" stroke-linejoin="round" />
+										</svg>
 									</div>
-									<a href={`/admin/super/cms-hub?payment=${method.id}#payment-methods`} class="rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-100">
-										Edit
-									</a>
+									<div class="min-w-0 flex-1">
+										<div class="flex items-start justify-between gap-2">
+											<div class="min-w-0">
+												<p class="truncate text-sm font-black text-slate-950">{method.name}</p>
+												<p class="mt-0.5 text-xs text-slate-500">{paymentTypeLabel[method.type] ?? method.type}</p>
+											</div>
+											<a href={`/admin/super/cms-hub?payment=${method.id}#payment-methods`} class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-600 transition hover:bg-slate-100">Edit</a>
+										</div>
+										<div class="mt-2 flex flex-wrap items-center gap-1.5">
+											<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-black ${paymentTone(method.type)}`}>{method.isActive ? 'Aktif' : 'Nonaktif'}</span>
+											{#if method.assetUrl}<span class="rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[10px] font-black text-cyan-700">Aset visual</span>{/if}
+										</div>
+									</div>
 								</div>
 							</div>
 						{/each}
@@ -1782,57 +1798,41 @@
 			</div>
 		</div>
 
-		<!-- Payment Methods List Full -->
-		<div class="mt-8">
-			<h3 class="text-xl font-semibold text-slate-900">Daftar Metode Pembayaran</h3>
-			{#if data.digitalCommerce.paymentMethods.length === 0}
-				<div class="mt-4 rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">
-					Belum ada metode pembayaran. Tambahkan metode di atas untuk memulai.
+		<div class="relative mt-8">
+			<div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+				<div>
+					<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Payment Directory</p>
+					<h3 class="mt-1 text-xl font-black text-slate-950">Daftar Metode Pembayaran</h3>
 				</div>
+				<p class="text-sm text-slate-500">Audit detail akun, instruksi, aset, dan status aktif.</p>
+			</div>
+			{#if data.digitalCommerce.paymentMethods.length === 0}
+				<div class="mt-4 rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">Belum ada metode pembayaran. Tambahkan metode di atas untuk memulai.</div>
 			{:else}
-				<div class="mt-5 space-y-3">
+				<div class="mt-5 grid gap-4 xl:grid-cols-2">
 					{#each data.digitalCommerce.paymentMethods as method}
-						<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-							<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-								<div class="min-w-0">
-									<div class="flex flex-wrap items-center gap-2">
-										<p class="text-sm font-semibold text-slate-900">{method.name}</p>
-										<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${paymentTone(method.type)}`}>
-											{paymentTypeLabel[method.type] ?? method.type}
-										</span>
-										{#if !method.isActive}
-											<span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-500">
-												Nonaktif
-											</span>
-										{/if}
+						<div class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+							<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+								<div class="flex min-w-0 gap-3">
+									<div class={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${paymentGradient(method.type)} text-white shadow-lg shadow-slate-900/10`}>
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8"><path d={paymentIconPath(method.type)} stroke-linecap="round" stroke-linejoin="round" /></svg>
 									</div>
-									<p class="mt-2 text-sm text-slate-600">
-										{#if method.accountName || method.accountNumber}
-											{method.accountName || '-'} • {method.accountNumber || '-'}
-										{:else}
-											Belum ada detail akun.
-										{/if}
-									</p>
-									{#if method.assetUrl}
-										<p class="mt-1 text-xs text-slate-500">Memiliki aset visual untuk checkout.</p>
-									{/if}
-									<p class="mt-1 text-xs text-slate-500">{shortText(method.instructions, 120)}</p>
+									<div class="min-w-0">
+										<div class="flex flex-wrap items-center gap-2">
+											<p class="text-base font-black text-slate-950">{method.name}</p>
+											<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-black ${paymentTone(method.type)}`}>{paymentTypeLabel[method.type] ?? method.type}</span>
+											<span class={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-black ${method.isActive ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-100 text-slate-500'}`}>{method.isActive ? 'Aktif' : 'Nonaktif'}</span>
+										</div>
+										<p class="mt-2 text-sm text-slate-600">{method.accountName || '-'} • {method.accountNumber || '-'}</p>
+										<p class="mt-1 text-xs leading-5 text-slate-500">{shortText(method.instructions, 130)}</p>
+										{#if method.assetUrl}<p class="mt-1 text-xs font-semibold text-cyan-700">Memiliki aset visual checkout.</p>{/if}
+									</div>
 								</div>
 								<div class="flex shrink-0 gap-2">
-									<a href={`/admin/super/cms-hub?payment=${method.id}#payment-methods`} class="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
-										Edit
-									</a>
+									<a href={`/admin/super/cms-hub?payment=${method.id}#payment-methods`} class="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100">Edit</a>
 									<form method="POST" action="?/deletePaymentMethod">
 										<input type="hidden" name="id" value={method.id} />
-										<button
-											type="submit"
-											class="rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
-											on:click={(event) => {
-												if (!confirm('Hapus metode pembayaran ini?')) event.preventDefault();
-											}}
-										>
-											Hapus
-										</button>
+										<button type="submit" class="rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100" on:click={(event) => { if (!confirm('Hapus metode pembayaran ini?')) event.preventDefault(); }}>Hapus</button>
 									</form>
 								</div>
 							</div>
