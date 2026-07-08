@@ -637,37 +637,49 @@ const baseNav = [
 	{
 		label: 'Beranda',
 		href: '/',
-		icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+		icon: 'M3.5 11.5L12 4l8.5 7.5M5.5 10.25V20h5v-5.5h3V20h5v-9.75M9 20h6',
+		description: 'Halaman utama',
+		tone: 'from-emerald-500 to-teal-500',
 		isActive: (path: string) => path === '/'
 	},
 	{
 		label: 'TPQ',
 		href: '/tpq',
-		icon: 'M4 6a2 2 0 012-2h9l5 4v10a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm9-2v4h4',
+		icon: 'M4.5 6.5A2.5 2.5 0 017 4h8l4.5 4.5V19A2.5 2.5 0 0117 21H7a2.5 2.5 0 01-2.5-2.5v-12zM14.5 4v5h5M8 13h8M8 16.5h6',
+		description: 'Kelola lembaga',
+		tone: 'from-lime-500 to-emerald-500',
 		isActive: (path: string) => path === '/tpq' || path.startsWith('/tpq/')
 	},
 	{
 		label: 'Blog',
 		href: '/blog',
-		icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
+		icon: 'M5 5.5A2.5 2.5 0 017.5 3h9A2.5 2.5 0 0119 5.5v13L15.5 16h-8A2.5 2.5 0 015 13.5v-8zM8 7h8M8 10.5h7M8 14h4',
+		description: 'Artikel terbaru',
+		tone: 'from-cyan-500 to-blue-500',
 		isActive: (path: string) => isBlogMenuActive(path)
 	},
 	{
 		label: 'Tokoh',
 		href: '/tokoh',
-		icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2m5-2a3 3 0 100-6 3 3 0 000 6z',
+		icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 20a8 8 0 0116 0M17.5 7.5h3M19 6v3M3.5 8.5h3',
+		description: 'Nabi & ulama',
+		tone: 'from-violet-500 to-indigo-500',
 		isActive: (path: string) => isTokohMenuActive(path)
 	},
 	{
 		label: 'Dinasti',
 		href: '/dinasti',
-		icon: 'M3 21h18M5 21V7l7-4 7 4v14M10 9h.01M14 9h.01M10 13h.01M14 13h.01M9 21v-4h6v4',
+		icon: 'M3 21h18M5 21V8l7-4 7 4v13M9 21v-5h6v5M8.5 10h.01M12 10h.01M15.5 10h.01M8.5 13.5h.01M15.5 13.5h.01',
+		description: 'Sejarah Islam',
+		tone: 'from-amber-500 to-orange-500',
 		isActive: (path: string) => isDynastyMenuActive(path)
 	},
 	{
 		label: 'Kitab',
 		href: '/kitab',
-		icon: 'M4 6a2 2 0 012-2h9l5 4v10a2 2 0 01-2 2H6a2 2 0 01-2-2V6z',
+		icon: 'M4.5 5.5A2.5 2.5 0 017 3h13v15H7a2.5 2.5 0 000 5h13M8 7h8M8 10.5h7M6.5 18H20',
+		description: 'Kitab turats',
+		tone: 'from-rose-500 to-pink-500',
 		isActive: (path: string) => path.startsWith('/kitab')
 	}
 ];
@@ -676,25 +688,33 @@ const adminNav = [
 	{
 		label: 'Dashboard',
 		href: '/admin/super/overview',
-		icon: 'M4 10.5a1 1 0 011-1h5.5V4.5a1 1 0 011-1h7a1 1 0 011 1v5h5.5a1 1 0 011 1v9a1 1 0 01-1 1h-7.5v-6h-4v6H5a1 1 0 01-1-1v-9z',
+		icon: 'M4 13h7V4H4v9zM13 20h7V4h-7v16zM4 20h7v-5H4v5z',
+		description: 'Ringkasan',
+		tone: 'from-slate-700 to-emerald-700',
 		isActive: (path: string) => path === '/admin/super/overview' || path.startsWith('/admin/super/overview/')
 	},
 	{
 		label: 'CMS',
 		href: '/admin/posts',
-		icon: 'M5 4.5h11a2 2 0 012 2V19a1 1 0 01-1.6.8L12 16.5l-4.4 3.3A1 1 0 016 19V6.5a2 2 0 012-2z',
+		icon: 'M5 5.5A2.5 2.5 0 017.5 3h9A2.5 2.5 0 0119 5.5v13L15.5 16h-8A2.5 2.5 0 015 13.5v-8zM8 7h8M8 10.5h7M8 14h4',
+		description: 'Konten',
+		tone: 'from-cyan-500 to-blue-500',
 		isActive: (path: string) => path === '/admin/posts' || path.startsWith('/admin/posts/')
 	},
 	{
-		label: 'Licenses',
+		label: 'Lisensi',
 		href: '/admin/licenses',
-		icon: 'M4 7.5V6a2 2 0 012-2h12a2 2 0 012 2v1.5M3 9.5h18v8.5a2 2 0 01-2 2H5a2 2 0 01-2-2V9.5zm6 4.5h6',
+		icon: 'M4.5 8V6.5A2.5 2.5 0 017 4h10a2.5 2.5 0 012.5 2.5V8M3.5 9.5h17v8A2.5 2.5 0 0118 20H6a2.5 2.5 0 01-2.5-2.5v-8zM9 14h6M12 11.5v5',
+		description: 'Akses',
+		tone: 'from-violet-500 to-fuchsia-500',
 		isActive: (path: string) => path === '/admin/licenses' || path.startsWith('/admin/licenses/')
 	},
 	{
-		label: 'Settings',
+		label: 'Akun',
 		href: '/akun',
-		icon: 'M12 8a4 4 0 100 8 4 4 0 000-8zm9 4a7.5 7.5 0 01-.2 1.8l2 1.5-2 3.4-2.3-.7a7.4 7.4 0 01-1.6.9l-.3 2.4H9l-.3-2.4a7.4 7.4 0 01-1.6-.9l-2.3.7-2-3.4 2-1.5A7.5 7.5 0 015 12c0-.6.1-1.2.2-1.8L3.2 8.7l2-3.4 2.3.7c.5-.4 1-.7 1.6-.9L9 2.7h4l.3 2.4c.6.2 1.1.5 1.6.9l2.3-.7 2 3.4-2 1.5c.1.6.2 1.2.2 1.8z',
+		icon: 'M12 8a4 4 0 100 8 4 4 0 000-8zM4 20a8 8 0 0116 0M18.5 5.5l1.5 1.5M20 5.5L18.5 7',
+		description: 'Setting',
+		tone: 'from-amber-500 to-orange-500',
 		isActive: (path: string) => path.startsWith('/akun')
 	}
 ];
@@ -706,21 +726,27 @@ let previousPathname = '';
 const kalenderNavItem = {
 	label: 'Kalender',
 	href: '/kalender',
-	icon: 'M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+	icon: 'M7 3v4M17 3v4M4.5 9.5h15M6 5h12a2.5 2.5 0 012.5 2.5v11A2.5 2.5 0 0118 21H6a2.5 2.5 0 01-2.5-2.5v-11A2.5 2.5 0 016 5zM8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01',
+	description: 'Hijriyah',
+	tone: 'from-indigo-500 to-violet-500',
 	isActive: (path: string) => path === '/kalender' || path.startsWith('/kalender/')
 };
 
 const featureNavItem = {
 	label: 'Fitur',
 	href: '/fitur',
-	icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.11 3.418a1 1 0 00.95.69h3.595c.969 0 1.371 1.24.588 1.81l-2.91 2.114a1 1 0 00-.364 1.118l1.11 3.418c.3.921-.755 1.688-1.538 1.118l-2.91-2.114a1 1 0 00-1.176 0l-2.91 2.114c-.783.57-1.838-.197-1.539-1.118l1.11-3.418a1 1 0 00-.363-1.118L2.805 8.845c-.783-.57-.38-1.81.588-1.81h3.595a1 1 0 00.95-.69l1.11-3.418z',
+	icon: 'M12 3l2.1 5.1 5.4.45-4.1 3.55 1.25 5.25L12 14.55 7.35 17.35 8.6 12.1 4.5 8.55l5.4-.45L12 3zM19 15l1 2.2 2.2.3-1.7 1.5.5 2.2-2-1.15-2 1.15.5-2.2-1.7-1.5 2.2-.3L19 15z',
+	description: 'Program aktif',
+	tone: 'from-fuchsia-500 to-rose-500',
 	isActive: (path: string) => path === '/fitur' || path.startsWith('/fitur/')
 };
 
 const quranNavItem = {
 	label: 'Mushaf',
 	href: '/kitab/quran',
-	icon: 'M12 6.253v13m0-13C10.832 5.477 9.247 5 7.5 5 5.205 5 3.126 5.82 1.5 7.165v11.089C3.126 16.91 5.205 16.09 7.5 16.09c1.747 0 3.332.477 4.5 1.253m0-11.09C13.168 5.477 14.753 5 16.5 5c2.295 0 4.374.82 6 2.165v11.089c-1.626-1.345-3.705-2.165-6-2.165-1.747 0-3.332.477-4.5 1.253',
+	icon: 'M12 6.25v13M12 6.25C10.7 5.45 9.15 5 7.5 5 5.2 5 3.1 5.82 1.5 7.16v11.1c1.6-1.35 3.7-2.16 6-2.16 1.65 0 3.2.45 4.5 1.15M12 6.25C13.3 5.45 14.85 5 16.5 5c2.3 0 4.4.82 6 2.16v11.1c-1.6-1.35-3.7-2.16-6-2.16-1.65 0-3.2.45-4.5 1.15',
+	description: 'Al-Qur’an',
+	tone: 'from-emerald-600 to-green-500',
 	isActive: (path: string) => path === '/kitab/quran' || path.startsWith('/kitab/quran/')
 };
 
@@ -1698,11 +1724,16 @@ $: if (pathname !== previousPathname) {
 									href={item.href}
 									class="mobile-tab-link"
 									class:mobile-tab-link-active={item.isActive(pathname)}
+									aria-current={item.isActive(pathname) ? 'page' : undefined}
+									aria-label={`${item.label}: ${item.description ?? 'Buka halaman'}`}
 								>
-									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-										<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
-									</svg>
-									<span class="text-[10px]">{item.label}</span>
+									<span class={`mobile-tab-icon bg-gradient-to-br ${item.tone ?? 'from-emerald-500 to-cyan-500'}`}>
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.85">
+											<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+										</svg>
+									</span>
+									<span class="leading-none text-[10.5px] font-extrabold tracking-[-0.01em]">{item.label}</span>
+									<span class="mobile-tab-hint">{item.description ?? 'Buka'}</span>
 								</a>
 							{/each}
 						</div>
@@ -1746,11 +1777,16 @@ $: if (pathname !== previousPathname) {
 								href={item.href}
 								class="mobile-tab-link"
 								class:mobile-tab-link-active={item.isActive(pathname)}
+								aria-current={item.isActive(pathname) ? 'page' : undefined}
+								aria-label={`${item.label}: ${item.description ?? 'Buka halaman'}`}
 							>
-								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-									<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
-								</svg>
-								<span class="text-[10px]">{item.label}</span>
+								<span class={`mobile-tab-icon bg-gradient-to-br ${item.tone ?? 'from-emerald-500 to-cyan-500'}`}>
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.85">
+										<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
+									</svg>
+								</span>
+								<span class="leading-none text-[10.5px] font-extrabold tracking-[-0.01em]">{item.label}</span>
+								<span class="mobile-tab-hint">{item.description ?? 'Buka'}</span>
 							</a>
 						{/each}
 					</div>
