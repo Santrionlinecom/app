@@ -99,6 +99,10 @@ test('payment success email uses an idempotent delivery claim', async () => {
 		db: db as never,
 		fetchFn: (async (_url: string | URL | Request, init?: RequestInit) => {
 			providerCalls += 1;
+			assert.equal(
+				new Headers(init?.headers).get('Idempotency-Key'),
+				'email:payment_success:SOA-EMAIL-1'
+			);
 			const body = JSON.parse(String(init?.body)) as { to: string[]; subject: string; html: string };
 			assert.deepEqual(body.to, ['ahmad@example.test']);
 			assert.match(body.subject, /Pembayaran berhasil/);
@@ -120,6 +124,78 @@ test('payment success email uses an idempotent delivery claim', async () => {
 	assert.deepEqual(await notifyPaymentSuccessEmail(input), { status: 'duplicate' });
 	assert.equal(providerCalls, 1);
 	assert.equal(paymentSuccessEmailDeliveryId('SOA-EMAIL-1'), 'email:payment_success:SOA-EMAIL-1');
+});
+
+test('ambiguous provider retry reuses the same idempotency key', async () => {
+	let status: 'pending' | 'sending' | 'sent' | 'failed' | null = null;
+	let attempts = 0;
+	const providerKeys: string[] = [];
+	const db = {
+		prepare(sql: string) {
+			const statement = {
+				bind() {
+					return statement;
+				},
+				async first() {
+					if (sql.includes('FROM users')) return { username: 'Ahmad', email: 'ahmad@example.test' };
+					if (sql.includes('FROM payment_notification_deliveries')) {
+						return status ? { status, attempts, updatedAt: Date.now() } : null;
+					}
+					return null;
+				},
+				async run() {
+					if (sql.includes('INSERT OR IGNORE INTO payment_notification_deliveries')) {
+						if (!status) status = 'pending';
+						return { meta: { changes: 1 } };
+					}
+					if (sql.includes("SET status = 'sending'")) {
+						if ((status === 'pending' || status === 'failed') && attempts < 3) {
+							status = 'sending';
+							attempts += 1;
+							return { meta: { changes: 1 } };
+						}
+						return { meta: { changes: 0 } };
+					}
+					if (sql.includes("SET status = 'failed'")) status = 'failed';
+					if (sql.includes("SET status = 'sent'")) status = 'sent';
+					return { meta: { changes: 0 } };
+				}
+			};
+			return statement;
+		}
+	};
+	let providerCalls = 0;
+	const input = {
+		db: db as never,
+		fetchFn: (async (_url: string | URL | Request, init?: RequestInit) => {
+			providerCalls += 1;
+			providerKeys.push(new Headers(init?.headers).get('Idempotency-Key') ?? '');
+			if (providerCalls === 1) throw new Error('response lost after provider accepted request');
+			return new Response(JSON.stringify({ id: 'email.same-provider-delivery' }), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json' }
+			});
+		}) as typeof fetch,
+		env: configuredEnv,
+		orderId: 'SOA-EMAIL-AMBIGUOUS',
+		userId: 'user-1',
+		packageName: 'Top Up Koin',
+		productSlug: 'coin_100',
+		grossAmount: 50_000
+	};
+
+	assert.deepEqual(await notifyPaymentSuccessEmail(input), {
+		status: 'failed',
+		code: 'resend_request_failed'
+	});
+	assert.deepEqual(await notifyPaymentSuccessEmail(input), {
+		status: 'sent',
+		messageId: 'email.same-provider-delivery'
+	});
+	assert.deepEqual(providerKeys, [
+		'email:payment_success:SOA-EMAIL-AMBIGUOUS',
+		'email:payment_success:SOA-EMAIL-AMBIGUOUS'
+	]);
 });
 
 test('provider failure is recorded as notification failure without throwing', async () => {

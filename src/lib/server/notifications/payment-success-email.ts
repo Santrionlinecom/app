@@ -166,7 +166,8 @@ export const notifyPaymentSuccessEmail = async ({
 			method: 'POST',
 			headers: {
 				Authorization: `Bearer ${config.apiKey}`,
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'Idempotency-Key': deliveryId
 			},
 			body: JSON.stringify({
 				from: config.from,
