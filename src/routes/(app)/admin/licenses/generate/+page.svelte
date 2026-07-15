@@ -178,7 +178,7 @@
 							</button>
 						</div>
 						<p class="mt-2 text-xs text-emerald-600/80">
-							Key asli hanya tampil setelah generate. D1 menyimpan hash dan placeholder internal.
+							Kunci asli hanya ditampilkan satu kali setelah dibuat. Simpan di tempat yang aman.
 						</p>
 					</div>
 

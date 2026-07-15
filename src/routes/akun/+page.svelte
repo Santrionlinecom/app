@@ -459,7 +459,7 @@
 			</p>
 		{/if}
 
-		{#if org}
+		{#if org && data.canManageOrgLocation}
 			<form method="POST" action="?/updateOrgLocation" class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
 				<input type="hidden" name="orgId" value={org.id} />
 				<div class="flex items-start gap-3">

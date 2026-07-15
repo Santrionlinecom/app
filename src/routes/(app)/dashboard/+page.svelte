@@ -3,6 +3,7 @@
 	import { SURAH_DATA } from '$lib/surah-data';
 	import { enhance } from '$app/forms';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import StudentProgressMap from '$lib/components/dashboard/StudentProgressMap.svelte';
 	import { isTeachingRole, isMentoringRole } from '$lib/utils/role-helpers';
 	import {
 		Activity,
@@ -14,12 +15,10 @@
 		CheckCircle2,
 		ClipboardCheck,
 		Clock3,
-		Database,
 		GraduationCap,
-		HardDrive,
 		LayoutDashboard,
+		MapPinned,
 		Megaphone,
-		MessageCircle,
 		Search,
 		ShieldCheck,
 		Sparkles,
@@ -181,6 +180,9 @@
 
 	let surahLookup = new Map<number, string>();
 	let studentHighlights: any[] = [];
+	let progressLocations: any[] = [];
+	let progressLocationsError = false;
+	let showProgressMap = false;
 	let seriesBars: { label: string; value: number; height: number }[] = [];
 	let topChecklist: any[] = [];
 	let users: any[] = [];
@@ -561,6 +563,8 @@
 
 		pending = data?.pending ?? [];
 		students = data?.students ?? [];
+		progressLocations = (data as any)?.progressLocations ?? [];
+		progressLocationsError = Boolean((data as any)?.progressLocationsError);
 		users = (data as any)?.users ?? [];
 		orgs = (data as any)?.orgs ?? [];
 		checklist = data?.checklist ?? [];
@@ -861,38 +865,38 @@
 				{
 					label: 'Total lembaga',
 					value: orgs.length ? formatNumber(orgs.length) : 'Belum tersedia',
-					desc: orgs.length ? 'Data organisasi existing' : 'Dialihkan ke dashboard super admin',
+					desc: orgs.length ? 'Lembaga yang terdaftar' : 'Lihat ringkasan pengelolaan lembaga',
 					href: '/admin/super/overview',
 					tone: 'green',
 					icon: Building2,
-					source: orgs.length ? 'Existing' : 'Belum tersedia'
+					source: orgs.length ? 'Aktif' : 'Belum tersedia'
 				},
 				{
 					label: 'Total pengguna',
 					value: users.length ? formatNumber(users.length) : 'Belum tersedia',
-					desc: users.length ? 'Data user existing' : 'Gunakan overview super admin',
+					desc: users.length ? 'Pengguna yang terdaftar' : 'Lihat ringkasan pengelolaan pengguna',
 					href: '/admin/super/overview',
 					tone: 'sky',
 					icon: Users,
-					source: users.length ? 'Existing' : 'Belum tersedia'
+					source: users.length ? 'Aktif' : 'Belum tersedia'
 				},
 				{
 					label: 'Lisensi aktif',
-					value: 'Belum tersedia',
-					desc: 'Perlu integrasi metrics lisensi',
+					value: 'Lihat ringkasan',
+					desc: 'Pantau dan kelola lisensi lembaga',
 					href: '/admin/super/overview',
 					tone: 'gold',
 					icon: ShieldCheck,
-					source: 'Perlu metrics'
+					source: 'Kelola'
 				},
 				{
-					label: 'AI / storage',
-					value: 'Perlu metrics',
-					desc: 'Belum ada data usage di load dashboard',
-					href: '/admin/super/overview',
+					label: 'Peta lembaga',
+					value: `${progressLocations.length} lokasi`,
+					desc: 'Lembaga yang sudah memiliki titik lokasi',
+					href: '/admin/peta',
 					tone: 'slate',
-					icon: Database,
-					source: 'Placeholder aman'
+					icon: MapPinned,
+					source: 'Peta'
 				}
 			];
 		} else if (isCommunityOrg) {
@@ -904,16 +908,16 @@
 					href: '/keuangan',
 					tone: 'green',
 					icon: Wallet,
-					source: hasFinanceData ? 'Existing' : 'Belum tersedia'
+					source: hasFinanceData ? 'Aktif' : 'Belum tersedia'
 				},
 				{
 					label: 'Pemasukan 7 hari',
 					value: hasFinanceData ? formatCurrency(kasWeeklyIn) : 'Belum tersedia',
-					desc: hasFinanceData ? 'Query kas_masjid 7 hari' : 'Belum ada ringkasan kas',
+					desc: hasFinanceData ? 'Ringkasan pemasukan tujuh hari terakhir' : 'Belum ada ringkasan kas',
 					href: '/keuangan',
 					tone: 'gold',
 					icon: TrendingUp,
-					source: hasFinanceData ? 'Existing' : 'Belum tersedia'
+					source: hasFinanceData ? 'Aktif' : 'Belum tersedia'
 				},
 				{
 					label: 'Agenda 14 hari',
@@ -922,7 +926,7 @@
 					href: '/kalender',
 					tone: 'sky',
 					icon: CalendarDays,
-					source: 'Existing'
+					source: 'Aktif'
 				},
 				{
 					label: 'Aset lembaga',
@@ -933,7 +937,7 @@
 					href: canManageCommunity ? '/dashboard/kelola-aset' : '/dashboard',
 					tone: 'slate',
 					icon: Building2,
-					source: canManageCommunity ? 'Existing' : 'Role-aware'
+					source: canManageCommunity ? 'Aktif' : 'Sesuai izin'
 				}
 			];
 		} else if (isStudent) {
@@ -945,7 +949,7 @@
 					href: '/dashboard/pencapaian-hafalan',
 					tone: 'green',
 					icon: GraduationCap,
-					source: 'Existing'
+					source: 'Aktif'
 				},
 				{
 					label: 'Ayat disetujui',
@@ -954,7 +958,7 @@
 					href: '/dashboard/pencapaian-hafalan',
 					tone: 'sky',
 					icon: CheckCircle2,
-					source: 'Existing'
+					source: 'Aktif'
 				},
 				{
 					label: 'Setoran diajukan',
@@ -963,7 +967,7 @@
 					href: '/tpq/akademik/riwayat',
 					tone: 'gold',
 					icon: ClipboardCheck,
-					source: 'Existing'
+					source: 'Aktif'
 				},
 				{
 					label: 'Disetujui hari ini',
@@ -972,7 +976,7 @@
 					href: '/tpq/akademik/riwayat',
 					tone: 'violet',
 					icon: Activity,
-					source: 'Existing'
+					source: 'Aktif'
 				}
 			];
 		} else if (isStaff) {
@@ -986,11 +990,11 @@
 					desc:
 						orgType === 'tpq' && tpqDashboard
 							? 'Setoran resmi hari ini'
-							: 'Data user/santri existing',
+							: 'Pengguna dan santri yang terdaftar',
 					href: orgType === 'tpq' ? academicPrimaryHref : '/dashboard/kelola-santri',
 					tone: 'green',
 					icon: ClipboardCheck,
-					source: 'Existing'
+					source: 'Aktif'
 				},
 				{
 					label: 'Perlu review',
@@ -1001,7 +1005,7 @@
 					href: tpqDashboard?.canReviewSetoran ? '/tpq/akademik/review' : '/tpq/akademik/riwayat',
 					tone: 'gold',
 					icon: Clock3,
-					source: 'Existing'
+					source: 'Aktif'
 				},
 				{
 					label: 'Santri aktif',
@@ -1010,7 +1014,7 @@
 					href: '/dashboard/kelola-santri',
 					tone: 'sky',
 					icon: Users,
-					source: 'Existing'
+					source: 'Aktif'
 				},
 				{
 					label: 'Ayat disetujui',
@@ -1019,7 +1023,7 @@
 					href: '/dashboard/pencapaian-hafalan',
 					tone: 'violet',
 					icon: BookOpen,
-					source: 'Existing'
+					source: 'Aktif'
 				}
 			];
 		} else {
@@ -1031,7 +1035,7 @@
 					href: '/akun',
 					tone: 'green',
 					icon: ShieldCheck,
-					source: 'Session'
+					source: 'Akun aktif'
 				},
 				{
 					label: 'Lembaga aktif',
@@ -1040,7 +1044,7 @@
 					href: '/dashboard',
 					tone: 'sky',
 					icon: Building2,
-					source: 'Session'
+					source: 'Akun aktif'
 				},
 				{
 					label: 'Agenda',
@@ -1049,57 +1053,68 @@
 					href: '/kalender',
 					tone: 'gold',
 					icon: CalendarDays,
-					source: isCommunityOrg ? 'Existing' : 'Belum tersedia'
+					source: isCommunityOrg ? 'Aktif' : 'Belum tersedia'
 				},
 				{
-					label: 'Metrics tambahan',
-					value: 'Perlu metrics',
-					desc: 'Storage, AI, WA belum ada di load dashboard',
-					href: '/dashboard',
+					label: 'Panduan akun',
+					value: 'Siap digunakan',
+					desc: 'Menu dan fitur menyesuaikan peran akun Anda',
+					href: '/akun',
 					tone: 'slate',
-					icon: Database,
-					source: 'Placeholder aman'
+					icon: ShieldCheck,
+					source: 'Sesuai izin'
 				}
 			];
 		}
 
 		statusItems = [
 			{
-				label: 'Izin dashboard',
+				label: 'Akses dashboard',
 				value: roleLabel,
-				desc: 'Widget disaring dari role dan lembaga aktif.',
+				desc: 'Tampilan disesuaikan dengan peran dan lembaga aktif.',
 				tone: 'green',
 				icon: ShieldCheck,
 				progress: null
 			},
 			{
-				label: orgType === 'tpq' ? 'TPQ akademik' : 'Data halaman',
-				value: orgType === 'tpq' && tpqDashboard ? 'Aktif' : 'Termuat',
+				label: orgType === 'tpq' ? 'Akademik TPQ' : 'Data lembaga',
+				value: orgType === 'tpq' && tpqDashboard ? 'Aktif' : 'Tersedia',
 				desc:
 					orgType === 'tpq' && tpqDashboard
-						? 'Setoran, review, riwayat, rapor, dan agenda tersedia.'
-						: 'Data berasal dari server load dashboard.',
+						? 'Setoran, review, riwayat, rapor, dan agenda siap digunakan.'
+						: 'Informasi lembaga dapat diakses sesuai izin akun.',
 				tone: orgType === 'tpq' && tpqDashboard ? 'green' : 'sky',
 				icon: Activity,
 				progress:
 					orgType === 'tpq' && tpqDashboard ? clampPercent(tpqDashboard.progressPercent ?? 0) : null
 			},
 			{
-				label: 'D1 / R2 metrics',
-				value: 'Perlu integrasi metrics',
-				desc: 'Tidak ada usage storage atau database metrics di load ini.',
-				tone: 'slate',
-				icon: HardDrive,
+				label: 'Lembaga aktif',
+				value: orgName,
+				desc: 'Data dan aktivitas ditampilkan sesuai lembaga akun Anda.',
+				tone: 'green',
+				icon: Building2,
 				progress: null
 			},
-			{
-				label: 'AI / WA summary',
-				value: 'Perlu integrasi metrics',
-				desc: 'Belum ada token AI atau WhatsApp delivery metrics.',
-				tone: 'gold',
-				icon: MessageCircle,
-				progress: null
-			}
+			isEducationalOrg && isStaff
+				? {
+						label: 'Pendampingan santri',
+						value: `${formatNumber(students.length)} santri`,
+						desc: pending.length
+							? `${formatNumber(pending.length)} setoran menunggu tindak lanjut.`
+							: 'Tidak ada setoran yang menunggu tindak lanjut.',
+						tone: pending.length ? 'gold' : 'sky',
+						icon: Users,
+						progress: null
+					}
+				: {
+						label: 'Aktivitas akun',
+						value: 'Siap digunakan',
+						desc: 'Akses fitur dan aktivitas tersedia sesuai peran akun Anda.',
+						tone: 'sky',
+						icon: Activity,
+						progress: null
+					}
 		];
 
 		if (tpqRecentSetoran.length) {
@@ -1190,7 +1205,7 @@
 					value: formatNumber(
 						series.reduce((sum: number, item: any) => sum + (item.approved ?? 0), 0)
 					),
-					desc: 'Ayat disetujui dalam grafik existing.',
+					desc: 'Ayat yang disetujui dalam tujuh hari terakhir.',
 					tone: 'sky',
 					icon: BarChart3
 				},
@@ -1225,7 +1240,7 @@
 				{
 					label: 'Sertifikat',
 					value: tpqDashboard ? formatNumber(tpqDashboard.certificateCount ?? 0) : 'Belum tersedia',
-					desc: tpqDashboard ? 'Sertifikat tersimpan di data existing.' : 'Perlu data sertifikat.',
+					desc: tpqDashboard ? 'Sertifikat santri yang sudah diterbitkan.' : 'Belum ada data sertifikat.',
 					tone: 'gold',
 					icon: ShieldCheck
 				}
@@ -1240,11 +1255,11 @@
 					icon: ShieldCheck
 				},
 				{
-					label: 'Metrics sistem',
-					value: 'Perlu integrasi metrics',
-					desc: 'D1, R2, AI, dan WA belum tersedia di load.',
+					label: 'Lembaga aktif',
+					value: orgName,
+					desc: 'Informasi ditampilkan sesuai lembaga dan izin akun.',
 					tone: 'slate',
-					icon: Database
+					icon: Building2
 				},
 				{
 					label: 'Aktivitas',
@@ -1256,10 +1271,11 @@
 			];
 		}
 
+		showProgressMap = false;
 		if (seriesBars.length) {
 			chartTitle = 'Aktivitas 7 Hari Terakhir';
 			chartDesc = 'Data berdasarkan setoran yang disetujui.';
-			chartMeta = 'Existing: getDailySeries';
+			chartMeta = '7 hari terakhir';
 			chartBars = seriesBars.map((entry) => ({
 				label: entry.label,
 				value: entry.value,
@@ -1271,8 +1287,8 @@
 			const latest = financeEntries.slice(0, 6).reverse();
 			const maxNominal = Math.max(1, ...latest.map((entry: any) => Math.abs(entry.nominal ?? 0)));
 			chartTitle = 'Arus Kas Terbaru';
-			chartDesc = 'Visual dari transaksi kas existing.';
-			chartMeta = 'Existing: getOrgFinanceSummary';
+			chartDesc = 'Ringkasan transaksi kas terbaru.';
+			chartMeta = 'Transaksi terbaru';
 			chartBars = latest.map((entry: any) => ({
 				label: formatDate(entry.tanggal).split(' ')[0],
 				value: Math.abs(entry.nominal ?? 0),
@@ -1281,17 +1297,14 @@
 				tone:
 					entry.tipe === 'masuk' ? 'from-emerald-500 to-teal-400' : 'from-rose-500 to-orange-400'
 			}));
-		} else if (studentHighlights.length) {
-			chartTitle = 'Sebaran Progres Santri';
-			chartDesc = isUstadz ? 'Santri dalam bimbingan Anda.' : 'Santri dengan progres tertinggi.';
-			chartMeta = 'Existing: getAllStudentsProgress';
-			chartBars = studentHighlights.map((student: any) => ({
-				label: student.username || student.email || 'Santri',
-				value: Math.round(student.percentage ?? 0),
-				display: `${Math.round(student.percentage ?? 0)}%`,
-				height: Math.max(8, clampPercent(student.percentage ?? 0)),
-				tone: 'from-emerald-500 to-teal-400'
-			}));
+		} else if (studentHighlights.length || progressLocations.length || progressLocationsError) {
+			chartTitle = 'Sebaran Progress Santri';
+			chartDesc = isUstadz
+				? 'Lokasi lembaga santri dalam bimbingan Anda.'
+				: 'Titik lembaga berdasarkan tempat santri terdaftar.';
+			chartMeta = `${progressLocations.length} lokasi lembaga`;
+			chartBars = [];
+			showProgressMap = true;
 		} else if (tpqDashboard && tpqDashboard.today?.total > 0) {
 			const todayRows = [
 				{
@@ -1313,7 +1326,7 @@
 			const maxToday = Math.max(1, ...todayRows.map((item) => item.value));
 			chartTitle = 'Setoran Hari Ini';
 			chartDesc = 'Status setoran resmi hari ini.';
-			chartMeta = 'Existing: tpq_setoran';
+			chartMeta = 'Hari ini';
 			chartBars = todayRows.map((item) => ({
 				...item,
 				display: formatNumber(item.value),
@@ -1566,7 +1579,13 @@
 				</span>
 			</div>
 
-			{#if chartBars.length}
+			{#if showProgressMap}
+				<StudentProgressMap
+					locations={progressLocations}
+					loadError={progressLocationsError}
+					settingsHref={isAdmin ? '/akun' : null}
+				/>
+			{:else if chartBars.length}
 				<div
 					class="soft-grid mt-6 h-72 min-w-0 rounded-xl border border-so-border bg-so-cream p-3 sm:p-4"
 				>
@@ -1595,7 +1614,7 @@
 						<BarChart3 class="mx-auto text-so-green/35" size={38} strokeWidth={1.8} />
 						<p class="mt-3 text-sm font-bold text-so-green">Belum tersedia</p>
 						<p class="mt-1 text-xs leading-5 text-so-muted">
-							Chart akan aktif setelah data aktivitas, kas, atau progress tersedia dari server load.
+							Ringkasan akan muncul setelah ada aktivitas, transaksi, atau capaian yang tercatat.
 						</p>
 					</div>
 				</div>
@@ -1695,7 +1714,7 @@
 				>
 					<p class="font-bold text-so-green">Belum tersedia</p>
 					<p class="mt-1 text-xs leading-5">
-						Aktivitas akan muncul setelah ada setoran, agenda, atau transaksi existing.
+						Aktivitas akan muncul setelah ada setoran, agenda, atau transaksi baru.
 					</p>
 				</div>
 			{/if}

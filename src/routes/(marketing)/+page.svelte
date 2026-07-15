@@ -112,7 +112,7 @@
 		'Aqidah + adab + amal, bukan sekadar aplikasi administrasi',
 		'Gamifikasi untuk melawan dopamin cepat game dan scrolling',
 		'Orang tua, guru, dan lembaga punya peran dalam satu alur',
-		'Tetap hemat biaya dengan Cloudflare serverless-first'
+		'Tetap ringan, cepat, dan hemat biaya operasional'
 	];
 
 	$: primaryAction = isSuperAdminUser(data?.user)

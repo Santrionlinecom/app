@@ -11,6 +11,8 @@ import { listOrgMedia } from '$lib/server/org-media';
 import { seedHafalanDefault } from '$lib/server/domains/tpq/db-hafalan';
 import { SEED_HAFALAN_DEFAULT } from '$lib/server/domains/tpq/seed-hafalan-default';
 import { buildR2PublicUrl, requireR2Bucket } from '$lib/server/cloudflare';
+import { isSuperAdminUser } from '$lib/auth/session-user';
+import { canManageOrgLocation } from '$lib/server/org-location-access';
 import type { Actions, PageServerLoad } from './$types';
 
 const allowedOrgTypes = ['tpq', 'pondok', 'masjid', 'musholla', 'rumah-tahfidz'] as const;
@@ -187,6 +189,12 @@ const parseNullableCoordinate = (formData: FormData, name: string) => {
 const isIndonesiaCoordinate = (latitude: number, longitude: number) =>
 	latitude >= -11 && latitude <= 6 && longitude >= 95 && longitude <= 141;
 
+const canEditOrgLocation = (user: NonNullable<App.Locals['user']>, targetOrgId: string) =>
+	canManageOrgLocation(
+		{ role: user.role, orgId: user.orgId, isSuperAdmin: isSuperAdminUser(user) },
+		targetOrgId
+	);
+
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth');
@@ -232,7 +240,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		org,
 		orgMedia,
 		managedLembaga,
-		addonAktif
+		addonAktif,
+		canManageOrgLocation: Boolean(org && canEditOrgLocation(user, org.id))
 	};
 };
 
@@ -446,7 +455,7 @@ export const actions: Actions = {
 			return fail(404, { message: 'Lembaga tidak ditemukan', type: 'org-location' });
 		}
 
-		const canUpdate = target.akunAdminId === locals.user.id || orgId === locals.user.orgId;
+		const canUpdate = canEditOrgLocation(locals.user, target.id);
 		if (!canUpdate) {
 			return fail(403, { message: 'Tidak memiliki akses mengubah lembaga ini', type: 'org-location' });
 		}

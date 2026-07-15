@@ -168,7 +168,7 @@
 	const downloadJson = () => {
 		if (!result) return;
 
-		// Download dilakukan di browser agar hemat: tidak perlu D1, R2, atau endpoint penyimpanan.
+		// Download dilakukan langsung di browser agar tetap ringan dan hemat.
 		const blob = new Blob([JSON.stringify(result, null, 2)], {
 			type: 'application/json;charset=utf-8'
 		});
@@ -247,7 +247,7 @@
 					<p class="text-sm font-semibold uppercase tracking-wide text-emerald-600">Super Admin Tools</p>
 					<h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-950">Scraper Data Aggregator</h1>
 					<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-						Mengambil JSON mentah dari target bawaan atau URL kustom yang sudah melewati whitelist domain di backend.
+						Mengambil data dari sumber bawaan atau alamat khusus yang sudah masuk daftar sumber tepercaya.
 					</p>
 				</div>
 
@@ -324,7 +324,7 @@
 			<div class="flex flex-col gap-2 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
 				<div>
 					<h2 class="text-lg font-semibold text-slate-950">Hasil JSON Mentah</h2>
-					<p class="text-sm text-slate-500">Response asli dari API target setelah melewati backend guard.</p>
+					<p class="text-sm text-slate-500">Hasil asli dari sumber terpilih setelah pemeriksaan keamanan.</p>
 				</div>
 				{#if result}
 					<span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">

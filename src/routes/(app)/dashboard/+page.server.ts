@@ -1,6 +1,13 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { getPendingSubmissions, getAllStudentsProgress, getSantriChecklist, getSantriStats, getDailySeries } from '$lib/server/progress';
+import {
+	getPendingSubmissions,
+	getAllStudentsProgress,
+	getSantriChecklist,
+	getSantriStats,
+	getDailySeries,
+	getStudentProgressLocations
+} from '$lib/server/progress';
 import { getSantriTeacherId, listOrgTeachers } from '$lib/server/domains/tpq/santri-ustadz';
 import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
 import type { D1Database } from '@cloudflare/workers-types';
@@ -675,14 +682,21 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 		}
 
 		const surahs = await fetchSurahs(db);
+		const [students, pending, progressMap] = await Promise.all([
+			getAllStudentsProgress(db, { orgId: scopedOrgId }),
+			getPendingSubmissions(db, { orgId: scopedOrgId }),
+			getStudentProgressLocations(db, { orgId: scopedOrgId })
+		]);
 		return {
 			...basePayload,
 			surahs,
 			orgs,
 			canManageCommunity,
 			...communityManagerData,
-			students: await getAllStudentsProgress(db, { orgId: scopedOrgId }),
-			pending: await getPendingSubmissions(db, { orgId: scopedOrgId })
+			students,
+			pending,
+			progressLocations: progressMap.locations,
+			progressLocationsError: progressMap.error
 		};
 	} else if (isTeachingRole(role)) {
 		// Ustadz: pending submissions and student progress
@@ -702,6 +716,11 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 		}
 
 		const surahs = await fetchSurahs(db);
+		const [pending, students, progressMap] = await Promise.all([
+			getPendingSubmissions(db, { orgId: scopedOrgId, ustadzId: locals.user.id }),
+			getAllStudentsProgress(db, { orgId: scopedOrgId, ustadzId: locals.user.id }),
+			getStudentProgressLocations(db, { orgId: scopedOrgId, ustadzId: locals.user.id })
+		]);
 		return {
 			role,
 			currentUser: locals.user,
@@ -711,8 +730,10 @@ export const load: PageServerLoad = async ({ locals, request, platform }) => {
 			tpqDashboard,
 			canManageCommunity,
 			...communityManagerData,
-			pending: await getPendingSubmissions(db, { orgId: scopedOrgId, ustadzId: locals.user.id }),
-			students: await getAllStudentsProgress(db, { orgId: scopedOrgId, ustadzId: locals.user.id }),
+			pending,
+			students,
+			progressLocations: progressMap.locations,
+			progressLocationsError: progressMap.error,
 			surahs
 		};
 	} else if (role === 'santri' || role === 'alumni') {

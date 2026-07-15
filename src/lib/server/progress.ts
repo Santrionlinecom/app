@@ -415,6 +415,100 @@ export const getAllStudentsProgress = async (
     }
 };
 
+export type StudentProgressLocation = {
+    orgId: string;
+    orgName: string;
+    orgType: string;
+    city: string | null;
+    province: string | null;
+    latitude: number;
+    longitude: number;
+    studentCount: number;
+    approvedAyah: number;
+    averagePercentage: number;
+};
+
+export const getStudentProgressLocations = async (
+    db: D1Database,
+    opts?: { orgId?: string | null; ustadzId?: string | null }
+): Promise<{ locations: StudentProgressLocation[]; error: boolean }> => {
+    try {
+        if (opts?.ustadzId) {
+            await ensureSantriUstadzSchema(db);
+        }
+
+        const conditions = [
+            "u.role = 'santri'",
+            'o.latitude IS NOT NULL',
+            'o.longitude IS NOT NULL'
+        ];
+        const params: string[] = [];
+        const joins = [
+            'JOIN organizations o ON o.id = u.org_id',
+            'LEFT JOIN hafalan_progress hp ON hp.user_id = u.id'
+        ];
+
+        if (opts?.orgId) {
+            conditions.push('u.org_id = ?');
+            params.push(opts.orgId);
+        }
+        if (opts?.ustadzId) {
+            joins.push('JOIN santri_ustadz su ON su.santri_id = u.id');
+            conditions.push('su.ustadz_id = ?');
+            params.push(opts.ustadzId);
+        }
+
+        const { results } = await db
+            .prepare(
+                `SELECT
+                    o.id as orgId,
+                    o.name as orgName,
+                    o.type as orgType,
+                    COALESCE(NULLIF(TRIM(o.kota), ''), o.city) as city,
+                    o.provinsi as province,
+                    o.latitude as latitude,
+                    o.longitude as longitude,
+                    COUNT(DISTINCT u.id) as studentCount,
+                    COUNT(CASE WHEN hp.status = 'disetujui' THEN 1 END) as approvedAyah
+                 FROM users u
+                 ${joins.join('\n                 ')}
+                 WHERE ${conditions.join(' AND ')}
+                 GROUP BY o.id, o.name, o.type, o.kota, o.city, o.provinsi, o.latitude, o.longitude
+                 ORDER BY o.name COLLATE NOCASE ASC`
+            )
+            .bind(...params)
+            .all<{
+                orgId: string;
+                orgName: string;
+                orgType: string;
+                city: string | null;
+                province: string | null;
+                latitude: number;
+                longitude: number;
+                studentCount: number;
+                approvedAyah: number;
+            }>();
+
+        const locations = (results ?? []).map((row) => {
+            const studentCount = Number(row.studentCount) || 0;
+            const approvedAyah = Number(row.approvedAyah) || 0;
+            const targetAyah = Math.max(1, studentCount * 6236);
+            return {
+                ...row,
+                latitude: Number(row.latitude),
+                longitude: Number(row.longitude),
+                studentCount,
+                approvedAyah,
+                averagePercentage: Math.round((approvedAyah / targetAyah) * 10000) / 100
+            };
+        });
+        return { locations, error: false };
+    } catch (error) {
+        console.error('Error in getStudentProgressLocations:', error);
+        return { locations: [], error: true };
+    }
+};
+
 export const getFlaggedHafalan = async (
     db: D1Database,
     opts: { currentUserId: string; role: 'admin' | 'ustadz' | 'santri'; userId?: string; orgId?: string | null }
