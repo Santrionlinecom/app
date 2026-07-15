@@ -1,7 +1,17 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { generateId } from 'lucia';
 import { ensureBukuWalletSchema } from '$lib/server/domains/buku/wallet';
+import {
+	isRetryablePaymentNotificationResult,
+	notifyPaymentSuccess
+} from '$lib/server/notifications/payment-success-notifier';
 import { ensurePaymentOrdersSchema } from '$lib/server/services/payment-gateway/payments/midtrans';
+import { fulfillPendingCoinTopup } from '$lib/server/services/payment-gateway/payments/coin-topup-fulfillment';
+import { fetchMidtransTransactionStatus } from '$lib/server/services/payment-gateway/payments/midtrans-status-api';
+import {
+	isSuccessfulMidtransTransaction,
+	mapMidtransPaymentStatus
+} from '$lib/server/services/payment-gateway/payments/midtrans-status';
 
 const ADDON_TYPES = [
 	'lembaga_tambahan',
@@ -20,6 +30,7 @@ type MidtransWebhookPayload = {
 	gross_amount?: unknown;
 	signature_key?: unknown;
 	transaction_status?: unknown;
+	fraud_status?: unknown;
 };
 
 type PaymentOrderRow = {
@@ -40,10 +51,6 @@ type CoinTopupRequestRow = {
 	amountRupiah: number;
 	coinAmount: number;
 	status: string;
-};
-
-type CoinWalletRow = {
-	balance: number;
 };
 
 const nanoid = () => generateId(15);
@@ -75,37 +82,18 @@ const timingSafeEqual = (left: string, right: string) => {
 const isAddonTipe = (value: string): value is AddonTipe =>
 	(ADDON_TYPES as readonly string[]).includes(value);
 
-const mapPaymentStatus = (transactionStatus: string) => {
-	switch (transactionStatus) {
-		case 'settlement':
-		case 'capture':
-			return 'sukses';
-		case 'expire':
-			return 'expired';
-		case 'cancel':
-			return 'canceled';
-		case 'deny':
-			return 'denied';
-		case 'refund':
-		case 'partial_refund':
-			return 'refunded';
-		case 'failure':
-			return 'gagal';
-		default:
-			return 'pending';
-	}
-};
-
 const settleCoinTopup = async ({
 	db,
 	orderId,
-	transactionStatus
+	transactionStatus,
+	fraudStatus
 }: {
 	db: App.Locals['db'];
 	orderId: string;
 	transactionStatus: string;
+	fraudStatus: string;
 }) => {
-	if (!db) return;
+	if (!db) return false;
 
 	await ensureBukuWalletSchema(db);
 
@@ -130,13 +118,13 @@ const settleCoinTopup = async ({
 	const nowIso = new Date().toISOString();
 	const nowMs = Date.now();
 
-	if (transactionStatus === 'settlement' || transactionStatus === 'capture') {
+	if (isSuccessfulMidtransTransaction(transactionStatus, fraudStatus)) {
 		if (topup.status === 'approved') {
 			await db
 				.prepare("UPDATE payment_orders SET status = 'sukses', provider_status = ?, updated_at = ? WHERE id = ?")
 				.bind(transactionStatus, nowMs, orderId)
 				.run();
-			return;
+			return true;
 		}
 
 		if (topup.status !== 'pending') {
@@ -144,45 +132,22 @@ const settleCoinTopup = async ({
 				.prepare('UPDATE payment_orders SET provider_status = ?, updated_at = ? WHERE id = ?')
 				.bind(transactionStatus, nowMs, orderId)
 				.run();
-			return;
+			return false;
 		}
 
-		await db.prepare('INSERT OR IGNORE INTO coin_wallets (user_id) VALUES (?)').bind(topup.userId).run();
-		const wallet = await db
-			.prepare('SELECT balance FROM coin_wallets WHERE user_id = ?')
-			.bind(topup.userId)
-			.first<CoinWalletRow>();
-		const currentBalance = Number(wallet?.balance ?? 0);
 		const coinAmount = Number(topup.coinAmount ?? 0);
-		const newBalance = currentBalance + coinAmount;
-		const txId = generateId(15);
-
-		await db.batch([
-			db
-				.prepare('UPDATE coin_wallets SET balance = ?, updated_at = ? WHERE user_id = ?')
-				.bind(newBalance, nowIso, topup.userId),
-			db
-				.prepare(
-					`INSERT INTO coin_transactions
-					(id, user_id, type, amount, balance_after, description, reference_type, reference_id, created_at)
-					VALUES (?, ?, 'topup', ?, ?, 'Topup koin via Midtrans', 'coin_topup_requests', ?, ?)`
-				)
-				.bind(txId, topup.userId, coinAmount, newBalance, orderId, nowIso),
-			db
-				.prepare(
-					`UPDATE coin_topup_requests
-					SET status = 'approved', admin_note = ?, reviewed_at = ?, updated_at = ?
-					WHERE id = ?`
-				)
-				.bind('Paid via Midtrans', nowIso, nowIso, orderId),
-			db
-				.prepare("UPDATE payment_orders SET status = 'sukses', provider_status = ?, updated_at = ? WHERE id = ?")
-				.bind(transactionStatus, nowMs, orderId)
-		]);
-		return;
+		return fulfillPendingCoinTopup({
+			db,
+			orderId,
+			userId: topup.userId,
+			coinAmount,
+			transactionStatus,
+			nowIso,
+			nowMs
+		});
 	}
 
-	const paymentStatus = mapPaymentStatus(transactionStatus);
+	const paymentStatus = mapMidtransPaymentStatus(transactionStatus, fraudStatus);
 	const shouldRejectTopup = ['gagal', 'expired', 'canceled', 'denied'].includes(paymentStatus);
 	await db.batch([
 		db
@@ -200,9 +165,10 @@ const settleCoinTopup = async ({
 				]
 			: [])
 	]);
+	return false;
 };
 
-export const POST: RequestHandler = async ({ locals, platform, request }) => {
+export const POST: RequestHandler = async ({ fetch, locals, platform, request }) => {
 	const db = locals.db ?? platform?.env?.DB;
 	if (!db) {
 		return json({ ok: false, message: 'Layanan data tidak tersedia' }, { status: 503 });
@@ -226,9 +192,9 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 	const statusCode = toPayloadString(body.status_code);
 	const grossAmount = toPayloadString(body.gross_amount);
 	const signatureKey = toPayloadString(body.signature_key).toLowerCase();
-	const transactionStatus = toPayloadString(body.transaction_status);
+	const payloadTransactionStatus = toPayloadString(body.transaction_status);
 
-	if (!orderId || !statusCode || !grossAmount || !signatureKey || !transactionStatus) {
+	if (!orderId || !statusCode || !grossAmount || !signatureKey || !payloadTransactionStatus) {
 		return json({ ok: false, message: 'Payload tidak lengkap' }, { status: 400 });
 	}
 
@@ -236,6 +202,25 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 	if (!timingSafeEqual(expectedSignature, signatureKey)) {
 		return json({ ok: false, message: 'Signature tidak valid' }, { status: 403 });
 	}
+
+	const verifiedStatus = await fetchMidtransTransactionStatus({
+		fetchFn: fetch,
+		serverKey,
+		isProduction: platform?.env?.MIDTRANS_IS_PRODUCTION === 'true',
+		orderId
+	});
+	if (!verifiedStatus.ok) {
+		console.error('midtrans_status_verification_failed', {
+			order_id: orderId,
+			code: verifiedStatus.code
+		});
+		return json({ ok: false, message: 'Status pembayaran belum dapat diverifikasi' }, { status: 502 });
+	}
+	if (verifiedStatus.orderId !== orderId) {
+		return json({ ok: false, message: 'Identitas pembayaran tidak sesuai' }, { status: 409 });
+	}
+	const transactionStatus = verifiedStatus.transactionStatus;
+	const fraudStatus = verifiedStatus.fraudStatus;
 
 	const paymentOrder = await db
 		.prepare(
@@ -260,7 +245,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 		return json({ ok: false, message: 'Order pembayaran tidak ditemukan' }, { status: 404 });
 	}
 
-	const webhookGrossAmount = Number(grossAmount);
+	const webhookGrossAmount = Number(verifiedStatus.grossAmount);
 	if (!Number.isFinite(webhookGrossAmount) || webhookGrossAmount !== Number(paymentOrder.grossAmount)) {
 		return json({ ok: false, message: 'Nominal pembayaran tidak sesuai' }, { status: 400 });
 	}
@@ -271,9 +256,49 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 		product_slug: paymentOrder.productSlug
 	});
 
+	const sendSuccessNotification = async () => {
+		const result = await notifyPaymentSuccess({
+			db,
+			fetchFn: fetch,
+			env: platform?.env ?? {},
+			orderId,
+			userId: paymentOrder.userId,
+			packageName: paymentOrder.packageName,
+			productSlug: paymentOrder.productSlug,
+			grossAmount: paymentOrder.grossAmount
+		});
+		console.info('payment_success_whatsapp_notification', {
+			order_id: orderId,
+			status: result.status,
+			...(result.status === 'skipped' ? { reason: result.reason } : {}),
+			...(result.status === 'failed' ? { code: result.code } : {})
+		});
+		return result;
+	};
+
+	const retryNotificationResponse = () =>
+		json({ ok: false, message: 'Notifikasi pembayaran akan dicoba ulang' }, { status: 503 });
+
+	if (
+		paymentOrder.status === 'sukses' &&
+		isSuccessfulMidtransTransaction(transactionStatus, fraudStatus)
+	) {
+		const notificationResult = await sendSuccessNotification();
+		if (isRetryablePaymentNotificationResult(notificationResult)) {
+			return retryNotificationResponse();
+		}
+		return json({ ok: true }, { status: 200 });
+	}
+
 	if (paymentOrder.purpose === 'coin_topup') {
 		try {
-			await settleCoinTopup({ db, orderId, transactionStatus });
+			const paymentSucceeded = await settleCoinTopup({ db, orderId, transactionStatus, fraudStatus });
+			if (paymentSucceeded) {
+				const notificationResult = await sendSuccessNotification();
+				if (isRetryablePaymentNotificationResult(notificationResult)) {
+					return retryNotificationResponse();
+				}
+			}
 			return json({ ok: true }, { status: 200 });
 		} catch (err) {
 			console.error('midtrans_webhook_coin_topup_failed', {
@@ -290,7 +315,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 		return json({ ok: false, message: 'Order pembayaran addon tidak valid' }, { status: 400 });
 	}
 
-	if (transactionStatus === 'settlement' || transactionStatus === 'capture') {
+	if (isSuccessfulMidtransTransaction(transactionStatus, fraudStatus)) {
 		const now = Date.now();
 		const berlakuHingga = Math.floor(now / 1000) + 2592000;
 
@@ -319,10 +344,14 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 				)
 				.bind(nanoid(), paymentOrder.lembagaId, paymentOrder.productSlug, berlakuHingga, now)
 		]);
+		const notificationResult = await sendSuccessNotification();
+		if (isRetryablePaymentNotificationResult(notificationResult)) {
+			return retryNotificationResponse();
+		}
 	} else {
 		await db
 			.prepare('UPDATE payment_orders SET status = ?, provider_status = ?, updated_at = ? WHERE id = ?')
-			.bind(mapPaymentStatus(transactionStatus), transactionStatus, Date.now(), orderId)
+			.bind(mapMidtransPaymentStatus(transactionStatus, fraudStatus), transactionStatus, Date.now(), orderId)
 			.run();
 	}
 

@@ -31,6 +31,11 @@ GOOGLE_CLIENT_ID = "511759368556-iu4bj02gusic1e0tqindpi5lriis9lkv.apps.googleuse
 # NEWS_FETCHER_URL -> set after deploying santrionline-news-fetcher
 # MIDTRANS_SERVER_KEY -> wrangler pages secret put
 # MIDTRANS_CLIENT_KEY -> wrangler pages secret put
+# WHATSAPP_ACCESS_TOKEN -> permanent System User token; set as Pages secret
+# WHATSAPP_PHONE_NUMBER_ID -> numeric Meta Phone Number ID, not the visible phone number
+# WHATSAPP_GRAPH_API_VERSION -> Pages variable, e.g. the active Meta Graph API version
+# WHATSAPP_PAYMENT_SUCCESS_TEMPLATE -> approved template name with 4 body parameters
+# WHATSAPP_TEMPLATE_LANGUAGE -> Pages variable matching the approved template language
 # TURNSTILE_SECRET_KEY -> wrangler secret put TURNSTILE_SECRET_KEY
 
 # --- Konfigurasi Database D1 ---
