@@ -441,9 +441,7 @@
 						<p class="text-sm font-semibold text-slate-800">Isi artikel</p>
 						<span class="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500">{wordCount} kata</span>
 					</div>
-					<div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-						<RichTextEditor bind:value={content} />
-					</div>
+					<RichTextEditor bind:value={content} />
 					<input type="hidden" name="content" value={content} />
 				</section>
 
