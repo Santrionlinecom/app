@@ -70,20 +70,21 @@
 	const sidebarIconTone = (item: MenuItem) => {
 		const href = item.href;
 
-		if (href === '/dashboard' || href.includes('/overview')) return 'from-slate-700 to-emerald-600';
-		if (href.startsWith('/lembaga') || href.includes('kelola-aset')) return 'from-lime-500 to-emerald-500';
-		if (href.startsWith('/addon')) return 'from-fuchsia-500 to-rose-500';
-		if (href.startsWith('/buku/studio')) return 'from-sky-500 to-cyan-500';
-		if (href.startsWith('/buku') || href.startsWith('/belajar')) return 'from-emerald-500 to-teal-500';
-		if (href.startsWith('/coins') || href.includes('topup')) return 'from-amber-400 to-orange-500';
-		if (href.includes('kelola-santri') || href.includes('licenses')) return 'from-violet-500 to-indigo-500';
-		if (href.includes('review') || href.includes('riwayat') || href.startsWith('/admin/posts')) return 'from-cyan-500 to-blue-500';
-		if (href.includes('pencapaian') || href.includes('rapor') || href.includes('royalt')) return 'from-rose-500 to-pink-500';
-		if (href.includes('sertifikat') || href.includes('jadwal') || href.startsWith('/kalender')) return 'from-indigo-500 to-violet-500';
-		if (href.startsWith('/keuangan')) return 'from-blue-500 to-indigo-500';
-		if (href.startsWith('/akun')) return 'from-amber-500 to-orange-500';
+		if (href === '/dashboard' || href.includes('/overview')) return 'from-slate-700 to-emerald-700';
+		if (href.startsWith('/lembaga') || href.includes('kelola-aset')) return 'from-lime-700 to-emerald-700';
+		if (href.startsWith('/addon')) return 'from-fuchsia-600 to-rose-600';
+		if (href.includes('earnings') || href.includes('royalt')) return 'from-rose-600 to-pink-600';
+		if (href.startsWith('/buku/studio')) return 'from-sky-600 to-cyan-700';
+		if (href.startsWith('/buku') || href.startsWith('/belajar')) return 'from-emerald-700 to-teal-700';
+		if (href.startsWith('/coins') || href.includes('topup')) return 'from-amber-700 to-orange-700';
+		if (href.includes('kelola-santri') || href.includes('licenses')) return 'from-violet-600 to-indigo-600';
+		if (href.includes('review') || href.includes('riwayat') || href.startsWith('/admin/posts')) return 'from-cyan-700 to-blue-600';
+		if (href.includes('pencapaian') || href.includes('rapor')) return 'from-rose-600 to-pink-600';
+		if (href.includes('sertifikat') || href.includes('jadwal') || href.startsWith('/kalender')) return 'from-indigo-600 to-violet-600';
+		if (href.startsWith('/keuangan')) return 'from-blue-600 to-indigo-600';
+		if (href.startsWith('/akun')) return 'from-amber-700 to-orange-700';
 
-		return 'from-emerald-500 to-teal-500';
+		return 'from-emerald-700 to-teal-700';
 	};
 
 	const learnItem: MenuItem = {
@@ -611,6 +612,7 @@
 								stroke-width="1.9"
 								stroke-linecap="round"
 								stroke-linejoin="round"
+								aria-hidden="true"
 							>
 								<path d={item.icon} />
 							</svg>
@@ -704,6 +706,7 @@
 										stroke-width="1.9"
 										stroke-linecap="round"
 										stroke-linejoin="round"
+										aria-hidden="true"
 									>
 										<path d={item.icon} />
 									</svg>
