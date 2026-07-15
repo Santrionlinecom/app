@@ -76,7 +76,7 @@
 
 		const snap = getMidtransSnap();
 		if (!midtransClientKey || !snap) {
-			showToast('error', 'Midtrans Snap belum siap. Muat ulang halaman lalu coba lagi.');
+			showToast('error', 'Layanan pembayaran belum siap. Muat ulang halaman lalu coba lagi.');
 			return;
 		}
 
@@ -111,11 +111,11 @@
 
 			snap.pay(payload.snapToken, {
 				onSuccess: () => {
-					showToast('success', 'Pembayaran sukses. Saldo coin akan disinkronkan otomatis.');
+					showToast('success', 'Pembayaran berhasil. Saldo koin akan disinkronkan otomatis.');
 					void invalidateAll();
 				},
 				onPending: () => {
-					showToast('pending', 'Pembayaran masih pending. Selesaikan pembayaran di Midtrans.');
+					showToast('pending', 'Pembayaran belum selesai. Silakan lanjutkan proses pembayaran.');
 					void invalidateAll();
 				},
 				onError: () => {
@@ -136,33 +136,33 @@
 	<script src="https://app.midtrans.com/snap/snap.js" data-client-key={midtransClientKey}></script>
 </svelte:head>
 
-<div class="space-y-6 pb-24 md:pb-10">
-	<header class="border-b border-slate-200 pb-6">
+<div class="space-y-5 pb-32 md:space-y-6 md:pb-12">
+	<header class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:p-8">
 		<a href="/coins" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900">
 			<ArrowLeft class="h-4 w-4" />
 			Kembali ke Saldo Koin
 		</a>
 
-		<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+		<div class="mt-5 grid gap-5 border-t border-slate-100 pt-5 sm:mt-6 sm:gap-6 sm:pt-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
 			<div>
 				<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-600">Top Up Koin</p>
 				<h1 class="mt-3 text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">
 					Tambah Saldo Koin
 				</h1>
 				<p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-					Pilih nominal, bayar via Midtrans, lalu saldo akan disinkronkan setelah pembayaran
+					Pilih nominal, selesaikan pembayaran, lalu saldo akan disinkronkan setelah pembayaran
 					terkonfirmasi.
 				</p>
 			</div>
 
-			<div class="grid gap-2 text-sm text-slate-600">
-				<div class="flex items-center gap-2">
+			<div class="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+				<div class="flex items-start gap-3">
 					<ShieldCheck class="h-4 w-4 text-emerald-600" />
-					<span>Pembayaran aman via Midtrans Snap</span>
+					<span class="leading-6">Pembayaran aman dan terverifikasi otomatis</span>
 				</div>
-				<div class="flex items-center gap-2">
+				<div class="flex items-start gap-3">
 					<Clock3 class="h-4 w-4 text-amber-600" />
-					<span>Status dapat dipantau dari riwayat saldo</span>
+					<span class="leading-6">Status dapat dipantau dari riwayat saldo</span>
 				</div>
 			</div>
 		</div>
@@ -184,9 +184,9 @@
 		</div>
 	{/if}
 
-	<form method="POST" class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6" on:submit|preventDefault={startMidtransTopup}>
+	<form method="POST" class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-7" on:submit|preventDefault={startMidtransTopup}>
 		<div class="space-y-6">
-			<fieldset class="space-y-4">
+			<fieldset class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
 				<div class="flex items-start justify-between gap-4">
 					<div>
 						<legend class="text-lg font-semibold text-slate-950">Pilih Paket</legend>
@@ -197,13 +197,13 @@
 					<WalletCards class="mt-1 h-5 w-5 shrink-0 text-slate-400" />
 				</div>
 
-				<div class="grid gap-3 sm:grid-cols-2">
+				<div class="grid gap-4 xl:grid-cols-2">
 					{#each packages as pkg}
 						<label
-							class={`group cursor-pointer rounded-lg border bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow-md ${
+							class={`group cursor-pointer rounded-xl border-2 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow-md ${
 								selectedPackageId === pkg.id
 									? 'border-emerald-500 ring-2 ring-emerald-100'
-									: 'border-slate-200'
+									: 'border-slate-200 hover:bg-slate-50/60'
 							}`}
 						>
 							<input
@@ -260,20 +260,19 @@
 				</div>
 			</fieldset>
 
-			<section class="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+			<section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm sm:p-6">
 				<div class="flex items-start justify-between gap-4">
 					<div>
-						<h2 class="text-lg font-semibold text-emerald-950">Pembayaran Midtrans</h2>
-						<p class="mt-1 text-sm text-slate-500">
-							Order dibuat dengan ID pendek dan saldo akan masuk setelah notifikasi pembayaran
-							diterima.
+						<h2 class="text-lg font-semibold text-emerald-950">Pembayaran Aman</h2>
+						<p class="mt-2 text-sm leading-6 text-emerald-900/75">
+							Saldo koin akan masuk otomatis setelah pembayaran berhasil diverifikasi.
 						</p>
 					</div>
 					<CreditCard class="mt-1 h-5 w-5 shrink-0 text-emerald-600" />
 				</div>
 			</section>
 
-			<section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+			<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
 				<div class="flex items-start justify-between gap-4">
 					<div>
 						<h2 class="text-lg font-semibold text-slate-950">Catatan Pembayaran</h2>
@@ -299,7 +298,7 @@
 		</div>
 
 		<aside class="space-y-4 lg:sticky lg:top-24 lg:self-start">
-			<section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+			<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
 				<div class="flex items-center justify-between gap-3">
 					<h2 class="text-lg font-semibold text-slate-950">Ringkasan</h2>
 					<CreditCard class="h-5 w-5 text-slate-400" />
@@ -340,15 +339,15 @@
 				{/if}
 			</section>
 
-			<section class="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
+			<section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm sm:p-6">
 				<div class="flex items-start gap-3">
 					<BadgeCheck class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
 					<div>
 						<h2 class="text-sm font-semibold text-emerald-950">Alur Verifikasi</h2>
 						<ol class="mt-3 space-y-2 text-sm leading-6 text-emerald-600">
-							<li>1. Transfer sesuai nominal paket.</li>
-							<li>2. Unggah bukti transfer dari formulir ini.</li>
-							<li>3. Admin memeriksa pembayaran dan menambahkan saldo.</li>
+							<li>1. Pilih paket koin yang dibutuhkan.</li>
+							<li>2. Selesaikan proses pada jendela pembayaran.</li>
+							<li>3. Saldo masuk setelah pembayaran terverifikasi.</li>
 						</ol>
 					</div>
 				</div>
@@ -362,10 +361,10 @@
 				>
 					{#if isProcessing}
 						<LoaderCircle class="h-4 w-4 animate-spin" />
-						Menyiapkan Snap
+						Menyiapkan pembayaran
 					{:else}
 						<CreditCard class="h-4 w-4" />
-						Bayar via Midtrans
+						Lanjutkan Pembayaran
 					{/if}
 				</button>
 				<a href="/coins" class="btn btn-outline btn-lg w-full gap-2">
