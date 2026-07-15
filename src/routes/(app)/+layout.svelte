@@ -67,6 +67,25 @@
 		feature?: FeatureKey;
 	};
 
+	const sidebarIconTone = (item: MenuItem) => {
+		const href = item.href;
+
+		if (href === '/dashboard' || href.includes('/overview')) return 'from-slate-700 to-emerald-600';
+		if (href.startsWith('/lembaga') || href.includes('kelola-aset')) return 'from-lime-500 to-emerald-500';
+		if (href.startsWith('/addon')) return 'from-fuchsia-500 to-rose-500';
+		if (href.startsWith('/buku/studio')) return 'from-sky-500 to-cyan-500';
+		if (href.startsWith('/buku') || href.startsWith('/belajar')) return 'from-emerald-500 to-teal-500';
+		if (href.startsWith('/coins') || href.includes('topup')) return 'from-amber-400 to-orange-500';
+		if (href.includes('kelola-santri') || href.includes('licenses')) return 'from-violet-500 to-indigo-500';
+		if (href.includes('review') || href.includes('riwayat') || href.startsWith('/admin/posts')) return 'from-cyan-500 to-blue-500';
+		if (href.includes('pencapaian') || href.includes('rapor') || href.includes('royalt')) return 'from-rose-500 to-pink-500';
+		if (href.includes('sertifikat') || href.includes('jadwal') || href.startsWith('/kalender')) return 'from-indigo-500 to-violet-500';
+		if (href.startsWith('/keuangan')) return 'from-blue-500 to-indigo-500';
+		if (href.startsWith('/akun')) return 'from-amber-500 to-orange-500';
+
+		return 'from-emerald-500 to-teal-500';
+	};
+
 	const learnItem: MenuItem = {
 		label: 'Belajar 📚',
 		href: '/belajar',
@@ -577,20 +596,19 @@
 						class:justify-center={desktopSidebarCollapsed}
 						class:px-2={desktopSidebarCollapsed}
 						title={desktopSidebarCollapsed ? item.label : ''}
+						aria-current={isActive(item) ? 'page' : undefined}
 					>
 						<span
-							class={`grid h-8 w-8 place-items-center rounded-lg ${
-								isActive(item)
-									? 'bg-so-gold text-so-green'
-									: 'bg-white/8 text-white/80 group-hover:bg-white/14'
+							class={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br text-white shadow-md ring-1 ring-white/20 transition duration-200 motion-safe:group-hover:-translate-y-0.5 group-hover:shadow-lg ${sidebarIconTone(item)} ${
+								isActive(item) ? 'ring-2 ring-so-gold/80 shadow-so-gold/20' : ''
 							}`}
 						>
 							<svg
-								class="h-4 w-4"
+								class="h-[18px] w-[18px]"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="currentColor"
-								stroke-width="1.8"
+								stroke-width="1.9"
 								stroke-linecap="round"
 								stroke-linejoin="round"
 							>
@@ -671,18 +689,25 @@
 									isActive(item) ? 'bg-so-gold/24 text-white' : 'text-white/78'
 								}`}
 								on:click={() => (sidebarOpen = false)}
+								aria-current={isActive(item) ? 'page' : undefined}
 							>
-								<svg
-									class="h-4 w-4"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="1.8"
-									stroke-linecap="round"
-									stroke-linejoin="round"
+								<span
+									class={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br text-white shadow-md ring-1 ring-white/20 ${sidebarIconTone(item)} ${
+										isActive(item) ? 'ring-2 ring-so-gold/80 shadow-so-gold/20' : ''
+									}`}
 								>
-									<path d={item.icon} />
-								</svg>
+									<svg
+										class="h-[18px] w-[18px]"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="1.9"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<path d={item.icon} />
+									</svg>
+								</span>
 								<span class="min-w-0 truncate">{item.label}</span>
 							</a>
 						{/each}
