@@ -3,10 +3,10 @@ import type { D1Database } from '@cloudflare/workers-types';
 import {
 	assertFeature,
 	assertLoggedIn,
-	assertOrgMember,
 	normalizeRole
 } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
+import { resolveLearnLembagaId } from '$lib/server/santri-learn-scope';
 
 export type LearnCategory =
 	| 'hijaiyah'
@@ -95,7 +95,7 @@ type ProgressRow = {
 type LearnContext = {
 	db: D1Database;
 	user: NonNullable<App.Locals['user']>;
-	lembagaId: string;
+	lembagaId: string | null;
 };
 
 const ALLOWED_ROLES = new Set([
@@ -368,17 +368,19 @@ export const requireSantriLearnContext = async (locals: App.Locals): Promise<Lea
 		throw error(403, 'Fitur belajar tidak tersedia untuk role ini.');
 	}
 
-	const lembagaId = assertOrgMember(user);
-	const org = await getOrganizationById(db, lembagaId);
-	if (!org) throw error(404, 'Lembaga tidak ditemukan');
-	assertFeature(org.type, user.role, 'hafalan');
+	const lembagaId = resolveLearnLembagaId(user);
+	if (lembagaId) {
+		const org = await getOrganizationById(db, lembagaId);
+		if (!org) throw error(404, 'Lembaga tidak ditemukan');
+		assertFeature(org.type, user.role, 'hafalan');
+	}
 
 	return { db, user, lembagaId };
 };
 
 export const listLearnModules = async (
 	db: D1Database,
-	lembagaId: string,
+	lembagaId: string | null,
 	userId: string
 ): Promise<LearnModule[]> => {
 	const { results } = await db
@@ -446,7 +448,7 @@ export const getLearnSummary = async (
 export const listLearnBadges = async (
 	db: D1Database,
 	userId: string,
-	lembagaId: string
+	lembagaId: string | null
 ): Promise<LearnBadge[]> => {
 	const { results } = await db
 		.prepare(
@@ -470,7 +472,7 @@ export const listLearnBadges = async (
 
 export const getLearnModule = async (
 	db: D1Database,
-	lembagaId: string,
+	lembagaId: string | null,
 	modulId: string,
 	userId: string
 ) => {
@@ -538,7 +540,7 @@ export const answerLearnQuestion = async (
 	db: D1Database,
 	params: {
 		userId: string;
-		lembagaId: string;
+		lembagaId: string | null;
 		soalId: string;
 		jawaban: string;
 	}
@@ -697,10 +699,12 @@ export const answerLearnQuestion = async (
 			.prepare(
 				`SELECT id
 				 FROM learn_badge
-				 WHERE user_id = ? AND lembaga_id = ? AND tipe = ?
+				 WHERE user_id = ?
+				   AND ((? IS NULL AND lembaga_id IS NULL) OR lembaga_id = ?)
+				   AND tipe = ?
 				 LIMIT 1`
 			)
-			.bind(params.userId, params.lembagaId, badgeDefinition.tipe)
+			.bind(params.userId, params.lembagaId, params.lembagaId, badgeDefinition.tipe)
 			.first<{ id: string }>();
 
 		if (!existingBadge) {
@@ -733,7 +737,7 @@ export const saveLearnProgressAnswer = async (
 	db: D1Database,
 	params: {
 		userId: string;
-		lembagaId: string;
+		lembagaId: string | null;
 		modulId: string;
 		soalId: string;
 		jawaban: string;
@@ -903,7 +907,7 @@ export const saveLearnProgressAnswer = async (
 
 export const getLearnLeaderboard = async (
 	db: D1Database,
-	lembagaId: string,
+	lembagaId: string | null,
 	currentUserId: string
 ): Promise<LearnLeaderboardRow[]> => {
 	const { results } = await db
@@ -938,12 +942,12 @@ export const getLearnLeaderboard = async (
 				WHERE lembaga_id = ? OR lembaga_id IS NULL
 				GROUP BY user_id
 			 ) badges ON badges.user_id = u.id
-			 WHERE u.org_id = ?
+			 WHERE (? IS NULL OR u.org_id = ?)
 			   AND u.role IN ('santri', 'alumni')
 			 ORDER BY totalXp DESC, streakHari DESC, nama COLLATE NOCASE ASC
 			 LIMIT 10`
 		)
-		.bind(lembagaId, lembagaId)
+		.bind(lembagaId, lembagaId, lembagaId)
 		.all<Omit<LearnLeaderboardRow, 'rank' | 'isCurrentUser'> & { lastBelajar: number | null }>();
 
 	return (results ?? []).map((row, index) => {

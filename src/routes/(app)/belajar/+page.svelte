@@ -82,13 +82,14 @@
 	});
 
 	$: completedCount = modules.filter((module) => module.progress_persen >= 100).length;
+	$: totalQuestions = modules.reduce((total, module) => total + module.total_soal, 0);
 </script>
 
 <svelte:head>
-	<title>SantriLearn - SantriOnline</title>
+	<title>Ruang Belajar Santri - SantriOnline</title>
 	<meta
 		name="description"
-		content="Gamifikasi belajar Nahwu dan percakapan Bahasa Arab untuk santri."
+		content="Kurikulum bertahap SantriOnline untuk membangun ilmu, adab, amal, dan keterampilan santri."
 	/>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
@@ -102,13 +103,13 @@
 	<header class="rounded-xl border border-[#1B4332]/10 bg-white p-5 shadow-sm sm:p-7">
 		<div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
 			<div class="min-w-0">
-				<p class="text-xs font-bold uppercase tracking-[0.22em] text-[#C9A84C]">Belajar Santri</p>
+				<p class="text-xs font-bold uppercase tracking-[0.22em] text-[#C9A84C]">Ruang Belajar Santri</p>
 				<h1 class="mt-2 text-3xl font-extrabold tracking-tight text-[#1B4332] md:text-5xl">
-					SantriLearn 🎓
+					Belajar bertahap, tumbuh setiap hari
 				</h1>
 				<p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
-					Kurikulum bertahap untuk memahami kata, jumlah, fi'il, maf'ul bih, dan dialog
-					perkenalan Bahasa Arab.
+					Mulai dari pondasi Bahasa Arab dan Nahwu melalui pelajaran singkat, latihan langsung,
+					serta progres yang tersimpan. Selesaikan satu tingkat sebelum membuka tingkat berikutnya.
 				</p>
 			</div>
 
@@ -141,8 +142,8 @@
 			<p class="mt-2 text-2xl font-extrabold text-[#1B4332]">+10</p>
 		</div>
 		<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-			<p class="text-sm font-semibold text-slate-500">XP per salah</p>
-			<p class="mt-2 text-2xl font-extrabold text-[#1B4332]">+2</p>
+			<p class="text-sm font-semibold text-slate-500">Latihan tersedia</p>
+			<p class="mt-2 text-2xl font-extrabold text-[#1B4332]">{totalQuestions} soal</p>
 		</div>
 	</div>
 
@@ -152,7 +153,18 @@
 		</p>
 	{/if}
 
-	<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+	<section aria-labelledby="active-curriculum-title">
+		<div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+			<div>
+				<p class="text-xs font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Jalur aktif</p>
+				<h2 id="active-curriculum-title" class="mt-1 text-2xl font-extrabold text-[#1B4332]">
+					Bahasa Arab & Nahwu Dasar
+				</h2>
+			</div>
+			<p class="text-sm font-semibold text-slate-500">{modules.length} tingkat pembelajaran</p>
+		</div>
+
+		<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 		{#each modules as module}
 			<div class="space-y-3">
 				{#if module.locked}
@@ -177,7 +189,28 @@
 				{/if}
 			</div>
 		{/each}
-	</div>
+		</div>
+
+		{#if !isLoading && modules.length === 0}
+			<div class="rounded-xl border border-[#C9A84C]/30 bg-[#FAF8F3] p-6 text-center">
+				<h3 class="text-lg font-extrabold text-[#1B4332]">Modul sedang disiapkan</h3>
+				<p class="mt-2 text-sm leading-6 text-slate-600">
+					Kurikulum akan muncul di sini setelah proses sinkronisasi selesai.
+				</p>
+			</div>
+		{/if}
+	</section>
+
+	<aside class="rounded-xl border border-[#1B4332]/10 bg-[#F2F7F4] p-5 sm:p-6" aria-labelledby="next-path-title">
+		<p class="text-xs font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Roadmap kurikulum</p>
+		<h2 id="next-path-title" class="mt-1 text-xl font-extrabold text-[#1B4332]">
+			Jalur pembinaan berikutnya
+		</h2>
+		<p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+			Materi Aqidah Aswaja, adab, fikih ibadah, sirah Rasulullah ﷺ, dan keterampilan digital
+			akan dibuka bertahap agar belajar tidak berhenti pada pengetahuan, tetapi menjadi kebiasaan baik.
+		</p>
+	</aside>
 
 	{#if isLoading}
 		<p class="text-center text-sm font-semibold text-slate-500">Memuat ulang modul...</p>
