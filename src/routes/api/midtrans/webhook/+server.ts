@@ -1,10 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { generateId } from 'lucia';
 import { ensureBukuWalletSchema } from '$lib/server/domains/buku/wallet';
-import {
-	isRetryablePaymentNotificationResult,
-	notifyPaymentSuccess
-} from '$lib/server/notifications/payment-success-notifier';
+import { dispatchPaymentSuccessNotificationsBestEffort } from '$lib/server/notifications/payment-success-notifications';
 import { ensurePaymentOrdersSchema } from '$lib/server/services/payment-gateway/payments/midtrans';
 import { fulfillPendingCoinTopup } from '$lib/server/services/payment-gateway/payments/coin-topup-fulfillment';
 import { fetchMidtransTransactionStatus } from '$lib/server/services/payment-gateway/payments/midtrans-status-api';
@@ -256,8 +253,8 @@ export const POST: RequestHandler = async ({ fetch, locals, platform, request })
 		product_slug: paymentOrder.productSlug
 	});
 
-	const sendSuccessNotification = async () => {
-		const result = await notifyPaymentSuccess({
+	const sendSuccessNotifications = async () => {
+		const input = {
 			db,
 			fetchFn: fetch,
 			env: platform?.env ?? {},
@@ -266,27 +263,24 @@ export const POST: RequestHandler = async ({ fetch, locals, platform, request })
 			packageName: paymentOrder.packageName,
 			productSlug: paymentOrder.productSlug,
 			grossAmount: paymentOrder.grossAmount
-		});
-		console.info('payment_success_whatsapp_notification', {
-			order_id: orderId,
-			status: result.status,
-			...(result.status === 'skipped' ? { reason: result.reason } : {}),
-			...(result.status === 'failed' ? { code: result.code } : {})
-		});
-		return result;
+		};
+		const outcomes = await dispatchPaymentSuccessNotificationsBestEffort(input);
+		for (const { channel, result } of outcomes) {
+			console.info('payment_success_notification', {
+				order_id: orderId,
+				channel,
+				status: result.status,
+				...(result.status === 'skipped' ? { reason: result.reason } : {}),
+				...(result.status === 'failed' ? { code: result.code } : {})
+			});
+		}
 	};
-
-	const retryNotificationResponse = () =>
-		json({ ok: false, message: 'Notifikasi pembayaran akan dicoba ulang' }, { status: 503 });
 
 	if (
 		paymentOrder.status === 'sukses' &&
 		isSuccessfulMidtransTransaction(transactionStatus, fraudStatus)
 	) {
-		const notificationResult = await sendSuccessNotification();
-		if (isRetryablePaymentNotificationResult(notificationResult)) {
-			return retryNotificationResponse();
-		}
+		await sendSuccessNotifications();
 		return json({ ok: true }, { status: 200 });
 	}
 
@@ -294,10 +288,7 @@ export const POST: RequestHandler = async ({ fetch, locals, platform, request })
 		try {
 			const paymentSucceeded = await settleCoinTopup({ db, orderId, transactionStatus, fraudStatus });
 			if (paymentSucceeded) {
-				const notificationResult = await sendSuccessNotification();
-				if (isRetryablePaymentNotificationResult(notificationResult)) {
-					return retryNotificationResponse();
-				}
+				await sendSuccessNotifications();
 			}
 			return json({ ok: true }, { status: 200 });
 		} catch (err) {
@@ -344,10 +335,7 @@ export const POST: RequestHandler = async ({ fetch, locals, platform, request })
 				)
 				.bind(nanoid(), paymentOrder.lembagaId, paymentOrder.productSlug, berlakuHingga, now)
 		]);
-		const notificationResult = await sendSuccessNotification();
-		if (isRetryablePaymentNotificationResult(notificationResult)) {
-			return retryNotificationResponse();
-		}
+		await sendSuccessNotifications();
 	} else {
 		await db
 			.prepare('UPDATE payment_orders SET status = ?, provider_status = ?, updated_at = ? WHERE id = ?')

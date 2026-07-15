@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import {
 	getWhatsAppCloudConfig,
+	isWhatsAppPaymentNotificationEnabled,
 	isRetryablePaymentNotificationResult,
 	notifyPaymentSuccess,
 	paymentSuccessDeliveryId
@@ -17,6 +18,52 @@ test('getWhatsAppCloudConfig returns null when required secrets are absent', () 
 		}),
 		null
 	);
+});
+
+test('WhatsApp payment notifications are disabled unless explicitly enabled', () => {
+	assert.equal(isWhatsAppPaymentNotificationEnabled({}), false);
+	assert.equal(
+		isWhatsAppPaymentNotificationEnabled({ WHATSAPP_PAYMENT_NOTIFICATIONS_ENABLED: 'false' }),
+		false
+	);
+	assert.equal(
+		isWhatsAppPaymentNotificationEnabled({ WHATSAPP_PAYMENT_NOTIFICATIONS_ENABLED: ' TRUE ' }),
+		true
+	);
+});
+
+test('notifyPaymentSuccess does not touch DB or Graph API while feature flag is disabled', async () => {
+	let dbCalls = 0;
+	let graphCalls = 0;
+	const result = await notifyPaymentSuccess({
+		db: {
+			prepare() {
+				dbCalls += 1;
+				throw new Error('DB must not be touched while WhatsApp is disabled');
+			}
+		} as never,
+		fetchFn: (async () => {
+			graphCalls += 1;
+			throw new Error('Graph API must not be called while WhatsApp is disabled');
+		}) as typeof fetch,
+		env: {
+			WHATSAPP_PAYMENT_NOTIFICATIONS_ENABLED: 'false',
+			WHATSAPP_ACCESS_TOKEN: 'synthetic-token',
+			WHATSAPP_PHONE_NUMBER_ID: '123456789',
+			WHATSAPP_GRAPH_API_VERSION: 'v23.0',
+			WHATSAPP_PAYMENT_SUCCESS_TEMPLATE: 'santrionline_payment_success',
+			WHATSAPP_TEMPLATE_LANGUAGE: 'id'
+		},
+		orderId: 'SOA-DISABLED',
+		userId: 'user-1',
+		packageName: 'Paket Koin',
+		productSlug: 'coin_100',
+		grossAmount: 50_000
+	});
+
+	assert.deepEqual(result, { status: 'skipped', reason: 'disabled' });
+	assert.equal(dbCalls, 0);
+	assert.equal(graphCalls, 0);
 });
 
 test('getWhatsAppCloudConfig uses explicit production configuration', () => {
@@ -91,6 +138,7 @@ test('notifyPaymentSuccess keeps a fresh sending claim retryable without sending
 			throw new Error('Graph API must not be called by the losing claimant');
 		}) as typeof fetch,
 		env: {
+			WHATSAPP_PAYMENT_NOTIFICATIONS_ENABLED: 'true',
 			WHATSAPP_ACCESS_TOKEN: 'token',
 			WHATSAPP_PHONE_NUMBER_ID: '123456789',
 			WHATSAPP_GRAPH_API_VERSION: 'v23.0',
@@ -162,6 +210,7 @@ test('notifyPaymentSuccess sends only once when the same order is replayed', asy
 			});
 		}) as typeof fetch,
 		env: {
+			WHATSAPP_PAYMENT_NOTIFICATIONS_ENABLED: 'true',
 			WHATSAPP_ACCESS_TOKEN: 'token',
 			WHATSAPP_PHONE_NUMBER_ID: '123456789',
 			WHATSAPP_GRAPH_API_VERSION: 'v23.0',

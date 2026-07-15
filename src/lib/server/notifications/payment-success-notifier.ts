@@ -6,6 +6,7 @@ import {
 } from './whatsapp-cloud';
 
 type WhatsAppEnv = {
+	WHATSAPP_PAYMENT_NOTIFICATIONS_ENABLED?: string;
 	WHATSAPP_ACCESS_TOKEN?: string;
 	WHATSAPP_PHONE_NUMBER_ID?: string;
 	WHATSAPP_GRAPH_API_VERSION?: string;
@@ -42,7 +43,13 @@ export type PaymentSuccessNotificationResult =
 	| { status: 'in_progress' }
 	| { status: 'exhausted' }
 	| { status: 'failed'; code: string }
-	| { status: 'skipped'; reason: 'not_configured' | 'missing_user' | 'invalid_recipient' };
+	| {
+			status: 'skipped';
+			reason: 'disabled' | 'not_configured' | 'missing_user' | 'invalid_recipient';
+	  };
+
+export const isWhatsAppPaymentNotificationEnabled = (env: object) =>
+	(env as WhatsAppEnv).WHATSAPP_PAYMENT_NOTIFICATIONS_ENABLED?.trim().toLowerCase() === 'true';
 
 export const isRetryablePaymentNotificationResult = (
 	result: PaymentSuccessNotificationResult
@@ -104,6 +111,9 @@ export const notifyPaymentSuccess = async ({
 	productSlug,
 	grossAmount
 }: PaymentSuccessNotificationInput): Promise<PaymentSuccessNotificationResult> => {
+	if (!isWhatsAppPaymentNotificationEnabled(env)) {
+		return { status: 'skipped', reason: 'disabled' };
+	}
 	const config = getWhatsAppCloudConfig(env);
 	if (!config) return { status: 'skipped', reason: 'not_configured' };
 	if (!userId) return { status: 'skipped', reason: 'missing_user' };
