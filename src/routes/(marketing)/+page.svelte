@@ -139,20 +139,20 @@
 		<div class="hero-glow hero-glow-one"></div>
 		<div class="hero-glow hero-glow-two"></div>
 		<div class="mx-auto grid max-w-7xl gap-8 pt-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:pt-10">
-			<div class="relative z-10">
-				<div class="inline-flex max-w-full items-center gap-2 rounded-full border border-white/20 bg-white/12 px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#f7d878] shadow-sm backdrop-blur">
+			<div class="hero-copy relative z-10">
+				<div class="hero-badge inline-flex max-w-full items-center gap-2 rounded-full border border-white/20 bg-white/12 px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#f7d878] shadow-sm backdrop-blur">
 					<Sparkles class="h-4 w-4 shrink-0" strokeWidth={2.4} />
 					<span class="truncate">Aqidah · Adab · Ilmu · Skill · Habit</span>
 				</div>
 
-				<h1 class="mt-7 max-w-4xl text-4xl font-black leading-[0.96] tracking-[-0.06em] text-white sm:text-5xl md:text-6xl lg:text-7xl">
+				<h1 class="hero-title mt-7 max-w-4xl text-4xl font-black leading-[0.96] tracking-[-0.06em] text-white sm:text-5xl md:text-6xl lg:text-7xl">
 					Sistem pembinaan generasi muslim, bukan sekadar aplikasi lembaga.
 				</h1>
-				<p class="mt-6 max-w-2xl text-base font-semibold leading-8 text-white/84 md:text-lg">
+				<p class="hero-lead mt-6 max-w-2xl text-base font-semibold leading-8 text-white/84 md:text-lg">
 					SantriOnline membantu TPQ, pondok, rumah tahfidz, masjid, dan musholla membentuk santri yang kuat aqidahnya, rapi ibadahnya, tinggi adabnya, hidup ilmunya, dan siap bersaing dengan skill masa depan.
 				</p>
 
-				<div class="mt-8 flex flex-col gap-3 sm:flex-row">
+				<div class="hero-actions mt-8 flex flex-col gap-3 sm:flex-row">
 					<a class="btn-gold h-14 px-6" href={primaryAction.href}>
 						<svelte:component this={primaryAction.icon} class="h-5 w-5" strokeWidth={2.5} />
 						{primaryAction.label}
@@ -585,6 +585,41 @@
 	@media (max-width: 640px) {
 		.hero {
 			padding-top: 1rem;
+		}
+
+		.hero-copy {
+			text-align: center;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+
+		.hero-badge {
+			justify-content: center;
+		}
+
+		.hero-title {
+			max-width: 12ch;
+			font-size: clamp(2.15rem, 12vw, 3rem);
+			line-height: 0.95;
+		}
+
+		.hero-lead {
+			max-width: 34rem;
+			line-height: 1.75;
+		}
+
+		.hero-actions {
+			width: 100%;
+			align-items: stretch;
+		}
+
+		.hero-actions > a {
+			width: 100%;
+		}
+
+		.metric {
+			text-align: center;
 		}
 
 		.section-head h2 {
