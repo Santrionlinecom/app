@@ -223,7 +223,8 @@
 	};
 
 	const orgTypeName = (value?: string | null) => (value ? orgTypeLabel[value] ?? value : '-');
-	const orgLabel = (org: Institution) => `${org.name} (${orgTypeLabel[org.type] ?? org.type})`;
+	const orgLabel = (org: Institution) =>
+		`${org.name} (${orgTypeLabel[org.type] ?? org.type}) — /${org.slug}`;
 	const orgsWithoutAdmin = (orgs: Institution[]) => orgs.filter((org) => !org.adminCount);
 	const hasOrgWithoutAdmin = (orgs: Institution[]) => orgs.some((org) => !org.adminCount);
 	const adminDisplayName = (admin: InstitutionAdmin) => admin.username || admin.email || admin.id;
@@ -236,6 +237,11 @@
 		const org = data.institutions?.find((item) => item.id === user.orgId);
 		const orgName = org ? org.name : null;
 		return `${user.username || user.email} • ${user.email}${orgName ? ` — ${orgName}` : ''}`;
+	};
+	const confirmOrganizationRejection = (event: SubmitEvent) => {
+		if (!window.confirm('Tolak lembaga ini? Admin lembaga tidak akan dapat mengaktifkan layanan lembaga.')) {
+			event.preventDefault();
+		}
 	};
 
 	const emptySummary = (type: OrgTypeKey): TypeSummary => ({
@@ -998,7 +1004,10 @@
 							<tbody class="divide-y divide-so-border bg-white">
 								{#each data.institutions as org}
 									<tr class="hover:bg-so-green/5">
-										<td class="px-5 py-3 font-bold text-so-ink">{org.name}</td>
+										<td class="px-5 py-3">
+											<p class="font-bold text-so-ink">{org.name}</p>
+											<p class="mt-1 text-xs text-so-muted">/{org.slug}</p>
+										</td>
 										<td class="px-5 py-3 text-so-muted">{orgTypeLabel[org.type] ?? org.type}</td>
 										<td class="px-5 py-3">
 											<span class={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold ${statusBadgeClass(org.status)}`}>{org.status}</span>
@@ -1029,10 +1038,27 @@
 										<td class="px-5 py-3 text-right font-bold text-so-ink">{formatNumber(org.totalMembers)}</td>
 										<td class="px-5 py-3 text-so-muted">{formatDate(org.createdAt)}</td>
 										<td class="px-5 py-3">
-											{#if org.adminCount}
+											{#if org.status === 'pending'}
+												<div class="flex flex-wrap items-center gap-2">
+													{#if org.adminCount}
+														<form method="POST" action="?/setOrganizationStatus">
+															<input type="hidden" name="orgId" value={org.id} />
+															<input type="hidden" name="nextStatus" value="active" />
+															<button aria-label={`Aktifkan ${org.name} /${org.slug}`} class="inline-flex h-9 items-center justify-center rounded-xl bg-so-green px-3 text-xs font-bold text-white transition hover:bg-so-green-2" type="submit">Aktifkan</button>
+														</form>
+													{:else}
+														<span class="text-xs font-semibold text-amber-700">Tetapkan admin dulu</span>
+													{/if}
+													<form method="POST" action="?/setOrganizationStatus" on:submit={confirmOrganizationRejection}>
+														<input type="hidden" name="orgId" value={org.id} />
+														<input type="hidden" name="nextStatus" value="rejected" />
+														<button aria-label={`Tolak ${org.name} /${org.slug}`} class="inline-flex h-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-bold text-rose-700 transition hover:bg-rose-100" type="submit">Tolak</button>
+													</form>
+												</div>
+											{:else if org.status === 'active' && org.adminCount}
 												<a class="inline-flex h-9 items-center justify-center rounded-xl border border-so-border bg-white px-3 text-xs font-bold text-so-green transition hover:border-so-green" href={`/admin/super/impersonate?orgId=${org.id}`}>Login Sebagai Admin</a>
 											{:else}
-												<span class="text-xs font-semibold text-so-muted">Admin belum ada</span>
+												<span class="text-xs font-semibold text-so-muted">Tidak ada aksi</span>
 											{/if}
 										</td>
 									</tr>

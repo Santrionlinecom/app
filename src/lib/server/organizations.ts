@@ -6,6 +6,24 @@ import { allowedRolesByType, isSystemAdmin, type OrgRole, type OrgType } from '$
 export type { OrgRole, OrgType };
 export type OrgStatus = 'pending' | 'active' | 'rejected';
 export type OrgStatusFilter = OrgStatus | 'all';
+export type OrgApprovalStatus = Extract<OrgStatus, 'active' | 'rejected'>;
+
+export const getOrganizationStatusTransitionError = (
+	currentStatus: string,
+	nextStatus: OrgApprovalStatus,
+	adminCount: number
+) => {
+	if (nextStatus !== 'active' && nextStatus !== 'rejected') {
+		return 'Status tujuan lembaga tidak valid.';
+	}
+	if (currentStatus !== 'pending') {
+		return 'Hanya lembaga berstatus pending yang dapat diproses.';
+	}
+	if (nextStatus === 'active' && adminCount < 1) {
+		return 'Lembaga harus memiliki admin sebelum diaktifkan.';
+	}
+	return null;
+};
 
 export type PublicOrgMember = {
 	id: string;

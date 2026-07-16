@@ -2,7 +2,11 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { generateId } from 'lucia';
 import { Scrypt } from '$lib/server/password';
-import { getOrganizationById } from '$lib/server/organizations';
+import {
+	getOrganizationById,
+	getOrganizationStatusTransitionError,
+	type OrgApprovalStatus
+} from '$lib/server/organizations';
 import { logActivity } from '$lib/server/activity-logs';
 import { isSuperAdminRole, requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 import {
@@ -446,6 +450,96 @@ const ensureOrgHasNoAdmin = async (db: App.Locals['db'], orgId: string) => {
 };
 
 export const actions: Actions = {
+	setOrganizationStatus: async ({ request, locals }) => {
+		const { db, user: actingUser } = requireSuperAdmin(locals);
+		const form = await request.formData();
+		const orgId = normalizeText(form.get('orgId'));
+		const nextStatus = normalizeText(form.get('nextStatus')) as OrgApprovalStatus;
+
+		if (!orgId) {
+			return fail(400, { error: 'Lembaga wajib dipilih.' });
+		}
+		if (nextStatus !== 'active' && nextStatus !== 'rejected') {
+			return fail(400, { error: 'Status tujuan lembaga tidak valid.' });
+		}
+
+		const org = await getOrganizationById(db, orgId);
+		if (!org) {
+			return fail(404, { error: 'Lembaga tidak ditemukan.' });
+		}
+
+		const hasOwnerColumn = await hasTableColumn(db, 'organizations', 'akun_admin_id');
+		const adminJoinCondition = hasOwnerColumn
+			? "(u.org_id = o.id AND u.role = 'admin') OR u.id = o.akun_admin_id"
+			: "u.org_id = o.id AND u.role = 'admin'";
+		const atomicAdminExists = hasOwnerColumn
+			? "EXISTS (SELECT 1 FROM users u WHERE (u.org_id = organizations.id AND u.role = 'admin') OR u.id = organizations.akun_admin_id)"
+			: "EXISTS (SELECT 1 FROM users u WHERE u.org_id = organizations.id AND u.role = 'admin')";
+		const auditAdminExists = hasOwnerColumn
+			? "EXISTS (SELECT 1 FROM users u WHERE (u.org_id = o.id AND u.role = 'admin') OR u.id = o.akun_admin_id)"
+			: "EXISTS (SELECT 1 FROM users u WHERE u.org_id = o.id AND u.role = 'admin')";
+
+		const adminRow = await db
+			.prepare(
+				`SELECT COUNT(DISTINCT u.id) as total
+				 FROM organizations o
+				 LEFT JOIN users u ON ${adminJoinCondition}
+				 WHERE o.id = ?`
+			)
+			.bind(orgId)
+			.first<{ total: number | null }>();
+		const adminCount = Number(adminRow?.total ?? 0);
+		const transitionError = getOrganizationStatusTransitionError(org.status, nextStatus, adminCount);
+		if (transitionError) {
+			return fail(400, { error: transitionError });
+		}
+
+		const auditId = generateId(15);
+		const auditAction = nextStatus === 'active' ? 'ACTIVATE_ORGANIZATION' : 'REJECT_ORGANIZATION';
+		const auditMetadata = JSON.stringify({
+			orgId,
+			orgName: org.name,
+			previousStatus: org.status,
+			nextStatus
+		});
+		const [auditInsert, organizationUpdate] = await db.batch([
+			db
+				.prepare(
+					`INSERT INTO activity_logs (id, user_id, action, metadata, created_at)
+					 SELECT ?, ?, ?, ?, ?
+					 WHERE EXISTS (
+						SELECT 1 FROM organizations o
+						WHERE o.id = ? AND o.status = 'pending'
+						  AND (? = 'rejected' OR ${auditAdminExists})
+					 )`
+				)
+				.bind(auditId, actingUser.id, auditAction, auditMetadata, Date.now(), orgId, nextStatus),
+			db
+				.prepare(
+					`UPDATE organizations SET status = ?
+					 WHERE id = ? AND status = 'pending'
+					   AND EXISTS (SELECT 1 FROM activity_logs WHERE id = ?)
+					   AND (? = 'rejected' OR ${atomicAdminExists})`
+				)
+				.bind(nextStatus, orgId, auditId, nextStatus),
+			db
+				.prepare(
+					`UPDATE users SET org_status = ?
+					 WHERE org_id = ?
+					   AND EXISTS (SELECT 1 FROM organizations WHERE id = ? AND status = ?)
+					   AND EXISTS (SELECT 1 FROM activity_logs WHERE id = ?)`
+				)
+				.bind(nextStatus, orgId, orgId, nextStatus, auditId)
+		]);
+		if (
+			Number(auditInsert.meta?.changes ?? 0) !== 1 ||
+			Number(organizationUpdate.meta?.changes ?? 0) !== 1
+		) {
+			return fail(409, { error: 'Status lembaga sudah berubah atau admin tidak lagi tersedia. Muat ulang halaman lalu coba lagi.' });
+		}
+
+		throw redirect(303, '/admin/super/overview#institution-list');
+	},
 	savePaymentMethod: async ({ request, locals }) => {
 		const { db } = requireSuperAdmin(locals);
 		await ensureDigitalCommerceSchema(db);
