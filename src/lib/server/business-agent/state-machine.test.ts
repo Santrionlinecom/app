@@ -12,7 +12,6 @@ const allowed: Array<[BusinessAggregate, string, string, string]> = [
 	['lead', 'discovery', 'qualified', 'lead_qualified'],
 	['quote', 'draft', 'awaiting_approval', 'approval_requested'],
 	['quote', 'awaiting_approval', 'approved', 'approval_granted'],
-	['quote', 'revision_required', 'draft', 'quote_revised'],
 	['order', 'created', 'awaiting_payment', 'invoice_created'],
 	['order', 'awaiting_payment', 'paid', 'payment_verified'],
 	['order', 'paid', 'provisioning', 'provisioning_started'],

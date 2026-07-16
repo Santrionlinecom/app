@@ -173,12 +173,13 @@ export const transitionBusinessLead = async (
 	await enforcePolicy(db, { action: 'create_lead', actorType: actor.type, actorId: actor.id });
 
 	const now = Date.now();
+	const mutationToken = newId('mutation');
 	const transitionId = newId('transition');
 	const auditId = newId('audit');
 	const results = await db.batch([
 		db
-			.prepare('UPDATE business_leads SET status = ?, updated_at = ? WHERE id = ? AND status = ?')
-			.bind(params.to, now, params.leadId, current.status),
+			.prepare('UPDATE business_leads SET status = ?, updated_at = ?, mutation_token = ? WHERE id = ? AND status = ?')
+			.bind(params.to, now, mutationToken, params.leadId, current.status),
 		db
 			.prepare(
 				`INSERT INTO business_state_transitions (
@@ -186,7 +187,7 @@ export const transitionBusinessLead = async (
 					actor_type, actor_id, reason, created_at
 				 )
 				 SELECT ?, 'lead', ?, ?, ?, ?, ?, ?, ?, ?
-				 WHERE EXISTS (SELECT 1 FROM business_leads WHERE id = ? AND status = ? AND updated_at = ?)`
+				 WHERE EXISTS (SELECT 1 FROM business_leads WHERE id = ? AND status = ? AND mutation_token = ?)`
 			)
 			.bind(
 				transitionId,
@@ -200,7 +201,7 @@ export const transitionBusinessLead = async (
 				now,
 				params.leadId,
 				params.to,
-				now
+				mutationToken
 			),
 		db
 			.prepare(
@@ -208,7 +209,7 @@ export const transitionBusinessLead = async (
 					id, event_type, actor_type, actor_id, resource_type, resource_id, payload_json, created_at
 				 )
 				 SELECT ?, 'lead_transitioned', ?, ?, 'lead', ?, ?, ?
-				 WHERE EXISTS (SELECT 1 FROM business_leads WHERE id = ? AND status = ? AND updated_at = ?)`
+				 WHERE EXISTS (SELECT 1 FROM business_leads WHERE id = ? AND status = ? AND mutation_token = ?)`
 			)
 			.bind(
 				auditId,
@@ -219,7 +220,7 @@ export const transitionBusinessLead = async (
 				now,
 				params.leadId,
 				params.to,
-				now
+				mutationToken
 			)
 	]);
 	if (Number(results[0]?.meta?.changes ?? 0) !== 1) throw new Error('Status lead berubah oleh proses lain');
@@ -286,6 +287,7 @@ export const createBusinessQuote = async (
 		expiresAt: input.expiresAt
 	});
 	const now = Date.now();
+	const mutationToken = newId('mutation');
 	const transitionId = newId('transition');
 	const auditId = newId('audit');
 	const results = await db.batch([
@@ -317,24 +319,34 @@ export const createBusinessQuote = async (
 			),
 		db
 			.prepare(
-				`UPDATE business_leads SET status = 'quoted', updated_at = ?
+				`UPDATE business_leads SET status = 'quoted', updated_at = ?, mutation_token = ?
 				 WHERE id = ? AND status = 'qualified'
 				   AND EXISTS (SELECT 1 FROM business_quotes WHERE id = ?)`
 			)
-			.bind(now, input.leadId, id),
+			.bind(now, mutationToken, input.leadId, id),
 		db
 			.prepare(
 				`INSERT INTO business_state_transitions (
 					id, aggregate_type, aggregate_id, from_state, to_state, event_type,
 					actor_type, actor_id, reason, created_at
-				 ) VALUES (?, 'lead', ?, 'qualified', 'quoted', 'quote_created', ?, ?, NULL, ?)`
+				 ) SELECT ?, 'lead', ?, 'qualified', 'quoted', 'quote_created', ?, ?, NULL, ?
+				 WHERE EXISTS (
+					SELECT 1 FROM business_leads
+					WHERE id = ? AND status = 'quoted' AND mutation_token = ?
+				 )
+				   AND EXISTS (SELECT 1 FROM business_quotes WHERE id = ?)`
 			)
-			.bind(transitionId, input.leadId, actor.type, actor.id, now),
+			.bind(transitionId, input.leadId, actor.type, actor.id, now, input.leadId, mutationToken, id),
 		db
 			.prepare(
 				`INSERT INTO business_audit_events (
 					id, event_type, actor_type, actor_id, resource_type, resource_id, payload_json, created_at
-				 ) VALUES (?, 'quote_created', ?, ?, 'quote', ?, ?, ?)`
+				 ) SELECT ?, 'quote_created', ?, ?, 'quote', ?, ?, ?
+				 WHERE EXISTS (
+					SELECT 1 FROM business_leads
+					WHERE id = ? AND status = 'quoted' AND mutation_token = ?
+				 )
+				   AND EXISTS (SELECT 1 FROM business_quotes WHERE id = ?)`
 			)
 			.bind(
 				auditId,
@@ -342,7 +354,10 @@ export const createBusinessQuote = async (
 				actor.id,
 				id,
 				JSON.stringify({ leadId: input.leadId, version, total, currency: input.currency, payloadHash }),
-				now
+				now,
+				input.leadId,
+				mutationToken,
+				id
 			)
 	]);
 	if (Number(results[1]?.meta?.changes ?? 0) !== 1) throw new Error('Lead tidak lagi siap dibuatkan quote');
@@ -370,6 +385,7 @@ export const requestQuoteApproval = async (db: D1Database, quoteId: string, acto
 	if (quote.expiresAt <= Date.now()) throw new Error('Quote sudah kedaluwarsa');
 
 	const approvalId = newId('approval');
+	const mutationToken = newId('mutation');
 	const transitionId = newId('transition');
 	const auditId = newId('audit');
 	const now = Date.now();
@@ -387,26 +403,34 @@ export const requestQuoteApproval = async (db: D1Database, quoteId: string, acto
 			.bind(approvalId, actor.id, now, approvalExpiresAt, quoteId),
 		db
 			.prepare(
-				`UPDATE business_quotes SET status = 'awaiting_approval', updated_at = ?
+				`UPDATE business_quotes SET status = 'awaiting_approval', updated_at = ?, mutation_token = ?
 				 WHERE id = ? AND status = 'draft'
 				   AND EXISTS (SELECT 1 FROM business_approvals WHERE id = ? AND status = 'pending')`
 			)
-			.bind(now, quoteId, approvalId),
+			.bind(now, mutationToken, quoteId, approvalId),
 		db
 			.prepare(
 				`INSERT INTO business_state_transitions (
 					id, aggregate_type, aggregate_id, from_state, to_state, event_type,
 					actor_type, actor_id, reason, created_at
 				 ) SELECT ?, 'quote', ?, 'draft', 'awaiting_approval', 'approval_requested', ?, ?, NULL, ?
-				 WHERE EXISTS (SELECT 1 FROM business_approvals WHERE id = ? AND status = 'pending')`
+				 WHERE EXISTS (SELECT 1 FROM business_approvals WHERE id = ? AND status = 'pending')
+				   AND EXISTS (
+					SELECT 1 FROM business_quotes
+					WHERE id = ? AND status = 'awaiting_approval' AND mutation_token = ?
+				   )`
 			)
-			.bind(transitionId, quoteId, actor.type, actor.id, now, approvalId),
+			.bind(transitionId, quoteId, actor.type, actor.id, now, approvalId, quoteId, mutationToken),
 		db
 			.prepare(
 				`INSERT INTO business_audit_events (
 					id, event_type, actor_type, actor_id, resource_type, resource_id, payload_json, created_at
 				 ) SELECT ?, 'approval_requested', ?, ?, 'quote', ?, ?, ?
-				 WHERE EXISTS (SELECT 1 FROM business_approvals WHERE id = ? AND status = 'pending')`
+				 WHERE EXISTS (SELECT 1 FROM business_approvals WHERE id = ? AND status = 'pending')
+				   AND EXISTS (
+					SELECT 1 FROM business_quotes
+					WHERE id = ? AND status = 'awaiting_approval' AND mutation_token = ?
+				   )`
 			)
 			.bind(
 				auditId,
@@ -415,7 +439,9 @@ export const requestQuoteApproval = async (db: D1Database, quoteId: string, acto
 				quoteId,
 				JSON.stringify({ approvalId, payloadHash: quote.payloadHash, total: quote.total }),
 				now,
-				approvalId
+				approvalId,
+				quoteId,
+				mutationToken
 			)
 	]);
 	if (Number(results[0]?.meta?.changes ?? 0) !== 1 || Number(results[1]?.meta?.changes ?? 0) !== 1) {
@@ -437,13 +463,73 @@ export const listPendingBusinessApprovals = async (db: D1Database, limit = 50) =
 			 FROM business_approvals a
 			 LEFT JOIN business_quotes q ON a.resource_type = 'quote' AND q.id = a.resource_id
 			 LEFT JOIN business_leads l ON l.id = q.lead_id
-			 WHERE a.status = 'pending'
+			 WHERE a.status = 'pending' AND a.expires_at > ?
 			 ORDER BY a.requested_at ASC
 			 LIMIT ?`
 		)
-		.bind(safeLimit)
+		.bind(Date.now(), safeLimit)
 		.all();
 	return result.results ?? [];
+};
+
+const invalidateQuoteApproval = async (
+	db: D1Database,
+	approval: Pick<ApprovalRow, 'id' | 'resourceId'>,
+	status: 'expired' | 'cancelled',
+	event: 'approval_expired' | 'approval_cancelled',
+	reason: string
+) => {
+	assertBusinessTransition({ aggregate: 'quote', from: 'awaiting_approval', to: 'draft', event });
+	const now = Date.now();
+	const mutationToken = newId('mutation');
+	const results = await db.batch([
+		db
+			.prepare("UPDATE business_approvals SET status = ?, mutation_token = ? WHERE id = ? AND status = 'pending'")
+			.bind(status, mutationToken, approval.id),
+		db
+			.prepare(
+				`UPDATE business_quotes SET status = 'draft', updated_at = ?, mutation_token = ?
+				 WHERE id = ? AND status = 'awaiting_approval'
+				   AND EXISTS (
+					SELECT 1 FROM business_approvals
+					WHERE id = ? AND status = ? AND mutation_token = ?
+				   )`
+			)
+			.bind(now, mutationToken, approval.resourceId, approval.id, status, mutationToken),
+		db
+			.prepare(
+				`INSERT INTO business_state_transitions (
+					id, aggregate_type, aggregate_id, from_state, to_state, event_type,
+					actor_type, actor_id, reason, created_at
+				 ) SELECT ?, 'quote', ?, 'awaiting_approval', 'draft', ?, 'system', 'business-agent-guard', ?, ?
+				 WHERE EXISTS (
+					SELECT 1 FROM business_quotes WHERE id = ? AND status = 'draft' AND mutation_token = ?
+				 )`
+			)
+			.bind(newId('transition'), approval.resourceId, event, reason, now, approval.resourceId, mutationToken),
+		db
+			.prepare(
+				`INSERT INTO business_audit_events (
+					id, event_type, actor_type, actor_id, resource_type, resource_id, payload_json, created_at
+				 ) SELECT ?, ?, 'system', 'business-agent-guard', 'approval', ?, ?, ?
+				 WHERE EXISTS (
+					SELECT 1 FROM business_approvals WHERE id = ? AND status = ? AND mutation_token = ?
+				 )`
+			)
+			.bind(
+				newId('audit'),
+				event,
+				approval.id,
+				JSON.stringify({ quoteId: approval.resourceId, reason }),
+				now,
+				approval.id,
+				status,
+				mutationToken
+			)
+	]);
+	if (Number(results[0]?.meta?.changes ?? 0) !== 1 || Number(results[1]?.meta?.changes ?? 0) !== 1) {
+		throw new Error('Approval gagal dibatalkan karena status berubah');
+	}
 };
 
 export const decideQuoteApproval = async (
@@ -466,10 +552,11 @@ export const decideQuoteApproval = async (
 	if (!approval) throw new Error('Approval bisnis tidak ditemukan');
 	if (approval.status !== 'pending') throw new Error('Approval bisnis sudah diproses');
 	if (approval.expiresAt <= Date.now()) {
-		await db.prepare("UPDATE business_approvals SET status = 'expired' WHERE id = ? AND status = 'pending'").bind(params.approvalId).run();
+		await invalidateQuoteApproval(db, approval, 'expired', 'approval_expired', 'approval_ttl_elapsed');
 		throw new Error('Approval bisnis sudah kedaluwarsa');
 	}
 	if (!approval.currentPayloadHash || approval.currentPayloadHash !== approval.payloadHash) {
+		await invalidateQuoteApproval(db, approval, 'cancelled', 'approval_cancelled', 'payload_hash_changed');
 		throw new Error('Payload quote berubah; approval lama dibatalkan');
 	}
 	await enforcePolicy(db, {
@@ -484,6 +571,7 @@ export const decideQuoteApproval = async (
 	const event = params.decision === 'approve' ? 'approval_granted' : 'approval_rejected';
 	assertBusinessTransition({ aggregate: 'quote', from: 'awaiting_approval', to: nextQuoteStatus, event });
 	const now = Date.now();
+	const mutationToken = newId('mutation');
 	const transitionId = newId('transition');
 	const auditId = newId('audit');
 	const orderId = params.decision === 'approve' ? newId('order') : null;
@@ -491,7 +579,7 @@ export const decideQuoteApproval = async (
 		db
 			.prepare(
 				`UPDATE business_approvals
-				 SET status = ?, decided_by = ?, decided_at = ?, decision_note = ?
+				 SET status = ?, decided_by = ?, decided_at = ?, decision_note = ?, mutation_token = ?
 				 WHERE id = ? AND status = 'pending' AND expires_at > ? AND requested_by <> ?
 				   AND payload_hash = ?`
 			)
@@ -500,6 +588,7 @@ export const decideQuoteApproval = async (
 				actor.id,
 				now,
 				params.note ?? null,
+				mutationToken,
 				params.approvalId,
 				now,
 				actor.id,
@@ -507,21 +596,23 @@ export const decideQuoteApproval = async (
 			),
 		db
 			.prepare(
-				`UPDATE business_quotes SET status = ?, updated_at = ?
+				`UPDATE business_quotes SET status = ?, updated_at = ?, mutation_token = ?
 				 WHERE id = ? AND status = 'awaiting_approval' AND payload_hash = ?
 				   AND EXISTS (
 					 SELECT 1 FROM business_approvals
-					 WHERE id = ? AND status = ? AND decided_by = ?
+					 WHERE id = ? AND status = ? AND decided_by = ? AND mutation_token = ?
 				   )`
 			)
 			.bind(
 				nextQuoteStatus,
 				now,
+				mutationToken,
 				approval.resourceId,
 				approval.payloadHash,
 				params.approvalId,
 				nextApprovalStatus,
-				actor.id
+				actor.id,
+				mutationToken
 			),
 		...(orderId
 			? [
@@ -533,10 +624,10 @@ export const decideQuoteApproval = async (
 							 SELECT ?, q.lead_id, q.id, 'created', ?, ?
 							 FROM business_quotes q
 							 JOIN business_approvals a ON a.resource_id = q.id
-							 WHERE q.id = ? AND q.status = 'approved'
-							   AND a.id = ? AND a.status = 'approved' AND a.decided_by = ?`
+							 WHERE q.id = ? AND q.status = 'approved' AND q.mutation_token = ?
+							   AND a.id = ? AND a.status = 'approved' AND a.decided_by = ? AND a.mutation_token = ?`
 						)
-						.bind(orderId, now, now, approval.resourceId, params.approvalId, actor.id)
+						.bind(orderId, now, now, approval.resourceId, mutationToken, params.approvalId, actor.id, mutationToken)
 				]
 			: []),
 		db
@@ -547,7 +638,11 @@ export const decideQuoteApproval = async (
 				 ) SELECT ?, 'quote', ?, 'awaiting_approval', ?, ?, ?, ?, ?, ?
 				 WHERE EXISTS (
 					 SELECT 1 FROM business_approvals
-					 WHERE id = ? AND status = ? AND decided_by = ?
+					 WHERE id = ? AND status = ? AND decided_by = ? AND mutation_token = ?
+				 )
+				   AND EXISTS (
+					 SELECT 1 FROM business_quotes
+					 WHERE id = ? AND status = ? AND mutation_token = ?
 				 )`
 			)
 			.bind(
@@ -561,7 +656,11 @@ export const decideQuoteApproval = async (
 				now,
 				params.approvalId,
 				nextApprovalStatus,
-				actor.id
+				actor.id,
+				mutationToken,
+				approval.resourceId,
+				nextQuoteStatus,
+				mutationToken
 			),
 		db
 			.prepare(
@@ -570,7 +669,11 @@ export const decideQuoteApproval = async (
 				 ) SELECT ?, ?, ?, ?, 'approval', ?, ?, ?
 				 WHERE EXISTS (
 					 SELECT 1 FROM business_approvals
-					 WHERE id = ? AND status = ? AND decided_by = ?
+					 WHERE id = ? AND status = ? AND decided_by = ? AND mutation_token = ?
+				 )
+				   AND EXISTS (
+					 SELECT 1 FROM business_quotes
+					 WHERE id = ? AND status = ? AND mutation_token = ?
 				 )`
 			)
 			.bind(
@@ -583,7 +686,11 @@ export const decideQuoteApproval = async (
 				now,
 				params.approvalId,
 				nextApprovalStatus,
-				actor.id
+				actor.id,
+				mutationToken,
+				approval.resourceId,
+				nextQuoteStatus,
+				mutationToken
 			)
 	]);
 	if (Number(results[0]?.meta?.changes ?? 0) !== 1 || Number(results[1]?.meta?.changes ?? 0) !== 1) {

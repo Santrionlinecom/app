@@ -25,15 +25,29 @@ export const createLeadSchema = z
 		path: ['contactEmail']
 	});
 
+const packageSnapshotSchema = z
+	.object({
+		slug: z.string().min(1).max(80).regex(/^[a-z0-9][a-z0-9_-]*$/i),
+		name: z.string().min(2).max(160),
+		description: z.string().max(2_000).optional(),
+		features: z.array(z.string().min(1).max(240)).max(30).optional(),
+		billingPeriod: z.enum(['one_time', 'monthly', 'yearly']).optional()
+	})
+	.strict();
+
 export const createQuoteSchema = z
 	.object({
 		leadId: z.string().trim().min(1).max(128),
 		subtotal: z.number().int().nonnegative().max(2_000_000_000),
 		discount: z.number().int().nonnegative().max(2_000_000_000).default(0),
 		currency: z.string().trim().length(3).toUpperCase().default('IDR'),
-		packageSnapshot: z.record(z.string(), z.unknown()),
-		assumptions: z.array(z.string().trim().min(1).max(500)).max(30).default([]),
-		expiresAt: z.number().int().positive()
+		packageSnapshot: packageSnapshotSchema,
+		assumptions: z.array(z.string().trim().min(1).max(500)).max(20).default([]),
+		expiresAt: z
+			.number()
+			.int()
+			.refine((value) => value > Date.now(), 'Masa berlaku quote harus di masa depan')
+			.refine((value) => value <= Date.now() + 90 * 86_400_000, 'Masa berlaku quote maksimal 90 hari')
 	})
 	.refine((value) => value.discount <= value.subtotal, {
 		message: 'Diskon tidak boleh melebihi subtotal',

@@ -9,7 +9,7 @@ Fondasi workflow bisnis untuk alur lead, discovery, quote, approval, order, pemb
 - Maker tidak dapat menyetujui request miliknya sendiri.
 - Approval terikat ke SHA-256 payload quote dan memiliki masa kedaluwarsa.
 - Midtrans adalah satu-satunya authority untuk status pembayaran.
-- Audit event bersifat append-only melalui trigger D1.
+- Audit event dan riwayat transisi bersifat append-only melalui trigger D1.
 - Side effect produksi tetap fail-closed melalui feature flag dan kill switch.
 
 ## Komponen yang aktif pada MVP
@@ -33,6 +33,8 @@ Fondasi workflow bisnis untuk alur lead, discovery, quote, approval, order, pemb
 - `POST /api/admin/business-agent/quotes/:id/request-approval`
 - `GET /api/admin/business-agent/approvals`
 - `POST /api/admin/business-agent/approvals/:id`
+
+Semua endpoint Super Admin `POST` mewajibkan `Idempotency-Key` 16–128 karakter. Key terikat ke actor, jenis action, dan hash payload; retry payload yang sama direplay, sedangkan reuse untuk payload berbeda ditolak.
 
 ### Hermes service identity
 
@@ -66,7 +68,7 @@ Default deployment adalah nonaktif.
 
 | Scope | Default |
 |---|---|
-| `global` | OFF — workflow internal diperbolehkan |
+| `global` | ON — seluruh mutasi ditutup sampai aktivasi eksplisit dan tercatat |
 | `midtrans_invoice` | ON — tidak boleh membuat invoice |
 | `telegram_approval` | ON — belum mengirim approval Telegram |
 | `license_activation` | ON — belum mengaktifkan lisensi |
@@ -84,7 +86,10 @@ Migration:
 
 ```bash
 npx wrangler d1 execute DB --remote --file=migrations/0049_business_agent.sql
+npx wrangler d1 execute DB --remote --file=migrations/0050_business_agent_security.sql
 ```
+
+Membuka kill switch global hanya boleh dilakukan setelah migration keamanan, concurrency tests, smoke test, dan service-token setup selesai. Simpan actor, alasan, dan waktu aktivasi di audit operasional.
 
 ## Batas MVP
 

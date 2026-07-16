@@ -16,6 +16,7 @@ export type BusinessAction =
 
 export type BusinessPolicyReason =
 	| 'allowed'
+	| 'actor_not_allowed'
 	| 'kill_switch_active'
 	| 'self_approval_forbidden'
 	| 'admin_required'
@@ -53,8 +54,26 @@ const approvalBoundActions = new Set<BusinessAction>([
 	'manage_policy'
 ]);
 
+const allowedActorsByAction: Record<BusinessAction, readonly BusinessActorType[]> = {
+	read: ['agent', 'admin', 'system', 'payment_webhook'],
+	create_lead: ['agent', 'admin'],
+	create_quote_draft: ['agent', 'admin'],
+	request_approval: ['agent', 'admin'],
+	approve_quote: ['admin'],
+	create_midtrans_invoice: ['admin', 'system'],
+	send_quote: ['admin', 'system'],
+	mark_paid: ['payment_webhook'],
+	activate_license: ['system'],
+	refund: ['admin'],
+	revoke_license: ['admin'],
+	manage_policy: ['admin']
+};
+
 export const evaluateBusinessAction = (input: BusinessPolicyInput): BusinessPolicyDecision => {
 	if (input.action === 'read') return allow();
+	if (!allowedActorsByAction[input.action].includes(input.actorType)) {
+		return deny('actor_not_allowed');
+	}
 	if (input.killSwitchActive) return deny('kill_switch_active');
 
 	if (internalActions.has(input.action)) return allow();

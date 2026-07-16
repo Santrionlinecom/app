@@ -24,6 +24,15 @@ test('read and internal drafts are allowed without financial approval', () => {
 	});
 });
 
+test('system actor cannot impersonate an agent for drafting side effects', () => {
+	for (const action of ['create_lead', 'create_quote_draft', 'request_approval'] as const) {
+		assert.deepEqual(evaluateBusinessAction({ ...base, action, actorType: 'system' }), {
+			allowed: false,
+			reason: 'actor_not_allowed'
+		});
+	}
+});
+
 test('maker cannot approve their own request', () => {
 	assert.deepEqual(
 		evaluateBusinessAction({
@@ -52,10 +61,13 @@ test('invoice creation requires a valid payload-bound approval', () => {
 });
 
 test('payment state can only be settled by a verified payment webhook', () => {
-	assert.deepEqual(evaluateBusinessAction({ ...base, action: 'mark_paid' }), {
-		allowed: false,
-		reason: 'verified_payment_required'
-	});
+	assert.deepEqual(
+		evaluateBusinessAction({ ...base, action: 'mark_paid', actorType: 'payment_webhook', actorId: 'midtrans' }),
+		{
+			allowed: false,
+			reason: 'verified_payment_required'
+		}
+	);
 	assert.deepEqual(
 		evaluateBusinessAction({
 			...base,

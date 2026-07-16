@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
+import { runIdempotentAdminBusinessMutation } from '$lib/server/business-agent/admin-idempotency';
 import { businessApiError } from '$lib/server/business-agent/http';
 import { createBusinessQuote, listBusinessQuotes } from '$lib/server/business-agent/repository';
 import { createQuoteSchema } from '$lib/server/business-agent/schemas';
@@ -18,8 +19,17 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		return json({ ok: false, message: 'Data quote tidak valid' }, { status: 400 });
 	}
 	try {
-		const quote = await createBusinessQuote(db, parsed.data, { id: user.id, type: 'admin' });
-		return json({ ok: true, quote }, { status: 201 });
+		return await runIdempotentAdminBusinessMutation({
+			db,
+			request,
+			actorId: user.id,
+			scope: 'admin_create_quote',
+			payload: parsed.data,
+			execute: async () => {
+				const quote = await createBusinessQuote(db, parsed.data, { id: user.id, type: 'admin' });
+				return { response: { ok: true, quote }, resourceId: quote.id, status: 201 };
+			}
+		});
 	} catch (error) {
 		return businessApiError(error, 'create_quote');
 	}
