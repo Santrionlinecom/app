@@ -18,6 +18,7 @@
     "openiti:parse": "node scripts/openiti/parse-openiti.mjs",
     "deploy:pages": "npm run build && npx wrangler@4 pages deploy .svelte-kit/cloudflare --project-name app-santrionline",
     "test:payments": "node --import tsx --test src/lib/server/services/payment-gateway/payments/coin-topup-fulfillment.test.ts src/lib/server/services/payment-gateway/payments/midtrans-status.test.ts src/lib/server/services/payment-gateway/payments/midtrans-status-api.test.ts src/lib/server/notifications/payment-success-email.test.ts src/lib/server/notifications/payment-success-notifications.test.ts src/lib/server/notifications/payment-success-notifier.test.ts src/lib/server/notifications/whatsapp-cloud.test.ts",
+    "test:business-agent": "node --import tsx --test src/lib/server/business-agent/*.test.ts",
     "check": "NODE_OPTIONS=--no-deprecation svelte-kit sync && NODE_OPTIONS=--no-deprecation svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "NODE_OPTIONS=--no-deprecation svelte-kit sync && NODE_OPTIONS=--no-deprecation svelte-check --tsconfig ./tsconfig.json --watch",
     "tauri": "tauri"

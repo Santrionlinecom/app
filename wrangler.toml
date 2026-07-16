@@ -14,6 +14,7 @@ PUBLIC_UMAMI_WEBSITE_ID = "4367f37b-32a2-4732-bbce-71192ac5fa17"
 GOOGLE_CLIENT_ID = "511759368556-iu4bj02gusic1e0tqindpi5lriis9lkv.apps.googleusercontent.com"
 WHATSAPP_PAYMENT_NOTIFICATIONS_ENABLED = "false"
 PAYMENT_EMAIL_NOTIFICATIONS_ENABLED = "true"
+BUSINESS_AGENT_AGENT_API_ENABLED = "false"
 
 # --- Sentry ---
 # Set these in Cloudflare Pages Dashboard > Settings > Variables and Secrets:
@@ -43,6 +44,8 @@ PAYMENT_EMAIL_NOTIFICATIONS_ENABLED = "true"
 # PAYMENT_EMAIL_NOTIFICATIONS_ENABLED -> set to "true" after transactional email provider is configured
 # RESEND_API_KEY -> Pages secret for transactional payment email; never commit the value
 # PAYMENT_EMAIL_FROM -> verified sender, e.g. SantriOnline <transaksi@santrionline.com>
+# BUSINESS_AGENT_AGENT_API_ENABLED -> keep false until Hermes service authentication is configured
+# BUSINESS_AGENT_SERVICE_TOKEN -> Pages secret; minimum 32 chars, never commit the value
 # TURNSTILE_SECRET_KEY -> wrangler secret put TURNSTILE_SECRET_KEY
 
 # --- Konfigurasi Database D1 ---
