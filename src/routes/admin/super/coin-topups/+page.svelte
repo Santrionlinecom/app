@@ -68,7 +68,7 @@
 	<title>Kelola Topup Koin - Admin SantriOnline</title>
 </svelte:head>
 
-<div class="space-y-6 pb-10">
+<div class="mx-auto min-h-screen w-full max-w-[1440px] space-y-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
 	<!-- Header -->
 	<section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
 		<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -82,7 +82,7 @@
 	</section>
 
 	<!-- Status Tabs -->
-	<div class="flex gap-2 overflow-x-auto pb-2">
+	<div class="flex w-fit max-w-full gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
 		<a
 			href="/admin/super/coin-topups?status=pending"
 			class="btn btn-sm {currentStatus === 'pending' ? 'btn-primary' : 'btn-outline'}"
@@ -105,7 +105,7 @@
 
 	<!-- Table -->
 	{#if requests.length === 0}
-		<div class="rounded-[1.75rem] border border-dashed border-slate-300 bg-white px-6 py-10 text-center shadow-sm">
+		<div class="flex min-h-48 flex-col items-center justify-center rounded-[1.75rem] border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-sm">
 			<p class="text-base font-semibold text-slate-900">Tidak ada request topup.</p>
 			<p class="mt-2 text-sm text-slate-500">Request topup dengan status "{currentStatus}" belum ada.</p>
 		</div>

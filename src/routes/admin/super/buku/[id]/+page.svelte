@@ -42,7 +42,7 @@
 	<title>{book.title} - Moderasi Buku</title>
 </svelte:head>
 
-<div class="space-y-6 pb-10">
+<div class="mx-auto min-h-screen w-full max-w-[1440px] space-y-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
 	<section class="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
 		<div class="grid gap-0 lg:grid-cols-[0.34fr_0.66fr]">
 			<div class="bg-gradient-to-br from-emerald-50 via-white to-amber-50">
@@ -191,7 +191,7 @@
 		</div>
 
 		{#if chapters.length === 0}
-			<div class="rounded-[1.75rem] border border-dashed border-slate-300 bg-white px-6 py-10 text-center shadow-sm">
+			<div class="flex min-h-48 flex-col items-center justify-center rounded-[1.75rem] border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-sm">
 				<p class="text-base font-semibold text-slate-900">Belum ada bab.</p>
 			</div>
 		{:else}
