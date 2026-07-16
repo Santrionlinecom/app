@@ -584,29 +584,52 @@
 
 	@media (max-width: 640px) {
 		.hero {
-			padding-top: 1rem;
+			padding-top: 0.75rem;
+			padding-bottom: 1rem;
+			background: #f7f3ea;
+		}
+
+		.hero-glow {
+			display: none;
 		}
 
 		.hero-copy {
+			width: 100%;
+			border: 1px solid #e5dcc0;
+			border-radius: 1.75rem;
+			background:
+				radial-gradient(circle at top, rgba(247, 216, 120, 0.18), transparent 42%),
+				linear-gradient(180deg, #ffffff 0%, #fffaf0 100%);
+			padding: 1rem;
 			text-align: center;
 			display: flex;
 			flex-direction: column;
 			align-items: center;
+			box-shadow: 0 18px 42px rgba(23, 61, 44, 0.08);
 		}
 
 		.hero-badge {
+			border-color: #d8e7db;
+			background: #f3faf5;
+			color: #1d5b40;
 			justify-content: center;
+			font-size: 0.68rem;
+			letter-spacing: 0.18em;
 		}
 
 		.hero-title {
-			max-width: 12ch;
-			font-size: clamp(2.15rem, 12vw, 3rem);
-			line-height: 0.95;
+			max-width: 100%;
+			font-size: clamp(2rem, 8.8vw, 2.75rem);
+			line-height: 1.03;
+			letter-spacing: -0.055em;
+			color: #153526;
+			text-wrap: balance;
 		}
 
 		.hero-lead {
 			max-width: 34rem;
-			line-height: 1.75;
+			line-height: 1.8;
+			color: #4a5f55;
 		}
 
 		.hero-actions {
@@ -618,8 +641,27 @@
 			width: 100%;
 		}
 
+		.btn-gold {
+			background: #e8c44d;
+			color: #163423;
+			box-shadow: none;
+		}
+
+		.btn-glass {
+			border-color: #cfe0d6;
+			background: #fff;
+			color: #173d2c;
+		}
+
 		.metric {
 			text-align: center;
+			background: #fff;
+			border-color: #e5dcc0;
+			color: #173d2c;
+		}
+
+		.metric span {
+			color: #5d6c65;
 		}
 
 		.section-head h2 {
