@@ -1,6 +1,12 @@
 import { json, error } from '@sveltejs/kit';
 import { extractPdfTextPages, splitText, toDriveDownloadUrl } from '$lib/server/pdf';
-import { ensureKitabReferenceSchema, insertDokumen } from '$lib/server/rag';
+import { normalizeKitabSlug } from '$lib/kitab';
+import {
+	ensureKitabReferenceSchema,
+	findActiveKitabSlugs,
+	insertDokumen,
+	insertDokumenBatch
+} from '$lib/server/rag';
 import { getOrganizationById } from '$lib/server/organizations';
 import { isEducationalOrgType } from '$lib/server/utils';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
@@ -9,7 +15,8 @@ import type { RequestHandler } from './$types';
 
 const MAX_PDF_BYTES = 20 * 1024 * 1024;
 const MAX_PDF_PAGES = 300;
-const MAX_TEXT_CHUNKS = 1200;
+const MAX_TEXT_CHUNKS = 16;
+const EMBEDDING_BATCH_SIZE = 16;
 const JSON_UPLOAD_RATE_LIMIT = { scope: 'kitab:upload:text', limit: 30, windowMs: 10 * 60 * 1000 };
 const PDF_UPLOAD_RATE_LIMIT = { scope: 'kitab:upload:pdf', limit: 6, windowMs: 30 * 60 * 1000 };
 
@@ -58,6 +65,9 @@ export const GET: RequestHandler = async ({ platform, locals }) => {
 
 export const POST: RequestHandler = async ({ request, platform, locals }) => {
 	const user = await assertKitabAccess(locals);
+	if (!locals.isSuperAdmin) {
+		throw error(403, 'Hanya Super Admin yang dapat menambahkan corpus RAG Kitab.');
+	}
 	if (!platform?.env?.AI || !platform?.env?.VECTORIZE_INDEX || !platform?.env?.DB) {
 		throw error(500, 'Layanan pencarian kitab belum tersedia');
 	}
@@ -99,19 +109,30 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 		const judul = typeof body.judul === 'string' ? body.judul.trim() : '';
 		const halaman = body.halaman ?? null;
 		const jilid = body.jilid ?? null;
+		const kitabSlug =
+			normalizeKitabSlug(typeof body.kitabSlug === 'string' ? body.kitabSlug : judul) || 'kitab';
+		const parsedChunkIndex = Number.parseInt(String(body.chunkIndex ?? '0'), 10);
+		const chunkIndex = Number.isFinite(parsedChunkIndex) && parsedChunkIndex >= 0 ? parsedChunkIndex : 0;
 
 		if (!text || !judul) {
 			throw error(400, 'Field text dan judul wajib diisi');
+		}
+		if ((await findActiveKitabSlugs(platform.env.DB, [kitabSlug])).has(kitabSlug)) {
+			throw error(409, 'Corpus kitab dengan slug ini sudah aktif dan tidak dapat ditimpa.');
 		}
 
 		try {
 			const stored = await insertDokumen(platform as App.Platform, text, {
 				judul_kitab: judul,
 				halaman: halaman ?? undefined,
-				jilid: jilid ?? undefined
+				jilid: jilid ?? undefined,
+				kitab_slug: kitabSlug,
+				source_type: 'manual',
+				source_ref: halaman == null ? `${judul}, input manual` : `${judul}, halaman ${halaman}`,
+				chunk_index: chunkIndex
 			});
 
-			return json({ ok: true, stored });
+			return json({ ok: true, status: 'indexing', stored });
 		} catch (err: any) {
 			const message = err?.message || 'Gagal menyimpan dokumen';
 			return json({ error: message }, { status: 500 });
@@ -124,6 +145,8 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 
 	const formData = await request.formData();
 	const judul = typeof formData.get('judul') === 'string' ? `${formData.get('judul')}`.trim() : '';
+	const kitabSlugRaw =
+		typeof formData.get('kitabSlug') === 'string' ? `${formData.get('kitabSlug')}`.trim() : '';
 	const jilidRaw = typeof formData.get('jilid') === 'string' ? `${formData.get('jilid')}`.trim() : '';
 	const pageOffsetRaw =
 		typeof formData.get('pageOffset') === 'string' ? `${formData.get('pageOffset')}`.trim() : '';
@@ -138,6 +161,11 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 	const pageOffset = Number.parseInt(pageOffsetRaw || '1', 10);
 	const startPage = Number.isFinite(pageOffset) && pageOffset > 0 ? pageOffset : 1;
 	const jilid = jilidRaw ? jilidRaw : null;
+	const kitabSlug = normalizeKitabSlug(kitabSlugRaw || judul) || 'kitab';
+	if ((await findActiveKitabSlugs(platform.env.DB, [kitabSlug])).has(kitabSlug)) {
+		throw error(409, 'Corpus kitab dengan slug ini sudah aktif dan tidak dapat ditimpa.');
+	}
+	const corpusKey = `${kitabSlug}:${jilid ?? 'default'}`;
 
 	let pdfBuffer: ArrayBuffer | null = null;
 	let source = 'upload';
@@ -174,20 +202,40 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 	}
 
 	let storedChunks = 0;
+	const pendingChunks: Parameters<typeof insertDokumenBatch>[1] = [];
 	for (const page of extracted.pages) {
 		const pageNumber = startPage + page.pageNumber - 1;
 		const chunks = splitText(page.text);
-		for (const chunk of chunks) {
+		for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex += 1) {
+			const chunk = chunks[chunkIndex];
+			if (!chunk) continue;
 			storedChunks += 1;
 			if (storedChunks > MAX_TEXT_CHUNKS) {
-				throw error(413, 'Dokumen terlalu besar untuk diproses sekaligus');
+				throw error(413, `Dokumen dibatasi maksimal ${MAX_TEXT_CHUNKS} chunk per proses`);
 			}
-			await insertDokumen(platform as App.Platform, chunk, {
-				judul_kitab: judul,
-				halaman: pageNumber,
-				jilid: jilid ?? undefined
+			pendingChunks.push({
+				text: chunk,
+				metadata: {
+					judul_kitab: judul,
+					halaman: pageNumber,
+					jilid: jilid ?? undefined,
+					kitab_slug: kitabSlug,
+					corpus_key: corpusKey,
+					source_type: source === 'drive' ? 'google-drive-pdf' : 'pdf-upload',
+					source_ref: `${judul}, halaman ${pageNumber}`,
+					chunk_index: chunkIndex
+				}
 			});
 		}
+	}
+
+	await ensureKitabReferenceSchema(platform.env.DB);
+	for (let offset = 0; offset < pendingChunks.length; offset += EMBEDDING_BATCH_SIZE) {
+		await insertDokumenBatch(
+			platform as App.Platform,
+			pendingChunks.slice(offset, offset + EMBEDDING_BATCH_SIZE),
+			{ ensureSchema: false }
+		);
 	}
 
 	let fileKey: string | null = null;
@@ -205,6 +253,7 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 
 	return json({
 		ok: true,
+		status: 'indexing',
 		totalPages: extracted.totalPages,
 		processedPages: extracted.pages.length,
 		chunks: storedChunks,

@@ -3,9 +3,15 @@ import type { RequestHandler } from './$types';
 import { normalizeKitabSlug } from '$lib/kitab';
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
-import { insertDokumen } from '$lib/server/rag';
+import {
+	buildKitabChunkId,
+	ensureKitabReferenceSchema,
+	findActiveKitabSlugs,
+	insertDokumenBatch
+} from '$lib/server/rag';
 
-const MAX_OPENITI_ROWS = 1200;
+const MAX_OPENITI_ROWS = 16;
+const EMBEDDING_BATCH_SIZE = 16;
 const MAX_TEXT_LENGTH = 12000;
 const IMPORT_RATE_LIMIT = {
 	scope: 'admin:kitab:openiti-import',
@@ -45,6 +51,7 @@ type NormalizedOpenitiChunk = {
 	madhhab: string | null;
 	pageNumber: string | null;
 	importId: string;
+	corpusKey: string;
 };
 
 const readString = (value: unknown, maxLength: number) =>
@@ -63,9 +70,6 @@ const readPageValue = (value: unknown) => {
 	if (typeof value === 'number' && Number.isFinite(value)) return String(value);
 	return readString(value, 80) || null;
 };
-
-const importIdPart = (value: string) =>
-	normalizeKitabSlug(value).slice(0, 120) || 'kitab-openiti';
 
 const summarizeBooks = (counts: Map<string, { title: string; chunks: number }>) =>
 	Array.from(counts.entries()).map(([slug, detail]) => ({
@@ -171,7 +175,13 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		const category = readString(row.category, 120) || null;
 		const madhhab = readString(row.madhhab ?? row.madzhab, 120) || null;
 		const pageNumber = readPageValue(row.pageNumber);
-		const importId = `openiti-${importIdPart(kitabSlug)}-${String(chunkIndex).padStart(6, '0')}`;
+		const corpusKey = `openiti:${kitabSlug}:${author ?? 'unknown'}`;
+		const importId = buildKitabChunkId({
+			kitabSlug,
+			corpusKey,
+			pageNumber: Number.parseInt(pageNumber ?? '0', 10) || 0,
+			chunkIndex
+		});
 
 		chunks.push({
 			title,
@@ -187,34 +197,55 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			category,
 			madhhab,
 			pageNumber,
-			importId
+			importId,
+			corpusKey
 		});
 	}
 
 	const books = new Map<string, { title: string; chunks: number }>();
+	const ingestionChunks: Parameters<typeof insertDokumenBatch>[1] = chunks.map((chunk) => ({
+		id: chunk.importId,
+		text: chunk.chunkText,
+		metadata: {
+			judul_kitab: chunk.title,
+			halaman: chunk.pageNumber,
+			kitab_slug: chunk.kitabSlug,
+			corpus_key: chunk.corpusKey,
+			source_type: 'openiti',
+			source_ref: chunk.sourceRef,
+			source_note: chunk.sourceNote,
+			chapter: chunk.chapter,
+			section_title: chunk.sectionTitle,
+			chunk_index: chunk.chunkIndex,
+			author: chunk.author,
+			category: chunk.category,
+			madhhab: chunk.madhhab
+		}
+	}));
 
 	try {
-		for (const chunk of chunks) {
-			await insertDokumen(
-				platform as App.Platform,
-				chunk.chunkText,
+		await ensureKitabReferenceSchema(platform.env.DB);
+		const activeSlugs = await findActiveKitabSlugs(
+			platform.env.DB,
+			chunks.map((chunk) => chunk.kitabSlug)
+		);
+		if (activeSlugs.size) {
+			return json(
 				{
-					judul_kitab: chunk.title,
-					halaman: chunk.pageNumber,
-					kitab_slug: chunk.kitabSlug,
-					source_type: 'openiti',
-					source_ref: chunk.sourceRef,
-					source_note: chunk.sourceNote,
-					chapter: chunk.chapter,
-					section_title: chunk.sectionTitle,
-					chunk_index: chunk.chunkIndex,
-					author: chunk.author,
-					category: chunk.category,
-					madhhab: chunk.madhhab
+					ok: false,
+					error: `Corpus kitab sudah aktif dan tidak dapat ditimpa: ${[...activeSlugs].join(', ')}`
 				},
-				{ id: chunk.importId }
+				{ status: 409 }
 			);
-
+		}
+		for (let offset = 0; offset < ingestionChunks.length; offset += EMBEDDING_BATCH_SIZE) {
+			await insertDokumenBatch(
+				platform as App.Platform,
+				ingestionChunks.slice(offset, offset + EMBEDDING_BATCH_SIZE),
+				{ ensureSchema: false }
+			);
+		}
+		for (const chunk of chunks) {
 			const existing = books.get(chunk.kitabSlug);
 			books.set(chunk.kitabSlug, {
 				title: chunk.title,
@@ -234,6 +265,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 	return json({
 		ok: true,
+		status: 'indexing',
 		importedChunks: chunks.length,
 		books: summarizeBooks(books)
 	});
