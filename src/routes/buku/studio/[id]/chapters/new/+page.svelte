@@ -18,7 +18,7 @@
 	<title>Tambah Bab - {data.book.title}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-4xl space-y-6 pb-10">
+<div class="mx-auto min-h-screen w-full max-w-4xl space-y-6 px-4 pb-36 pt-6 sm:px-6 md:pb-12 lg:pt-10">
 	<header class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
 		<a href={`/buku/studio/${data.book.id}/edit#chapters`} class="text-sm font-medium text-emerald-600 hover:text-emerald-600">
 			Kembali ke Buku

@@ -138,7 +138,7 @@
 	<title>Edit {data.book.title} - Studio Buku</title>
 </svelte:head>
 
-<div class="mx-auto max-w-5xl space-y-6 pb-10">
+<div class="mx-auto min-h-screen w-full max-w-5xl space-y-6 px-4 pb-36 pt-6 sm:px-6 md:pb-12 lg:pt-10">
 	<header class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
 		<a href="/buku/studio" class="text-sm font-medium text-emerald-600 hover:text-emerald-600">Kembali ke Studio</a>
 		<div class="mt-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">

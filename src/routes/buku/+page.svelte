@@ -30,7 +30,7 @@
 	/>
 </svelte:head>
 
-<div class="space-y-8 pb-10">
+<div class="mx-auto min-h-screen w-full max-w-[1440px] space-y-8 px-4 pb-36 pt-6 sm:px-6 md:pb-12 lg:px-8 lg:pt-10">
 	<section class="relative overflow-hidden rounded-[2rem] border border-emerald-100 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.20),_transparent_36%),linear-gradient(135deg,_#0f172a_0%,_#1f2937_45%,_#064e3b_100%)] px-5 py-8 text-white shadow-xl md:px-8 md:py-10">
 		<div class="absolute -right-16 top-4 h-44 w-44 rounded-full bg-amber-200/10 blur-3xl"></div>
 		<div class="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-emerald-300/10 blur-3xl"></div>

@@ -76,7 +76,7 @@
 	<meta name="description" content="Kelola perangkat yang dipakai untuk membaca buku digital SantriOnline." />
 </svelte:head>
 
-<div class="mx-auto max-w-4xl space-y-6 pb-10">
+<div class="mx-auto min-h-screen w-full max-w-4xl space-y-6 px-4 pb-36 pt-6 sm:px-6 md:pb-12 lg:pt-10">
 	<header class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
 		<a href="/akun" class="text-sm font-semibold text-emerald-600 hover:text-emerald-600">Kembali ke Akun</a>
 		<div class="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">

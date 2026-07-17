@@ -52,7 +52,7 @@
 	/>
 </svelte:head>
 
-<div class="space-y-6 pb-10">
+<div class="mx-auto min-h-screen w-full max-w-[1440px] space-y-6 px-4 pb-36 pt-6 sm:px-6 md:pb-12 lg:px-8 lg:pt-10">
 	<header class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
 		<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 			<div>

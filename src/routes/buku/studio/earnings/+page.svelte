@@ -37,7 +37,7 @@
 	<meta name="description" content="Riwayat royalti penulis Buku SantriOnline." />
 </svelte:head>
 
-<div class="space-y-6 pb-10">
+<div class="mx-auto min-h-screen w-full max-w-[1440px] space-y-8 px-4 pb-36 pt-6 sm:px-6 md:pb-12 lg:px-8 lg:pt-10">
 	<section class="rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top_right,_rgba(245,158,11,0.16),_transparent_36%),linear-gradient(135deg,_#0f172a_0%,_#1f2937_48%,_#064e3b_100%)] p-6 text-white shadow-xl md:p-8">
 		<a href="/buku/studio" class="text-sm font-semibold text-emerald-100 hover:text-white">Kembali ke Studio</a>
 		<div class="mt-5 grid gap-6 lg:grid-cols-[1fr_0.75fr] lg:items-end">

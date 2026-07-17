@@ -82,7 +82,7 @@
 	<meta name="description" content="Kelola koin SantriOnline untuk unlock bab buku." />
 </svelte:head>
 
-<div class="space-y-6 pb-10">
+<div class="mx-auto min-h-screen w-full max-w-[1440px] space-y-8 px-4 pb-36 pt-6 sm:px-6 md:pb-12 lg:px-8 lg:pt-10">
 	<!-- Header -->
 	<section class="rounded-[1.75rem] border border-amber-100 bg-[radial-gradient(circle_at_top_right,_rgba(251,191,36,0.15),_transparent_40%),linear-gradient(135deg,_#0f172a_0%,_#1f2937_45%,_#78350f_100%)] px-5 py-8 text-white shadow-xl md:px-8">
 		<div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -121,17 +121,17 @@
 		{:else}
 			<div class="divide-y divide-slate-100">
 				{#each transactions as tx}
-					<div class="flex items-center justify-between p-4 md:p-5">
-						<div class="flex items-center gap-4">
+					<div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+						<div class="flex min-w-0 items-center gap-4">
 							<div class="flex h-10 w-10 items-center justify-center rounded-full {getTransactionColor(tx.type)}">
 								<span class="text-lg">↑</span>
 							</div>
-							<div>
+							<div class="min-w-0">
 								<p class="font-medium text-slate-900">{getTransactionLabel(tx.type)}</p>
-								<p class="text-sm text-slate-500">{tx.description ?? '-'}</p>
+								<p class="break-words text-sm leading-6 text-slate-500">{tx.description ?? '-'}</p>
 							</div>
 						</div>
-						<div class="text-right">
+						<div class="self-end text-right sm:self-auto">
 							<p class="font-semibold {tx.amount > 0 ? 'text-emerald-600' : 'text-red-600'}">
 								{tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString('id-ID')}
 							</p>
@@ -156,8 +156,8 @@
 		{:else}
 			<div class="divide-y divide-slate-100">
 				{#each topupRequests as req}
-					<div class="flex items-center justify-between p-4 md:p-5">
-						<div class="flex items-center gap-4">
+					<div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+						<div class="flex min-w-0 items-center gap-4">
 							<div class="flex h-10 w-10 items-center justify-center rounded-full border {getStatusColor(req.status)}">
 								{#if req.status === 'pending'}
 									<span class="text-lg">⏳</span>
@@ -167,16 +167,16 @@
 									<span class="text-lg">✕</span>
 								{/if}
 							</div>
-							<div>
+							<div class="min-w-0">
 								<p class="font-medium text-slate-900">
 									{req.coinAmount.toLocaleString('id-ID')} koin
 								</p>
-								<p class="text-sm text-slate-500">
+								<p class="break-words text-sm leading-6 text-slate-500">
 									{formatRupiah(req.amountRupiah)} • {req.userNote ?? 'Tanpa catatan'}
 								</p>
 							</div>
 						</div>
-						<div class="text-right">
+						<div class="self-end text-right sm:self-auto">
 							<span class="rounded-full border px-3 py-1 text-xs font-medium {getStatusColor(req.status)}">
 								{getStatusLabel(req.status)}
 							</span>

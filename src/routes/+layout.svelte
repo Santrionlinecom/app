@@ -85,6 +85,8 @@ const isBookMenuActive = (path: string) =>
 	path.startsWith('/buku/') ||
 	path === '/coins' ||
 	path.startsWith('/coins/');
+let usesStandalonePageContainer = false;
+$: usesStandalonePageContainer = isBookMenuActive(pathname);
 const isRegisterMenuActive = (path: string) =>
 	path === '/register' ||
 	path.startsWith('/register/') ||
@@ -1680,7 +1682,11 @@ $: if (pathname !== previousPathname) {
 		</div>
 	{/if}
 
-	<main class={hidePageChrome ? 'min-h-screen' : 'container mx-auto max-w-6xl px-4 py-8 pb-24 md:pb-10'}>
+	<main
+		class={hidePageChrome || usesStandalonePageContainer
+			? 'min-h-screen'
+			: 'container mx-auto max-w-6xl px-4 py-8 pb-24 md:pb-10'}
+	>
 		<slot />
 	</main>
 

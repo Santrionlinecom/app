@@ -36,7 +36,7 @@
 	<meta name="description" content="Dashboard penulis untuk mengelola buku dan bab SantriOnline." />
 </svelte:head>
 
-<div class="space-y-8 pb-10">
+<div class="mx-auto min-h-screen w-full max-w-[1440px] space-y-8 px-4 pb-36 pt-6 sm:px-6 md:pb-12 lg:px-8 lg:pt-10">
 	<section class="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(245,158,11,0.18),_transparent_34%),linear-gradient(135deg,_#0f172a_0%,_#1f2937_50%,_#064e3b_100%)] px-5 py-8 text-white shadow-xl md:px-8 md:py-10">
 		<div class="absolute -right-16 top-0 h-44 w-44 rounded-full bg-emerald-200/10 blur-3xl"></div>
 		<div class="relative grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-end">
@@ -82,7 +82,7 @@
 	</section>
 
 	<section class="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-		<form method="POST" action="?/createFolder" class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+		<form method="POST" action="?/createFolder" class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
 			<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Folder Buku</p>
 			<h2 class="mt-2 text-2xl font-semibold text-slate-900">Tambah folder</h2>
 			<p class="mt-2 text-sm leading-6 text-slate-500">
@@ -109,7 +109,7 @@
 			</div>
 		</form>
 
-		<div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+		<div class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
 			<div class="flex items-center justify-between gap-3">
 				<div>
 					<p class="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">Daftar Folder</p>
@@ -198,15 +198,15 @@
 								{/if}
 
 								<div class="mt-5 grid grid-cols-3 gap-3">
-									<div class="rounded-2xl bg-slate-50 px-4 py-3">
+									<div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
 										<p class="text-xs uppercase tracking-[0.2em] text-slate-400">Bab</p>
 										<p class="mt-1 text-lg font-semibold text-slate-900">{book.totalChapterCount}</p>
 									</div>
-									<div class="rounded-2xl bg-emerald-50 px-4 py-3">
+									<div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
 										<p class="text-xs uppercase tracking-[0.2em] text-emerald-600">Live</p>
 										<p class="mt-1 text-lg font-semibold text-emerald-600">{book.publishedChapterCount}</p>
 									</div>
-									<div class="rounded-2xl bg-amber-50 px-4 py-3">
+									<div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
 										<p class="text-xs uppercase tracking-[0.2em] text-amber-600">Gratis</p>
 										<p class="mt-1 text-lg font-semibold text-amber-800">{book.freeChapterLimit}</p>
 									</div>

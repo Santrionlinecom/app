@@ -136,7 +136,7 @@
 	<script src="https://app.midtrans.com/snap/snap.js" data-client-key={midtransClientKey}></script>
 </svelte:head>
 
-<div class="space-y-5 pb-32 md:space-y-6 md:pb-12">
+<div class="mx-auto min-h-screen w-full max-w-[1440px] space-y-6 px-4 pb-36 pt-6 sm:px-6 md:pb-12 lg:px-8 lg:pt-10">
 	<header class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:p-8">
 		<a href="/coins" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900">
 			<ArrowLeft class="h-4 w-4" />

@@ -58,7 +58,7 @@
 	/>
 </svelte:head>
 
-<div class="space-y-8 pb-10">
+<div class="mx-auto min-h-screen w-full max-w-[1440px] space-y-8 px-4 pb-36 pt-6 sm:px-6 md:pb-12 lg:px-8 lg:pt-10">
 	<section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(245,158,11,0.18),_transparent_36%),linear-gradient(135deg,_#111827_0%,_#1f2937_48%,_#064e3b_100%)] px-5 py-8 text-white shadow-xl md:px-8 md:py-10">
 		<div class="grid gap-8 lg:grid-cols-[0.42fr_0.58fr] lg:items-center">
 			<div class="max-w-sm">

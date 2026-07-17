@@ -228,7 +228,7 @@
 </svelte:head>
 
 <div
-	class={`min-h-screen px-3 py-4 transition-colors duration-300 sm:px-5 md:px-8 md:py-8 ${shellClass}`}
+	class={`min-h-screen px-3 pb-36 pt-4 transition-colors duration-300 sm:px-5 md:px-8 md:pb-12 md:pt-8 ${shellClass}`}
 >
 	<div class="reader-enter mx-auto max-w-5xl space-y-4 md:space-y-6">
 		<nav class={`rounded-3xl border px-4 py-3 text-sm backdrop-blur ${softCardClass}`}>
