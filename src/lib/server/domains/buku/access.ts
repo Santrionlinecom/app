@@ -1,6 +1,10 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { ensureBukuWalletSchema, ensureCoinWallet } from '$lib/server/domains/buku/wallet';
-import { recordChapterUnlockRoyalty } from '$lib/server/domains/buku/royalty';
+import {
+	calculateRoyaltySplit,
+	ensureAuthorRoyaltyWallet,
+	ensureBukuRoyaltySchema
+} from '$lib/server/domains/buku/royalty';
 
 export type BukuChapterAccess = 'free' | 'unlocked' | 'locked';
 
@@ -78,9 +82,23 @@ export async function unlockBukuChapter(
 
 	const unlockId = crypto.randomUUID();
 	const transactionId = crypto.randomUUID();
+	const royaltyLedgerId = crypto.randomUUID();
+	const royaltySplit = calculateRoyaltySplit(coinPrice);
+	const book = await db
+		.prepare('SELECT author_id AS authorId FROM buku_books WHERE id = ? LIMIT 1')
+		.bind(params.bookId)
+		.first<{ authorId: string }>();
+	const shouldRecordRoyalty = Boolean(
+		book && book.authorId !== params.userId && royaltySplit.grossCoin > 0
+	);
+
+	if (shouldRecordRoyalty && book) {
+		await ensureBukuRoyaltySchema(db);
+		await ensureAuthorRoyaltyWallet(db, book.authorId);
+	}
 
 	try {
-		const results = await db.batch([
+		const statements = [
 			db
 				.prepare(
 					`INSERT INTO buku_unlocks (id, user_id, book_id, chapter_id, coin_spent)
@@ -124,7 +142,55 @@ export async function unlockBukuChapter(
 					params.userId,
 					unlockId
 				)
-		]);
+		];
+
+		if (shouldRecordRoyalty && book) {
+			statements.push(
+				db
+					.prepare(
+						`INSERT INTO buku_author_royalty_ledger (
+							id, author_id, book_id, chapter_id, unlock_id, reader_id,
+							gross_coin, author_coin, platform_coin, author_share_bps,
+							platform_share_bps, status
+						)
+						SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending'
+						WHERE EXISTS (SELECT 1 FROM buku_unlocks WHERE id = ?)`
+					)
+					.bind(
+						royaltyLedgerId,
+						book.authorId,
+						params.bookId,
+						params.chapterId,
+						unlockId,
+						params.userId,
+						royaltySplit.grossCoin,
+						royaltySplit.authorCoin,
+						royaltySplit.platformCoin,
+						royaltySplit.authorShareBps,
+						royaltySplit.platformShareBps,
+						unlockId
+					),
+				db
+					.prepare(
+						`UPDATE buku_author_wallets
+						SET total_earned_coin = total_earned_coin + ?,
+							pending_coin = pending_coin + ?,
+							updated_at = CURRENT_TIMESTAMP
+						WHERE author_id = ?
+							AND EXISTS (
+								SELECT 1 FROM buku_author_royalty_ledger WHERE id = ?
+							)`
+					)
+					.bind(
+						royaltySplit.authorCoin,
+						royaltySplit.authorCoin,
+						book.authorId,
+						royaltyLedgerId
+					)
+			);
+		}
+
+		const results = await db.batch(statements);
 
 		const unlockCreated = Number(results[0]?.meta?.changes ?? 0) > 0;
 		const walletUpdated = Number(results[1]?.meta?.changes ?? 0) > 0;
@@ -135,14 +201,6 @@ export async function unlockBukuChapter(
 			}
 			return { status: 'insufficient_coin', balance: latestWallet.balance, required: coinPrice };
 		}
-
-		await recordChapterUnlockRoyalty(db, {
-			unlockId,
-			readerId: params.userId,
-			bookId: params.bookId,
-			chapterId: params.chapterId,
-			grossCoin: coinPrice
-		});
 
 		const latestWallet = await ensureCoinWallet(db, params.userId);
 		return { status: 'unlocked', balanceAfter: latestWallet.balance, unlockId };
