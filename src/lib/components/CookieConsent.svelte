@@ -65,9 +65,9 @@
 </script>
 
 {#if visible}
-	<div class="fixed inset-x-0 bottom-0 z-[100] px-3 pb-3 sm:px-4 sm:pb-4">
-		<div class="mx-auto max-w-3xl overflow-hidden rounded-xl border border-emerald-200/80 bg-white shadow-[0_16px_42px_rgba(15,23,42,0.16)]">
-			<div class="grid gap-3 p-3 md:grid-cols-[1fr_auto] md:items-center md:p-4">
+	<div class="fixed inset-x-0 bottom-0 z-[100] px-3 pb-3 sm:left-auto sm:right-0 sm:w-[25rem] sm:px-4 sm:pb-4">
+		<div class="mx-auto max-w-3xl overflow-hidden rounded-xl border border-emerald-200/80 bg-white shadow-[0_16px_42px_rgba(15,23,42,0.16)] sm:max-w-none">
+			<div class="grid gap-3 p-3 sm:p-4">
 				<div class="space-y-2.5">
 					<div class="flex items-center gap-2.5">
 						<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white">
@@ -107,7 +107,7 @@
 					{/if}
 				</div>
 
-				<div class="flex flex-col gap-1.5 sm:min-w-44">
+				<div class="grid grid-cols-2 gap-1.5">
 					<button type="button" class="btn btn-sm min-h-9 bg-emerald-600 text-xs text-white hover:bg-emerald-600" on:click={() => saveConsent(true)}>
 						Terima Analytics
 					</button>
@@ -115,11 +115,11 @@
 						Tolak Analytics
 					</button>
 					{#if showPreferences}
-						<button type="button" class="btn btn-ghost btn-sm min-h-9 text-xs text-slate-700" on:click={() => saveConsent(analyticsEnabled)}>
+						<button type="button" class="btn btn-ghost btn-sm col-span-2 min-h-9 text-xs text-slate-700" on:click={() => saveConsent(analyticsEnabled)}>
 							Simpan Pilihan
 						</button>
 					{:else}
-						<button type="button" class="btn btn-ghost btn-sm min-h-9 text-xs text-slate-700" on:click={() => (showPreferences = true)}>
+						<button type="button" class="btn btn-ghost btn-sm col-span-2 min-h-9 text-xs text-slate-700" on:click={() => (showPreferences = true)}>
 							Atur Pilihan
 						</button>
 					{/if}

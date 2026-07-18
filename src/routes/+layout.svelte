@@ -41,6 +41,7 @@ let scrollingDown = false;
 let hideChromeFromRoute = false;
 let hidePageChrome = false;
 let shouldHideMobileChrome = false;
+let hideMobileBottomNavigation = false;
 let stopChromeScrollTracking: (() => void) | null = null;
 $: isSuperAdmin = isSuperAdminUser(data?.user);
 $: isImpersonating = isImpersonatingUser(data?.user);
@@ -49,6 +50,7 @@ $: scrollingDown = $scrollDirection.scrollingDown;
 $: hideChromeFromRoute = Boolean(($page.data as PageDataWithChrome | undefined)?.hideChrome);
 // Auto-hide header/footer when user is logged in
 $: hidePageChrome = hideChrome || hideChromeFromRoute || Boolean(data?.user);
+$: hideMobileBottomNavigation = pathname === '/register' || pathname.startsWith('/register/');
 $: shouldHideMobileChrome =
 	!hidePageChrome &&
 	isMobileViewport &&
@@ -1715,7 +1717,7 @@ $: if (pathname !== previousPathname) {
 	{/if}
 
 	<!-- Bottom nav (mobile) - Always show for logged-in users -->
-	{#if data?.user}
+	{#if data?.user && !hideMobileBottomNavigation}
 		<nav
 			class={`pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom transition-transform duration-300 ease-in-out will-change-transform ${
 				shouldHideMobileChrome ? 'translate-y-full' : 'translate-y-0'
@@ -1768,7 +1770,7 @@ $: if (pathname !== previousPathname) {
 				</div>
 			</div>
 		</nav>
-	{:else if !hidePageChrome && !isAppRouteActive && !isAdminRouteActive}
+	{:else if !data?.user && !hideMobileBottomNavigation && !hidePageChrome && !isAppRouteActive && !isAdminRouteActive}
 		<!-- Bottom nav for non-logged-in users -->
 		<nav
 			class={`pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom transition-transform duration-300 ease-in-out will-change-transform ${

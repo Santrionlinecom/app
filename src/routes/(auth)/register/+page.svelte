@@ -98,7 +98,7 @@
 
 					<a
 						href="/tpq/daftar"
-						class="mt-8 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 focus:outline-none focus:ring-4 focus:ring-emerald-800/20"
+						class="mt-8 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-800/20"
 					>
 						Daftarkan TPQ
 						<ArrowRight size={17} strokeWidth={2.2} class="transition-transform group-hover:translate-x-0.5" />
@@ -130,7 +130,7 @@
 
 					<a
 						href="/register/ustadz"
-						class="mt-8 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-950 bg-white px-5 py-3 text-sm font-bold text-emerald-950 transition hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-800/15"
+						class="mt-8 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-950 bg-white px-5 py-3 text-sm font-bold text-emerald-950 transition hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-800/15"
 					>
 						Daftar sebagai Ustadz
 						<ArrowRight size={17} strokeWidth={2.2} class="transition-transform group-hover:translate-x-0.5" />
@@ -164,7 +164,7 @@
 				<p class="mt-1 text-xs leading-5 text-slate-600">Masuk untuk melanjutkan pembelajaran atau pengelolaan lembaga.</p>
 				<a
 					href="/auth"
-					class="mt-4 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-emerald-950 ring-1 ring-inset ring-slate-300 transition hover:bg-emerald-50 hover:ring-emerald-800/30"
+					class="mt-4 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-emerald-950 ring-1 ring-inset ring-slate-300 transition hover:bg-emerald-50 hover:ring-emerald-800/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
 				>
 					<LogIn size={17} strokeWidth={2} /> Masuk ke akun
 				</a>
@@ -216,9 +216,9 @@
 
 		<p class="mx-auto mt-8 max-w-3xl text-center text-xs leading-5 text-slate-600">
 			Dengan melanjutkan pendaftaran, Anda menyetujui
-			<a href="/syarat" class="font-semibold text-emerald-800 hover:underline">Syarat dan Ketentuan</a>
+			<a href="/syarat" class="rounded-sm font-semibold text-emerald-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">Syarat dan Ketentuan</a>
 			dan telah membaca
-			<a href="/privacy" class="font-semibold text-emerald-800 hover:underline">Kebijakan Privasi</a> SantriOnline.
+			<a href="/privacy" class="rounded-sm font-semibold text-emerald-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">Kebijakan Privasi</a> SantriOnline.
 		</p>
 	</section>
 </main>

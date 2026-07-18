@@ -9,6 +9,7 @@ import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logg
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 import { seedHafalanDefault } from '$lib/server/domains/tpq/db-hafalan';
 import { SEED_HAFALAN_DEFAULT } from '$lib/server/domains/tpq/seed-hafalan-default';
+import { queueRegistrationEmail } from '$lib/server/notifications/registration-email';
 
 export const load: PageServerLoad = async () => {
 	return {};
@@ -101,6 +102,19 @@ export const actions: Actions = {
 				metadata: { orgId, orgName: orgName.trim(), orgType: 'tpq', role: 'admin', source: 'tpq/daftar' },
 				waitUntil: platform?.context?.waitUntil
 			});
+			queueRegistrationEmail(
+				{
+					db,
+					fetchFn: fetch,
+					env: platform?.env ?? {},
+					userId,
+					name: (adminName as string).trim(),
+					email: (adminEmail as string).trim(),
+					role: 'admin',
+					organizationName: orgName.trim()
+				},
+				platform?.context?.waitUntil
+			);
 
 			const lucia = initializeLucia(db);
 			const session = await lucia.createSession(userId, {});
