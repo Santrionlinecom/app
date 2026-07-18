@@ -122,6 +122,10 @@ export const splitText = (text: string, maxChars = 1800) => {
 			if (lastSpace > start + 120) {
 				end = lastSpace;
 			}
+			const remainderLength = trimmed.length - end;
+			if (remainderLength > 0 && remainderLength < 120) {
+				end = trimmed.length;
+			}
 		}
 		const slice = trimmed.slice(start, end).trim();
 		if (slice) chunks.push(slice);
