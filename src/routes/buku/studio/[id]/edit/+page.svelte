@@ -54,6 +54,7 @@
 	$: folders = Array.isArray(data.folders) ? data.folders : [];
 	$: canSubmitReview = data.book.status === 'draft' || data.book.status === 'rejected';
 	$: canEditBook = data.book.status === 'draft' || data.book.status === 'rejected';
+	$: canManageChapters = canEditBook || data.book.status === 'published';
 	$: coverPreviewUrl = coverUrl.trim();
 
 	const uploadCover = async (event: Event) => {
@@ -194,8 +195,8 @@
 
 		{#if !canEditBook}
 			<div class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-				Buku dengan status {bookStatusLabel(data.book.status)} bersifat read-only di studio. Perubahan
-				konten setelah review belum didukung pada tahap ini.
+				Metadata buku berstatus {bookStatusLabel(data.book.status)} bersifat read-only.
+				{#if data.book.status === 'published'} Status dan isi bab tetap dapat dikelola satu per satu dari daftar bab.{/if}
 			</div>
 		{/if}
 
@@ -410,7 +411,7 @@
 								</div>
 								<h3 class="mt-3 text-lg font-semibold text-slate-900">{chapter.title}</h3>
 							</div>
-							<span class="btn btn-sm btn-outline">{canEditBook ? 'Edit Bab' : 'Lihat Bab'}</span>
+							<span class="btn btn-sm btn-outline">{canManageChapters ? 'Kelola Bab' : 'Lihat Bab'}</span>
 						</div>
 					</a>
 				{/each}

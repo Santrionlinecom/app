@@ -9,6 +9,7 @@ import { generateId } from 'lucia';
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
+import { queueRegistrationEmail } from '$lib/server/notifications/registration-email';
 
 const optionalText = z.preprocess(
 	(value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
@@ -113,6 +114,7 @@ export const actions: Actions = {
 			metadata: { role: 'ustadz', workStatus, source: 'register/ustadz' },
 			waitUntil: platform?.context?.waitUntil
 		});
+		queueRegistrationEmail({ db: locals.db, fetchFn: fetch, env: platform?.env ?? {}, userId, name: fullName, email, role: 'ustadz' }, platform?.context?.waitUntil);
 
 		const lucia = initializeLucia(locals.db);
 		const session = await lucia.createSession(userId, {});

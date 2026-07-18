@@ -36,6 +36,7 @@
 	$: chapters = Array.isArray(data.chapters) ? data.chapters : [];
 	$: isPending = book.status === 'pending';
 	$: isPublished = book.status === 'published';
+	$: canPublish = data.canPublish;
 </script>
 
 <svelte:head>
@@ -139,16 +140,30 @@
 		<section class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
 			<h2 class="text-xl font-semibold text-slate-900">Aksi Moderasi</h2>
 			<p class="mt-2 text-sm leading-7 text-slate-600">
-				Approve hanya untuk buku pending. Reject wajib menyertakan catatan. Archive hanya untuk buku published.
+				Terbitkan buku dari draft, pending, atau ditolak. Pilih batas bab yang langsung tersedia untuk pembaca.
 			</p>
 
 			<div class="mt-6 space-y-4">
-				{#if isPending}
-					<form method="POST" action="?/approve">
-						<button type="submit" class="btn btn-primary w-full">Approve dan Publish</button>
+				{#if canPublish}
+					<form method="POST" action="?/approve" class="space-y-3">
+						<label class="block">
+							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Terbitkan sampai bab</span>
+							<input
+								name="publishedThrough"
+								type="number"
+								min="1"
+								max={book.totalChapterCount}
+								value={data.defaultPublishedThrough}
+								class="input input-bordered mt-2 w-full"
+								required
+							/>
+							<span class="mt-2 block text-xs leading-5 text-slate-500">Bab setelah angka ini tetap draft dan dapat diterbitkan satu per satu dari Buku Studio.</span>
+						</label>
+						<button type="submit" class="btn btn-primary w-full">{data.publishLabel}</button>
 					</form>
 
-					<form method="POST" action="?/reject" class="space-y-3">
+					{#if isPending}
+					<form method="POST" action="?/reject" class="space-y-3 border-t border-slate-200 pt-4">
 						<label class="block">
 							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Catatan Penolakan</span>
 							<textarea
@@ -162,6 +177,7 @@
 							Reject Buku
 						</button>
 					</form>
+					{/if}
 				{:else if isPublished}
 					<form method="POST" action="?/archive" class="space-y-3">
 						<label class="block">

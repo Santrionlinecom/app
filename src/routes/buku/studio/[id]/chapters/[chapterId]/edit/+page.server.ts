@@ -7,6 +7,8 @@ import {
 	parseBukuChapterForm,
 	updateBukuChapter
 } from '$lib/server/domains/buku/library';
+import { canManagePublishedBookChapters } from '$lib/server/domains/buku/moderation-policy';
+import { getRequestIp, logActivity } from '$lib/server/logger';
 
 export const load: PageServerLoad = async ({ locals, platform, params, url }) => {
 	if (!locals.user) {
@@ -33,7 +35,7 @@ export const load: PageServerLoad = async ({ locals, platform, params, url }) =>
 		book,
 		chapter,
 		saved: url.searchParams.get('saved') === '1',
-		canEdit: book.status === 'draft' || book.status === 'rejected'
+		canEdit: canManagePublishedBookChapters(book.status)
 	};
 };
 
@@ -53,8 +55,8 @@ export const actions: Actions = {
 		if (!book) {
 			return fail(404, { error: 'Buku tidak ditemukan.' });
 		}
-		if (book.status !== 'draft' && book.status !== 'rejected') {
-			return fail(400, { error: 'Bab hanya bisa diedit saat buku draft atau ditolak.' });
+		if (!canManagePublishedBookChapters(book.status)) {
+			return fail(400, { error: 'Bab tidak bisa diedit saat buku menunggu review atau diarsipkan.' });
 		}
 
 		const chapter = await getAuthorBukuChapterById(db, book.id, params.chapterId);
@@ -72,6 +74,21 @@ export const actions: Actions = {
 			const updated = await updateBukuChapter(db, book.id, chapter.id, parsed.values);
 			if (!updated) {
 				return fail(404, { error: 'Bab tidak ditemukan.', values: parsed.values });
+			}
+			if (chapter.status !== parsed.values.status) {
+				logActivity(db, parsed.values.status === 'published' ? 'BUKU_CHAPTER_PUBLISHED' : 'BUKU_CHAPTER_UNPUBLISHED', {
+					userId: locals.user.id,
+					userEmail: locals.user.email ?? null,
+					ipAddress: getRequestIp(request),
+					metadata: {
+						bookId: book.id,
+						bookTitle: book.title,
+						chapterId: chapter.id,
+						chapterNumber: parsed.values.chapterNumber,
+						chapterTitle: parsed.values.title
+					},
+					waitUntil: platform?.context?.waitUntil
+				});
 			}
 		} catch (err: any) {
 			const message = String(err?.message || err || '');

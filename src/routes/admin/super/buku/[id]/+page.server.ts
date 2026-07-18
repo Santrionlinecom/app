@@ -5,8 +5,15 @@ import {
 	ensureBukuLibrarySchema,
 	getAdminBukuBookById,
 	listAuthorBukuChapters,
+	publishAdminBukuBook,
 	updateAdminBukuBookStatus
 } from '$lib/server/domains/buku/library';
+import {
+	adminBookPublishLabel,
+	canAdminPublishBook,
+	defaultPublishedThrough
+} from '$lib/server/domains/buku/moderation-policy';
+import { getRequestIp, logActivity } from '$lib/server/logger';
 
 const readAdminNote = async (request: Request) => {
 	const formData = await request.formData();
@@ -27,26 +34,48 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 	return {
 		book,
 		chapters,
+		canPublish: book.totalChapterCount > 0 && canAdminPublishBook(book.status),
+		publishLabel: adminBookPublishLabel(book.status),
+		defaultPublishedThrough: defaultPublishedThrough(
+			book.status,
+			book.publishedChapterCount,
+			book.totalChapterCount
+		),
 		saved: url.searchParams.get('saved') ?? null
 	};
 };
 
 export const actions: Actions = {
-	approve: async ({ locals, params }) => {
-		const { db } = requireSuperAdmin(locals);
+	approve: async ({ request, locals, params, platform }) => {
+		const { db, user } = requireSuperAdmin(locals);
 		await ensureBukuLibrarySchema(db);
-
-		const updated = await updateAdminBukuBookStatus(db, {
-			id: params.id,
-			fromStatuses: ['pending'],
-			toStatus: 'published',
-			adminNote: null
-		});
-		if (!updated) {
-			return fail(400, { error: 'Hanya buku pending yang bisa di-approve.' });
+		const book = await getAdminBukuBookById(db, params.id);
+		if (!book || !canAdminPublishBook(book.status)) {
+			return fail(400, { error: 'Buku ini tidak dapat diterbitkan dari status sekarang.' });
+		}
+		const formData = await request.formData();
+		const publishedThrough = Number.parseInt(String(formData.get('publishedThrough') ?? ''), 10);
+		if (!Number.isInteger(publishedThrough) || publishedThrough < 1 || publishedThrough > book.totalChapterCount) {
+			return fail(400, { error: `Jumlah bab terbit harus antara 1 dan ${book.totalChapterCount}.` });
 		}
 
-		throw redirect(303, `/admin/super/buku/${params.id}?saved=approved`);
+		const updated = await publishAdminBukuBook(db, {
+			id: params.id,
+			fromStatuses: ['draft', 'pending', 'rejected'],
+			publishedThrough
+		});
+		if (!updated) {
+			return fail(400, { error: 'Status buku berubah. Muat ulang halaman lalu coba kembali.' });
+		}
+		logActivity(db, 'BUKU_PUBLISHED', {
+			userId: user.id,
+			userEmail: user.email ?? null,
+			ipAddress: getRequestIp(request),
+			metadata: { bookId: book.id, title: book.title, publishedThrough },
+			waitUntil: platform?.context?.waitUntil
+		});
+
+		throw redirect(303, `/admin/super/buku/${params.id}?saved=published`);
 	},
 
 	reject: async ({ request, locals, params }) => {

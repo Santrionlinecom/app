@@ -85,14 +85,17 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		}>();
 	const { notifications, notificationCounts } = await getSuperAdminNotifications(db);
 
-	return json({
-		recentActivities: results ?? [],
-		notifications,
-		notificationCounts,
-		filters: {
-			role: roleFilter,
-			action: actionFilter,
-			range: rangeFilter
-		}
-	});
+	return json(
+		{
+			recentActivities: results ?? [],
+			notifications,
+			notificationCounts,
+			filters: {
+				role: roleFilter,
+				action: actionFilter,
+				range: rangeFilter
+			}
+		},
+		{ headers: { 'cache-control': 'private, no-store' } }
+	);
 };

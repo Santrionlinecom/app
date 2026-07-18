@@ -671,6 +671,39 @@ export async function getAdminBukuBookById(db: D1Database, id: string) {
 	return row ? toBukuAdminBookListItem(row) : null;
 }
 
+export async function publishAdminBukuBook(
+	db: D1Database,
+	params: {
+		id: string;
+		fromStatuses: BukuBookStatus[];
+		publishedThrough: number;
+	}
+) {
+	if (params.fromStatuses.length === 0 || !Number.isInteger(params.publishedThrough) || params.publishedThrough < 1) {
+		return false;
+	}
+	const placeholders = params.fromStatuses.map(() => '?').join(', ');
+	const [chapterResult, bookResult] = await db.batch([
+		db.prepare(
+			`UPDATE buku_chapters
+			 SET status = CASE WHEN chapter_number <= ? THEN 'published' ELSE 'draft' END,
+				 updated_at = CURRENT_TIMESTAMP
+			 WHERE book_id = ?
+			   AND EXISTS (
+				 SELECT 1 FROM buku_books
+				 WHERE id = ? AND status IN (${placeholders})
+			   )`
+		).bind(params.publishedThrough, params.id, params.id, ...params.fromStatuses),
+		db.prepare(
+			`UPDATE buku_books
+			 SET status = 'published', admin_note = NULL, updated_at = CURRENT_TIMESTAMP
+			 WHERE id = ? AND status IN (${placeholders})`
+		).bind(params.id, ...params.fromStatuses)
+	]);
+
+	return Number(bookResult.meta?.changes ?? 0) > 0 && Number(chapterResult.meta?.changes ?? 0) > 0;
+}
+
 export async function updateAdminBukuBookStatus(
 	db: D1Database,
 	params: {

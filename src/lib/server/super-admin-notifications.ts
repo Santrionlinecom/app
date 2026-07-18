@@ -31,8 +31,19 @@ const hasTableColumn = async (db: D1Database, table: string, column: string) => 
 	}
 };
 
+export const dedupeSuperAdminNotifications = (items: SuperAdminNotification[]) => {
+	const seen = new Set<string>();
+	return [...items]
+		.sort((left, right) => Number(right.createdAt ?? 0) - Number(left.createdAt ?? 0))
+		.filter((item) => {
+			if (seen.has(item.id)) return false;
+			seen.add(item.id);
+			return true;
+		});
+};
+
 const sortNotifications = (items: SuperAdminNotification[]) =>
-	items
+	dedupeSuperAdminNotifications(items)
 		.sort((left, right) => {
 			const rank: Record<SuperAdminNotificationSeverity, number> = { urgent: 3, warning: 2, info: 1 };
 			const severityDiff = (rank[right.severity] ?? 0) - (rank[left.severity] ?? 0);
@@ -223,48 +234,38 @@ export const getSuperAdminNotifications = async (db: D1Database) => {
 		}));
 	}, [] as SuperAdminNotification[]);
 
-	const pendingPaymentOrderNotifications = await safeNotificationQuery(async () => {
+	const pendingBookNotifications = await safeNotificationQuery(async () => {
 		const { results } = await db
 			.prepare(
-				`SELECT po.id, po.purpose, po.product_slug as productSlug, po.package_name as packageName,
-					po.gross_amount as grossAmount, po.created_at as createdAt,
-					u.username, u.email, o.name as organizationName
-				 FROM payment_orders po
-				 LEFT JOIN users u ON u.id = po.user_id
-				 LEFT JOIN organizations o ON o.id = po.lembaga_id
-				 WHERE po.status = 'pending'
-				 ORDER BY po.created_at DESC
+				`SELECT b.id, b.title, b.updated_at as updatedAt, u.username, u.email
+				 FROM buku_books b
+				 LEFT JOIN users u ON u.id = b.author_id
+				 WHERE b.status = 'pending'
+				 ORDER BY b.updated_at DESC
 				 LIMIT 6`
 			)
 			.all<{
 				id: string;
-				purpose: string;
-				productSlug: string | null;
-				packageName: string | null;
-				grossAmount: number | null;
-				createdAt: number;
+				title: string;
+				updatedAt: string | number | null;
 				username: string | null;
 				email: string | null;
-				organizationName: string | null;
 			}>();
-		return (results ?? []).map((order): SuperAdminNotification => ({
-			id: `payment-order:${order.id}`,
-			kind: 'payment',
+		return (results ?? []).map((book): SuperAdminNotification => ({
+			id: `book-pending:${book.id}`,
+			kind: 'book',
 			severity: 'urgent',
-			title: 'Payment order masih pending',
-			body: `${order.username || order.email || order.organizationName || 'User'} - ${order.packageName || order.productSlug || order.purpose} Rp${Number(order.grossAmount ?? 0).toLocaleString('id-ID')}`,
-			href:
-				order.purpose === 'coin_topup'
-					? '/admin/super/coin-topups'
-					: '/admin/super/overview#institution-list',
-			createdAt: order.createdAt
+			title: 'Buku menunggu review',
+			body: `${book.title} oleh ${book.username || book.email || 'penulis'}`,
+			href: `/admin/super/buku/${book.id}`,
+			createdAt: typeof book.updatedAt === 'number' ? book.updatedAt : book.updatedAt ? Date.parse(book.updatedAt) : null
 		}));
 	}, [] as SuperAdminNotification[]);
 
 	const notifications = sortNotifications([
 		...pendingTopupNotifications,
 		...pendingSaleNotifications,
-		...pendingPaymentOrderNotifications,
+		...pendingBookNotifications,
 		...pendingInstitutionNotifications,
 		...noAdminNotifications,
 		...recentRegisterNotifications,

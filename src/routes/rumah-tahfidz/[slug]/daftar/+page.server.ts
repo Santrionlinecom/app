@@ -9,6 +9,7 @@ import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logg
 import { getInstitutionActionBlock, getInstitutionComingSoonLoad } from '$lib/server/institution-guards';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 import { registerLoggedInMember } from '$lib/server/member-registration';
+import { queueRegistrationEmail } from '$lib/server/notifications/registration-email';
 
 const roleLabel = (value: string) => {
 	if (value === 'ustadzah') return 'Ustadzah';
@@ -153,6 +154,7 @@ export const actions: Actions = {
 			},
 			waitUntil: platform?.context?.waitUntil
 		});
+		queueRegistrationEmail({ db, fetchFn: fetch, env: platform?.env ?? {}, userId, name: name.trim(), email: email.trim(), role: normalizedRole, organizationName: org.name }, platform?.context?.waitUntil);
 
 		const lucia = initializeLucia(db);
 		const session = await lucia.createSession(userId, {});

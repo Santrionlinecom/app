@@ -12,6 +12,7 @@
 	};
 
 	const values = (form && 'values' in form ? form.values : {}) as ChapterFormValues;
+	let selectedStatus = values.status ?? data.chapter.status;
 
 	$: canEdit = data.canEdit;
 </script>
@@ -49,7 +50,7 @@
 
 		{#if !canEdit}
 			<div class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-				Bab bersifat read-only karena buku sedang menunggu review, sudah terbit, atau sudah diarsipkan.
+				Bab bersifat read-only karena buku sedang menunggu review atau sudah diarsipkan.
 			</div>
 		{/if}
 
@@ -82,9 +83,9 @@
 				</label>
 				<label class="block">
 					<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Status Bab</span>
-					<select name="status" class="select select-bordered mt-2 w-full" disabled={!canEdit}>
-						<option value="draft" selected={(values.status ?? data.chapter.status) === 'draft'}>Draft</option>
-						<option value="published" selected={(values.status ?? data.chapter.status) === 'published'}>Published</option>
+					<select name="status" class="select select-bordered mt-2 w-full" disabled={!canEdit} bind:value={selectedStatus}>
+						<option value="draft">Draft</option>
+						<option value="published">Published</option>
 					</select>
 				</label>
 			</div>
@@ -102,7 +103,9 @@
 
 		<div class="mt-8 flex flex-col gap-3 sm:flex-row">
 			{#if canEdit}
-				<button type="submit" class="btn btn-primary">Simpan Bab</button>
+				<button type="submit" class="btn btn-primary">
+					{selectedStatus === 'published' ? 'Terbitkan Bab' : 'Simpan sebagai Draft'}
+				</button>
 			{/if}
 			<a href={`/buku/studio/${data.book.id}/edit#chapters`} class="btn btn-outline">Kembali</a>
 		</div>

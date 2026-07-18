@@ -442,7 +442,8 @@
 			payment: 'PY',
 			message: 'PS',
 			institution: 'LB',
-			order: 'OD'
+			order: 'OD',
+			book: 'BK'
 		};
 		return map[item.kind] ?? 'NT';
 	};
@@ -450,6 +451,15 @@
 	onMount(() => {
 		refreshLive();
 		pollTimer = setInterval(refreshLive, 12000);
+		const refreshWhenVisible = () => {
+			if (document.visibilityState === 'visible') void refreshLive();
+		};
+		window.addEventListener('focus', refreshWhenVisible);
+		document.addEventListener('visibilitychange', refreshWhenVisible);
+		return () => {
+			window.removeEventListener('focus', refreshWhenVisible);
+			document.removeEventListener('visibilitychange', refreshWhenVisible);
+		};
 	});
 
 	onDestroy(() => {
@@ -797,7 +807,7 @@
 						</div>
 					</section>
 
-					<section class="admin-card p-5 sm:p-6">
+					<section class="admin-card p-5 sm:p-6 lg:hidden">
 						<h2 class="font-display text-xl font-bold text-so-green">Akses Cepat</h2>
 						<div class="mt-4 grid grid-cols-2 gap-3">
 							{#each quickActions as item}
