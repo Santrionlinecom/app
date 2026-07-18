@@ -11,7 +11,8 @@ import {
 import {
 	adminBookPublishLabel,
 	canAdminPublishBook,
-	defaultPublishedThrough
+	defaultPublishedThrough,
+	isValidPublishedThrough
 } from '$lib/server/domains/buku/moderation-policy';
 import { getRequestIp, logActivity } from '$lib/server/logger';
 
@@ -38,8 +39,8 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		publishLabel: adminBookPublishLabel(book.status),
 		defaultPublishedThrough: defaultPublishedThrough(
 			book.status,
-			book.publishedChapterCount,
-			book.totalChapterCount
+			chapters.map((chapter) => chapter.chapterNumber),
+			chapters.filter((chapter) => chapter.status === 'published').map((chapter) => chapter.chapterNumber)
 		),
 		saved: url.searchParams.get('saved') ?? null
 	};
@@ -55,13 +56,14 @@ export const actions: Actions = {
 		}
 		const formData = await request.formData();
 		const publishedThrough = Number.parseInt(String(formData.get('publishedThrough') ?? ''), 10);
-		if (!Number.isInteger(publishedThrough) || publishedThrough < 1 || publishedThrough > book.totalChapterCount) {
-			return fail(400, { error: `Jumlah bab terbit harus antara 1 dan ${book.totalChapterCount}.` });
+		const chapters = await listAuthorBukuChapters(db, book.id);
+		if (!isValidPublishedThrough(chapters.map((chapter) => chapter.chapterNumber), publishedThrough)) {
+			return fail(400, { error: 'Pilih batas dari nomor bab yang tersedia.' });
 		}
 
 		const updated = await publishAdminBukuBook(db, {
 			id: params.id,
-			fromStatuses: ['draft', 'pending', 'rejected'],
+			fromStatus: book.status,
 			publishedThrough
 		});
 		if (!updated) {

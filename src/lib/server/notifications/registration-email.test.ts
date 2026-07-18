@@ -28,8 +28,10 @@ test('registration email config reuses payment sender when a dedicated sender is
 test('registration email sends once with a stable provider idempotency key', async () => {
 	let status: 'pending' | 'sending' | 'sent' | 'failed' | null = null;
 	let providerCalls = 0;
+	const preparedSql: string[] = [];
 	const db = {
 		prepare(sql: string) {
+			preparedSql.push(sql);
 			const statement = {
 				bind() { return statement; },
 				async first() {
@@ -81,6 +83,8 @@ test('registration email sends once with a stable provider idempotency key', asy
 	assert.deepEqual(await notifyRegistrationEmail(input), { status: 'duplicate' });
 	assert.equal(providerCalls, 1);
 	assert.equal(registrationEmailDeliveryId('user-1'), 'email:registration:user-1');
+	assert.equal(preparedSql.some((sql) => sql.includes("CHECK (status IN ('pending', 'sending', 'sent', 'failed'))")), true);
+	assert.equal(preparedSql.some((sql) => sql.includes('CREATE INDEX IF NOT EXISTS idx_registration_email_deliveries_status_updated')), true);
 });
 
 test('provider failure is returned as data and never thrown into registration flow', async () => {

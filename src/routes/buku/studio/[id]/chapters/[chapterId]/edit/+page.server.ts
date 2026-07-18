@@ -71,7 +71,13 @@ export const actions: Actions = {
 		}
 
 		try {
-			const updated = await updateBukuChapter(db, book.id, chapter.id, parsed.values);
+			const updated = await updateBukuChapter(db, {
+				bookId: book.id,
+				chapterId: chapter.id,
+				authorId: locals.user.id,
+				allowedBookStatuses: ['draft', 'rejected', 'published'],
+				values: parsed.values
+			});
 			if (!updated) {
 				return fail(404, { error: 'Bab tidak ditemukan.', values: parsed.values });
 			}

@@ -5,7 +5,8 @@ import {
 	adminBookPublishLabel,
 	canAdminPublishBook,
 	canManagePublishedBookChapters,
-	defaultPublishedThrough
+	defaultPublishedThrough,
+	isValidPublishedThrough
 } from './moderation-policy.ts';
 
 test('super admin can publish a draft, pending, or rejected book from the canonical moderation page', () => {
@@ -30,8 +31,14 @@ test('chapter release remains manageable after the parent book is published', ()
 	assert.equal(canManagePublishedBookChapters('archived'), false);
 });
 
-test('draft books default to a safe three-chapter release', () => {
-	assert.equal(defaultPublishedThrough('draft', 100, 100), 3);
-	assert.equal(defaultPublishedThrough('draft', 1, 2), 2);
-	assert.equal(defaultPublishedThrough('pending', 7, 100), 7);
+test('draft books default to the third actual chapter number even when numbering is sparse', () => {
+	assert.equal(defaultPublishedThrough('draft', [10, 20, 30, 40], []), 30);
+	assert.equal(defaultPublishedThrough('draft', [10, 20], []), 20);
+	assert.equal(defaultPublishedThrough('pending', [10, 20, 30], [10, 20]), 20);
+});
+
+test('publish cutoff must be an actual chapter number', () => {
+	assert.equal(isValidPublishedThrough([10, 20], 10), true);
+	assert.equal(isValidPublishedThrough([10, 20], 2), false);
+	assert.equal(isValidPublishedThrough([], 1), false);
 });

@@ -148,15 +148,17 @@
 					<form method="POST" action="?/approve" class="space-y-3">
 						<label class="block">
 							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Terbitkan sampai bab</span>
-							<input
+							<select
 								name="publishedThrough"
-								type="number"
-								min="1"
-								max={book.totalChapterCount}
-								value={data.defaultPublishedThrough}
 								class="input input-bordered mt-2 w-full"
 								required
-							/>
+							>
+								{#each chapters as chapter}
+									<option value={chapter.chapterNumber} selected={chapter.chapterNumber === data.defaultPublishedThrough}>
+										Bab {chapter.chapterNumber} — {chapter.title}
+									</option>
+								{/each}
+							</select>
 							<span class="mt-2 block text-xs leading-5 text-slate-500">Bab setelah angka ini tetap draft dan dapat diterbitkan satu per satu dari Buku Studio.</span>
 						</label>
 						<button type="submit" class="btn btn-primary w-full">{data.publishLabel}</button>

@@ -17,10 +17,19 @@ export const canManagePublishedBookChapters = (status: BukuBookStatus) =>
 
 export const defaultPublishedThrough = (
 	status: BukuBookStatus,
-	publishedChapterCount: number,
-	totalChapterCount: number
+	chapterNumbers: number[],
+	publishedChapterNumbers: number[]
 ) => {
-	if (!Number.isInteger(totalChapterCount) || totalChapterCount <= 0) return 0;
-	const requested = status === 'pending' ? publishedChapterCount : Math.min(3, totalChapterCount);
-	return Math.max(1, Math.min(totalChapterCount, requested || 1));
+	const available = Array.from(
+		new Set(chapterNumbers.filter((number) => Number.isInteger(number) && number > 0))
+	).sort((a, b) => a - b);
+	if (available.length === 0) return 0;
+	if (status === 'pending') {
+		const published = publishedChapterNumbers.filter((number) => available.includes(number));
+		if (published.length > 0) return Math.max(...published);
+	}
+	return available[Math.min(2, available.length - 1)];
 };
+
+export const isValidPublishedThrough = (chapterNumbers: number[], publishedThrough: number) =>
+	Number.isInteger(publishedThrough) && chapterNumbers.includes(publishedThrough);

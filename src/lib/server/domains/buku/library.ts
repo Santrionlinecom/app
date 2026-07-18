@@ -675,14 +675,13 @@ export async function publishAdminBukuBook(
 	db: D1Database,
 	params: {
 		id: string;
-		fromStatuses: BukuBookStatus[];
+		fromStatus: BukuBookStatus;
 		publishedThrough: number;
 	}
 ) {
-	if (params.fromStatuses.length === 0 || !Number.isInteger(params.publishedThrough) || params.publishedThrough < 1) {
+	if (!Number.isInteger(params.publishedThrough) || params.publishedThrough < 1) {
 		return false;
 	}
-	const placeholders = params.fromStatuses.map(() => '?').join(', ');
 	const [chapterResult, bookResult] = await db.batch([
 		db.prepare(
 			`UPDATE buku_chapters
@@ -691,17 +690,22 @@ export async function publishAdminBukuBook(
 			 WHERE book_id = ?
 			   AND EXISTS (
 				 SELECT 1 FROM buku_books
-				 WHERE id = ? AND status IN (${placeholders})
+				 WHERE id = ? AND status = ?
 			   )`
-		).bind(params.publishedThrough, params.id, params.id, ...params.fromStatuses),
+		).bind(params.publishedThrough, params.id, params.id, params.fromStatus),
 		db.prepare(
 			`UPDATE buku_books
 			 SET status = 'published', admin_note = NULL, updated_at = CURRENT_TIMESTAMP
-			 WHERE id = ? AND status IN (${placeholders})`
-		).bind(params.id, ...params.fromStatuses)
+			 WHERE id = ? AND status = ?
+			   AND EXISTS (
+				 SELECT 1 FROM buku_chapters
+				 WHERE book_id = ? AND chapter_number <= ?
+			   )`
+		).bind(params.id, params.fromStatus, params.id, params.publishedThrough)
 	]);
 
-	return Number(bookResult.meta?.changes ?? 0) > 0 && Number(chapterResult.meta?.changes ?? 0) > 0;
+	void chapterResult;
+	return Number(bookResult.meta?.changes ?? 0) > 0;
 }
 
 export async function updateAdminBukuBookStatus(
@@ -788,10 +792,16 @@ export async function createBukuChapter(db: D1Database, bookId: string, values: 
 
 export async function updateBukuChapter(
 	db: D1Database,
-	bookId: string,
-	chapterId: string,
-	values: BukuChapterFormValues
+	params: {
+		bookId: string;
+		chapterId: string;
+		authorId: string;
+		allowedBookStatuses: BukuBookStatus[];
+		values: BukuChapterFormValues;
+	}
 ) {
+	if (params.allowedBookStatuses.length === 0) return false;
+	const placeholders = params.allowedBookStatuses.map(() => '?').join(', ');
 	const result = await db
 		.prepare(
 			`UPDATE buku_chapters
@@ -800,9 +810,23 @@ export async function updateBukuChapter(
 				content = ?,
 				status = ?,
 				updated_at = CURRENT_TIMESTAMP
-			WHERE id = ? AND book_id = ?`
+			WHERE id = ? AND book_id = ?
+			  AND EXISTS (
+				SELECT 1 FROM buku_books
+				WHERE id = ? AND author_id = ? AND status IN (${placeholders})
+			  )`
 		)
-		.bind(values.chapterNumber, values.title, values.content, values.status, chapterId, bookId)
+		.bind(
+			params.values.chapterNumber,
+			params.values.title,
+			params.values.content,
+			params.values.status,
+			params.chapterId,
+			params.bookId,
+			params.bookId,
+			params.authorId,
+			...params.allowedBookStatuses
+		)
 		.run();
 
 	return Number(result.meta?.changes ?? 0) > 0;
