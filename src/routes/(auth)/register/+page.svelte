@@ -1,194 +1,224 @@
 <script lang="ts">
-	import { ArrowRight, Building2, GraduationCap, LogIn, Users } from 'lucide-svelte';
-	import { INSTITUTIONS, type InstitutionKey } from '$lib/config/institutions';
+	import {
+		ArrowRight,
+		Building2,
+		Check,
+		Clock3,
+		GraduationCap,
+		Link2,
+		LockKeyhole,
+		LogIn,
+		MailCheck,
+		ShieldCheck,
+		Users
+	} from 'lucide-svelte';
 
-	const institutionLabels: Record<InstitutionKey, string> = {
-		tpq: 'TPQ',
-		pondok: 'Pondok',
-		masjid: 'Masjid',
-		musholla: 'Musholla',
-		'rumah-tahfidz': 'Rumah Tahfidz'
-	};
-
-	const roleCards = [
-		{
-			title: 'Guru/Ustadz',
-			badge: 'Butuh Kode Undangan',
-			description:
-				'Bergabung melalui kode undangan dari admin lembaga. Kode ini memastikan akun Anda terhubung ke lembaga yang tepat dengan akses kelas dan santri yang sesuai.',
-			icon: GraduationCap,
-			ctaText: 'Masuk dengan Kode'
-		},
-		{
-			title: 'Santri/Jamaah/Anggota',
-			badge: 'Butuh Kode Undangan',
-			description:
-				'Bergabung melalui kode undangan dari admin lembaga. Kode ini memastikan data Anda masuk ke lembaga yang benar dan mendapat akses fitur yang sesuai.',
-			icon: Users,
-			ctaText: 'Gabung Pakai Kode'
-		}
-	];
-
-	const featureByInstitution: Record<InstitutionKey, string[]> = {
-		tpq: ['Kelas & santri', 'Setoran hafalan', 'Rapor & sertifikat'],
-		pondok: ['Santri & ustadz', 'Diniyah', 'Tahfidz & ujian'],
-		masjid: ['Jamaah', 'Kas & zakat', 'Jadwal imam/khotib'],
-		musholla: ['Anggota warga', 'Kas transparan', 'Agenda kegiatan'],
-		'rumah-tahfidz': ['Halaqoh', 'Target hafalan', 'Evaluasi setoran']
-	};
-
-	const institutionStatus: Record<InstitutionKey, { ready: boolean; label: string }> = {
-		tpq: { ready: true, label: 'Aktif' },
-		pondok: { ready: false, label: 'Dalam Pengembangan' },
-		masjid: { ready: false, label: 'Dalam Pengembangan' },
-		musholla: { ready: false, label: 'Dalam Pengembangan' },
-		'rumah-tahfidz': { ready: false, label: 'Dalam Pengembangan' }
-	};
+	const upcomingInstitutions = ['Pondok Pesantren', 'Rumah Tahfidz', 'Masjid', 'Musholla'];
 </script>
 
 <svelte:head>
-	<title>Daftar Akun SantriOnline</title>
+	<title>Daftar Akun | SantriOnline</title>
+	<meta
+		name="description"
+		content="Pilih jalur pendaftaran SantriOnline untuk pengelola TPQ, ustadz, pengajar mandiri, atau anggota lembaga."
+	/>
 </svelte:head>
 
-<div class="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-so-cream via-white to-so-cream/50 px-4 py-12 text-so-ink sm:px-6 lg:px-8 lg:py-16">
-	<div class="mx-auto w-full max-w-6xl space-y-8 sm:space-y-10">
-		<!-- Header -->
-		<header class="min-w-0 space-y-5 text-center">
-			<div class="mx-auto flex w-fit items-center gap-2 rounded-full border border-so-gold/30 bg-gradient-to-r from-white to-so-gold/5 px-4 py-1.5 shadow-sm">
-				<span class="h-2 w-2 animate-pulse rounded-full bg-so-gold"></span>
-				<span class="text-xs font-bold uppercase tracking-[0.2em] text-so-green">SantriOnline</span>
-			</div>
-			<div class="mx-auto max-w-3xl space-y-4">
-				<h1 class="break-words text-4xl font-black leading-tight tracking-tight text-so-green sm:text-5xl">
-					Daftar Akun Baru
+<main class="min-h-screen overflow-x-hidden bg-[#f6f7f3] text-slate-900">
+	<section class="border-b border-emerald-950/10 bg-[#123f34] px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+		<div class="mx-auto grid w-full max-w-6xl items-end gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
+			<header class="max-w-3xl">
+				<div class="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-emerald-50">
+					<span class="h-1.5 w-1.5 rounded-full bg-amber-300"></span>
+					Pendaftaran SantriOnline
+				</div>
+				<h1 class="text-3xl font-extrabold leading-[1.12] tracking-tight text-white sm:text-4xl lg:text-5xl">
+					Pilih jalur pendaftaran yang sesuai
 				</h1>
-				<p class="break-words text-base font-medium leading-relaxed text-so-muted sm:text-lg">
-					Pilih peran dan jenis lembaga agar fitur yang muncul sesuai kebutuhan Anda
+				<p class="mt-5 max-w-2xl text-base leading-7 text-emerald-50/80 sm:text-lg">
+					Mulai sebagai pengelola TPQ, ustadz, atau anggota lembaga. Setiap jalur disiapkan agar akun dan fitur Anda langsung tepat sasaran.
+				</p>
+			</header>
+
+			<div class="grid grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-center backdrop-blur-sm">
+				<div class="px-2">
+					<ShieldCheck class="mx-auto h-5 w-5 text-amber-300" strokeWidth={1.8} />
+					<p class="mt-2 text-[11px] font-medium leading-4 text-emerald-50/75 sm:text-xs">Data terlindungi</p>
+				</div>
+				<div class="px-2">
+					<MailCheck class="mx-auto h-5 w-5 text-amber-300" strokeWidth={1.8} />
+					<p class="mt-2 text-[11px] font-medium leading-4 text-emerald-50/75 sm:text-xs">Notifikasi email</p>
+				</div>
+				<div class="px-2">
+					<LockKeyhole class="mx-auto h-5 w-5 text-amber-300" strokeWidth={1.8} />
+					<p class="mt-2 text-[11px] font-medium leading-4 text-emerald-50/75 sm:text-xs">Akses sesuai peran</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16" aria-labelledby="registration-paths">
+		<div class="mx-auto w-full max-w-6xl">
+			<div class="max-w-2xl">
+				<p class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Mulai pendaftaran</p>
+				<h2 id="registration-paths" class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+					Pilih jalur pendaftaran
+				</h2>
+				<p class="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+					Pilih berdasarkan peran Anda saat ini. Jalur dapat dikembangkan kembali dari dashboard setelah akun aktif.
 				</p>
 			</div>
-		</header>
 
-		<!-- Main Content Grid -->
-		<section class="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-3">
-			<!-- Admin/Pengelola Card (Larger) -->
-			<article class="min-w-0 rounded-2xl border border-so-green/10 bg-white p-6 shadow-lg shadow-so-green/5 sm:p-8 lg:col-span-2">
-				<div class="flex min-w-0 items-start gap-4">
-					<div class="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-so-green to-so-green-3 text-white shadow-md">
-						<Building2 size={26} strokeWidth={2.2} />
-					</div>
-					<div class="min-w-0 flex-1">
-						<div class="inline-flex items-center gap-2 rounded-full bg-so-gold/10 px-3 py-1">
-							<span class="h-1.5 w-1.5 rounded-full bg-so-gold"></span>
-							<p class="text-xs font-bold uppercase tracking-[0.15em] text-so-green">Jalur Utama</p>
+			<div class="mt-8 grid gap-5 lg:grid-cols-2">
+				<article class="group flex min-h-[390px] flex-col rounded-3xl border border-emerald-900/15 bg-white p-6 shadow-[0_18px_55px_-35px_rgba(15,67,55,0.45)] transition duration-200 hover:-translate-y-0.5 hover:border-emerald-800/30 sm:p-8">
+					<div class="flex items-start justify-between gap-4">
+						<div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-emerald-950 text-white shadow-sm">
+							<Building2 size={27} strokeWidth={1.8} />
 						</div>
-						<h2 class="mt-3 break-words text-2xl font-black leading-tight text-so-green sm:text-3xl">
-							Admin/Pengelola Lembaga
-						</h2>
-						<p class="mt-3 break-words text-sm leading-relaxed text-so-muted sm:text-base">
-							Buat ruang kerja lembaga baru, kelola anggota, dan langsung akses fitur yang relevan untuk jenis lembaga Anda
+						<span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-700/15 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
+							<span class="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
+							Aktif
+						</span>
+					</div>
+
+					<div class="mt-7">
+						<p class="text-xs font-bold uppercase tracking-[0.15em] text-emerald-700">Untuk pemilik atau admin</p>
+						<h3 class="mt-2 text-2xl font-bold tracking-tight text-slate-900">Pengelola TPQ</h3>
+						<p class="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+							Daftarkan TPQ dan siapkan ruang kerja untuk mengelola santri, kelas, pembelajaran, hafalan, serta laporan perkembangan.
 						</p>
 					</div>
-				</div>
 
-				<!-- Institution Options -->
-				<div class="mt-6 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-					{#each INSTITUTIONS as option}
-						{@const status = institutionStatus[option.key]}
-						<a
-							href={status.ready ? option.registerRoute : '#'}
-							class="group relative min-w-0 overflow-hidden rounded-xl border transition-all duration-200 {status.ready
-								? 'border-so-green/20 bg-gradient-to-br from-so-green/5 to-so-green/10 hover:-translate-y-1 hover:border-so-green/40 hover:shadow-lg hover:shadow-so-green/10'
-								: 'border-so-border/50 bg-gray-50 opacity-75 cursor-not-allowed'}"
-						>
-							<div class="p-5">
-								<div class="flex min-w-0 items-start justify-between gap-2">
-									<p class="break-words text-lg font-black text-so-green">
-										{institutionLabels[option.key]}
-									</p>
-									<span class="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider {status.ready
-										? 'bg-so-gold/20 text-so-green'
-										: 'bg-gray-200 text-gray-600'}">
-										{status.label}
-									</span>
-								</div>
-								<p class="mt-3 break-words text-sm leading-relaxed text-so-muted">
-									{option.registerDescription}
-								</p>
-								<div class="mt-4 flex flex-wrap gap-1.5">
-									{#each featureByInstitution[option.key] as feature}
-										<span class="rounded-full border border-so-green/15 bg-white px-2.5 py-1 text-[10px] font-bold text-so-green">
-											{feature}
-										</span>
-									{/each}
-								</div>
-								{#if status.ready}
-									<span class="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-so-green transition-transform group-hover:translate-x-1">
-										Mulai Sekarang
-										<ArrowRight size={16} strokeWidth={2.5} />
-									</span>
-								{/if}
-							</div>
-							{#if !status.ready}
-								<div class="absolute inset-0 bg-gradient-to-t from-gray-100/80 to-transparent pointer-events-none"></div>
-							{/if}
-						</a>
+					<ul class="mt-6 grid gap-3 text-sm font-medium text-slate-700 sm:grid-cols-2">
+						<li class="flex items-center gap-2"><Check class="h-4 w-4 text-emerald-700" strokeWidth={2.5} /> Data santri dan kelas</li>
+						<li class="flex items-center gap-2"><Check class="h-4 w-4 text-emerald-700" strokeWidth={2.5} /> Setoran dan hafalan</li>
+						<li class="flex items-center gap-2"><Check class="h-4 w-4 text-emerald-700" strokeWidth={2.5} /> Rapor perkembangan</li>
+						<li class="flex items-center gap-2"><Check class="h-4 w-4 text-emerald-700" strokeWidth={2.5} /> Akun pengajar dan santri</li>
+					</ul>
+
+					<a
+						href="/tpq/daftar"
+						class="mt-8 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 focus:outline-none focus:ring-4 focus:ring-emerald-800/20"
+					>
+						Daftarkan TPQ
+						<ArrowRight size={17} strokeWidth={2.2} class="transition-transform group-hover:translate-x-0.5" />
+					</a>
+				</article>
+
+				<article class="group flex min-h-[390px] flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_18px_55px_-35px_rgba(15,23,42,0.35)] transition duration-200 hover:-translate-y-0.5 hover:border-emerald-800/30 sm:p-8">
+					<div class="flex items-start justify-between gap-4">
+						<div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-amber-100 text-amber-900">
+							<GraduationCap size={28} strokeWidth={1.8} />
+						</div>
+						<span class="rounded-full border border-amber-700/15 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900">Akun pribadi</span>
+					</div>
+
+					<div class="mt-7">
+						<p class="text-xs font-bold uppercase tracking-[0.15em] text-amber-800">Untuk pendidik</p>
+						<h3 class="mt-2 text-2xl font-bold tracking-tight text-slate-900">Ustadz atau Pengajar</h3>
+						<p class="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+							Buat akun pengajar untuk mengelola profil, memilih status mengajar, atau melanjutkan proses bergabung dengan lembaga.
+						</p>
+					</div>
+
+					<ul class="mt-6 grid gap-3 text-sm font-medium text-slate-700 sm:grid-cols-2">
+						<li class="flex items-center gap-2"><Check class="h-4 w-4 text-amber-700" strokeWidth={2.5} /> Pengajar mandiri</li>
+						<li class="flex items-center gap-2"><Check class="h-4 w-4 text-amber-700" strokeWidth={2.5} /> Pemilik lembaga</li>
+						<li class="flex items-center gap-2"><Check class="h-4 w-4 text-amber-700" strokeWidth={2.5} /> Staf atau pengajar</li>
+						<li class="flex items-center gap-2"><Check class="h-4 w-4 text-amber-700" strokeWidth={2.5} /> Profil keahlian</li>
+					</ul>
+
+					<a
+						href="/register/ustadz"
+						class="mt-8 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-950 bg-white px-5 py-3 text-sm font-bold text-emerald-950 transition hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-800/15"
+					>
+						Daftar sebagai Ustadz
+						<ArrowRight size={17} strokeWidth={2.2} class="transition-transform group-hover:translate-x-0.5" />
+					</a>
+				</article>
+			</div>
+		</div>
+	</section>
+
+	<section class="border-y border-slate-200 bg-white px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+		<div class="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
+			<div class="flex min-w-0 items-start gap-4 sm:gap-5">
+				<div class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-emerald-800">
+					<Users size={23} strokeWidth={1.9} />
+				</div>
+				<div class="min-w-0">
+					<p class="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Santri, jamaah, atau anggota</p>
+					<h2 class="mt-2 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Bergabung melalui lembaga Anda</h2>
+					<p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+						Mintalah <strong class="font-semibold text-slate-800">tautan pendaftaran dari admin lembaga</strong>. Tautan khusus tersebut memastikan akun Anda langsung terhubung ke lembaga dan peran yang benar.
+					</p>
+					<div class="mt-4 inline-flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950">
+						<Link2 class="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
+						Belum menerima tautan? Hubungi pengelola TPQ atau lembaga tempat Anda bergabung.
+					</div>
+				</div>
+			</div>
+
+			<div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+				<p class="text-sm font-semibold text-slate-900">Sudah memiliki akun?</p>
+				<p class="mt-1 text-xs leading-5 text-slate-600">Masuk untuk melanjutkan pembelajaran atau pengelolaan lembaga.</p>
+				<a
+					href="/auth"
+					class="mt-4 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-emerald-950 ring-1 ring-inset ring-slate-300 transition hover:bg-emerald-50 hover:ring-emerald-800/30"
+				>
+					<LogIn size={17} strokeWidth={2} /> Masuk ke akun
+				</a>
+			</div>
+		</div>
+	</section>
+
+	<section class="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+		<div class="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+			<div class="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
+				<div class="flex items-center gap-3">
+					<div class="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-700">
+						<Clock3 size={20} strokeWidth={1.9} />
+					</div>
+					<div>
+						<p class="text-xs font-bold uppercase tracking-[0.15em] text-slate-500">Dalam pengembangan</p>
+						<h2 class="mt-1 text-lg font-bold text-slate-900">Jenis lembaga berikutnya</h2>
+					</div>
+				</div>
+				<div class="mt-6 grid gap-3 sm:grid-cols-2">
+					{#each upcomingInstitutions as institution}
+						<div class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+							<span class="text-sm font-semibold text-slate-700">{institution}</span>
+							<span class="shrink-0 rounded-full bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 ring-1 ring-inset ring-slate-200">Segera hadir</span>
+						</div>
 					{/each}
 				</div>
-			</article>
-
-			<!-- Role Cards (Guru & Santri) -->
-			<div class="grid min-w-0 grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-1">
-				{#each roleCards as card}
-					<article class="min-w-0 rounded-2xl border border-so-green/10 bg-white p-6 shadow-lg shadow-so-green/5">
-						<div class="flex min-w-0 items-start gap-3">
-							<div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-so-green/10 to-so-green/20 text-so-green">
-								<svelte:component this={card.icon} size={24} strokeWidth={2.2} />
-							</div>
-							<div class="min-w-0 flex-1">
-								<span class="inline-block rounded-full bg-so-gold/15 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-so-green">
-									{card.badge}
-								</span>
-								<h2 class="mt-3 break-words text-lg font-black leading-tight text-so-green sm:text-xl">
-									{card.title}
-								</h2>
-							</div>
-						</div>
-						<p class="mt-4 break-words text-sm leading-relaxed text-so-muted">
-							{card.description}
-						</p>
-						<a
-							href="/auth"
-							class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-so-green to-so-green-3 px-4 py-3.5 text-sm font-bold text-white shadow-md shadow-so-green/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-so-green/30"
-						>
-							<LogIn size={18} strokeWidth={2.4} />
-							{card.ctaText}
-						</a>
-					</article>
-				{/each}
 			</div>
-		</section>
 
-		<!-- Info Box: Kode Undangan -->
-		<div class="mx-auto max-w-3xl rounded-xl border border-so-gold/20 bg-gradient-to-r from-so-gold/5 to-so-gold/10 p-6 shadow-sm">
-			<div class="flex items-start gap-3">
-				<div class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-so-gold/20 text-so-green">
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-					</svg>
-				</div>
-				<div class="min-w-0 flex-1">
-					<h3 class="break-words text-base font-bold text-so-green sm:text-lg">Apa itu Kode Undangan?</h3>
-					<p class="mt-2 break-words text-sm leading-relaxed text-so-muted">
-						Kode undangan diberikan oleh admin lembaga kepada guru/ustadz atau santri/jamaah agar akun mereka terhubung ke lembaga yang tepat. Tanpa kode ini, Anda tidak bisa bergabung sebagai anggota lembaga.
-					</p>
+			<div class="rounded-3xl border border-emerald-900/15 bg-emerald-50/60 p-6 sm:p-8">
+				<p class="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Setelah mendaftar</p>
+				<h2 class="mt-2 text-xl font-bold tracking-tight text-slate-900">Akun siap diarahkan ke langkah berikutnya</h2>
+				<div class="mt-6 space-y-5">
+					<div class="flex gap-3">
+						<span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-emerald-900 text-xs font-bold text-white">1</span>
+						<p class="pt-0.5 text-sm leading-6 text-slate-700">Lengkapi data sesuai jalur yang dipilih.</p>
+					</div>
+					<div class="flex gap-3">
+						<span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-emerald-900 text-xs font-bold text-white">2</span>
+						<p class="pt-0.5 text-sm leading-6 text-slate-700">Terima pemberitahuan melalui email setelah akun berhasil dibuat.</p>
+					</div>
+					<div class="flex gap-3">
+						<span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-emerald-900 text-xs font-bold text-white">3</span>
+						<p class="pt-0.5 text-sm leading-6 text-slate-700">Ikuti arahan di dashboard untuk menyiapkan lembaga atau mulai belajar.</p>
+					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Footer Link -->
-		<p class="break-words text-center text-sm text-so-muted">
-			Sudah punya akun?
-			<a href="/auth" class="font-bold text-so-green underline-offset-2 hover:underline">Masuk di sini</a>
+		<p class="mx-auto mt-8 max-w-3xl text-center text-xs leading-5 text-slate-600">
+			Dengan melanjutkan pendaftaran, Anda menyetujui
+			<a href="/syarat" class="font-semibold text-emerald-800 hover:underline">Syarat dan Ketentuan</a>
+			dan telah membaca
+			<a href="/privacy" class="font-semibold text-emerald-800 hover:underline">Kebijakan Privasi</a> SantriOnline.
 		</p>
-	</div>
-</div>
+	</section>
+</main>
