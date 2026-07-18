@@ -5,7 +5,10 @@ import {
 	ensureKitabReferenceSchema,
 	findActiveKitabSlugs,
 	insertDokumen,
-	insertDokumenBatch
+	insertDokumenBatch,
+	markKitabCorpusFailed,
+	reconcileIndexingKitabRows,
+	reserveKitabCorpus
 } from '$lib/server/rag';
 import { getOrganizationById } from '$lib/server/organizations';
 import { isEducationalOrgType } from '$lib/server/utils';
@@ -15,8 +18,8 @@ import type { RequestHandler } from './$types';
 
 const MAX_PDF_BYTES = 20 * 1024 * 1024;
 const MAX_PDF_PAGES = 300;
-const MAX_TEXT_CHUNKS = 16;
-const EMBEDDING_BATCH_SIZE = 16;
+const MAX_TEXT_CHUNKS = 135;
+const EMBEDDING_BATCH_SIZE = 15;
 const JSON_UPLOAD_RATE_LIMIT = { scope: 'kitab:upload:text', limit: 30, windowMs: 10 * 60 * 1000 };
 const PDF_UPLOAD_RATE_LIMIT = { scope: 'kitab:upload:pdf', limit: 6, windowMs: 30 * 60 * 1000 };
 
@@ -49,6 +52,7 @@ export const GET: RequestHandler = async ({ platform, locals }) => {
 	if (!platform?.env?.DB) throw error(500, 'Layanan data tidak tersedia');
 	try {
 		await ensureKitabReferenceSchema(platform.env.DB);
+		await reconcileIndexingKitabRows(platform as App.Platform, { ensureSchema: false });
 		const { results } =
 			(await platform.env.DB.prepare(
 				`SELECT id, judul, halaman, jilid, created_at as createdAt 
@@ -99,7 +103,11 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 				);
 			}
 		} catch (err) {
-			console.warn('Rate limit kitab upload gagal:', err);
+			console.error('Rate limit kitab upload gagal:', err);
+			return json(
+				{ ok: false, error: 'Layanan pembatasan upload sedang bermasalah.' },
+				{ status: 503 }
+			);
 		}
 	}
 
@@ -107,33 +115,63 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 		const body = await request.json().catch(() => ({}));
 		const text = typeof body.text === 'string' ? body.text.trim() : '';
 		const judul = typeof body.judul === 'string' ? body.judul.trim() : '';
-		const halaman = body.halaman ?? null;
-		const jilid = body.jilid ?? null;
+		const halaman =
+			typeof body.halaman === 'string' || typeof body.halaman === 'number' ? body.halaman : null;
+		const jilid = typeof body.jilid === 'string' || typeof body.jilid === 'number' ? body.jilid : null;
+		const kitabSlugInput = typeof body.kitabSlug === 'string' ? body.kitabSlug : judul;
 		const kitabSlug =
-			normalizeKitabSlug(typeof body.kitabSlug === 'string' ? body.kitabSlug : judul) || 'kitab';
+			normalizeKitabSlug(kitabSlugInput) || 'kitab';
 		const parsedChunkIndex = Number.parseInt(String(body.chunkIndex ?? '0'), 10);
-		const chunkIndex = Number.isFinite(parsedChunkIndex) && parsedChunkIndex >= 0 ? parsedChunkIndex : 0;
+		const chunkIndex =
+			Number.isSafeInteger(parsedChunkIndex) && parsedChunkIndex >= 0 && parsedChunkIndex <= 1_000_000
+				? parsedChunkIndex
+				: 0;
 
 		if (!text || !judul) {
 			throw error(400, 'Field text dan judul wajib diisi');
 		}
-		if ((await findActiveKitabSlugs(platform.env.DB, [kitabSlug])).has(kitabSlug)) {
-			throw error(409, 'Corpus kitab dengan slug ini sudah aktif dan tidak dapat ditimpa.');
+		if (
+			text.length > 12000 ||
+			judul.length > 240 ||
+			kitabSlugInput.length > 160 ||
+			String(jilid ?? '').length > 80 ||
+			String(halaman ?? '').length > 80
+		) {
+			throw error(413, 'Teks atau metadata kitab terlalu panjang');
+		}
+		const corpusKey = `manual:${kitabSlug}:${jilid == null ? '' : String(jilid).slice(0, 80)}`;
+		const indexRevision = crypto.randomUUID();
+		const reserved = await reserveKitabCorpus(platform.env.DB, {
+			kitabSlug,
+			corpusKey,
+			indexRevision,
+			expectedChunks: 1
+		});
+		if (!reserved) {
+			throw error(409, 'Corpus kitab dengan slug ini sedang diproses atau sudah aktif.');
 		}
 
 		try {
-			const stored = await insertDokumen(platform as App.Platform, text, {
-				judul_kitab: judul,
-				halaman: halaman ?? undefined,
-				jilid: jilid ?? undefined,
-				kitab_slug: kitabSlug,
-				source_type: 'manual',
-				source_ref: halaman == null ? `${judul}, input manual` : `${judul}, halaman ${halaman}`,
-				chunk_index: chunkIndex
-			});
+			const stored = await insertDokumen(
+				platform as App.Platform,
+				text,
+				{
+					judul_kitab: judul,
+					halaman: halaman ?? undefined,
+					jilid: jilid ?? undefined,
+					kitab_slug: kitabSlug,
+					corpus_key: corpusKey,
+					source_type: 'manual',
+					source_ref:
+						halaman == null ? `${judul}, input manual` : `${judul}, halaman ${halaman}`,
+					chunk_index: chunkIndex
+				},
+				{ indexRevision, requireReservation: true }
+			);
 
 			return json({ ok: true, status: 'indexing', stored });
 		} catch (err: any) {
+			await markKitabCorpusFailed(platform.env.DB, kitabSlug, indexRevision, err);
 			const message = err?.message || 'Gagal menyimpan dokumen';
 			return json({ error: message }, { status: 500 });
 		}
@@ -156,6 +194,9 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 
 	if (!judul) {
 		throw error(400, 'Judul kitab wajib diisi');
+	}
+	if (judul.length > 240 || kitabSlugRaw.length > 160 || jilidRaw.length > 80) {
+		throw error(413, 'Metadata kitab terlalu panjang');
 	}
 
 	const pageOffset = Number.parseInt(pageOffsetRaw || '1', 10);
@@ -229,26 +270,40 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 		}
 	}
 
-	await ensureKitabReferenceSchema(platform.env.DB);
-	for (let offset = 0; offset < pendingChunks.length; offset += EMBEDDING_BATCH_SIZE) {
-		await insertDokumenBatch(
-			platform as App.Platform,
-			pendingChunks.slice(offset, offset + EMBEDDING_BATCH_SIZE),
-			{ ensureSchema: false }
-		);
+	if (!pendingChunks.length) throw error(400, 'Tidak ada teks PDF yang dapat diindeks');
+	const indexRevision = crypto.randomUUID();
+	const reserved = await reserveKitabCorpus(platform.env.DB, {
+		kitabSlug,
+		corpusKey,
+		indexRevision,
+		expectedChunks: pendingChunks.length
+	});
+	if (!reserved) {
+		throw error(409, 'Corpus kitab dengan slug ini sedang diproses atau sudah aktif.');
 	}
-
 	let fileKey: string | null = null;
-	if (bucket) {
-		fileKey = `kitab/${crypto.randomUUID()}.pdf`;
-		await bucket.put(fileKey, pdfBuffer, {
-			httpMetadata: { contentType: 'application/pdf' },
-			customMetadata: {
-				judul,
-				jilid: jilid ?? '',
-				source
-			}
-		});
+	try {
+		for (let offset = 0; offset < pendingChunks.length; offset += EMBEDDING_BATCH_SIZE) {
+			await insertDokumenBatch(
+				platform as App.Platform,
+				pendingChunks.slice(offset, offset + EMBEDDING_BATCH_SIZE),
+				{ ensureSchema: false, indexRevision, requireReservation: true }
+			);
+		}
+		if (bucket) {
+			fileKey = `kitab/${crypto.randomUUID()}.pdf`;
+			await bucket.put(fileKey, pdfBuffer, {
+				httpMetadata: { contentType: 'application/pdf' },
+				customMetadata: {
+					judul,
+					jilid: jilid ?? '',
+					source
+				}
+			});
+		}
+	} catch (err) {
+		await markKitabCorpusFailed(platform.env.DB, kitabSlug, indexRevision, err);
+		throw err;
 	}
 
 	return json({

@@ -12,7 +12,9 @@ import {
 	filterRelevantMatches,
 	generateEmbeddings,
 	insertDokumenBatch,
-	reconcileIndexingKitabRows
+	markKitabCorpusFailed,
+	reconcileIndexingKitabRows,
+	reserveKitabCorpus
 } from './rag.ts';
 
 test('ID chunk kitab stabil, membedakan volume, dan maksimal 64 byte', () => {
@@ -37,6 +39,13 @@ test('ID chunk kitab stabil, membedakan volume, dan maksimal 64 byte', () => {
 	assert.equal(first, retry);
 	assert.notEqual(first, secondVolume);
 	assert.ok(new TextEncoder().encode(first).byteLength <= 64);
+	const extreme = buildKitabChunkId({
+		kitabSlug: 'x'.repeat(12000),
+		corpusKey: 'y'.repeat(12000),
+		pageNumber: Number.MAX_SAFE_INTEGER,
+		chunkIndex: Number.MAX_SAFE_INTEGER
+	});
+	assert.ok(new TextEncoder().encode(extreme).byteLength <= 64);
 });
 
 test('embedding kitab memakai model multilingual dan satu payload batch', async () => {
@@ -99,7 +108,12 @@ const createPlatform = async (
 		getByIds: async (ids: string[]) => {
 			visibilityChecks += 1;
 			if (visibilityChecks <= (options.visibilityChecksBeforeReady ?? 0)) return [];
-			return ids.filter((id) => upsertedIds.includes(id)).map((id) => ({ id, values: [] }));
+			return ids
+				.filter((id) => upsertedIds.includes(id))
+				.map((id) => {
+					const vectorIndex = upsertedIds.lastIndexOf(id);
+					return { id, values: [], metadata: vectorMetadata[vectorIndex] };
+				});
 		}
 	};
 	return {
@@ -118,6 +132,7 @@ const pilotChunks = [
 		metadata: {
 			judul_kitab: 'Terjemah Bidayatul Hidayah',
 			kitab_slug: 'terjemah-bidayatul-hidayah',
+			corpus_key: 'terjemah-bidayatul-hidayah:default',
 			halaman: 12,
 			chunk_index: 0,
 			source_type: 'pdf',
@@ -129,6 +144,7 @@ const pilotChunks = [
 		metadata: {
 			judul_kitab: 'Terjemah Bidayatul Hidayah',
 			kitab_slug: 'terjemah-bidayatul-hidayah',
+			corpus_key: 'terjemah-bidayatul-hidayah:default',
 			halaman: 12,
 			chunk_index: 1,
 			source_type: 'pdf',
@@ -140,12 +156,34 @@ const pilotChunks = [
 test('batch ingestion idempoten tetap indexing sampai vector terlihat saat reconciliation', async () => {
 	const fixture = await createPlatform();
 	try {
-		const result = await insertDokumenBatch(fixture.platform, pilotChunks);
+		const indexRevision = 'revision-pilot';
+		assert.equal(
+			await reserveKitabCorpus(fixture.db as never, {
+				kitabSlug: 'terjemah-bidayatul-hidayah',
+				corpusKey: 'terjemah-bidayatul-hidayah:default',
+				indexRevision,
+				expectedChunks: 2
+			}),
+			true
+		);
+		assert.equal(
+			await reserveKitabCorpus(fixture.db as never, {
+				kitabSlug: 'terjemah-bidayatul-hidayah',
+				corpusKey: 'concurrent',
+				indexRevision: 'revision-concurrent',
+				expectedChunks: 2
+			}),
+			false
+		);
+		const result = await insertDokumenBatch(fixture.platform, pilotChunks, { indexRevision });
 		assert.equal(result.length, 2);
 		assert.ok(result.every((item) => new TextEncoder().encode(item.id).byteLength <= 64));
 		assert.deepEqual(fixture.statusesDuringUpsert, [['indexing', 'indexing']]);
 		assert.ok(fixture.vectorMetadata.every((metadata) => !('text' in metadata)));
+		assert.ok(fixture.vectorMetadata.every((metadata) => !('kitab_slug' in metadata)));
+		assert.ok(fixture.vectorMetadata.every((metadata) => !('corpus_key' in metadata)));
 		assert.ok(fixture.vectorMetadata.every((metadata) => metadata.embedding_model === EMBEDDING_MODEL));
+		assert.ok(fixture.vectorMetadata.every((metadata) => typeof metadata.index_revision === 'string'));
 		assert.equal(fixture.aiCalls.length, 1);
 		const pendingRows = await fixture.db
 			.prepare('SELECT status FROM kitab_referensi ORDER BY id')
@@ -167,10 +205,159 @@ test('batch ingestion idempoten tetap indexing sampai vector terlihat saat recon
 	}
 });
 
-test('batch ingestion dibatasi 16 chunk untuk anggaran query Workers Free', async () => {
+test('revision vector lama tidak dapat mem-publish row D1 yang baru', async () => {
+	const fixture = await createPlatform();
+	try {
+		assert.equal(
+			await reserveKitabCorpus(fixture.db as never, {
+				kitabSlug: 'terjemah-bidayatul-hidayah',
+				corpusKey: 'terjemah-bidayatul-hidayah:default',
+				indexRevision: 'revision-baru',
+				expectedChunks: 2
+			}),
+			true
+		);
+		await insertDokumenBatch(fixture.platform, pilotChunks, {
+			indexRevision: 'revision-baru',
+			requireReservation: true
+		});
+		for (const metadata of fixture.vectorMetadata) metadata.index_revision = 'revision-lama';
+		assert.equal(await reconcileIndexingKitabRows(fixture.platform, { ensureSchema: false }), 0);
+		let rows = await fixture.db
+			.prepare('SELECT status FROM kitab_referensi ORDER BY id')
+			.all<{ status: string }>();
+		assert.ok((rows.results ?? []).every((row) => row.status === 'indexing'));
+		for (const metadata of fixture.vectorMetadata) metadata.index_revision = 'revision-baru';
+		assert.equal(await reconcileIndexingKitabRows(fixture.platform, { ensureSchema: false }), 2);
+		rows = await fixture.db
+			.prepare('SELECT status FROM kitab_referensi ORDER BY id')
+			.all<{ status: string }>();
+		assert.ok((rows.results ?? []).every((row) => row.status === 'indexed'));
+	} finally {
+		await fixture.mf.dispose();
+	}
+});
+
+test('failure storage setelah reconciliation menonaktifkan revision yang sempat indexed', async () => {
+	const fixture = await createPlatform();
+	try {
+		const indexRevision = 'revision-storage-race';
+		assert.equal(
+			await reserveKitabCorpus(fixture.db as never, {
+				kitabSlug: 'terjemah-bidayatul-hidayah',
+				corpusKey: 'terjemah-bidayatul-hidayah:default',
+				indexRevision,
+				expectedChunks: 2
+			}),
+			true
+		);
+		await insertDokumenBatch(fixture.platform, pilotChunks, {
+			indexRevision,
+			requireReservation: true
+		});
+		assert.equal(await reconcileIndexingKitabRows(fixture.platform, { ensureSchema: false }), 2);
+		await markKitabCorpusFailed(
+			fixture.db as never,
+			'terjemah-bidayatul-hidayah',
+			indexRevision,
+			'R2 gagal setelah reconciliation'
+		);
+		const rows = await fixture.db
+			.prepare('SELECT status FROM kitab_referensi WHERE index_revision = ? ORDER BY id')
+			.bind(indexRevision)
+			.all<{ status: string }>();
+		assert.deepEqual((rows.results ?? []).map((row) => row.status), ['failed', 'failed']);
+		const corpus = await fixture.db
+			.prepare('SELECT status FROM kitab_corpora WHERE kitab_slug = ?')
+			.bind('terjemah-bidayatul-hidayah')
+			.first<{ status: string }>();
+		assert.equal(corpus?.status, 'failed');
+		assert.equal(
+			await reserveKitabCorpus(fixture.db as never, {
+				kitabSlug: 'terjemah-bidayatul-hidayah',
+				corpusKey: 'terjemah-bidayatul-hidayah:default',
+				indexRevision: 'revision-retry-storage',
+				expectedChunks: 2
+			}),
+			true
+		);
+	} finally {
+		await fixture.mf.dispose();
+	}
+});
+
+test('batch 15 chunk tersimpan lewat satu JSON-bound statement', async () => {
+	const fixture = await createPlatform();
+	try {
+		const chunks = Array.from({ length: 15 }, (_, chunkIndex) => ({
+			...pilotChunks[0]!,
+			metadata: { ...pilotChunks[0]!.metadata, chunk_index: chunkIndex }
+		}));
+		const stored = await insertDokumenBatch(fixture.platform, chunks, {
+			indexRevision: 'revision-boundary'
+		});
+		assert.equal(stored.length, 15);
+		const count = await fixture.db
+			.prepare('SELECT COUNT(*) AS total FROM kitab_referensi')
+			.first<{ total: number }>();
+		assert.equal(count?.total, 15);
+		assert.equal(fixture.aiCalls.length, 1);
+	} finally {
+		await fixture.mf.dispose();
+	}
+});
+
+test('revision lama tidak dapat staging setelah reservation berpindah ke retry baru', async () => {
+	const fixture = await createPlatform();
+	try {
+		await reserveKitabCorpus(fixture.db as never, {
+			kitabSlug: 'terjemah-bidayatul-hidayah',
+			corpusKey: 'terjemah-bidayatul-hidayah:default',
+			indexRevision: 'revision-lama',
+			expectedChunks: 2
+		});
+		await insertDokumenBatch(fixture.platform, pilotChunks, {
+			indexRevision: 'revision-lama',
+			requireReservation: true
+		});
+		await markKitabCorpusFailed(
+			fixture.db as never,
+			'terjemah-bidayatul-hidayah',
+			'revision-lama',
+			'worker lama berhenti'
+		);
+		const failedRows = await fixture.db
+			.prepare('SELECT status FROM kitab_referensi WHERE index_revision = ? ORDER BY id')
+			.bind('revision-lama')
+			.all<{ status: string }>();
+		assert.deepEqual((failedRows.results ?? []).map((row) => row.status), ['failed', 'failed']);
+		assert.equal(
+			await reserveKitabCorpus(fixture.db as never, {
+				kitabSlug: 'terjemah-bidayatul-hidayah',
+				corpusKey: 'terjemah-bidayatul-hidayah:default',
+				indexRevision: 'revision-baru',
+				expectedChunks: 2
+			}),
+			true
+		);
+		await assert.rejects(
+			() =>
+				insertDokumenBatch(fixture.platform, pilotChunks, {
+					indexRevision: 'revision-lama',
+					requireReservation: true
+				}),
+			/Reservation corpus tidak lagi aktif/
+		);
+		assert.equal(fixture.aiCalls.length, 1);
+	} finally {
+		await fixture.mf.dispose();
+	}
+});
+
+test('batch ingestion dibatasi 15 chunk untuk anggaran query Workers Free', async () => {
 	await assert.rejects(
-		() => insertDokumenBatch({} as never, Array.from({ length: 17 }, () => pilotChunks[0]!)),
-		/Maksimal 16 chunk/
+		() => insertDokumenBatch({} as never, Array.from({ length: 16 }, () => pilotChunks[0]!)),
+		/Maksimal 15 chunk/
 	);
 });
 
@@ -233,20 +420,25 @@ test('cariJawaban hanya mengirim bukti indexed dan relevan ke model jawaban', as
 		await db.batch([
 			db
 				.prepare(
-					"INSERT INTO kitab_referensi (id, judul, halaman, isi_teks, source_ref, status, embedding_model) VALUES (?, 'Bidayatul Hidayah', '10', 'Bukti sah', 'OpenITI baris 120-140', 'indexed', ?)"
+					"INSERT INTO kitab_referensi (id, judul, halaman, isi_teks, kitab_slug, source_ref, status, embedding_model) VALUES (?, 'Bidayatul Hidayah', '10', 'Bukti sah', 'bidayatul-hidayah', 'OpenITI baris 120-140', 'indexed', ?)"
 				)
 				.bind('ready', EMBEDDING_MODEL),
 			db
 				.prepare(
-					"INSERT INTO kitab_referensi (id, judul, isi_teks, status, embedding_model) VALUES (?, 'Bidayatul Hidayah', 'Belum siap', 'indexing', ?)"
+					"INSERT INTO kitab_referensi (id, judul, isi_teks, kitab_slug, status, embedding_model) VALUES (?, 'Bidayatul Hidayah', 'Belum siap', 'bidayatul-hidayah', 'indexing', ?)"
 				)
 				.bind('pending', EMBEDDING_MODEL),
 			db
 				.prepare(
-					"INSERT INTO kitab_referensi (id, judul, isi_teks, status, embedding_model) VALUES (?, 'Bidayatul Hidayah', 'Skor lemah', 'indexed', ?)"
+					"INSERT INTO kitab_referensi (id, judul, isi_teks, kitab_slug, status, embedding_model) VALUES (?, 'Bidayatul Hidayah', 'Skor lemah', 'bidayatul-hidayah', 'indexed', ?)"
 				)
 				.bind('weak', EMBEDDING_MODEL)
 		]);
+		await db
+			.prepare(
+				"INSERT INTO kitab_corpora (kitab_slug, corpus_key, index_revision, expected_chunks, status) VALUES ('bidayatul-hidayah', 'legacy', 'legacy', 2, 'indexed')"
+			)
+			.run();
 
 		const aiCalls: Array<{ model: string; input: any }> = [];
 		const queryCalls: any[] = [];

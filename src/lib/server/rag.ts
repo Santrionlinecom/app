@@ -70,28 +70,18 @@ export const buildKitabChunkId = (input: {
 	corpusKey?: string;
 	pageNumber: number;
 	chunkIndex: number;
-}) =>
-	`kitab:${normalizeChunkIdPart(input.kitabSlug)}:${stableHash(
-		`${input.kitabSlug.normalize('NFKC').toLowerCase()}|${input.corpusKey ?? input.kitabSlug}`
-	)}:p${Math.max(0, Math.trunc(input.pageNumber))
-		.toString()
-		.padStart(4, '0')}:c${Math.max(0, Math.trunc(input.chunkIndex)).toString().padStart(4, '0')}`;
+}) => {
+	const corpusIdentity = `${input.kitabSlug.normalize('NFKC').toLowerCase()}|${input.corpusKey ?? input.kitabSlug}`;
+	const position = `${Number.isFinite(input.pageNumber) ? Math.max(0, Math.trunc(input.pageNumber)) : 0}|${Number.isFinite(input.chunkIndex) ? Math.max(0, Math.trunc(input.chunkIndex)) : 0}`;
+	return `kitab:${normalizeChunkIdPart(input.kitabSlug)}:${stableHash(corpusIdentity)}:${stableHash(position)}`;
+};
 
 type VectorMetadataValue = string | number | boolean | string[];
 
-const toVectorMetadata = (metadata: KitabMetadata): Record<string, VectorMetadataValue> => {
-	const normalized: Record<string, VectorMetadataValue> = { embedding_model: EMBEDDING_MODEL };
-	for (const [key, value] of Object.entries({
-		kitab_slug: metadata.kitab_slug,
-		corpus_key: metadata.corpus_key
-	})) {
-		if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-			normalized[key] = value;
-		}
-	}
-
-	return normalized;
-};
+const toVectorMetadata = (indexRevision: string): Record<string, VectorMetadataValue> => ({
+	embedding_model: EMBEDDING_MODEL,
+	index_revision: indexRevision
+});
 
 const schemaPromises = new WeakMap<object, Promise<void>>();
 
@@ -116,6 +106,7 @@ const initializeKitabReferenceSchema = async (db: D1Database) => {
 				madhhab TEXT,
 				corpus_key TEXT,
 				embedding_model TEXT,
+				index_revision TEXT,
 				status TEXT NOT NULL DEFAULT 'stale',
 				index_error TEXT,
 				indexed_at TEXT,
@@ -140,6 +131,7 @@ const initializeKitabReferenceSchema = async (db: D1Database) => {
 		['madhhab', 'TEXT'],
 		['corpus_key', 'TEXT'],
 		['embedding_model', 'TEXT'],
+		['index_revision', 'TEXT'],
 		['status', "TEXT NOT NULL DEFAULT 'stale'"],
 		['index_error', 'TEXT'],
 		['indexed_at', 'TEXT'],
@@ -167,6 +159,31 @@ const initializeKitabReferenceSchema = async (db: D1Database) => {
 			'CREATE INDEX IF NOT EXISTS idx_kitab_referensi_source_type ON kitab_referensi(source_type)'
 		)
 		.run();
+	await db
+		.prepare(
+			`CREATE TABLE IF NOT EXISTS kitab_corpora (
+				kitab_slug TEXT PRIMARY KEY,
+				corpus_key TEXT NOT NULL,
+				index_revision TEXT NOT NULL,
+				expected_chunks INTEGER NOT NULL,
+				status TEXT NOT NULL DEFAULT 'indexing',
+				last_error TEXT,
+				created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+			)`
+		)
+		.run();
+	await db
+		.prepare(
+			`INSERT OR IGNORE INTO kitab_corpora (
+				kitab_slug, corpus_key, index_revision, expected_chunks, status
+			)
+			SELECT kitab_slug, COALESCE(MAX(corpus_key), kitab_slug), 'legacy', COUNT(*), 'indexed'
+			FROM kitab_referensi
+			WHERE status = 'indexed' AND kitab_slug IS NOT NULL AND kitab_slug != ''
+			GROUP BY kitab_slug`
+		)
+		.run();
 };
 
 export const ensureKitabReferenceSchema = async (db: D1Database) => {
@@ -189,12 +206,61 @@ export const findActiveKitabSlugs = async (db: D1Database, slugs: string[]) => {
 	const placeholders = uniqueSlugs.map(() => '?').join(',');
 	const { results } = await db
 		.prepare(
-			`SELECT DISTINCT kitab_slug FROM kitab_referensi
+			`SELECT kitab_slug FROM kitab_corpora
 			 WHERE status = 'indexed' AND kitab_slug IN (${placeholders})`
 		)
 		.bind(...uniqueSlugs)
 		.all<{ kitab_slug: string }>();
 	return new Set((results ?? []).map((row) => row.kitab_slug));
+};
+
+export const reserveKitabCorpus = async (
+	db: D1Database,
+	input: { kitabSlug: string; corpusKey: string; indexRevision: string; expectedChunks: number }
+) => {
+	await ensureKitabReferenceSchema(db);
+	const result = await db
+		.prepare(
+			`INSERT INTO kitab_corpora (
+				kitab_slug, corpus_key, index_revision, expected_chunks, status, last_error, created_at, updated_at
+			) VALUES (?, ?, ?, ?, 'indexing', NULL, datetime('now'), datetime('now'))
+			ON CONFLICT(kitab_slug) DO UPDATE SET
+				corpus_key = excluded.corpus_key,
+				index_revision = excluded.index_revision,
+				expected_chunks = excluded.expected_chunks,
+				status = 'indexing',
+				last_error = NULL,
+				updated_at = datetime('now')
+			WHERE kitab_corpora.status = 'failed'`
+		)
+		.bind(input.kitabSlug, input.corpusKey, input.indexRevision, input.expectedChunks)
+		.run();
+	return (result.meta?.changes ?? 0) > 0;
+};
+
+export const markKitabCorpusFailed = async (
+	db: D1Database,
+	kitabSlug: string,
+	indexRevision: string,
+	error: unknown
+) => {
+	const message = errorMessage(error);
+	await db.batch([
+		db
+			.prepare(
+				`UPDATE kitab_referensi
+				 SET status = 'failed', index_error = ?, indexed_at = NULL, updated_at = datetime('now')
+				 WHERE kitab_slug = ? AND index_revision = ? AND status IN ('indexing', 'indexed')`
+			)
+			.bind(message, kitabSlug, indexRevision),
+		db
+			.prepare(
+				`UPDATE kitab_corpora
+				 SET status = 'failed', last_error = ?, updated_at = datetime('now')
+				 WHERE kitab_slug = ? AND index_revision = ? AND status IN ('indexing', 'indexed')`
+			)
+			.bind(message, kitabSlug, indexRevision)
+	]);
 };
 
 export const generateEmbeddings = async (ai: Ai, texts: string[]) => {
@@ -254,15 +320,16 @@ const errorMessage = (error: unknown) =>
 export const insertDokumenBatch = async (
 	platform: App.Platform,
 	chunks: KitabChunkInput[],
-	options: { ensureSchema?: boolean } = {}
+	options: { ensureSchema?: boolean; indexRevision?: string; requireReservation?: boolean } = {}
 ) => {
 	if (!chunks.length) return [];
-	if (chunks.length > 16) throw new Error('Maksimal 16 chunk per batch pada Workers Free');
+	if (chunks.length > 15) throw new Error('Maksimal 15 chunk per batch pada Workers Free');
 
 	const { ai, index } = assertBindings(platform);
 	const db = platform.env.DB;
 	if (!db) throw new Error('Layanan data tidak tersedia');
 	if (options.ensureSchema !== false) await ensureKitabReferenceSchema(db);
+	const indexRevision = options.indexRevision ?? randomId();
 
 	const records = chunks.map((chunk) => {
 		const text = chunk.text.trim();
@@ -281,60 +348,84 @@ export const insertDokumenBatch = async (
 			chunkIndex: Number.isFinite(parsedChunkIndex) ? parsedChunkIndex : null
 		};
 	});
+	const reservationSlugs = new Set(records.map((record) => record.metadata.kitab_slug ?? ''));
+	const reservationKeys = new Set(records.map((record) => record.metadata.corpus_key ?? ''));
+	if (
+		options.requireReservation &&
+		(reservationSlugs.size !== 1 || reservationKeys.size !== 1 || ![...reservationSlugs][0] || ![...reservationKeys][0])
+	) {
+		throw new Error('Batch reservation harus memiliki satu kitab_slug dan corpus_key');
+	}
+	const reservationSlug = [...reservationSlugs][0] ?? '';
+	const reservationKey = [...reservationKeys][0] ?? '';
 
-	await db.batch(
-		records.map((record) =>
-			db
-				.prepare(
-					`INSERT INTO kitab_referensi (
-						id, judul, halaman, jilid, isi_teks, kitab_slug, source_type, source_ref,
-						source_note, chapter, section_title, chunk_index, author, category, madhhab,
-						corpus_key, embedding_model, status, index_error, indexed_at, created_at, updated_at
-					)
-					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'indexing', NULL, NULL, datetime('now'), datetime('now'))
-					ON CONFLICT(id) DO UPDATE SET
-						judul = excluded.judul,
-						halaman = excluded.halaman,
-						jilid = excluded.jilid,
-						isi_teks = excluded.isi_teks,
-						kitab_slug = excluded.kitab_slug,
-						source_type = excluded.source_type,
-						source_ref = excluded.source_ref,
-						source_note = excluded.source_note,
-						chapter = excluded.chapter,
-						section_title = excluded.section_title,
-						chunk_index = excluded.chunk_index,
-						author = excluded.author,
-						category = excluded.category,
-						madhhab = excluded.madhhab,
-						corpus_key = excluded.corpus_key,
-						embedding_model = excluded.embedding_model,
-						status = 'indexing',
-						index_error = NULL,
-						indexed_at = NULL,
-						updated_at = datetime('now')`
-				)
-				.bind(
-					record.id,
-					record.metadata.judul_kitab,
-					record.metadata.halaman == null ? null : String(record.metadata.halaman),
-					record.metadata.jilid == null ? null : String(record.metadata.jilid),
-					record.text,
-					record.metadata.kitab_slug ?? null,
-					record.metadata.source_type ?? null,
-					record.metadata.source_ref ?? null,
-					record.metadata.source_note ?? null,
-					record.metadata.chapter ?? null,
-					record.metadata.section_title ?? null,
-					record.chunkIndex,
-					record.metadata.author ?? null,
-					record.metadata.category ?? null,
-					record.metadata.madhhab ?? null,
-					record.metadata.corpus_key ?? null,
-					EMBEDDING_MODEL
-				)
-		)
+	const payload = JSON.stringify(
+		records.map((record) => ({
+			id: record.id,
+			judul: record.metadata.judul_kitab,
+			halaman: record.metadata.halaman == null ? null : String(record.metadata.halaman),
+			jilid: record.metadata.jilid == null ? null : String(record.metadata.jilid),
+			isi_teks: record.text,
+			kitab_slug: record.metadata.kitab_slug ?? null,
+			source_type: record.metadata.source_type ?? null,
+			source_ref: record.metadata.source_ref ?? null,
+			source_note: record.metadata.source_note ?? null,
+			chapter: record.metadata.chapter ?? null,
+			section_title: record.metadata.section_title ?? null,
+			chunk_index: record.chunkIndex,
+			author: record.metadata.author ?? null,
+			category: record.metadata.category ?? null,
+			madhhab: record.metadata.madhhab ?? null,
+			corpus_key: record.metadata.corpus_key ?? null
+		}))
 	);
+	const stageResult = await db
+		.prepare(
+			`WITH input AS (SELECT value FROM json_each(?))
+			 INSERT INTO kitab_referensi (
+				id, judul, halaman, jilid, isi_teks, kitab_slug, source_type, source_ref,
+				source_note, chapter, section_title, chunk_index, author, category, madhhab,
+				corpus_key, embedding_model, index_revision, status, index_error, indexed_at, created_at, updated_at
+			 )
+			 SELECT
+				json_extract(value, '$.id'), json_extract(value, '$.judul'),
+				json_extract(value, '$.halaman'), json_extract(value, '$.jilid'),
+				json_extract(value, '$.isi_teks'), json_extract(value, '$.kitab_slug'),
+				json_extract(value, '$.source_type'), json_extract(value, '$.source_ref'),
+				json_extract(value, '$.source_note'), json_extract(value, '$.chapter'),
+				json_extract(value, '$.section_title'), json_extract(value, '$.chunk_index'),
+				json_extract(value, '$.author'), json_extract(value, '$.category'),
+				json_extract(value, '$.madhhab'), json_extract(value, '$.corpus_key'),
+				?, ?, 'indexing', NULL, NULL, datetime('now'), datetime('now')
+			 FROM input
+			 WHERE ? = 0 OR EXISTS (
+				SELECT 1 FROM kitab_corpora
+				WHERE index_revision = ? AND kitab_slug = ? AND corpus_key = ? AND status = 'indexing'
+			 )
+			 ON CONFLICT(id) DO UPDATE SET
+				judul = excluded.judul, halaman = excluded.halaman, jilid = excluded.jilid,
+				isi_teks = excluded.isi_teks, kitab_slug = excluded.kitab_slug,
+				source_type = excluded.source_type, source_ref = excluded.source_ref,
+				source_note = excluded.source_note, chapter = excluded.chapter,
+				section_title = excluded.section_title, chunk_index = excluded.chunk_index,
+				author = excluded.author, category = excluded.category, madhhab = excluded.madhhab,
+				corpus_key = excluded.corpus_key, embedding_model = excluded.embedding_model,
+				index_revision = excluded.index_revision, status = 'indexing', index_error = NULL,
+				indexed_at = NULL, updated_at = datetime('now')`
+		)
+		.bind(
+			payload,
+			EMBEDDING_MODEL,
+			indexRevision,
+			options.requireReservation ? 1 : 0,
+			indexRevision,
+			reservationSlug,
+			reservationKey
+		)
+		.run();
+	if (options.requireReservation && Number(stageResult.meta?.changes ?? 0) < records.length) {
+		throw new Error('Reservation corpus tidak lagi aktif');
+	}
 
 	try {
 		const embeddings = await generateEmbeddings(
@@ -345,21 +436,20 @@ export const insertDokumenBatch = async (
 			records.map((record, indexPosition) => ({
 				id: record.id,
 				values: embeddings[indexPosition],
-				metadata: toVectorMetadata(record.metadata)
+				metadata: toVectorMetadata(indexRevision)
 			}))
 		);
 	} catch (error) {
 		const message = errorMessage(error);
 		try {
-			await db.batch(
-				records.map((record) =>
-					db
-						.prepare(
-							"UPDATE kitab_referensi SET status = 'failed', index_error = ?, indexed_at = NULL, updated_at = datetime('now') WHERE id = ?"
-						)
-						.bind(message, record.id)
+			await db
+				.prepare(
+					`UPDATE kitab_referensi
+					 SET status = 'failed', index_error = ?, indexed_at = NULL, updated_at = datetime('now')
+					 WHERE index_revision = ? AND id IN (SELECT value FROM json_each(?))`
 				)
-			);
+				.bind(message, indexRevision, JSON.stringify(records.map((record) => record.id)))
+				.run();
 		} catch (statusError) {
 			console.error('Gagal menandai status indexing kitab', statusError);
 		}
@@ -380,38 +470,71 @@ export const reconcileIndexingKitabRows = async (
 
 	const pending = await db
 		.prepare(
-			`SELECT id FROM kitab_referensi
-			 WHERE status = 'indexing' AND embedding_model = ?
-			 ORDER BY updated_at ASC LIMIT 16`
+			`SELECT kr.id, kr.index_revision AS indexRevision
+			 FROM kitab_referensi kr
+			 JOIN kitab_corpora kc
+				ON kc.kitab_slug = kr.kitab_slug
+				AND kc.index_revision = kr.index_revision
+				AND kc.status = 'indexing'
+			 WHERE kr.status = 'indexing'
+				AND kr.embedding_model = ?
+				AND kr.index_revision IS NOT NULL
+			 ORDER BY kr.updated_at ASC LIMIT 16`
 		)
 		.bind(EMBEDDING_MODEL)
-		.all<{ id: string }>();
-	const ids = (pending.results ?? []).map((row) => row.id);
+		.all<{ id: string; indexRevision: string }>();
+	const pendingRows = pending.results ?? [];
+	const ids = pendingRows.map((row) => row.id);
 	if (!ids.length) return 0;
 
+	const expectedRevision = new Map(pendingRows.map((row) => [row.id, row.indexRevision]));
 	const visible = await index.getByIds(ids);
-	const visibleIds = new Set(visible.map((vector) => vector.id).filter((id) => ids.includes(id)));
-	if (!visibleIds.size) return 0;
+	const visibleRows = visible.flatMap((vector) => {
+		const revision = expectedRevision.get(vector.id);
+		return revision && vector.metadata?.index_revision === revision
+			? [{ id: vector.id, revision }]
+			: [];
+	});
+	if (!visibleRows.length) return 0;
 
 	await db.batch(
-		[...visibleIds].map((id) =>
+		visibleRows.map((row) =>
 			db
 				.prepare(
-					"UPDATE kitab_referensi SET status = 'indexed', index_error = NULL, indexed_at = datetime('now'), updated_at = datetime('now') WHERE id = ? AND status = 'indexing' AND embedding_model = ?"
+					"UPDATE kitab_referensi SET status = 'indexed', index_error = NULL, indexed_at = datetime('now'), updated_at = datetime('now') WHERE id = ? AND index_revision = ? AND status = 'indexing' AND embedding_model = ?"
 				)
-				.bind(id, EMBEDDING_MODEL)
+				.bind(row.id, row.revision, EMBEDDING_MODEL)
 		)
 	);
-	return visibleIds.size;
+	await db
+		.prepare(
+			`UPDATE kitab_corpora
+			 SET status = 'indexed', last_error = NULL, updated_at = datetime('now')
+			 WHERE status = 'indexing' AND expected_chunks <= (
+				SELECT COUNT(*) FROM kitab_referensi r
+				WHERE r.kitab_slug = kitab_corpora.kitab_slug
+					AND r.index_revision = kitab_corpora.index_revision
+					AND r.status = 'indexed'
+			 )`
+		)
+		.run();
+	return visibleRows.length;
 };
 
 export const insertDokumen = async (
 	platform: App.Platform,
 	text: string,
 	metadata: Omit<KitabMetadata, 'text'>,
-	options: { id?: string | null } = {}
+	options: { id?: string | null; indexRevision?: string; requireReservation?: boolean } = {}
 ) => {
-	const [stored] = await insertDokumenBatch(platform, [{ text, metadata, id: options.id }]);
+	const [stored] = await insertDokumenBatch(
+		platform,
+		[{ text, metadata, id: options.id }],
+		{
+			indexRevision: options.indexRevision,
+			requireReservation: options.requireReservation
+		}
+	);
 	if (!stored) throw new Error('Gagal menyimpan data');
 	return stored.metadata;
 };
@@ -458,11 +581,14 @@ export const cariJawaban = async (platform: App.Platform, pertanyaan: string) =>
 		const placeholders = candidateIds.map(() => '?').join(',');
 		const { results } = await db
 			.prepare(
-				`SELECT id, judul, halaman, jilid, isi_teks, kitab_slug, source_type, source_ref,
-					source_note, chapter, section_title, chunk_index, author, category, madhhab,
-					corpus_key, embedding_model
-				 FROM kitab_referensi
-				 WHERE status = 'indexed' AND embedding_model = ? AND id IN (${placeholders})`
+				`SELECT r.id, r.judul, r.halaman, r.jilid, r.isi_teks, r.kitab_slug, r.source_type, r.source_ref,
+					r.source_note, r.chapter, r.section_title, r.chunk_index, r.author, r.category, r.madhhab,
+					r.corpus_key, r.embedding_model
+				 FROM kitab_referensi r
+				 JOIN kitab_corpora c ON c.kitab_slug = r.kitab_slug
+					AND c.status = 'indexed'
+					AND (c.index_revision = r.index_revision OR (r.index_revision IS NULL AND c.index_revision = 'legacy'))
+				 WHERE r.status = 'indexed' AND r.embedding_model = ? AND r.id IN (${placeholders})`
 			)
 			.bind(EMBEDDING_MODEL, ...candidateIds)
 			.all<Record<string, unknown>>();

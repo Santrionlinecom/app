@@ -7,11 +7,13 @@ import {
 	buildKitabChunkId,
 	ensureKitabReferenceSchema,
 	findActiveKitabSlugs,
-	insertDokumenBatch
+	insertDokumenBatch,
+	markKitabCorpusFailed,
+	reserveKitabCorpus
 } from '$lib/server/rag';
 
-const MAX_OPENITI_ROWS = 16;
-const EMBEDDING_BATCH_SIZE = 16;
+const MAX_OPENITI_ROWS = 135;
+const EMBEDDING_BATCH_SIZE = 15;
 const MAX_TEXT_LENGTH = 12000;
 const IMPORT_RATE_LIMIT = {
 	scope: 'admin:kitab:openiti-import',
@@ -58,10 +60,17 @@ const readString = (value: unknown, maxLength: number) =>
 	typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
 
 const readInteger = (value: unknown) => {
-	if (typeof value === 'number' && Number.isInteger(value) && value > 0) return value;
-	if (typeof value === 'string' && /^\d+$/.test(value.trim())) {
+	if (
+		typeof value === 'number' &&
+		Number.isSafeInteger(value) &&
+		value > 0 &&
+		value <= 1_000_000
+	) {
+		return value;
+	}
+	if (typeof value === 'string' && /^\d{1,7}$/.test(value.trim())) {
 		const parsed = Number.parseInt(value.trim(), 10);
-		return parsed > 0 ? parsed : null;
+		return Number.isSafeInteger(parsed) && parsed > 0 && parsed <= 1_000_000 ? parsed : null;
 	}
 	return null;
 };
@@ -111,7 +120,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			);
 		}
 	} catch (err) {
-		console.warn('Rate limit import OpenITI gagal:', err);
+		console.error('Rate limit import OpenITI gagal:', err);
+		return json({ ok: false, error: 'Layanan pembatasan import sedang bermasalah.' }, { status: 503 });
 	}
 
 	const body = (await request.json().catch(() => null)) as
@@ -223,18 +233,46 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		}
 	}));
 
+	const corpusSlugs = new Set(chunks.map((chunk) => chunk.kitabSlug));
+	const corpusKeys = new Set(chunks.map((chunk) => chunk.corpusKey));
+	const chunkIds = new Set(chunks.map((chunk) => chunk.importId));
+	if (chunkIds.size !== chunks.length) {
+		return json(
+			{ ok: false, error: 'ID chunk OpenITI harus unik; periksa pageNumber dan chunkIndex.' },
+			{ status: 400 }
+		);
+	}
+	if (corpusSlugs.size !== 1 || corpusKeys.size !== 1) {
+		return json(
+			{ ok: false, error: 'Satu request OpenITI hanya boleh berisi satu corpus kitab.' },
+			{ status: 400 }
+		);
+	}
+	const kitabSlug = chunks[0]!.kitabSlug;
+	const corpusKey = chunks[0]!.corpusKey;
+	const indexRevision = crypto.randomUUID();
+	let reserved = false;
 	try {
 		await ensureKitabReferenceSchema(platform.env.DB);
-		const activeSlugs = await findActiveKitabSlugs(
-			platform.env.DB,
-			chunks.map((chunk) => chunk.kitabSlug)
-		);
+		const activeSlugs = await findActiveKitabSlugs(platform.env.DB, [kitabSlug]);
 		if (activeSlugs.size) {
 			return json(
 				{
 					ok: false,
-					error: `Corpus kitab sudah aktif dan tidak dapat ditimpa: ${[...activeSlugs].join(', ')}`
+					error: `Corpus kitab sudah aktif dan tidak dapat ditimpa: ${kitabSlug}`
 				},
+				{ status: 409 }
+			);
+		}
+		reserved = await reserveKitabCorpus(platform.env.DB, {
+			kitabSlug,
+			corpusKey,
+			indexRevision,
+			expectedChunks: ingestionChunks.length
+		});
+		if (!reserved) {
+			return json(
+				{ ok: false, error: 'Corpus kitab sedang diproses atau sudah aktif.' },
 				{ status: 409 }
 			);
 		}
@@ -242,7 +280,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			await insertDokumenBatch(
 				platform as App.Platform,
 				ingestionChunks.slice(offset, offset + EMBEDDING_BATCH_SIZE),
-				{ ensureSchema: false }
+				{ ensureSchema: false, indexRevision, requireReservation: true }
 			);
 		}
 		for (const chunk of chunks) {
@@ -253,6 +291,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			});
 		}
 	} catch (err) {
+		if (reserved) await markKitabCorpusFailed(platform.env.DB, kitabSlug, indexRevision, err);
 		console.error('Import OpenITI gagal:', err);
 		return json(
 			{
