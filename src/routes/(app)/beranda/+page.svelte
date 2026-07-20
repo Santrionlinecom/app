@@ -6,6 +6,7 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import LoadingState from '$lib/components/ui/LoadingState.svelte';
 	import ErrorState from '$lib/components/ui/ErrorState.svelte';
+	import DailyStreakWidget from '$lib/components/Dashboard/DailyStreakWidget.svelte';
 
 	export let data;
 
@@ -91,6 +92,8 @@
 			Feed internal tertutup untuk anggota lembaga. Postingan hanya terlihat oleh anggota lembaga yang sama.
 		</p>
 	</header>
+
+	<DailyStreakWidget {data} />
 
 	<PostComposer currentUser={data.currentUser} on:created={(event) => upsertPost(event.detail.post)} />
 

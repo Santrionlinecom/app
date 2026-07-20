@@ -951,20 +951,12 @@
 				{#each mobileQuickItems as item}
 					<a
 						href={item.href}
-						class="flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 text-xs text-slate-600 transition-all duration-200 active:scale-95"
-						class:text-emerald-600={isActive(item)}
-						class:font-semibold={isActive(item)}
+						class="flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 text-[10px] font-medium text-slate-500 transition-all duration-200 active:scale-95"
+						class:text-emerald-700={isActive(item)}
 						class:bg-emerald-50={isActive(item)}
-						style="min-height: 44px;"
+						style="min-height: 48px;"
 					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							class="h-6 w-6 shrink-0"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-						>
+						<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 							<path d={item.icon} stroke-linecap="round" stroke-linejoin="round" />
 						</svg>
 						<span class="max-w-full truncate text-[10px] leading-tight">{item.label}</span>

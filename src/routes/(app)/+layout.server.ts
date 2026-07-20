@@ -1,6 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { getOrganizationById } from '$lib/server/organizations';
+import { getDailyStreak } from '$lib/server/streak';
 import { getAppNavigation, SUPER_ADMIN_NAVIGATION } from '$lib/config/app-navigation';
 import {
 	assertLoggedIn,
@@ -147,6 +148,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	return {
 		user,
 		org,
+		streak: await getDailyStreak(locals.db, user.id),
 		lembagaList: await listManagedLembaga(locals.db, user.id),
 		appMenu: withOrgScopedNavigation(
 			getAppNavigation(org?.type ?? null, user.role, locals.can),
