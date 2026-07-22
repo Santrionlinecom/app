@@ -16,12 +16,12 @@
 	const statusLabels: Record<string, string> = {
 		trial: 'Menunggu',
 		aktif: 'Disetujui',
-		expired: 'Ditolak'
+		expired: 'Ditolak/Nonaktif'
 	};
 
 	const statusClasses: Record<string, string> = {
 		trial: 'border-amber-200 bg-amber-50 text-amber-700',
-		aktif: 'border-emerald-200 bg-emerald-50 text-emerald-600',
+		aktif: 'border-emerald-200 bg-emerald-50 text-emerald-700',
 		expired: 'border-red-200 bg-red-50 text-red-700'
 	};
 
@@ -47,6 +47,7 @@
 	const successMessage = (value: string | null | undefined) => {
 		if (value === 'approved') return 'Addon berhasil disetujui dan sudah aktif.';
 		if (value === 'rejected') return 'Request addon berhasil ditolak.';
+		if (value === 'deactivated') return 'Addon aktif berhasil dinonaktifkan.';
 		return null;
 	};
 
@@ -54,6 +55,7 @@
 	$: counts = data.counts;
 	$: currentStatus = data.currentStatus;
 	$: success = successMessage(data.success);
+	$: q = ((data as PageData & { q?: string }).q ?? '');
 </script>
 
 <svelte:head>
@@ -67,31 +69,58 @@
 				<p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Super Admin</p>
 				<h1 class="mt-2 text-2xl font-bold text-slate-900">Approval Addon</h1>
 				<p class="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-					Setujui request addon dari lembaga. Request dari halaman user disimpan sebagai status
-					<strong>trial</strong> dan akan aktif setelah disetujui super admin.
+					Setujui, tolak, atau nonaktifkan request addon lembaga. Request user disimpan sebagai status
+					<strong>trial</strong> sampai disetujui.
 				</p>
 			</div>
-			<a href="/admin/super/overview" class="btn btn-outline">← Kembali</a>
+			<div class="flex flex-wrap gap-2">
+				<a href="/admin/super/overview" class="btn btn-outline">← Overview</a>
+				<a href="/addon" class="btn btn-outline">Lihat halaman user</a>
+			</div>
 		</div>
 	</section>
 
 	{#if success}
-		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-600">
+		<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
 			{success}
 		</div>
 	{/if}
 
+	<form method="GET" class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center">
+		<input type="hidden" name="status" value={currentStatus} />
+		<input
+			type="search"
+			name="q"
+			value={q}
+			placeholder="Cari lembaga, slug, email admin, atau tipe addon..."
+			class="input input-bordered w-full"
+		/>
+		<button type="submit" class="btn btn-primary">Cari</button>
+	</form>
+
 	<div class="flex w-fit max-w-full gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-		<a href="/admin/super/addons?status=pending" class="btn btn-sm {currentStatus === 'pending' ? 'btn-primary' : 'btn-outline'}">
+		<a
+			href={`/admin/super/addons?status=pending${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+			class="btn btn-sm {currentStatus === 'pending' ? 'btn-primary' : 'btn-outline'}"
+		>
 			Menunggu ({counts.pending})
 		</a>
-		<a href="/admin/super/addons?status=active" class="btn btn-sm {currentStatus === 'active' ? 'btn-primary' : 'btn-outline'}">
+		<a
+			href={`/admin/super/addons?status=active${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+			class="btn btn-sm {currentStatus === 'active' ? 'btn-primary' : 'btn-outline'}"
+		>
 			Disetujui ({counts.active})
 		</a>
-		<a href="/admin/super/addons?status=rejected" class="btn btn-sm {currentStatus === 'rejected' ? 'btn-primary' : 'btn-outline'}">
-			Ditolak ({counts.rejected})
+		<a
+			href={`/admin/super/addons?status=rejected${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+			class="btn btn-sm {currentStatus === 'rejected' ? 'btn-primary' : 'btn-outline'}"
+		>
+			Ditolak/Nonaktif ({counts.rejected})
 		</a>
-		<a href="/admin/super/addons?status=all" class="btn btn-sm {currentStatus === 'all' ? 'btn-primary' : 'btn-outline'}">
+		<a
+			href={`/admin/super/addons?status=all${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+			class="btn btn-sm {currentStatus === 'all' ? 'btn-primary' : 'btn-outline'}"
+		>
 			Semua ({counts.all})
 		</a>
 	</div>
@@ -103,7 +132,7 @@
 		</div>
 	{:else}
 		<div class="overflow-x-auto rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
-			<table class="w-full min-w-[780px] text-left">
+			<table class="w-full min-w-[860px] text-left">
 				<thead class="border-b border-slate-100 bg-slate-50">
 					<tr>
 						<th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Lembaga</th>
@@ -149,6 +178,11 @@
 											<button type="submit" class="btn btn-sm btn-outline text-red-600 hover:bg-red-50">Tolak</button>
 										</form>
 									</div>
+								{:else if req.status === 'aktif'}
+									<form method="POST" action="?/deactivate" use:enhance>
+										<input type="hidden" name="id" value={req.id} />
+										<button type="submit" class="btn btn-sm btn-outline text-red-600 hover:bg-red-50">Nonaktifkan</button>
+									</form>
 								{:else}
 									<span class="text-sm text-slate-400">Tidak ada aksi</span>
 								{/if}

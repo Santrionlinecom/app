@@ -325,6 +325,8 @@ export const deleteOrganizationAsSuperAdmin = async (
 	await safeRun(db, 'DELETE FROM post_reactions WHERE lembaga_id = ?', orgId);
 	await safeRun(db, 'DELETE FROM posts WHERE lembaga_id = ?', orgId);
 	// addons
+	await safeRun(db, 'DELETE FROM addon_lembaga WHERE lembaga_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM billing WHERE lembaga_id = ?', orgId);
 	await safeRun(db, 'DELETE FROM lembaga_addons WHERE lembaga_id = ?', orgId);
 	await safeRun(db, 'DELETE FROM addon_requests WHERE lembaga_id = ?', orgId);
 

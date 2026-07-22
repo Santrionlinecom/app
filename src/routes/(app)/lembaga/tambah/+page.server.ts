@@ -1,5 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { generateId } from 'lucia';
+import { assertCanAddLembaga, getLembagaCapacity } from '$lib/server/addons';
 import { ensureUniqueSlug, slugify, type OrgType } from '$lib/server/organizations';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -34,7 +35,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw error(500, 'Layanan data tidak tersedia');
 	}
 
-	return {};
+	const capacity = await getLembagaCapacity(locals.db, locals.user.id);
+	return { capacity };
 };
 
 export const actions: Actions = {
@@ -70,6 +72,18 @@ export const actions: Actions = {
 
 		if (Object.keys(errors).length > 0) {
 			return fail(400, { errors, values });
+		}
+
+		const capacity = await assertCanAddLembaga(locals.db, locals.user.id);
+		if (!capacity.canAdd) {
+			return fail(403, {
+				errors: {
+					error:
+						capacity.error ??
+						'Batas 1 lembaga gratis tercapai. Aktifkan addon Lembaga Tambahan di /addon.'
+				} satisfies FormErrors,
+				values
+			});
 		}
 
 		const baseSlug = slugify(name);

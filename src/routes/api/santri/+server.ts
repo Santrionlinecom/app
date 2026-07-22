@@ -5,6 +5,7 @@ import { getDefaultMemberRole, getOrgScope, getOrganizationById, memberRoleByTyp
 import type { OrgType } from '$lib/server/organizations';
 import type { RequestHandler } from './$types';
 import { logActivity } from '$lib/server/activity-logs';
+import { assertCanAddSantri } from '$lib/server/addons';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import { requirePermission } from '$lib/rbac/helpers';
 import { isTeachingRole } from '$lib/utils/role-helpers';
@@ -192,6 +193,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		throw error(400, 'Role tidak valid');
 	}
 
+	const memberLikeRoles = new Set(['santri', 'jamaah', 'murid']);
+	const willCountTowardSantriLimit = memberLikeRoles.has(String(normalizedRole).toLowerCase());
+	let santriCapacity: Awaited<ReturnType<typeof assertCanAddSantri>> | null = null;
+	if (willCountTowardSantriLimit) {
+		santriCapacity = await assertCanAddSantri(db, targetOrgId);
+		if (!santriCapacity.canAdd) {
+			throw error(403, santriCapacity.error ?? 'Batas santri gratis tercapai. Aktifkan Santri Unlimited.');
+		}
+	}
+
 	try {
 		await db
 			.prepare(
@@ -228,7 +239,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	return json(
-		{ id: userId, username, email, role: normalizedRole },
+		{
+			id: userId,
+			username,
+			email,
+			role: normalizedRole,
+			santriCapacity: santriCapacity
+				? {
+						used: santriCapacity.used + 1,
+						limit: santriCapacity.limit,
+						unlimited: santriCapacity.unlimited
+					}
+				: null
+		},
 		{
 			status: 201
 		}

@@ -311,11 +311,46 @@ export const getSuperAdminNotifications = async (db: D1Database) => {
 		}));
 	}, [] as SuperAdminNotification[]);
 
+	const pendingAddonNotifications = await safeNotificationQuery(async () => {
+		const { results } = await db
+			.prepare(
+				`SELECT
+					a.id,
+					a.tipe_addon AS tipeAddon,
+					a.created_at AS createdAt,
+					o.name AS lembagaName,
+					o.slug AS lembagaSlug
+				 FROM addon_lembaga a
+				 LEFT JOIN organizations o ON o.id = a.lembaga_id
+				 WHERE a.status = 'trial'
+				 ORDER BY a.created_at DESC
+				 LIMIT 8`
+			)
+			.all<{
+				id: string;
+				tipeAddon: string;
+				createdAt: number | null;
+				lembagaName: string | null;
+				lembagaSlug: string | null;
+			}>();
+
+		return (results ?? []).map((row): SuperAdminNotification => ({
+			id: `addon-pending:${row.id}`,
+			kind: 'addon',
+			severity: 'urgent',
+			title: 'Request addon menunggu approval',
+			body: `${row.lembagaName || row.lembagaSlug || 'Lembaga'} meminta ${String(row.tipeAddon || '').replace(/_/g, ' ')}`,
+			href: '/admin/super/addons?status=pending',
+			createdAt: row.createdAt
+		}));
+	}, [] as SuperAdminNotification[]);
+
 	const dismissedIds = await safeNotificationQuery(() => listDismissedNotificationIds(db), new Set<string>());
 	const notifications = sortNotifications([
 		...pendingTopupNotifications,
 		...pendingSaleNotifications,
 		...pendingBookNotifications,
+		...pendingAddonNotifications,
 		...pendingInstitutionNotifications,
 		...noAdminNotifications,
 		...recentRegisterNotifications,
