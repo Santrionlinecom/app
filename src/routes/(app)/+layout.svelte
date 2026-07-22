@@ -75,7 +75,8 @@
 		if (href.startsWith('/addon')) return 'from-fuchsia-600 to-rose-600';
 		if (href.includes('earnings') || href.includes('royalt')) return 'from-rose-600 to-pink-600';
 		if (href.startsWith('/buku/studio')) return 'from-sky-600 to-cyan-700';
-		if (href.startsWith('/buku') || href.startsWith('/belajar')) return 'from-emerald-700 to-teal-700';
+		if (href.startsWith('/buku') || href.startsWith('/belajar') || href.startsWith('/habit'))
+			return 'from-emerald-700 to-teal-700';
 		if (href.startsWith('/coins') || href.includes('topup')) return 'from-amber-700 to-orange-700';
 		if (href.includes('kelola-santri') || href.includes('licenses')) return 'from-violet-600 to-indigo-600';
 		if (href.includes('review') || href.includes('riwayat') || href.startsWith('/admin/posts')) return 'from-cyan-700 to-blue-600';
@@ -207,6 +208,11 @@
 
 	const educationalStudentItems: MenuItem[] = [
 		learnItem,
+		{
+			label: 'Misi Habit',
+			href: '/habit',
+			icon: 'M5 12l5 5L20 7'
+		},
 		{
 			label: "Muroja'ah",
 			href: '/dashboard/hafalan-mandiri',

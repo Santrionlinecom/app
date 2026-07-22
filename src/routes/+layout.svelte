@@ -67,6 +67,7 @@ const appRoutePrefixes = [
 	'/tpq/hafalan-rapor',
 	'/tpq/rapor-rekap',
 	'/belajar',
+	'/habit',
 	'/beranda',
 	'/org'
 ];

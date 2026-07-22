@@ -36,6 +36,7 @@ const fallbackHref = (feature: string) =>
 export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]> = {
 	tpq: [
 		{ label: 'Dashboard TPQ', href: '/dashboard', icon: ICONS.home, allowedTypes: ['tpq'] },
+		{ label: 'Misi Habit', href: '/habit', icon: ICONS.check, allowedTypes: ['tpq'], description: '3 misi harian pilot' },
 		{ label: 'Data Santri', href: '/dashboard/kelola-santri', icon: ICONS.users, allowedTypes: ['tpq'], permission: 'student.read', allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'wali_kelas', 'ustadz', 'ustadzah', 'operator'] },
 		{ label: 'Setoran Hafalan', href: '/tpq/akademik/setoran', icon: ICONS.check, allowedTypes: ['tpq'], permission: 'hafalan.input', allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'wali_kelas', 'ustadz', 'ustadzah'] },
 		{ label: 'Ujian', href: '/dashboard/ujian-tahfidz', icon: ICONS.star, allowedTypes: ['tpq'], permission: 'ujian.read', allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'wali_kelas', 'ustadz', 'ustadzah'] },

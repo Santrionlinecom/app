@@ -6,7 +6,8 @@ import {
 	countMetInWindow,
 	isConsistent5of7,
 	isValidLocalDate,
-	todayWib
+	todayWib,
+	weekStartMonday
 } from './dates';
 import {
 	HABIT_MISSION_KEYS,
@@ -612,4 +613,149 @@ export function parseCheckinBody(body: unknown): CheckinInput {
 		category: categoryRaw && isKebaikanCategory(categoryRaw) ? categoryRaw : undefined,
 		optionalReflection: (data.optionalReflection ?? data.optional_reflection) as string | null
 	};
+}
+
+const GUARDIAN_CONFIRMATIONS = ['sesuai_pantauan', 'perlu_dibicarakan', 'belum_sempat'] as const;
+export type GuardianConfirmation = (typeof GUARDIAN_CONFIRMATIONS)[number];
+
+const isGuardianConfirmation = (value: string): value is GuardianConfirmation =>
+	(GUARDIAN_CONFIRMATIONS as readonly string[]).includes(value);
+
+const clampNote = (value: unknown, max = 280): string | null => {
+	if (typeof value !== 'string') return null;
+	const trimmed = value.trim().replace(/\s+/g, ' ');
+	if (!trimmed) return null;
+	return trimmed.slice(0, max);
+};
+
+export async function upsertGuardianWeekly(
+	db: D1Database,
+	params: {
+		childUserId: string;
+		guardianUserId: string;
+		confirmation: GuardianConfirmation;
+		note?: string | null;
+		asOfDate?: string;
+	}
+) {
+	if (!isGuardianConfirmation(params.confirmation)) {
+		throw error(400, 'Konfirmasi orang tua tidak valid.');
+	}
+	const weekStart = weekStartMonday(params.asOfDate ?? todayWib());
+	const id = crypto.randomUUID();
+	const createdAt = nowMs();
+	const note = clampNote(params.note);
+
+	await db
+		.prepare(
+			`INSERT INTO habit_guardian_weekly (
+			   id, user_id, guardian_user_id, week_start, confirmation, note, created_at
+			 ) VALUES (?, ?, ?, ?, ?, ?, ?)
+			 ON CONFLICT(user_id, guardian_user_id, week_start) DO UPDATE SET
+			   confirmation = excluded.confirmation,
+			   note = excluded.note,
+			   created_at = excluded.created_at`
+		)
+		.bind(
+			id,
+			params.childUserId,
+			params.guardianUserId,
+			weekStart,
+			params.confirmation,
+			note,
+			createdAt
+		)
+		.run();
+
+	return {
+		weekStart,
+		confirmation: params.confirmation,
+		note
+	};
+}
+
+export async function upsertMentorWeekly(
+	db: D1Database,
+	params: {
+		childUserId: string;
+		mentorUserId: string;
+		note: string;
+		asOfDate?: string;
+	}
+) {
+	const note = clampNote(params.note, 500);
+	if (!note) throw error(400, 'Catatan mentor wajib diisi (tanpa detail uzur).');
+	const weekStart = weekStartMonday(params.asOfDate ?? todayWib());
+	const id = crypto.randomUUID();
+	const createdAt = nowMs();
+
+	await db
+		.prepare(
+			`INSERT INTO habit_mentor_weekly (
+			   id, user_id, mentor_user_id, week_start, note, created_at
+			 ) VALUES (?, ?, ?, ?, ?, ?)
+			 ON CONFLICT(user_id, mentor_user_id, week_start) DO UPDATE SET
+			   note = excluded.note,
+			   created_at = excluded.created_at`
+		)
+		.bind(id, params.childUserId, params.mentorUserId, weekStart, note, createdAt)
+		.run();
+
+	return { weekStart, note };
+}
+
+/**
+ * Mentor trends for a list of child user ids — no uzur details, no public ranking.
+ * Returns children needing private support when weekly consistency is weak.
+ */
+export async function getMentorTrends(
+	db: D1Database,
+	childUserIds: string[],
+	endDate = todayWib()
+) {
+	const uniqueIds = [...new Set(childUserIds.filter(Boolean))];
+	const rows: Array<{
+		userId: string;
+		missions: HabitSummary['missions'];
+		needsPrivateSupport: boolean;
+	}> = [];
+
+	for (const userId of uniqueIds) {
+		const summary = await getHabitSummary(db, userId, 7, endDate);
+		const weakCount = summary.missions.filter((m) => !m.consistent5of7).length;
+		rows.push({
+			userId,
+			missions: summary.missions,
+			needsPrivateSupport: weakCount >= 2 || summary.missions.some((m) => m.trend === 'perlu_pendampingan')
+		});
+	}
+
+	return {
+		endDate,
+		// Stable order by userId only — never sort by piety score.
+		children: rows.sort((a, b) => a.userId.localeCompare(b.userId))
+	};
+}
+
+export async function assertSameOrgUsers(
+	db: D1Database,
+	actorUserId: string,
+	targetUserId: string
+): Promise<{ actorOrgId: string | null; targetOrgId: string | null }> {
+	const actor = await db
+		.prepare(`SELECT org_id as orgId FROM users WHERE id = ?`)
+		.bind(actorUserId)
+		.first<{ orgId: string | null }>();
+	const target = await db
+		.prepare(`SELECT org_id as orgId FROM users WHERE id = ?`)
+		.bind(targetUserId)
+		.first<{ orgId: string | null }>();
+
+	if (!target) throw error(404, 'Santri tidak ditemukan.');
+	const actorOrgId = actor?.orgId ?? null;
+	const targetOrgId = target.orgId ?? null;
+	if (actorOrgId && targetOrgId && actorOrgId !== targetOrgId) {
+		throw error(403, 'Tidak boleh mengakses data santri di luar lembaga.');
+	}
+	return { actorOrgId, targetOrgId };
 }
