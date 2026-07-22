@@ -2,6 +2,7 @@
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import InsufficientCoinNotice from '$lib/components/InsufficientCoinNotice.svelte';
+	import { toBukuParagraphs } from '$lib/utils/buku-reader-text';
 	import type { ActionData, PageData } from './$types';
 
 	export let data: PageData;
@@ -20,27 +21,6 @@
 
 	const FONT_STORAGE_KEY = 'santrionline:buku-reader-font-size';
 	const THEME_STORAGE_KEY = 'santrionline:buku-reader-theme';
-
-	const plainText = (value: string | null | undefined) =>
-		(value ?? '')
-			.replace(/<br\s*\/?>/gi, '\n')
-			.replace(/<\/p>/gi, '\n\n')
-			.replace(/<[^>]+>/g, ' ')
-			.replace(/&nbsp;/g, ' ')
-			.replace(/&amp;/g, '&')
-			.replace(/&lt;/g, '<')
-			.replace(/&gt;/g, '>')
-			.replace(/&quot;/g, '"')
-			.replace(/&#39;/g, "'")
-			.replace(/[ \t]+\n/g, '\n')
-			.replace(/\n{3,}/g, '\n\n')
-			.trim();
-
-	const toParagraphs = (value: string | null | undefined) =>
-		plainText(value)
-			.split(/\n{2,}/)
-			.map((paragraph) => paragraph.replace(/\s+/g, ' ').trim())
-			.filter(Boolean);
 
 	const isReaderFontSize = (value: string | null): value is ReaderFontSize =>
 		value === 'small' || value === 'normal' || value === 'large';
@@ -99,7 +79,7 @@
 	$: isLocked = data.access === 'locked';
 	$: isUnlocked = data.access === 'unlocked';
 	$: accessLabel = isLocked ? 'Terkunci' : isUnlocked ? 'Terbuka' : 'Gratis';
-	$: paragraphs = toParagraphs(chapter.content);
+	$: paragraphs = toBukuParagraphs(chapter.content);
 	$: previousChapter = data.previousChapter;
 	$: nextChapter = data.nextChapter;
 	$: formBalance =
@@ -112,10 +92,10 @@
 	$: isDarkReader = readerTheme === 'dark';
 	$: readerFontClass =
 		readerFontSize === 'small'
-			? 'text-[0.98rem] leading-8 md:text-[1.05rem] md:leading-9'
+			? 'text-[1rem] leading-8 md:text-[1.06rem] md:leading-9'
 			: readerFontSize === 'large'
-				? 'text-[1.18rem] leading-10 md:text-[1.28rem] md:leading-[2.65rem]'
-				: 'text-[1.08rem] leading-9 md:text-[1.16rem] md:leading-10';
+				? 'text-[1.2rem] leading-[2.1rem] md:text-[1.3rem] md:leading-[2.7rem]'
+				: 'text-[1.1rem] leading-9 md:text-[1.18rem] md:leading-10';
 	$: shellClass = isDarkReader
 		? 'bg-[radial-gradient(circle_at_top_left,_rgba(217,119,6,0.12),_transparent_34%),linear-gradient(180deg,_#12110d_0%,_#1c1917_58%,_#0f172a_100%)] text-stone-100'
 		: 'bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.13),_transparent_32%),linear-gradient(180deg,_#f8fafc_0%,_#fdf6e8_52%,_#ecfdf5_100%)] text-slate-900';
@@ -431,7 +411,7 @@
 			></div>
 
 			<div
-				class={`book-paper relative mx-auto max-w-3xl rounded-[1.6rem] border px-5 py-7 sm:px-7 md:px-11 md:py-12 ${paperClass}`}
+				class={`book-paper relative mx-auto max-w-3xl rounded-[1.6rem] border px-5 py-8 sm:px-8 md:px-12 md:py-14 ${paperClass}`}
 			>
 				<div
 					class={`mb-8 flex items-start justify-between gap-4 border-b pb-4 ${isDarkReader ? 'border-stone-700' : 'border-amber-100'}`}
@@ -527,9 +507,9 @@
 						{/if}
 					</div>
 				{:else if paragraphs.length > 0}
-					<div class={`reader-content mx-auto max-w-2xl ${readerFontClass}`}>
-						{#each paragraphs as paragraph}
-							<p>{paragraph}</p>
+					<div class={`reader-content mx-auto max-w-[42rem] ${readerFontClass}`}>
+						{#each paragraphs as paragraph, index (index)}
+							<p class="reader-paragraph">{paragraph}</p>
 						{/each}
 					</div>
 				{:else}
@@ -597,15 +577,27 @@
 	.reader-content {
 		font-family:
 			'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
-		letter-spacing: 0.005em;
+		letter-spacing: 0.01em;
+		word-spacing: 0.01em;
 	}
 
-	.reader-content p + p {
-		margin-top: 1.45rem;
-	}
-
-	.reader-content p {
+	.reader-content p.reader-paragraph {
+		margin: 0;
 		text-wrap: pretty;
+		text-align: justify;
+		text-justify: inter-word;
+		hyphens: auto;
+		-webkit-hyphens: auto;
+	}
+
+	.reader-content p.reader-paragraph + p.reader-paragraph {
+		margin-top: 1.65rem;
+	}
+
+	@media (min-width: 768px) {
+		.reader-content p.reader-paragraph + p.reader-paragraph {
+			margin-top: 1.85rem;
+		}
 	}
 
 	.book-paper::before {
