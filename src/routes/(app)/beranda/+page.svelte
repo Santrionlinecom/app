@@ -17,6 +17,47 @@
 	let eventSource: EventSource | null = null;
 	let isInitialLoad = false;
 
+	const leftNav = [
+		{
+			label: 'Dashboard',
+			href: '/dashboard',
+			desc: 'Ringkasan lembaga',
+			icon: 'M3 13h8V3H3v10Zm10 8h8V11h-8v10ZM3 21h8v-6H3v6Zm10-12h8V3h-8v6Z'
+		},
+		{
+			label: 'Misi Habit',
+			href: '/habit',
+			desc: '3 misi harian',
+			icon: 'M5 12l5 5L20 7'
+		},
+		{
+			label: 'Belajar',
+			href: '/belajar',
+			desc: 'Ilmu & materi',
+			icon: 'M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM8 7h8M8 11h7M8 15h6'
+		},
+		{
+			label: 'Akun',
+			href: '/akun',
+			desc: 'Profil & keamanan',
+			icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0H5z'
+		}
+	];
+
+	const adabTips = [
+		'Bagikan manfaat, bukan aib orang lain.',
+		'Apresiasi teman tanpa merendahkan.',
+		'Uzur dan kekurangan ibadah bersifat privat.',
+		'Tulis seolah dibaca ustadz dan orang tua.'
+	];
+
+	const contentPillars = [
+		{ label: 'Amal', note: 'habit & kebaikan (opt-in)' },
+		{ label: 'Ilmu', note: 'hafalan, sirah, fiqih praktis' },
+		{ label: 'Adab', note: 'ukhuwah & adab digital' },
+		{ label: 'Skill', note: 'karya & kompetensi halal' }
+	];
+
 	const upsertPost = (post: Post) => {
 		if (posts.some((item) => item.id === post.id)) return;
 		posts = [post, ...posts];
@@ -80,75 +121,210 @@
 </script>
 
 <svelte:head>
-	<title>Beranda Sosial SantriOnline</title>
+	<title>Sosial · {data.org?.name ?? 'SantriOnline'}</title>
 </svelte:head>
 
-<div class="mx-auto w-full max-w-full min-w-0 px-4 sm:max-w-3xl sm:px-6 lg:px-8">
-<div class="space-y-5">
-	<header class="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-600 to-teal-700 p-5 text-white shadow-sm">
-		<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-100">Beranda</p>
-		<h1 class="mt-2 text-2xl font-bold sm:text-3xl">Sosial {data.org?.name ?? 'Lembaga'}</h1>
-		<p class="mt-2 text-sm leading-6 text-emerald-50">
-			Feed internal tertutup untuk anggota lembaga. Postingan hanya terlihat oleh anggota lembaga yang sama.
-		</p>
+<div class="mx-auto w-full max-w-[1400px] min-w-0">
+	<!-- Hero -->
+	<header
+		class="overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-700 via-teal-700 to-so-green p-5 text-white shadow-sm sm:p-6"
+	>
+		<div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+			<div class="min-w-0">
+				<p class="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-100/90">
+					Komunitas · Sosial Ala Santri
+				</p>
+				<h1 class="mt-2 font-display text-2xl font-bold tracking-tight sm:text-3xl">
+					Ummah {data.org?.name ?? 'Lembaga'}
+				</h1>
+				<p class="mt-2 max-w-2xl text-sm leading-6 text-emerald-50/95">
+					Ruang ukhuwah internal lembaga: berbagi amal, ilmu, adab, dan skill — dengan adab digital.
+					Bukan media sosial bebas; postingan hanya terlihat anggota lembaga yang sama.
+				</p>
+			</div>
+			<div class="flex flex-wrap gap-2">
+				{#each contentPillars as pillar}
+					<span
+						class="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur"
+						title={pillar.note}
+					>
+						{pillar.label}
+					</span>
+				{/each}
+			</div>
+		</div>
 	</header>
 
-	<DailyStreakWidget {data} />
+	<!-- 3-col desktop / 1-col mobile -->
+	<div class="mt-5 grid gap-5 xl:grid-cols-[240px_minmax(0,1fr)_280px]">
+		<!-- Left rail -->
+		<aside class="hidden space-y-4 xl:block">
+			<section class="rounded-2xl border border-so-border/80 bg-white p-4 shadow-sm">
+				<p class="text-[11px] font-bold uppercase tracking-[0.16em] text-so-muted">Pintasan</p>
+				<nav class="mt-3 grid gap-1.5">
+					{#each leftNav as item}
+						<a
+							href={item.href}
+							class="flex items-start gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800"
+						>
+							<span
+								class="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-sm"
+							>
+								<svg
+									class="h-4 w-4"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.9"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<path d={item.icon} />
+								</svg>
+							</span>
+							<span class="min-w-0">
+								<span class="block truncate">{item.label}</span>
+								<span class="mt-0.5 block text-xs font-medium text-slate-500">{item.desc}</span>
+							</span>
+						</a>
+					{/each}
+				</nav>
+			</section>
 
-	<PostComposer currentUser={data.currentUser} on:created={(event) => upsertPost(event.detail.post)} />
+			<section class="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 shadow-sm">
+				<p class="text-sm font-bold text-emerald-900">Kenapa beda dari FB?</p>
+				<ul class="mt-2 space-y-2 text-xs leading-5 text-emerald-900/85">
+					<li>· Feed tertutup lembaga</li>
+					<li>· Tanpa ranking ketakwaan</li>
+					<li>· Fokus manfaat, bukan viral</li>
+					<li>· Moderasi ustadz/admin</li>
+				</ul>
+			</section>
+		</aside>
 
-	{#if isInitialLoad}
-		<div class="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
-			<LoadingState message="Memuat feed sosial..." />
-		</div>
-	{:else if posts.length === 0}
-		<section class="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
-			<EmptyState
-				icon="✨"
-				title="Belum ada postingan"
-				description="Jadilah yang pertama berbagi manfaat, inspirasi, atau kabar baik hari ini untuk anggota lembaga."
+		<!-- Center feed -->
+		<section class="min-w-0 space-y-4">
+			<!-- Mobile-only quick links -->
+			<div class="flex gap-2 overflow-x-auto pb-1 xl:hidden">
+				{#each leftNav as item}
+					<a
+						href={item.href}
+						class="shrink-0 rounded-full border border-so-border bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm"
+					>
+						{item.label}
+					</a>
+				{/each}
+			</div>
+
+			<PostComposer
+				currentUser={data.currentUser}
+				on:created={(event) => upsertPost(event.detail.post)}
 			/>
+
+			{#if isInitialLoad}
+				<div class="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
+					<LoadingState message="Memuat feed sosial..." />
+				</div>
+			{:else if posts.length === 0}
+				<section class="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
+					<EmptyState
+						icon="🤝"
+						title="Belum ada jejak ukhuwah"
+						description="Jadilah yang pertama berbagi manfaat: ilmu, adab, habit (opsional), atau karya skill — dengan adab."
+					/>
+				</section>
+			{:else}
+				<div class="space-y-4">
+					{#each posts as post (post.id)}
+						<PostCard
+							{post}
+							currentUserId={data.currentUser.id}
+							on:hidden={(event) => hidePost(event.detail.id)}
+							on:changed={(event) => updatePost(event.detail.post)}
+						/>
+					{/each}
+				</div>
+			{/if}
+
+			{#if loadError}
+				<div class="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
+					<ErrorState
+						title="Gagal memuat feed"
+						message={loadError}
+						onRetry={loadMore}
+						compact={true}
+					/>
+				</div>
+			{/if}
+
+			{#if cursor}
+				{#if isLoadingMore}
+					<div class="rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm">
+						<LoadingState message="Memuat postingan..." compact={true} />
+					</div>
+				{:else}
+					<div class="flex justify-center">
+						<button
+							type="button"
+							class="min-h-[44px] rounded-full border border-emerald-200 bg-white px-6 py-3 text-sm font-bold text-emerald-700 shadow-sm transition hover:bg-emerald-50 active:scale-95"
+							on:click={loadMore}
+						>
+							Muat lebih banyak
+						</button>
+					</div>
+				{/if}
+			{/if}
 		</section>
-	{:else}
-		<div class="space-y-4">
-			{#each posts as post (post.id)}
-				<PostCard
-					{post}
-					currentUserId={data.currentUser.id}
-					on:hidden={(event) => hidePost(event.detail.id)}
-					on:changed={(event) => updatePost(event.detail.post)}
-				/>
-			{/each}
-		</div>
-	{/if}
 
-	{#if loadError}
-		<div class="rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
-			<ErrorState
-				title="Gagal memuat feed"
-				message={loadError}
-				onRetry={loadMore}
-				compact={true}
-			/>
-		</div>
-	{/if}
+		<!-- Right rail -->
+		<aside class="space-y-4">
+			<section class="rounded-2xl border border-so-border/80 bg-white p-4 shadow-sm">
+				<p class="text-[11px] font-bold uppercase tracking-[0.16em] text-so-muted">Lembaga</p>
+				<p class="mt-2 text-base font-bold text-so-ink">{data.org?.name ?? 'Lembaga Anda'}</p>
+				<p class="mt-1 text-sm capitalize text-so-muted">
+					{(data.org?.type ?? 'lembaga').replace('-', ' ')} · feed internal
+				</p>
+				<div class="mt-4 grid gap-2">
+					<a
+						href="/dashboard"
+						class="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-center text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100"
+					>
+						Buka dashboard
+					</a>
+					<a
+						href="/habit"
+						class="rounded-xl border border-so-border bg-slate-50 px-3 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+					>
+						Isi misi habit
+					</a>
+				</div>
+			</section>
 
-	{#if cursor}
-		{#if isLoadingMore}
-			<div class="rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm">
-				<LoadingState message="Memuat postingan..." compact={true} />
+			<section class="rounded-2xl border border-amber-100 bg-amber-50/80 p-4 shadow-sm">
+				<p class="text-sm font-bold text-amber-950">Adab digital</p>
+				<ul class="mt-2 space-y-2 text-xs leading-5 text-amber-950/85">
+					{#each adabTips as tip}
+						<li class="flex gap-2">
+							<span class="mt-0.5 text-amber-700">•</span>
+							<span>{tip}</span>
+						</li>
+					{/each}
+				</ul>
+			</section>
+
+			<div class="rounded-2xl border border-so-border/80 bg-white p-1 shadow-sm">
+				<DailyStreakWidget {data} />
 			</div>
-		{:else}
-			<div class="flex justify-center">
-				<button
-					type="button"
-					class="min-h-[44px] rounded-full border border-emerald-200 bg-white px-6 py-3 text-sm font-bold text-emerald-600 shadow-sm transition hover:bg-emerald-50 active:scale-95"
-					on:click={loadMore}
-				>
-					Muat lebih banyak
-				</button>
-			</div>
-		{/if}
-	{/if}
-</div>
+
+			<!-- Mobile: compact “why different” -->
+			<section class="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 shadow-sm xl:hidden">
+				<p class="text-sm font-bold text-emerald-900">Sosial Ala Santri</p>
+				<p class="mt-1 text-xs leading-5 text-emerald-900/85">
+					Hangat seperti komunitas, profesional seperti jejak karya — tanpa viral kosong dan tanpa
+					pamer aib.
+				</p>
+			</section>
+		</aside>
+	</div>
 </div>

@@ -38,22 +38,23 @@
 	};
 </script>
 
-<article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+<article class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-black/[0.02] sm:p-5">
 	<header class="flex items-start justify-between gap-3">
 		<div class="flex min-w-0 items-start gap-3">
 			{#if post.user_avatar_url}
-				<img src={post.user_avatar_url} alt="" class="h-11 w-11 rounded-full object-cover" loading="lazy" />
+				<img src={post.user_avatar_url} alt="" class="h-11 w-11 rounded-full object-cover ring-2 ring-emerald-50" loading="lazy" />
 			{:else}
-				<div class={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white ${avatarColor(post.user_id)}`}>
+				<div class={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white ring-2 ring-emerald-50 ${avatarColor(post.user_id)}`}>
 					{initials(post.user_name)}
 				</div>
 			{/if}
 			<div class="min-w-0">
 				<div class="flex flex-wrap items-center gap-2">
 					<p class="break-words font-bold text-slate-950">{post.user_name}</p>
+					<span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold capitalize text-slate-600">{post.user_role}</span>
 					<span class="text-sm text-slate-400">{formatRelativeTime(post.created_at)}</span>
 				</div>
-				<p class="mt-0.5 text-sm capitalize text-slate-500">{post.user_role}</p>
+				<p class="mt-0.5 text-xs text-slate-500">Anggota ummah lembaga</p>
 			</div>
 		</div>
 

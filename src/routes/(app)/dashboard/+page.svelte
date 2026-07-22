@@ -438,11 +438,11 @@
 								tone: 'from-violet-50 to-indigo-100 text-indigo-900'
 							},
 							{
-								label: 'Sosial',
-								desc: 'Feed internal jamaah musholla.',
-								href: '/beranda',
-								tone: 'from-lime-50 to-emerald-100 text-lime-900'
-							}
+							label: 'Sosial',
+							desc: 'Feed internal jamaah musholla.',
+							href: '/beranda',
+							tone: 'from-lime-50 to-emerald-100 text-lime-900'
+						}
 						]
 					: orgType === 'pondok'
 						? [
@@ -477,11 +477,11 @@
 									tone: 'from-rose-50 to-pink-100 text-rose-900'
 								},
 								{
-									label: 'Sosial',
-									desc: 'Feed internal pondok.',
-									href: '/beranda',
-									tone: 'from-violet-50 to-indigo-100 text-indigo-900'
-								}
+								label: 'Sosial',
+								desc: 'Feed internal pondok.',
+								href: '/beranda',
+								tone: 'from-violet-50 to-indigo-100 text-indigo-900'
+							}
 							]
 						: orgType === 'rumah-tahfidz'
 							? [
@@ -516,11 +516,11 @@
 										tone: 'from-rose-50 to-pink-100 text-rose-900'
 									},
 									{
-										label: 'Sosial',
-										desc: 'Feed internal rumah tahfidz.',
-										href: '/beranda',
-										tone: 'from-violet-50 to-indigo-100 text-indigo-900'
-									}
+									label: 'Sosial',
+									desc: 'Feed internal rumah tahfidz.',
+									href: '/beranda',
+									tone: 'from-violet-50 to-indigo-100 text-indigo-900'
+								}
 								]
 							: [
 									{
@@ -554,11 +554,11 @@
 										tone: 'from-rose-50 to-pink-100 text-rose-900'
 									},
 									{
-										label: 'Sosial Santri',
-										desc: 'Feed internal santri dan pengajar.',
-										href: '/beranda',
-										tone: 'from-violet-50 to-indigo-100 text-indigo-900'
-									}
+									label: 'Sosial Santri',
+									desc: 'Feed internal santri dan pengajar.',
+									href: '/beranda',
+									tone: 'from-violet-50 to-indigo-100 text-indigo-900'
+								}
 								];
 
 		pending = data?.pending ?? [];
