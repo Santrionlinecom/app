@@ -789,37 +789,37 @@ const mobileExploreLinks = [
 		label: 'Semua Fitur',
 		href: '/fitur',
 		note: 'Program pembinaan aktif',
-		tone: 'border-emerald-200 bg-emerald-50 text-emerald-600'
+		tone: 'border-emerald-200 bg-emerald-50 text-so-green'
 	},
 	{
 		label: 'Buku',
 		href: '/buku',
 		note: 'Buku digital dan bab premium',
-		tone: 'border-emerald-200 bg-white text-emerald-600'
+		tone: 'border-emerald-200 bg-white text-so-green'
 	},
 	{
 		label: 'Blog',
 		href: '/blog',
 		note: 'Artikel dan digital store',
-		tone: 'border-slate-200 bg-slate-50 text-slate-700'
+		tone: 'border-slate-200 bg-slate-50 text-so-muted'
 	},
 	{
 		label: 'Tokoh',
 		href: '/tokoh',
 		note: 'Nabi sampai ulama',
-		tone: 'border-amber-200 bg-amber-50 text-amber-700'
+		tone: 'border-amber-200 bg-amber-50 text-so-green'
 	},
 	{
 		label: 'Dinasti',
 		href: '/dinasti',
 		note: 'Peta peradaban Islam',
-		tone: 'border-sky-200 bg-sky-50 text-sky-700'
+		tone: 'border-sky-200 bg-sky-50 text-so-green-2'
 	},
 	{
 		label: 'Ormas',
 		href: '/ormas',
 		note: 'Afiliasi dan asal-usul',
-		tone: 'border-emerald-200 bg-emerald-50 text-emerald-600'
+		tone: 'border-emerald-200 bg-emerald-50 text-so-green'
 	},
 	{
 		label: 'Mushaf',
@@ -1164,8 +1164,8 @@ $: if (pathname !== previousPathname) {
 								loading="lazy"
 							/>
 							<div class="min-w-0">
-								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Santri Online</p>
-								<p class="truncate text-sm font-semibold text-slate-950">{mobileContext.label}</p>
+								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-so-green">Santri Online</p>
+								<p class="truncate text-sm font-semibold text-so-ink">{mobileContext.label}</p>
 								<p class="truncate text-xs text-slate-500">{mobileContext.note}</p>
 							</div>
 						</a>
@@ -1173,13 +1173,13 @@ $: if (pathname !== previousPathname) {
 						<div class="flex items-center gap-2">
 							<a
 								href={mobilePrimaryAction.href}
-								class="inline-flex h-11 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-600 shadow-sm"
+								class="inline-flex h-11 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-so-green shadow-sm"
 							>
 								{mobilePrimaryAction.label}
 							</a>
 							<button
 								type="button"
-								class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-emerald-200 hover:text-emerald-600"
+								class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-so-muted shadow-sm transition hover:border-emerald-200 hover:text-so-green"
 								aria-label="Buka menu mobile"
 								on:click={() => (mobileMenuOpen = true)}
 							>
@@ -1237,7 +1237,7 @@ $: if (pathname !== previousPathname) {
 							<div class="mt-2 border-t border-slate-200/80 pt-2">
 								<a
 									href={activeMobileTopMenu.footerHref}
-									class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600"
+									class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-so-green"
 									on:click={() => (mobileTopMenuOpen = null)}
 								>
 									{activeMobileTopMenu.footerLabel}
@@ -1283,7 +1283,7 @@ $: if (pathname !== previousPathname) {
 									<div class="desktop-dropdown-panel">
 									<a href="/buku" class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm transition hover:bg-emerald-100">
 										<p class="font-semibold text-emerald-900">Baca Buku</p>
-										<p class="mt-1 text-xs leading-5 text-emerald-600">Bab gratis dan premium pakai coin.</p>
+										<p class="mt-1 text-xs leading-5 text-so-green">Bab gratis dan premium pakai coin.</p>
 									</a>
 									<div class="mt-2 grid gap-1">
 										{#each bookMenuItems as item}
@@ -1389,7 +1389,7 @@ $: if (pathname !== previousPathname) {
 										<div class="grid gap-3 md:grid-cols-2">
 											<div class="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-3">
 												<p class="text-sm font-semibold text-emerald-950">Daftarkan Lembaga</p>
-												<p class="mt-1 text-xs leading-5 text-emerald-600">
+												<p class="mt-1 text-xs leading-5 text-so-green">
 													Untuk admin TPQ, pondok, masjid, musholla, atau rumah tahfidz.
 												</p>
 												<div class="mt-2 grid gap-1">
@@ -1403,7 +1403,7 @@ $: if (pathname !== previousPathname) {
 											</div>
 
 											<div class="rounded-2xl border border-slate-200 bg-white p-3">
-												<p class="text-sm font-semibold text-slate-950">Daftar sebagai Santri/Jamaah</p>
+												<p class="text-sm font-semibold text-so-ink">Daftar sebagai Santri/Jamaah</p>
 												<p class="mt-1 text-xs leading-5 text-slate-500">
 													Pilih lembaga aktif, lalu gunakan halaman pendaftaran anggotanya.
 												</p>
@@ -1476,14 +1476,14 @@ $: if (pathname !== previousPathname) {
 					{#if !data.user}
 						<section>
 							<div class="mb-3">
-								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Daftar</p>
-								<h3 class="mt-1 text-lg font-semibold text-slate-950">Pilih jalur pendaftaran</h3>
+								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-so-green">Daftar</p>
+								<h3 class="mt-1 text-lg font-semibold text-so-ink">Pilih jalur pendaftaran</h3>
 							</div>
 
 							<div class="grid gap-3">
 								<div class="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/80 p-4">
 									<p class="text-sm font-semibold text-emerald-950">Daftarkan Lembaga</p>
-									<p class="mt-1 text-xs leading-5 text-emerald-600">
+									<p class="mt-1 text-xs leading-5 text-so-green">
 										Untuk admin TPQ, pondok, masjid, musholla, dan rumah tahfidz.
 									</p>
 									<div class="mt-3 grid gap-2">
@@ -1496,13 +1496,13 @@ $: if (pathname !== previousPathname) {
 								</div>
 
 								<div class="rounded-[1.5rem] border border-slate-200/80 bg-white p-4">
-									<p class="text-sm font-semibold text-slate-950">Daftar sebagai Santri/Jamaah</p>
+									<p class="text-sm font-semibold text-so-ink">Daftar sebagai Santri/Jamaah</p>
 									<p class="mt-1 text-xs leading-5 text-slate-500">
 										Pilih direktori lembaga dulu, lalu gunakan tautan pendaftaran anggota.
 									</p>
 									<div class="mt-3 grid gap-2">
 										{#each memberRegisterMenuItems as item}
-											<a href={item.href} class="rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+											<a href={item.href} class="rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-sm font-semibold text-so-muted shadow-sm">
 												{item.label}
 											</a>
 										{/each}
@@ -1515,10 +1515,10 @@ $: if (pathname !== previousPathname) {
 					<section>
 						<div class="mb-3 flex items-center justify-between gap-3">
 							<div>
-								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Jalur cepat</p>
-								<h3 class="mt-1 text-lg font-semibold text-slate-950">Area utama produk</h3>
+								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-so-green">Jalur cepat</p>
+								<h3 class="mt-1 text-lg font-semibold text-so-ink">Area utama produk</h3>
 							</div>
-							<a href="/fitur" class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">Semua fitur</a>
+							<a href="/fitur" class="text-xs font-semibold uppercase tracking-[0.18em] text-so-green">Semua fitur</a>
 						</div>
 
 						<div class="grid grid-cols-2 gap-3">
@@ -1536,17 +1536,17 @@ $: if (pathname !== previousPathname) {
 					<section>
 						<div class="mb-3 flex items-center justify-between gap-3">
 							<div>
-								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Buku dan coin</p>
-								<h3 class="mt-1 text-lg font-semibold text-slate-950">Buku Digital SantriOnline</h3>
+								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-so-green">Buku dan coin</p>
+								<h3 class="mt-1 text-lg font-semibold text-so-ink">Buku Digital SantriOnline</h3>
 							</div>
-							<a href="/buku" class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">Buka buku</a>
+							<a href="/buku" class="text-xs font-semibold uppercase tracking-[0.18em] text-so-green">Buka buku</a>
 						</div>
 
 						<div class="grid grid-cols-2 gap-3">
 							{#each bookMenuItems as item}
 								<a href={item.href} class="rounded-[1.35rem] border border-emerald-100 bg-emerald-50/70 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
 									<p class="text-sm font-semibold text-emerald-950">{item.label}</p>
-									<p class="mt-2 text-xs leading-5 text-emerald-600">{item.note}</p>
+									<p class="mt-2 text-xs leading-5 text-so-green">{item.note}</p>
 								</a>
 							{/each}
 						</div>
@@ -1555,8 +1555,8 @@ $: if (pathname !== previousPathname) {
 					{#if isSuperAdmin}
 						<section>
 							<div class="mb-3">
-								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Admin</p>
-								<h3 class="mt-1 text-lg font-semibold text-slate-950">Buku, royalti, dan topup</h3>
+								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-so-green">Admin</p>
+								<h3 class="mt-1 text-lg font-semibold text-so-ink">Buku, royalti, dan topup</h3>
 							</div>
 
 							<div class="space-y-2">
@@ -1575,8 +1575,8 @@ $: if (pathname !== previousPathname) {
 
 					<section>
 						<div class="mb-3">
-							<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Program pembinaan</p>
-							<h3 class="mt-1 text-lg font-semibold text-slate-950">Fitur aktif</h3>
+							<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-so-green">Program pembinaan</p>
+							<h3 class="mt-1 text-lg font-semibold text-so-ink">Fitur aktif</h3>
 						</div>
 
 						<div class="space-y-2">
@@ -1597,8 +1597,8 @@ $: if (pathname !== previousPathname) {
 
 					<section>
 						<div class="mb-3">
-							<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Kategori kitab</p>
-							<h3 class="mt-1 text-lg font-semibold text-slate-950">Masuk langsung ke kitab</h3>
+							<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-so-green">Kategori kitab</p>
+							<h3 class="mt-1 text-lg font-semibold text-so-ink">Masuk langsung ke kitab</h3>
 						</div>
 
 						<div class="grid grid-cols-2 gap-3">
@@ -1644,21 +1644,21 @@ $: if (pathname !== previousPathname) {
 
 					<section class="space-y-3">
 						<div>
-							<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-600">Akun dan akses</p>
-							<h3 class="mt-1 text-lg font-semibold text-slate-950">Langkah berikutnya</h3>
+							<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-so-green">Akun dan akses</p>
+							<h3 class="mt-1 text-lg font-semibold text-so-ink">Langkah berikutnya</h3>
 						</div>
 
 						<div class="grid gap-3">
-							<a href="/kalender" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+							<a href="/kalender" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-so-muted shadow-sm">
 								Buka Kalender
 							</a>
 
 							{#if data.user}
-								<a href="/akun" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+								<a href="/akun" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-so-muted shadow-sm">
 									Kelola Profil
 								</a>
 								{#if isImpersonating}
-									<a href="/admin/super/impersonate/stop" class="rounded-[1.3rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700 shadow-sm">
+									<a href="/admin/super/impersonate/stop" class="rounded-[1.3rem] border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-so-green shadow-sm">
 										Keluar Mode Admin
 									</a>
 								{/if}
@@ -1668,13 +1668,13 @@ $: if (pathname !== previousPathname) {
 									</button>
 								</form>
 							{:else}
-								<a href="/auth" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+								<a href="/auth" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-so-muted shadow-sm">
 									Login
 								</a>
-								<a href="/register" class="rounded-[1.3rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-600 shadow-sm">
+								<a href="/register" class="rounded-[1.3rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-so-green shadow-sm">
 									Daftarkan Lembaga
 								</a>
-								<a href="/tpq" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm">
+								<a href="/tpq" class="rounded-[1.3rem] border border-slate-200/80 bg-white px-4 py-3 text-sm font-semibold text-so-muted shadow-sm">
 									Daftar sebagai Santri/Jamaah
 								</a>
 							{/if}
@@ -1699,19 +1699,19 @@ $: if (pathname !== previousPathname) {
 				<div>
 					<a href="/" class="inline-flex items-center gap-2">
 						<img src="/logo-santri.png" alt="SantriOnline" class="h-8 w-auto" loading="lazy" />
-						<span class="text-sm font-semibold text-slate-950">SantriOnline</span>
+						<span class="text-sm font-semibold text-so-ink">SantriOnline</span>
 					</a>
 					<p class="mt-3 max-w-xl text-sm leading-6 text-slate-500">
 						Platform ekosistem pesantren digital untuk belajar Islam, kitab, buku, hafalan, dan manajemen lembaga.
 					</p>
 				</div>
-				<nav aria-label="Footer" class="grid gap-2 text-sm font-semibold text-slate-600 sm:grid-cols-2 md:min-w-[22rem]">
-					<a href="/tentang" class="hover:text-emerald-600">Tentang SantriOnline</a>
-					<a href="/kontak" class="hover:text-emerald-600">Kontak</a>
-					<a href="/privacy" class="hover:text-emerald-600">Kebijakan Privasi</a>
-					<a href="/syarat" class="hover:text-emerald-600">Syarat dan Ketentuan</a>
-					<a href="/buku" class="hover:text-emerald-600">Buku Digital</a>
-					<a href="/blog" class="hover:text-emerald-600">Blog SantriOnline</a>
+				<nav aria-label="Footer" class="grid gap-2 text-sm font-semibold text-so-muted sm:grid-cols-2 md:min-w-[22rem]">
+					<a href="/tentang" class="hover:text-so-green">Tentang SantriOnline</a>
+					<a href="/kontak" class="hover:text-so-green">Kontak</a>
+					<a href="/privacy" class="hover:text-so-green">Kebijakan Privasi</a>
+					<a href="/syarat" class="hover:text-so-green">Syarat dan Ketentuan</a>
+					<a href="/buku" class="hover:text-so-green">Buku Digital</a>
+					<a href="/blog" class="hover:text-so-green">Blog SantriOnline</a>
 				</nav>
 			</div>
 		</footer>
@@ -1810,12 +1810,12 @@ $: if (pathname !== previousPathname) {
 		>
 			<button
 				type="button"
-				class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
+				class="absolute inset-0 bg-so-green-3/55 backdrop-blur-sm"
 				aria-label="Tutup popup instalasi"
 				on:click={() => dismissInstallPopup()}
 			></button>
 			<div
-				class="relative w-full max-w-[18.5rem] overflow-hidden rounded-xl border border-white/80 bg-white shadow-[0_16px_42px_rgba(15,23,42,0.22)] sm:max-w-sm"
+				class="relative w-full max-w-[18.5rem] overflow-hidden rounded-2xl border border-so-border bg-so-surface shadow-soft sm:max-w-sm"
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby="install-dialog-title"
@@ -1824,31 +1824,31 @@ $: if (pathname !== previousPathname) {
 			>
 				<button
 					type="button"
-					class="absolute right-2.5 top-2.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/35 bg-white/90 text-slate-700 shadow-sm transition hover:bg-white"
+					class="absolute right-2.5 top-2.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-so-border bg-so-surface/95 text-so-muted shadow-sm transition hover:bg-so-cream"
 					on:click={() => dismissInstallPopup()}
 					aria-label="Tutup"
 				>
 					<X class="h-3 w-3" />
 				</button>
-				<div class="bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.34),transparent_38%),linear-gradient(135deg,#052e16,#065f46_48%,#0f766e)] px-3 pb-3 pt-3 text-white sm:px-4">
+				<div class="bg-[radial-gradient(circle_at_top_left,rgba(201,168,76,0.28),transparent_38%),linear-gradient(135deg,#0f2f24,#1b4332_48%,#2d6a4f)] px-3 pb-3 pt-3 text-white sm:px-4">
 					<div class="flex items-start gap-2.5 pr-8">
-						<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/12 p-1.5 shadow-md shadow-emerald-950/20">
+						<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/12 p-1.5 shadow-md shadow-so-green-3/20">
 							<img src="/icons/icon-192.png" alt="" class="h-6 w-6 rounded-md" loading="lazy" />
 						</div>
 						<div class="min-w-0">
-							<p class="text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-100">
+							<p class="text-[9px] font-semibold uppercase tracking-[0.18em] text-so-gold-2">
 								{deferredInstallPrompt ? 'Siap diinstall' : installMode === 'ios' ? 'iOS dan iPadOS' : 'Android resmi'}
 							</p>
 							<h2 id="install-dialog-title" class="mt-1 text-base font-semibold leading-tight sm:text-lg">
 								Pasang Santri Online di layar utama
 							</h2>
-							<p class="mt-1.5 text-[11px] leading-4 text-emerald-50/90 sm:text-xs">
+							<p class="mt-1.5 text-[11px] leading-4 text-white/85 sm:text-xs">
 								Akses hafalan, kitab, buku digital, kalender, dan dashboard lembaga dengan pengalaman yang terasa seperti aplikasi.
 							</p>
 						</div>
 					</div>
 
-					<div class="mt-2 flex flex-wrap gap-1 text-[10px] font-semibold text-emerald-950">
+					<div class="mt-2 flex flex-wrap gap-1 text-[10px] font-semibold text-so-green-3">
 						<span class="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5">
 							<BadgeCheck class="h-2.5 w-2.5" />
 							Resmi
@@ -1866,42 +1866,42 @@ $: if (pathname !== previousPathname) {
 
 				<div class="max-h-[calc(100vh-10rem)] min-h-0 overflow-y-auto px-3 py-3 sm:max-h-[calc(100vh-7rem)] sm:px-4">
 					<div class="grid gap-2 sm:grid-cols-3">
-						<div class="rounded-lg border border-emerald-100 bg-emerald-50 p-2">
-							<Smartphone class="h-3.5 w-3.5 text-emerald-600" />
-							<p class="mt-1.5 text-[11px] font-semibold text-slate-950">Shortcut app</p>
-							<p class="mt-0.5 text-[10px] leading-3.5 text-slate-600">Buka dari home screen.</p>
+						<div class="rounded-lg border border-so-border bg-so-cream p-2">
+							<Smartphone class="h-3.5 w-3.5 text-so-green" />
+							<p class="mt-1.5 text-[11px] font-semibold text-so-ink">Shortcut app</p>
+							<p class="mt-0.5 text-[10px] leading-3.5 text-so-muted">Buka dari home screen.</p>
 						</div>
-						<div class="rounded-lg border border-sky-100 bg-sky-50 p-2">
-							<RefreshCw class="h-3.5 w-3.5 text-sky-700" />
-							<p class="mt-1.5 text-[11px] font-semibold text-slate-950">Versi terbaru</p>
-							<p class="mt-0.5 text-[10px] leading-3.5 text-slate-600">Update otomatis.</p>
+						<div class="rounded-lg border border-so-border bg-so-surface p-2">
+							<RefreshCw class="h-3.5 w-3.5 text-so-green-2" />
+							<p class="mt-1.5 text-[11px] font-semibold text-so-ink">Versi terbaru</p>
+							<p class="mt-0.5 text-[10px] leading-3.5 text-so-muted">Update otomatis.</p>
 						</div>
-						<div class="rounded-lg border border-amber-100 bg-amber-50 p-2">
-							<BadgeCheck class="h-3.5 w-3.5 text-amber-700" />
-							<p class="mt-1.5 text-[11px] font-semibold text-slate-950">Akses aman</p>
-							<p class="mt-0.5 text-[10px] leading-3.5 text-slate-600">Install resmi.</p>
+						<div class="rounded-lg border border-so-gold/30 bg-so-gold-2/25 p-2">
+							<BadgeCheck class="h-3.5 w-3.5 text-so-green" />
+							<p class="mt-1.5 text-[11px] font-semibold text-so-ink">Akses aman</p>
+							<p class="mt-0.5 text-[10px] leading-3.5 text-so-muted">Install resmi.</p>
 						</div>
 					</div>
 
-					<div class="mt-2.5 rounded-lg border border-slate-200 bg-slate-50 p-2.5">
+					<div class="mt-2.5 rounded-lg border border-so-border bg-so-cream p-2.5">
 						{#if deferredInstallPrompt}
-							<p class="text-xs font-semibold text-slate-950">Install langsung dari browser</p>
-							<p class="mt-1 text-[11px] leading-4 text-slate-600">
+							<p class="text-xs font-semibold text-so-ink">Install langsung dari browser</p>
+							<p class="mt-1 text-[11px] leading-4 text-so-muted">
 								Klik tombol install, lalu konfirmasi pada prompt bawaan Chrome, Edge, atau browser Chromium lain.
 							</p>
 						{:else if installMode === 'ios'}
 							<div class="flex items-start gap-2.5">
-								<Share2 class="mt-0.5 h-4 w-4 shrink-0 text-slate-700" />
+								<Share2 class="mt-0.5 h-4 w-4 shrink-0 text-so-muted" />
 								<div>
-									<p class="text-xs font-semibold text-slate-950">Untuk Safari iPhone atau iPad</p>
-									<p class="mt-1 text-[11px] leading-4 text-slate-600">
+									<p class="text-xs font-semibold text-so-ink">Untuk Safari iPhone atau iPad</p>
+									<p class="mt-1 text-[11px] leading-4 text-so-muted">
 										Buka menu Bagikan, pilih “Add to Home Screen”, lalu simpan Santri Online.
 									</p>
 								</div>
 							</div>
 						{:else}
-							<p class="text-xs font-semibold text-slate-950">Fallback Android tersedia</p>
-							<p class="mt-1 text-[11px] leading-4 text-slate-600">
+							<p class="text-xs font-semibold text-so-ink">Fallback Android tersedia</p>
+							<p class="mt-1 text-[11px] leading-4 text-so-muted">
 								Jika tombol install bawaan browser belum muncul, gunakan APK resmi Santri Online khusus Android.
 							</p>
 						{/if}
@@ -1911,7 +1911,7 @@ $: if (pathname !== previousPathname) {
 						{#if deferredInstallPrompt}
 							<button
 								type="button"
-								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-600 disabled:cursor-wait disabled:bg-emerald-600/70 sm:h-11"
+								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-so-green px-4 text-sm font-bold text-white shadow-lg shadow-so-green/20 transition hover:bg-so-green-3 disabled:cursor-wait disabled:bg-so-green/70 sm:h-11"
 								on:click={handleNativeInstall}
 								disabled={installActionBusy}
 							>
@@ -1921,7 +1921,7 @@ $: if (pathname !== previousPathname) {
 						{:else if installMode === 'android'}
 							<a
 								href={apkUrl}
-								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-600 sm:h-11"
+								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-so-green px-4 text-sm font-bold text-white shadow-lg shadow-so-green/20 transition hover:bg-so-green-3 sm:h-11"
 								target="_blank"
 								rel="noopener"
 								on:click={() => dismissInstallPopup('dismiss')}
@@ -1932,7 +1932,7 @@ $: if (pathname !== previousPathname) {
 						{:else}
 							<button
 								type="button"
-								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-600 sm:h-11"
+								class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-so-green px-4 text-sm font-bold text-white shadow-lg shadow-so-green/20 transition hover:bg-so-green-3 sm:h-11"
 								on:click={() => dismissInstallPopup('dismiss')}
 							>
 								<Smartphone class="h-4 w-4" />
@@ -1942,7 +1942,7 @@ $: if (pathname !== previousPathname) {
 
 						<button
 							type="button"
-							class="inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-200 hover:text-emerald-600"
+							class="inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-so-muted transition hover:border-emerald-200 hover:text-so-green"
 							on:click={() => dismissInstallPopup('snooze')}
 						>
 							Nanti saja

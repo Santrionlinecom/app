@@ -134,13 +134,13 @@
 	/>
 </svelte:head>
 
-<div class="home-root min-h-screen overflow-hidden bg-[#f8f3e7] text-[#1d2d24]">
+<div class="home-root min-h-screen overflow-hidden bg-so-cream text-so-ink">
 	<section class="hero relative isolate overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
 		<div class="hero-glow hero-glow-one"></div>
 		<div class="hero-glow hero-glow-two"></div>
 		<div class="mx-auto grid max-w-7xl gap-8 pt-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:pt-10">
 			<div class="hero-copy relative z-10">
-				<div class="hero-badge inline-flex max-w-full items-center gap-2 rounded-full border border-white/20 bg-white/12 px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#f7d878] shadow-sm backdrop-blur">
+				<div class="hero-badge inline-flex max-w-full items-center gap-2 rounded-full border border-white/20 bg-white/12 px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-so-gold-2 shadow-sm backdrop-blur">
 					<Sparkles class="h-4 w-4 shrink-0" strokeWidth={2.4} />
 					<span class="truncate">Aqidah · Adab · Ilmu · Skill · Habit</span>
 				</div>
@@ -171,19 +171,19 @@
 			</div>
 
 			<div class="relative z-10 rounded-[2rem] border border-white/14 bg-white/10 p-4 shadow-2xl backdrop-blur-xl md:p-5">
-				<div class="rounded-[1.5rem] border border-white/16 bg-[#fffaf0] p-4 text-[#183728] shadow-xl md:p-5">
+				<div class="rounded-[1.5rem] border border-white/16 bg-so-surface p-4 text-so-green shadow-xl md:p-5">
 					<div class="flex items-center justify-between gap-3">
 						<div>
-							<p class="text-xs font-black uppercase tracking-[0.2em] text-[#a98418]">Mission Control</p>
-							<h2 class="mt-1 text-2xl font-black tracking-[-0.04em] text-[#123424]">Rapor Pembinaan</h2>
+							<p class="text-xs font-black uppercase tracking-[0.2em] text-so-gold">Mission Control</p>
+							<h2 class="mt-1 text-2xl font-black tracking-[-0.04em] text-so-green">Rapor Pembinaan</h2>
 						</div>
-						<div class="grid h-12 w-12 place-items-center rounded-2xl bg-[#173d2c] text-[#f7d878]">
+						<div class="grid h-12 w-12 place-items-center rounded-2xl bg-so-green text-so-gold-2">
 							<Compass class="h-6 w-6" strokeWidth={2.4} />
 						</div>
 					</div>
 
 					<div class="mt-5 grid gap-3 sm:grid-cols-2">
-						<div class="dash-card bg-[#173d2c] text-white">
+						<div class="dash-card bg-so-green text-white">
 							<p>Habit Ibadah</p>
 							<strong>Streak Subuh + Qur’an</strong>
 							<span>misi harian santri</span>
@@ -198,17 +198,17 @@
 							<strong>Badge Amanah</strong>
 							<span>lisan, waktu, konten</span>
 						</div>
-						<div class="dash-card bg-[#f1dfaa]">
+						<div class="dash-card bg-so-gold-2">
 							<p>Kitab Digital</p>
 							<strong>Rujukan Aswaja</strong>
 							<span>Qur’an, tafsir, turats</span>
 						</div>
 					</div>
 
-					<div class="mt-4 rounded-2xl border border-[#e8d9ad] bg-white p-4">
+					<div class="mt-4 rounded-2xl border border-so-border bg-white p-4">
 						<div class="flex items-center gap-3">
-							<Medal class="h-5 w-5 text-[#b58a13]" strokeWidth={2.4} />
-							<p class="text-sm font-black text-[#173d2c]">Identitas santri digital: beradab, berilmu, disiplin, dan punya misi.</p>
+							<Medal class="h-5 w-5 text-so-gold" strokeWidth={2.4} />
+							<p class="text-sm font-black text-so-green">Identitas santri digital: beradab, berilmu, disiplin, dan punya misi.</p>
 						</div>
 					</div>
 				</div>
@@ -279,10 +279,10 @@
 		</div>
 	</section>
 
-	<section class="bg-[#173d2c] px-4 py-12 text-white sm:px-6 lg:px-8">
+	<section class="bg-so-green px-4 py-12 text-white sm:px-6 lg:px-8">
 		<div class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
 			<div>
-				<p class="text-xs font-black uppercase tracking-[0.24em] text-[#f7d878]">Addon & Pembayaran</p>
+				<p class="text-xs font-black uppercase tracking-[0.24em] text-so-gold-2">Addon & Pembayaran</p>
 				<h2 class="mt-3 max-w-3xl text-3xl font-black tracking-[-0.05em] sm:text-4xl md:text-5xl">Aktifkan modul sesuai kebutuhan, tanpa memaksa lembaga kecil membayar besar.</h2>
 				<p class="mt-5 max-w-2xl text-sm font-semibold leading-7 text-white/75 md:text-base">Katalog addon sekarang diarahkan sebagai permintaan gratis/konfirmasi admin, sehingga lembaga bisa mulai dari kebutuhan paling mendesak.</p>
 				<div class="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -292,19 +292,19 @@
 			</div>
 			<div class="rounded-[1.6rem] border border-white/12 bg-white/8 p-5 backdrop-blur">
 				{#each readiness as item}
-					<div class="check-row"><CheckCircle2 class="h-5 w-5 text-[#f7d878]" strokeWidth={2.4} /><span>{item}</span></div>
+					<div class="check-row"><CheckCircle2 class="h-5 w-5 text-so-gold-2" strokeWidth={2.4} /><span>{item}</span></div>
 				{/each}
 			</div>
 		</div>
 	</section>
 
 	<section class="px-4 py-12 sm:px-6 lg:px-8">
-		<div class="mx-auto max-w-7xl rounded-[2rem] border border-[#eadfbe] bg-white p-5 shadow-sm md:p-8">
+		<div class="mx-auto max-w-7xl rounded-[2rem] border border-so-border bg-white p-5 shadow-sm md:p-8">
 			<div class="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
 				<div>
-					<p class="text-xs font-black uppercase tracking-[0.22em] text-[#a98418]">Akses Cepat</p>
-					<h2 class="mt-3 text-3xl font-black tracking-[-0.05em] text-[#173d2c] md:text-4xl">Masuk ke bagian yang paling sering dipakai.</h2>
-					<p class="mt-4 text-sm font-semibold leading-7 text-[#647067]">Halaman depan dibuat lebih jelas sebagai pintu pembinaan, dashboard lembaga, kitab, addon, dan konten publik.</p>
+					<p class="text-xs font-black uppercase tracking-[0.22em] text-so-gold">Akses Cepat</p>
+					<h2 class="mt-3 text-3xl font-black tracking-[-0.05em] text-so-green md:text-4xl">Masuk ke bagian yang paling sering dipakai.</h2>
+					<p class="mt-4 text-sm font-semibold leading-7 text-so-muted">Halaman depan dibuat lebih jelas sebagai pintu pembinaan, dashboard lembaga, kitab, addon, dan konten publik.</p>
 				</div>
 				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 					{#each quickLinks as link}
@@ -328,7 +328,7 @@
 	.hero {
 		background:
 			radial-gradient(circle at 16% 18%, rgba(247, 216, 120, 0.22), transparent 28rem),
-			linear-gradient(135deg, #0b241a 0%, #173d2c 46%, #22553e 100%);
+			linear-gradient(135deg, #0f2f24 0%, #1b4332 46%, #2d6a4f 100%);
 	}
 
 	.hero-glow {
@@ -344,7 +344,7 @@
 		top: 4rem;
 		height: 18rem;
 		width: 18rem;
-		background: #c9a84c;
+		background: var(--color-so-gold);
 	}
 
 	.hero-glow-two {
@@ -352,7 +352,7 @@
 		left: 20%;
 		height: 16rem;
 		width: 16rem;
-		background: #40755b;
+		background: var(--color-so-green-2);
 	}
 
 	.btn-gold,
@@ -374,8 +374,8 @@
 	}
 
 	.btn-gold {
-		background: #f2cc61;
-		color: #173223;
+		background: var(--color-so-gold);
+		color: var(--color-so-green-3);
 		box-shadow: 0 18px 34px rgba(9, 23, 16, 0.16);
 	}
 
@@ -387,7 +387,7 @@
 	}
 
 	.btn-dark {
-		background: #173d2c;
+		background: var(--color-so-green);
 		color: #ffffff;
 	}
 
@@ -412,7 +412,7 @@
 		font-size: 2rem;
 		line-height: 1;
 		font-weight: 950;
-		color: #f7d878;
+		color: var(--color-so-gold-2);
 	}
 
 	.metric span {
@@ -426,7 +426,7 @@
 	.dash-card {
 		min-height: 8rem;
 		border-radius: 1.25rem;
-		border: 1px solid #eadfbe;
+		border: 1px solid var(--color-so-border);
 		background: white;
 		padding: 1rem;
 	}
@@ -451,7 +451,7 @@
 		font-weight: 950;
 		letter-spacing: 0.22em;
 		text-transform: uppercase;
-		color: #a98418;
+		color: var(--color-so-gold);
 	}
 
 	.section-head h2 {
@@ -461,7 +461,7 @@
 		font-weight: 950;
 		line-height: 0.98;
 		letter-spacing: -0.055em;
-		color: #173d2c;
+		color: var(--color-so-green);
 	}
 
 	.section-head span {
@@ -471,7 +471,7 @@
 		font-size: 0.96rem;
 		font-weight: 650;
 		line-height: 1.8;
-		color: #647067;
+		color: var(--color-so-muted);
 	}
 
 	.sticky-block {
@@ -482,9 +482,9 @@
 	.pillar-card,
 	.workspace-card,
 	.lane-card {
-		border: 1px solid #eadfbe;
+		border: 1px solid var(--color-so-border);
 		border-radius: 1.5rem;
-		background: #fffdf7;
+		background: var(--color-so-surface);
 		padding: 1.25rem;
 		box-shadow: 0 14px 38px rgba(31, 45, 36, 0.06);
 	}
@@ -496,7 +496,7 @@
 		font-size: 1.08rem;
 		font-weight: 950;
 		letter-spacing: -0.035em;
-		color: #173d2c;
+		color: var(--color-so-green);
 	}
 
 	.pillar-card p,
@@ -506,7 +506,7 @@
 		font-size: 0.875rem;
 		font-weight: 620;
 		line-height: 1.7;
-		color: #647067;
+		color: var(--color-so-muted);
 	}
 
 	.icon-badge {
@@ -515,12 +515,12 @@
 		width: 2.75rem;
 		place-items: center;
 		border-radius: 1rem;
-		background: #173d2c;
-		color: #f7d878;
+		background: var(--color-so-green);
+		color: var(--color-so-gold-2);
 	}
 
 	.workspace-card {
-		background: linear-gradient(180deg, #fffdf7, #f8f3e7);
+		background: linear-gradient(180deg, var(--color-so-surface), var(--color-so-cream));
 	}
 
 	.lane-card {
@@ -544,7 +544,7 @@
 		font-weight: 950;
 		letter-spacing: 0.18em;
 		text-transform: uppercase;
-		color: #a98418;
+		color: var(--color-so-gold);
 	}
 
 	.check-row {
@@ -565,14 +565,14 @@
 	.quick-link {
 		min-height: 3.25rem;
 		justify-content: flex-start;
-		border: 1px solid #eadfbe;
-		background: #fffaf0;
+		border: 1px solid var(--color-so-border);
+		background: var(--color-so-surface);
 		padding: 0 1rem;
-		color: #173d2c;
+		color: var(--color-so-green);
 	}
 
 	.quick-link:hover {
-		border-color: #d4b24d;
+		border-color: var(--color-so-gold);
 		box-shadow: 0 12px 22px rgba(31, 45, 36, 0.08);
 	}
 
@@ -586,7 +586,7 @@
 		.hero {
 			padding-top: 0.6rem;
 			padding-bottom: 0.9rem;
-			background: #f7f4ed;
+			background: var(--color-so-cream);
 		}
 
 		.hero-glow {
@@ -597,7 +597,7 @@
 			width: 100%;
 			border: 1px solid rgba(184, 156, 73, 0.18);
 			border-radius: 1.85rem;
-			background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
+			background: linear-gradient(180deg, #ffffff 0%, #faf8f3 100%);
 			padding: 1.05rem;
 			text-align: center;
 			display: flex;
@@ -612,14 +612,14 @@
 			width: 4rem;
 			height: 0.25rem;
 			border-radius: 9999px;
-			background: linear-gradient(90deg, transparent, #d9bf67, transparent);
+			background: linear-gradient(90deg, transparent, #c9a84c, transparent);
 			margin-bottom: 0.4rem;
 		}
 
 		.hero-badge {
 			border-color: rgba(184, 156, 73, 0.24);
 			background: rgba(247, 216, 120, 0.12);
-			color: #8a6a12;
+			color: var(--color-so-gold);
 			justify-content: center;
 			font-size: 0.66rem;
 			letter-spacing: 0.2em;
@@ -630,14 +630,14 @@
 			font-size: clamp(2.05rem, 8.9vw, 2.7rem);
 			line-height: 0.98;
 			letter-spacing: -0.06em;
-			color: #153526;
+			color: var(--color-so-green);
 			text-wrap: balance;
 		}
 
 		.hero-lead {
 			max-width: 31rem;
 			line-height: 1.78;
-			color: #56655d;
+			color: var(--color-so-muted);
 		}
 
 		.hero-actions {
@@ -650,41 +650,41 @@
 		}
 
 		.btn-gold {
-			background: #d9bf67;
-			color: #183524;
+			background: var(--color-so-gold);
+			color: var(--color-so-green-3);
 			box-shadow: none;
 		}
 
 		.btn-glass {
-			border-color: #d8d0ba;
+			border-color: var(--color-so-border);
 			background: #fff;
-			color: #173d2c;
+			color: var(--color-so-green);
 		}
 
 		.metric {
 			text-align: center;
-			background: linear-gradient(180deg, #ffffff, #fffdf7);
+			background: linear-gradient(180deg, #ffffff, #faf8f3);
 			border-color: rgba(184, 156, 73, 0.16);
-			color: #173d2c;
+			color: var(--color-so-green);
 			box-shadow: 0 8px 18px rgba(23, 61, 44, 0.04);
 		}
 
 		.metric strong {
-			color: #c6a23f;
+			color: var(--color-so-gold);
 		}
 
 		.metric span {
-			color: #66746d;
+			color: var(--color-so-muted);
 		}
 
 		.dash-card {
 			border-color: rgba(184, 156, 73, 0.16);
-			background: linear-gradient(180deg, #ffffff, #fffdf8);
+			background: linear-gradient(180deg, #ffffff, #faf8f3);
 			box-shadow: 0 8px 18px rgba(23, 61, 44, 0.04);
 		}
 
 		.dash-card strong {
-			color: #153526;
+			color: var(--color-so-green);
 		}
 
 		.dash-card p,
