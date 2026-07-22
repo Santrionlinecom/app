@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { ArrowLeft, PlusCircle } from 'lucide-svelte';
-	import type { ActionData } from './$types';
+	import type { ActionData, PageData } from './$types';
 
+	export let data: PageData;
 	export let form: ActionData;
 
 	type LembagaFormErrors = {
@@ -15,6 +16,14 @@
 		name?: string;
 		type?: string;
 		address?: string;
+	};
+
+	type CapacityInfo = {
+		unlimited?: boolean;
+		limit?: number | null;
+		used?: number;
+		remaining?: number | null;
+		canAdd?: boolean;
 	};
 
 	const lembagaTypes = [
@@ -55,6 +64,8 @@
 	$: errors = (form?.errors ?? {}) as LembagaFormErrors;
 	$: values = (form?.values ?? {}) as LembagaFormValues;
 	$: selectedOption = lembagaTypes.find((item) => item.value === selectedType);
+	$: capacity = ((data as PageData & { capacity?: CapacityInfo }).capacity ?? null) as CapacityInfo | null;
+	$: capacityBlocked = capacity ? capacity.canAdd === false : false;
 </script>
 
 <svelte:head>
@@ -81,7 +92,26 @@
 		<p class="mt-2 max-w-2xl text-sm leading-6 text-so-muted">
 			Buat lembaga baru yang akan dikelola oleh akun admin saat ini.
 		</p>
+		{#if capacity}
+			<p class="mt-3 text-sm font-semibold text-so-green">
+				{#if capacity.unlimited}
+					Kuota lembaga: unlimited (addon Lembaga Tambahan aktif).
+				{:else}
+					Kuota gratis: {capacity.used ?? 0}/{capacity.limit ?? 1} lembaga.
+					{#if capacityBlocked}
+						Aktifkan addon <a href="/addon" class="underline">Lembaga Tambahan</a> untuk menambah lagi.
+					{/if}
+				{/if}
+			</p>
+		{/if}
 	</header>
+
+	{#if capacityBlocked}
+		<div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+			Batas 1 lembaga gratis sudah tercapai.
+			<a href="/addon" class="underline">Aktifkan Lembaga Tambahan</a> dulu sebelum menambah lembaga baru.
+		</div>
+	{/if}
 
 	<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
 		{#each lembagaTypes as option}
@@ -94,6 +124,7 @@
 				}`}
 				aria-pressed={selectedType === option.value}
 				on:click={() => (selectedType = option.value)}
+				disabled={capacityBlocked}
 			>
 				<span class="text-4xl leading-none" aria-hidden="true">{option.emoji}</span>
 				<span class="mt-5 text-base font-black text-so-green">{option.name}</span>
@@ -115,7 +146,7 @@
 		</p>
 	{/if}
 
-	{#if selectedOption}
+	{#if selectedOption && !capacityBlocked}
 		<form
 			method="POST"
 			class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6"

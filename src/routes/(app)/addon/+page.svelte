@@ -14,6 +14,20 @@
 		lembagaNama?: string | null;
 		lembagaSlug?: string | null;
 		lembagaType?: string | null;
+		santriCapacity?: {
+			unlimited?: boolean;
+			limit?: number | null;
+			used?: number;
+			remaining?: number | null;
+			canAdd?: boolean;
+		} | null;
+		lembagaCapacity?: {
+			unlimited?: boolean;
+			limit?: number | null;
+			used?: number;
+			remaining?: number | null;
+			canAdd?: boolean;
+		} | null;
 		addonAktif?: Array<{
 			id?: string;
 			tipeAddon: string;
@@ -278,6 +292,35 @@
 			</div>
 		</div>
 	</header>
+
+	{#if page.santriCapacity || page.lembagaCapacity}
+		<div class="grid gap-3 md:grid-cols-2">
+			{#if page.santriCapacity}
+				<div class="rounded-so-lg border border-so-border bg-white p-4 shadow-card">
+					<p class="text-xs font-bold uppercase tracking-[0.18em] text-so-muted">Kuota Santri</p>
+					<p class="mt-2 text-sm font-semibold text-so-green">
+						{#if page.santriCapacity.unlimited}
+							Unlimited aktif
+						{:else}
+							{page.santriCapacity.used ?? 0}/{page.santriCapacity.limit ?? 30} santri aktif
+						{/if}
+					</p>
+				</div>
+			{/if}
+			{#if page.lembagaCapacity}
+				<div class="rounded-so-lg border border-so-border bg-white p-4 shadow-card">
+					<p class="text-xs font-bold uppercase tracking-[0.18em] text-so-muted">Kuota Lembaga</p>
+					<p class="mt-2 text-sm font-semibold text-so-green">
+						{#if page.lembagaCapacity.unlimited}
+							Unlimited aktif
+						{:else}
+							{page.lembagaCapacity.used ?? 0}/{page.lembagaCapacity.limit ?? 1} lembaga
+						{/if}
+					</p>
+				</div>
+			{/if}
+		</div>
+	{/if}
 
 	{#if !page.canManage}
 		<div class="rounded-so-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 shadow-card">

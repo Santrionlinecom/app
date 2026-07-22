@@ -47,7 +47,10 @@
 	const successMessage = (value: string | null | undefined) => {
 		if (value === 'approved') return 'Addon berhasil disetujui dan sudah aktif.';
 		if (value === 'rejected') return 'Request addon berhasil ditolak.';
-		if (value === 'deactivated') return 'Addon aktif berhasil dinonaktifkan.';
+		if (value === 'deactivated' || value === 'revoked') {
+			return 'Addon aktif berhasil dinonaktifkan.';
+		}
+		if (value === 'reactivated') return 'Addon berhasil diaktifkan ulang.';
 		return null;
 	};
 
@@ -179,9 +182,14 @@
 										</form>
 									</div>
 								{:else if req.status === 'aktif'}
-									<form method="POST" action="?/deactivate" use:enhance>
+									<form method="POST" action="?/revoke" use:enhance>
 										<input type="hidden" name="id" value={req.id} />
 										<button type="submit" class="btn btn-sm btn-outline text-red-600 hover:bg-red-50">Nonaktifkan</button>
+									</form>
+								{:else if req.status === 'expired'}
+									<form method="POST" action="?/reactivate" use:enhance>
+										<input type="hidden" name="id" value={req.id} />
+										<button type="submit" class="btn btn-sm btn-primary">Aktifkan ulang</button>
 									</form>
 								{:else}
 									<span class="text-sm text-slate-400">Tidak ada aksi</span>

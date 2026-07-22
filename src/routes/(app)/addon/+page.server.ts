@@ -8,8 +8,10 @@ import {
 	canManageAddonForOrg,
 	cancelAddonRequest,
 	getActiveAddon,
+	getLembagaCapacity,
 	getOrganizationForAddon,
 	getPendingAddon,
+	getSantriCapacity,
 	isAddonActiveRow,
 	isAddonTipe,
 	listAddonsForLembaga,
@@ -50,6 +52,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const coinBalance = await getCoinBalance(locals.db, locals.user.id);
 	const lembaga = await resolveManagedLembaga(locals.db, locals.user, locals.user.orgId);
+	const lembagaCapacity = await getLembagaCapacity(locals.db, locals.user.id);
 
 	if (!lembaga) {
 		return {
@@ -63,7 +66,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			groupWaPath: ADDON_GROUP_WA_PATH,
 			canManage: false,
 			isMember: Boolean(locals.user.orgId),
-			isSuperAdmin: isSystemAdmin(locals.user.role)
+			isSuperAdmin: isSystemAdmin(locals.user.role),
+			lembagaCapacity,
+			santriCapacity: null
 		};
 	}
 
@@ -73,6 +78,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		(item) =>
 			item.status === ADDON_REQUEST_STATUS || isAddonActiveRow(item.status, item.berlakuHingga, nowMs)
 	);
+	const santriCapacity = await getSantriCapacity(locals.db, lembaga.id);
 
 	return {
 		addonAktif,
@@ -85,7 +91,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		groupWaPath: ADDON_GROUP_WA_PATH,
 		canManage: true,
 		isMember: true,
-		isSuperAdmin: isSystemAdmin(locals.user.role)
+		isSuperAdmin: isSystemAdmin(locals.user.role),
+		lembagaCapacity,
+		santriCapacity
 	};
 };
 

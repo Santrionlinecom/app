@@ -4,7 +4,6 @@ import { logActivity } from '$lib/server/activity-logs';
 import {
 	ADDON_NAMES,
 	ADDON_REQUEST_STATUS,
-	addonLabel,
 	isAddonActiveRow,
 	setAddonStatus,
 	type AddonDbStatus
@@ -57,12 +56,43 @@ const loadAddonById = async (db: App.Locals['db'], id: string) => {
 		}>();
 };
 
+const successStatus = (successKey: string): AddonStatusFilter => {
+	if (successKey === 'approved' || successKey === 'reactivated') return 'active';
+	if (successKey === 'rejected' || successKey === 'revoked' || successKey === 'deactivated') {
+		return 'rejected';
+	}
+	return 'pending';
+};
+
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db } = requireSuperAdmin(locals);
 	const currentStatus = statusFromUrl(url.searchParams.get('status'));
 	const dbStatus = STATUS_FILTERS[currentStatus];
+	const q = (url.searchParams.get('q') ?? '').trim().slice(0, 80);
 
-	const whereClause = dbStatus ? 'WHERE a.status = ?' : '';
+	const whereParts: string[] = [];
+	const binds: Array<string> = [];
+
+	if (dbStatus) {
+		whereParts.push('a.status = ?');
+		binds.push(dbStatus);
+	}
+
+	if (q) {
+		const like = `%${q.toLowerCase()}%`;
+		whereParts.push(
+			`(
+				LOWER(COALESCE(o.name, '')) LIKE ?
+				OR LOWER(COALESCE(o.slug, '')) LIKE ?
+				OR LOWER(COALESCE(u.email, '')) LIKE ?
+				OR LOWER(COALESCE(u.username, '')) LIKE ?
+				OR LOWER(COALESCE(a.tipe_addon, '')) LIKE ?
+			)`
+		);
+		binds.push(like, like, like, like, like);
+	}
+
+	const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
 	const statement = db.prepare(
 		`SELECT
 			a.id,
@@ -84,7 +114,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		 ORDER BY a.created_at DESC
 		 LIMIT 200`
 	);
-	const requests = dbStatus ? await statement.bind(dbStatus).all<any>() : await statement.all<any>();
+	const requests = binds.length
+		? await statement.bind(...binds).all<any>()
+		: await statement.all<any>();
 
 	const counts = await db
 		.prepare(
@@ -108,6 +140,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		requests: requests.results ?? [],
 		currentStatus,
 		counts: countMap,
+		q,
 		success: url.searchParams.get('success')
 	};
 };
@@ -138,10 +171,7 @@ const mutateAddon = async (params: {
 		return fail(400, { error: params.invalidMessage });
 	}
 
-	if (
-		params.nextStatus === 'aktif' &&
-		isAddonActiveRow(existing.status, existing.berlakuHingga)
-	) {
+	if (params.nextStatus === 'aktif' && isAddonActiveRow(existing.status, existing.berlakuHingga)) {
 		return fail(400, { error: 'Addon ini sudah aktif.' });
 	}
 
@@ -165,7 +195,8 @@ const mutateAddon = async (params: {
 		}
 	});
 
-	throw redirect(303, `/admin/super/addons?status=${params.successKey.includes('approved') || params.successKey.includes('reactivated') ? 'active' : params.successKey.includes('rejected') || params.successKey.includes('revoked') ? 'rejected' : 'pending'}&success=${params.successKey}`);
+	const status = successStatus(params.successKey);
+	throw redirect(303, `/admin/super/addons?status=${status}&success=${params.successKey}`);
 };
 
 export const actions: Actions = {
@@ -188,6 +219,17 @@ export const actions: Actions = {
 			action: 'ADDON_REJECT',
 			allowedFrom: [ADDON_REQUEST_STATUS],
 			invalidMessage: 'Hanya request menunggu yang bisa ditolak.'
+		}),
+	// Alias for older UI form action.
+	deactivate: async ({ locals, request }) =>
+		mutateAddon({
+			locals,
+			request,
+			nextStatus: 'expired',
+			successKey: 'deactivated',
+			action: 'ADDON_REVOKE',
+			allowedFrom: ['aktif'],
+			invalidMessage: 'Hanya addon aktif yang bisa dinonaktifkan.'
 		}),
 	revoke: async ({ locals, request }) =>
 		mutateAddon({
