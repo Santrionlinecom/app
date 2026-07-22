@@ -22,6 +22,55 @@ const safeNotificationQuery = async <T>(fn: () => Promise<T>, fallback: T): Prom
 	}
 };
 
+
+const ensureSuperAdminNotificationDismissalsTable = async (db: D1Database) => {
+	await db
+		.prepare(
+			`CREATE TABLE IF NOT EXISTS super_admin_notification_dismissals (
+				notification_id TEXT PRIMARY KEY,
+				dismissed_by TEXT,
+				dismissed_at INTEGER NOT NULL
+			)`
+		)
+		.run();
+};
+
+export const dismissSuperAdminNotification = async (
+	db: D1Database,
+	notificationId: string,
+	dismissedBy?: string | null
+) => {
+	const id = notificationId.trim();
+	if (!id) return { ok: false as const, error: 'Notifikasi tidak valid.' };
+	await ensureSuperAdminNotificationDismissalsTable(db);
+	await db
+		.prepare(
+			`INSERT INTO super_admin_notification_dismissals (notification_id, dismissed_by, dismissed_at)
+			 VALUES (?, ?, ?)
+			 ON CONFLICT(notification_id) DO UPDATE SET
+				dismissed_by = excluded.dismissed_by,
+				dismissed_at = excluded.dismissed_at`
+		)
+		.bind(id, dismissedBy ?? null, Date.now())
+		.run();
+	return { ok: true as const };
+};
+
+export const clearSuperAdminNotificationDismissals = async (db: D1Database) => {
+	await ensureSuperAdminNotificationDismissalsTable(db);
+	await db.prepare('DELETE FROM super_admin_notification_dismissals').run();
+	return { ok: true as const };
+};
+
+const listDismissedNotificationIds = async (db: D1Database) => {
+	await ensureSuperAdminNotificationDismissalsTable(db);
+	const { results } = await db
+		.prepare('SELECT notification_id as id FROM super_admin_notification_dismissals')
+		.all<{ id: string }>();
+	return new Set((results ?? []).map((row) => row.id));
+};
+
+
 const hasTableColumn = async (db: D1Database, table: string, column: string) => {
 	try {
 		const { results } = await db.prepare(`PRAGMA table_info(${table})`).all<{ name: string }>();
@@ -141,7 +190,7 @@ export const getSuperAdminNotifications = async (db: D1Database) => {
 			kind: 'message',
 			severity: 'info',
 			title: 'Pesan chat baru',
-			body: `${row.username || row.email || 'User'}: ${row.content.slice(0, 90)}`,
+			body: `${row.username || row.email || 'User'}: ${String(row.content ?? '').slice(0, 90)}`,
 			href: '/admin/super/overview#activity-feed',
 			createdAt: row.createdAt
 		}));
@@ -262,6 +311,7 @@ export const getSuperAdminNotifications = async (db: D1Database) => {
 		}));
 	}, [] as SuperAdminNotification[]);
 
+	const dismissedIds = await safeNotificationQuery(() => listDismissedNotificationIds(db), new Set<string>());
 	const notifications = sortNotifications([
 		...pendingTopupNotifications,
 		...pendingSaleNotifications,
@@ -270,7 +320,7 @@ export const getSuperAdminNotifications = async (db: D1Database) => {
 		...noAdminNotifications,
 		...recentRegisterNotifications,
 		...chatNotifications
-	]);
+	]).filter((item) => !dismissedIds.has(item.id));
 
 	return {
 		notifications,

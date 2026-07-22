@@ -122,6 +122,8 @@
 	let pollTimer: ReturnType<typeof setInterval> | null = null;
 	let formError: string | null = null;
 	let notificationOpen = false;
+	let dismissingId: string | null = null;
+	let deletingOrgId: string | null = null;
 
 	const orgTypeLabel: Record<string, string> = {
 		pondok: 'Pondok',
@@ -241,6 +243,60 @@
 	const confirmOrganizationRejection = (event: SubmitEvent) => {
 		if (!window.confirm('Tolak lembaga ini? Admin lembaga tidak akan dapat mengaktifkan layanan lembaga.')) {
 			event.preventDefault();
+		}
+	};
+	const confirmOrganizationDeletion = (event: SubmitEvent, org: Institution) => {
+		const typed = window.prompt(
+			`Hapus lembaga "${org.name}"?\n\nAkun user tidak dihapus, hanya dilepas dari lembaga.\nKetik nama lembaga untuk konfirmasi:`,
+			''
+		);
+		if (!typed || typed.trim().toLowerCase() !== org.name.trim().toLowerCase()) {
+			event.preventDefault();
+			if (typed !== null) {
+				formError = `Ketik nama lembaga "${org.name}" untuk konfirmasi penghapusan.`;
+			}
+			return;
+		}
+		const form = event.currentTarget as HTMLFormElement | null;
+		const confirmInput = form?.querySelector<HTMLInputElement>('input[name="confirmName"]');
+		if (confirmInput) confirmInput.value = typed.trim();
+		deletingOrgId = org.id;
+	};
+	const dismissNotification = async (item: NotificationItem) => {
+		if (dismissingId) return;
+		dismissingId = item.id;
+		try {
+			const body = new FormData();
+			body.set('notificationId', item.id);
+			const res = await fetch('?/dismissNotification', {
+				method: 'POST',
+				body,
+				headers: {
+					accept: 'application/json',
+					'x-sveltekit-action': 'true'
+				}
+			});
+			if (!res.ok) {
+				formError = 'Gagal menutup notifikasi. Coba lagi.';
+				return;
+			}
+			const payload = await res.json().catch(() => null);
+			const actionData = payload?.type === 'success' || payload?.type === 'failure' ? payload : payload?.data ?? payload;
+			if (payload?.type === 'failure' || (actionData && actionData.error)) {
+				formError = typeof actionData?.error === 'string' ? actionData.error : 'Gagal menutup notifikasi. Coba lagi.';
+				return;
+			}
+			notifications = notifications.filter((entry) => entry.id !== item.id);
+			notificationCounts = {
+				total: notifications.length,
+				urgent: notifications.filter((entry) => entry.severity === 'urgent').length,
+				warning: notifications.filter((entry) => entry.severity === 'warning').length,
+				info: notifications.filter((entry) => entry.severity === 'info').length
+			};
+		} catch {
+			formError = 'Gagal menutup notifikasi. Coba lagi.';
+		} finally {
+			dismissingId = null;
 		}
 	};
 
@@ -612,9 +668,19 @@
 											<p class="font-display text-base font-bold text-so-green">Notifikasi Super Admin</p>
 											<p class="mt-0.5 text-xs text-so-muted">Akun baru, pesan, topup, order, dan lembaga urgent</p>
 										</div>
-										<span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-black text-rose-700">
-											{formatNumber(notificationCounts.urgent)} urgent
-										</span>
+										<div class="flex items-center gap-2">
+											<button
+												type="button"
+												class="rounded-full border border-so-border bg-white px-2.5 py-1 text-[11px] font-bold text-so-muted transition hover:border-so-green hover:text-so-green"
+												on:click={() => void refreshLive()}
+												disabled={isRefreshing}
+											>
+												{isRefreshing ? 'Memuat...' : 'Refresh'}
+											</button>
+											<span class="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-black text-rose-700">
+												{formatNumber(notificationCounts.urgent)} urgent
+											</span>
+										</div>
 									</div>
 								</div>
 								<div class="max-h-[430px] overflow-auto p-2 scrollbar-soft">
@@ -625,27 +691,39 @@
 										</div>
 									{:else}
 										{#each notifications as item}
-											<a
-												href={item.href}
-												class="grid grid-cols-[38px_minmax(0,1fr)_auto] gap-3 rounded-xl px-3 py-3 transition hover:bg-so-green/5"
-												on:click={() => (notificationOpen = false)}
-											>
+											<div class="grid grid-cols-[38px_minmax(0,1fr)_auto] gap-3 rounded-xl px-3 py-3 transition hover:bg-so-green/5">
 												<span class={`grid h-9 w-9 place-items-center rounded-xl border text-[11px] font-black ${notificationTone(item.severity)}`}>
 													{notificationIconLabel(item)}
 												</span>
-												<span class="min-w-0">
+												<a
+													href={item.href}
+													class="min-w-0"
+													on:click={() => (notificationOpen = false)}
+												>
 													<span class="block truncate text-sm font-bold text-so-ink">{item.title}</span>
 													<span class="mt-0.5 block text-xs leading-5 text-so-muted">{item.body}</span>
-												</span>
-												<time class="whitespace-nowrap text-[11px] font-semibold text-so-muted">{formatShortTime(item.createdAt)}</time>
-											</a>
+													<time class="mt-1 block text-[11px] font-semibold text-so-muted">{formatShortTime(item.createdAt)}</time>
+												</a>
+												<button
+													type="button"
+													class="self-start rounded-lg border border-so-border bg-white px-2 py-1 text-[11px] font-bold text-so-muted transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+													aria-label={`Tutup notifikasi ${item.title}`}
+													disabled={dismissingId === item.id}
+													on:click|stopPropagation={() => void dismissNotification(item)}
+												>
+													{dismissingId === item.id ? '...' : 'Tutup'}
+												</button>
+											</div>
 										{/each}
 									{/if}
 								</div>
 								<div class="border-t border-so-border bg-so-cream px-4 py-3">
 									<div class="flex items-center justify-between text-xs font-bold text-so-muted">
 										<span>{formatNumber(notificationCounts.total)} total</span>
-										<a class="text-so-green hover:text-so-green-2" href="/admin/super/coin-topups" on:click={() => (notificationOpen = false)}>Cek topup</a>
+										<div class="flex items-center gap-3">
+											<a class="text-so-green hover:text-so-green-2" href="/admin/super/coin-topups" on:click={() => (notificationOpen = false)}>Cek topup</a>
+											<a class="text-so-green hover:text-so-green-2" href="#institution-list" on:click={() => (notificationOpen = false)}>Daftar lembaga</a>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -1048,8 +1126,8 @@
 										<td class="px-5 py-3 text-right font-bold text-so-ink">{formatNumber(org.totalMembers)}</td>
 										<td class="px-5 py-3 text-so-muted">{formatDate(org.createdAt)}</td>
 										<td class="px-5 py-3">
-											{#if org.status === 'pending'}
-												<div class="flex flex-wrap items-center gap-2">
+											<div class="flex flex-wrap items-center gap-2">
+												{#if org.status === 'pending'}
 													{#if org.adminCount}
 														<form method="POST" action="?/setOrganizationStatus">
 															<input type="hidden" name="orgId" value={org.id} />
@@ -1064,12 +1142,22 @@
 														<input type="hidden" name="nextStatus" value="rejected" />
 														<button aria-label={`Tolak ${org.name} /${org.slug}`} class="inline-flex h-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 text-xs font-bold text-rose-700 transition hover:bg-rose-100" type="submit">Tolak</button>
 													</form>
-												</div>
-											{:else if org.status === 'active' && org.adminCount}
-												<a class="inline-flex h-9 items-center justify-center rounded-xl border border-so-border bg-white px-3 text-xs font-bold text-so-green transition hover:border-so-green" href={`/admin/super/impersonate?orgId=${org.id}`}>Login Sebagai Admin</a>
-											{:else}
-												<span class="text-xs font-semibold text-so-muted">Tidak ada aksi</span>
-											{/if}
+												{:else if org.status === 'active' && org.adminCount}
+													<a class="inline-flex h-9 items-center justify-center rounded-xl border border-so-border bg-white px-3 text-xs font-bold text-so-green transition hover:border-so-green" href={`/admin/super/impersonate?orgId=${org.id}`}>Login Sebagai Admin</a>
+												{/if}
+												<form method="POST" action="?/deleteOrganization" on:submit={(event) => confirmOrganizationDeletion(event, org)}>
+													<input type="hidden" name="orgId" value={org.id} />
+													<input type="hidden" name="confirmName" value="" />
+													<button
+														aria-label={`Hapus ${org.name} /${org.slug}`}
+														class="inline-flex h-9 items-center justify-center rounded-xl border border-rose-300 bg-rose-600 px-3 text-xs font-bold text-white transition hover:bg-rose-700 disabled:opacity-60"
+														type="submit"
+														disabled={deletingOrgId === org.id}
+													>
+														{deletingOrgId === org.id ? 'Menghapus...' : 'Hapus'}
+													</button>
+												</form>
+											</div>
 										</td>
 									</tr>
 								{/each}

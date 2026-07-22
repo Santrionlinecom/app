@@ -273,3 +273,67 @@ export const listPublicOrgMembers = async (db: D1Database, orgId: string) => {
 		throw err;
 	}
 };
+
+
+const safeRun = async (db: D1Database, sql: string, ...binds: Array<string | number | null>) => {
+	try {
+		const stmt = db.prepare(sql);
+		await (binds.length ? stmt.bind(...binds) : stmt).run();
+		return true;
+	} catch (err) {
+		const message = `${(err as Error)?.message ?? err}`.toLowerCase();
+		if (message.includes('no such table') || message.includes('no such column')) return false;
+		throw err;
+	}
+};
+
+/**
+ * Super Admin only: hapus lembaga dari daftar tanpa menghapus akun user.
+ * User terkait di-unlink (org_id = NULL), data org-scoped dibersihkan best-effort.
+ */
+export const deleteOrganizationAsSuperAdmin = async (
+	db: D1Database,
+	orgId: string
+): Promise<{ ok: true } | { ok: false; error: string }> => {
+	const org = await getOrganizationById(db, orgId);
+	if (!org) return { ok: false, error: 'Lembaga tidak ditemukan.' };
+
+	// Unlink users first so personal accounts survive.
+	await safeRun(db, 'UPDATE users SET org_id = NULL, org_status = ? WHERE org_id = ?', 'active', orgId);
+	await safeRun(db, 'UPDATE organizations SET akun_admin_id = NULL WHERE id = ?', orgId);
+	// memberships / role history
+	await safeRun(db, 'DELETE FROM memberships WHERE org_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM org_memberships WHERE org_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM user_role_history WHERE org_id = ?', orgId);
+	// media & assets
+	await safeRun(db, 'DELETE FROM org_media WHERE organization_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM org_assets WHERE organization_id = ?', orgId);
+	// schedules / ummah
+	await safeRun(db, 'DELETE FROM jadwal_imam WHERE organization_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM jadwal_khotib_jumat WHERE organization_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM program_amal WHERE organization_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM kas_masjid WHERE organization_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM traffic_sources WHERE organization_id = ?', orgId);
+	// tpq academic
+	await safeRun(db, 'DELETE FROM tpq_setoran WHERE institution_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM tpq_halaqoh WHERE institution_id = ?', orgId);
+	// learn org-scoped (keep global NULL)
+	await safeRun(db, 'DELETE FROM learn_badge WHERE lembaga_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM learn_modul WHERE lembaga_id = ?', orgId);
+	// social / sosmed org-scoped
+	await safeRun(db, 'DELETE FROM post_comments WHERE lembaga_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM post_reactions WHERE lembaga_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM posts WHERE lembaga_id = ?', orgId);
+	// addons
+	await safeRun(db, 'DELETE FROM lembaga_addons WHERE lembaga_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM addon_requests WHERE lembaga_id = ?', orgId);
+
+	const deleted = await db
+		.prepare('DELETE FROM organizations WHERE id = ?')
+		.bind(orgId)
+		.run();
+	if (Number(deleted.meta?.changes ?? 0) !== 1) {
+		return { ok: false, error: 'Gagal menghapus lembaga. Muat ulang lalu coba lagi.' };
+	}
+	return { ok: true };
+};

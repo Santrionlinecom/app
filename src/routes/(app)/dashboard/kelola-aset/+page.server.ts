@@ -1,10 +1,15 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { assertLoggedIn, assertOrgMember, assertOrgRoleAllowed } from '$lib/server/auth/rbac';
-import { getOrgScope, getOrganizationById } from '$lib/server/organizations';
+import {
+	deleteOrganizationAsSuperAdmin,
+	getOrgScope,
+	getOrganizationById
+} from '$lib/server/organizations';
 import { listOrgAssets } from '$lib/server/org-assets';
 import { listOrgMedia } from '$lib/server/org-media';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
+import { logActivity } from '$lib/server/activity-logs';
 import * as XLSX from 'xlsx';
 
 const allowedRoles = new Set(['admin', 'tamir', 'bendahara']);
@@ -181,8 +186,28 @@ export const actions: Actions = {
 			return fail(400, { error: 'Organisasi tidak valid' });
 		}
 
-		await locals.db!.prepare('DELETE FROM users WHERE org_id = ?').bind(orgId).run();
-		await locals.db!.prepare('DELETE FROM organizations WHERE id = ?').bind(orgId).run();
+		const org = await getOrganizationById(locals.db, orgId);
+		if (!org) {
+			return fail(404, { error: 'Lembaga tidak ditemukan' });
+		}
+
+		const result = await deleteOrganizationAsSuperAdmin(locals.db, orgId);
+		if (!result.ok) {
+			return fail(400, { error: result.error });
+		}
+
+		await logActivity(locals.db, {
+			userId: locals.user.id,
+			action: 'DELETE_ORGANIZATION',
+			metadata: {
+				orgId,
+				orgName: org.name,
+				orgType: org.type,
+				orgSlug: org.slug,
+				previousStatus: org.status,
+				source: 'kelola-aset'
+			}
+		});
 
 		return { success: true };
 	},

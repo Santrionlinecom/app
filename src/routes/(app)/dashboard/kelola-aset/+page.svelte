@@ -272,7 +272,7 @@
 											<button
 												class="btn btn-xs btn-error text-white"
 												formaction="?/remove"
-												on:click={confirmAction('Hapus lembaga ini beserta data terkait?')}
+												on:click={confirmAction('Hapus lembaga ini? Akun user tidak dihapus, hanya dilepas dari lembaga.')}
 											>
 												Hapus
 											</button>

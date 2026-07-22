@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { generateId } from 'lucia';
 import { Scrypt } from '$lib/server/password';
 import {
+	deleteOrganizationAsSuperAdmin,
 	getOrganizationById,
 	getOrganizationStatusTransitionError,
 	type OrgApprovalStatus
@@ -18,7 +19,11 @@ import {
 	upsertDigitalPaymentMethod,
 	upsertDigitalProduct
 } from '$lib/server/domains/digital-store/commerce';
-import { getSuperAdminNotifications } from '$lib/server/super-admin-notifications';
+import {
+	clearSuperAdminNotificationDismissals,
+	dismissSuperAdminNotification,
+	getSuperAdminNotifications
+} from '$lib/server/super-admin-notifications';
 
 const memberRoles = ['santri'];
 const allowedProductStatuses = new Set(['draft', 'published', 'archived']);
@@ -539,6 +544,64 @@ export const actions: Actions = {
 		}
 
 		throw redirect(303, '/admin/super/overview#institution-list');
+	},
+	deleteOrganization: async ({ request, locals }) => {
+		const { db, user: actingUser } = requireSuperAdmin(locals);
+		const form = await request.formData();
+		const orgId = normalizeText(form.get('orgId'));
+		const confirmName = normalizeText(form.get('confirmName'));
+
+		if (!orgId) {
+			return fail(400, { error: 'Lembaga wajib dipilih.' });
+		}
+
+		const org = await getOrganizationById(db, orgId);
+		if (!org) {
+			return fail(404, { error: 'Lembaga tidak ditemukan.' });
+		}
+
+		if (!confirmName || confirmName.toLowerCase() !== org.name.trim().toLowerCase()) {
+			return fail(400, {
+				error: `Ketik nama lembaga "${org.name}" untuk konfirmasi penghapusan.`
+			});
+		}
+
+		const result = await deleteOrganizationAsSuperAdmin(db, orgId);
+		if (!result.ok) {
+			return fail(400, { error: result.error });
+		}
+
+		await logActivity(db, {
+			userId: actingUser.id,
+			action: 'DELETE_ORGANIZATION',
+			metadata: {
+				orgId,
+				orgName: org.name,
+				orgType: org.type,
+				orgSlug: org.slug,
+				previousStatus: org.status
+			}
+		});
+
+		throw redirect(303, '/admin/super/overview#institution-list');
+	},
+	dismissNotification: async ({ request, locals }) => {
+		const { db, user: actingUser } = requireSuperAdmin(locals);
+		const form = await request.formData();
+		const notificationId = normalizeText(form.get('notificationId'));
+		if (!notificationId) {
+			return fail(400, { error: 'Notifikasi tidak valid.' });
+		}
+		const result = await dismissSuperAdminNotification(db, notificationId, actingUser.id);
+		if (!result.ok) {
+			return fail(400, { error: result.error });
+		}
+		return { success: true, dismissedId: notificationId };
+	},
+	clearNotificationDismissals: async ({ locals }) => {
+		const { db } = requireSuperAdmin(locals);
+		await clearSuperAdminNotificationDismissals(db);
+		return { success: true };
 	},
 	savePaymentMethod: async ({ request, locals }) => {
 		const { db } = requireSuperAdmin(locals);
