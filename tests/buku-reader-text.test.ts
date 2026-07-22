@@ -30,4 +30,16 @@ describe('buku reader text', () => {
 		const paragraphs = toBukuParagraphs(source);
 		assert.equal(paragraphs.length, 12);
 	});
+
+	it('reflows an oversized trailing paragraph so public pages stay readable', () => {
+		const short = 'Pembuka singkat yang sudah rapi.';
+		const long =
+			'Ini kalimat pertama yang panjang untuk mengisi ruang bacaan. '.repeat(40) +
+			'Ini kalimat penutup yang tetap padat.';
+		const source = `${short}\r\n\r\n${long}`;
+		const paragraphs = toBukuParagraphs(source);
+		assert.ok(paragraphs.length > 2);
+		assert.ok(paragraphs.every((part) => part.length < 1200));
+		assert.equal(paragraphs[0], short);
+	});
 });

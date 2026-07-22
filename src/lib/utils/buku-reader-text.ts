@@ -4,6 +4,8 @@
  * \r\n\r\n the same as blank-line breaks so prose does not collapse into one block.
  */
 
+const LONG_PARAGRAPH_CHARS = 900;
+
 const stripTags = (value: string) =>
 	value
 		.replace(/<br\s*\/?>/gi, '\n')
@@ -40,8 +42,8 @@ const cleanParagraph = (paragraph: string) =>
 /**
  * Prefer blank-line paragraphs. If the source only used single newlines
  * (common from some editors), treat non-empty lines as paragraphs.
- * As a last resort, reflow a single dense block into readable chunks so the
- * public reader never shows one wall of text.
+ * Also reflow any remaining overlong blocks so public reading stays
+ * professional (about 3–5 sentences / short visual paragraphs).
  */
 export const toBukuParagraphs = (value: string | null | undefined): string[] => {
 	const normalized = normalizeBukuProse(value);
@@ -63,25 +65,38 @@ export const toBukuParagraphs = (value: string | null | undefined): string[] => 
 		}
 	}
 
-	// Dense single block: reflow for readable novel pacing (~3–5 sentences)
-	if (paragraphs.length === 1 && paragraphs[0].length > 700) {
-		paragraphs = reflowDenseProse(paragraphs[0]);
+	// Reflow any dense block (whole chapter or one oversized trailing paragraph)
+	const expanded: string[] = [];
+	for (const paragraph of paragraphs) {
+		if (paragraph.length > LONG_PARAGRAPH_CHARS) {
+			expanded.push(...reflowDenseProse(paragraph));
+		} else {
+			expanded.push(paragraph);
+		}
 	}
 
-	return paragraphs;
+	return expanded.filter(Boolean);
+};
+
+const splitSentences = (text: string): string[] => {
+	const parts = text
+		.split(/(?<=[.!?…])(?=["”’')\]]?\s+)(?=\s*["“‘(A-ZÀ-Ýa-zà-ÿ])/)
+		.map((part) => part.trim())
+		.filter(Boolean);
+
+	if (parts.length >= 3) return parts;
+
+	// Indonesian prose often continues after "." with lowercase; pack by words.
+	return [];
 };
 
 const reflowDenseProse = (text: string): string[] => {
-	// Split after sentence enders when the next token starts a new sentence/dialogue.
-	const sentences = text
-		.split(/(?<=[.!?…])(?=["”’')\]]?\s+)(?=\s*["“‘(A-ZÀ-Ý])/)
-		.map((part) => part.trim())
-		.filter(Boolean);
+	const sentences = splitSentences(text);
 
 	if (sentences.length < 3) {
 		const words = text.split(/\s+/).filter(Boolean);
 		const chunks: string[] = [];
-		const wordsPerChunk = 90;
+		const wordsPerChunk = 85;
 		for (let i = 0; i < words.length; i += wordsPerChunk) {
 			chunks.push(words.slice(i, i + wordsPerChunk).join(' '));
 		}
@@ -99,7 +114,7 @@ const reflowDenseProse = (text: string): string[] => {
 		const shouldFlush =
 			buffer.length >= targetSentences ||
 			(isShortDialogue && buffer.length >= 2) ||
-			joined.length > 520;
+			joined.length > 480;
 
 		if (shouldFlush) {
 			chunks.push(joined);
