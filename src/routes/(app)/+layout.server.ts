@@ -9,6 +9,7 @@ import {
 	canAccessFeature
 } from '$lib/server/auth/rbac';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
+import { getCoinBalance } from '$lib/server/domains/buku/wallet';
 
 type LembagaSwitcherItem = {
 	id: string;
@@ -100,6 +101,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 			org: null,
 			lembagaList: await listManagedLembaga(locals.db, user.id),
 			appMenu: SUPER_ADMIN_NAVIGATION,
+			coinBalance: await getCoinBalance(locals.db, user.id).catch(() => 0),
 			featureAccess: {
 				hafalan: true,
 				setoran: true,
@@ -149,6 +151,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		user,
 		org,
 		streak: await getDailyStreak(locals.db, user.id),
+		coinBalance: await getCoinBalance(locals.db, user.id).catch(() => 0),
 		lembagaList: await listManagedLembaga(locals.db, user.id),
 		appMenu: withOrgScopedNavigation(
 			getAppNavigation(org?.type ?? null, user.role, locals.can),

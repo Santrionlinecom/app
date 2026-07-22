@@ -87,6 +87,8 @@
 	$: roleLabel = roleLabelMap[roleKey] ?? 'Pengguna';
 	$: displayName = data?.user?.username || data?.user?.email || 'Pengguna';
 	$: displayEmail = data?.user?.email || '';
+	$: coinBalance = Number((data as any)?.coinBalance ?? 0);
+	$: coinBalanceLabel = coinBalance.toLocaleString('id-ID');
 	$: displayInitials =
 		displayName
 			.split(/[\s@._-]+/)
@@ -572,6 +574,26 @@
 									>
 										Kelola akun Anda
 									</a>
+									<a
+										href="/coins"
+										class="mt-3 flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50/90 px-3 py-2.5 transition hover:bg-amber-100"
+										role="menuitem"
+										on:click={closeOverlays}
+									>
+										<span class="flex items-center gap-2 text-sm font-semibold text-amber-950">
+											<svg
+												class="h-4 w-4 text-amber-700"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="1.8"
+											>
+												<path d={iconPaths.coins} stroke-linecap="round" stroke-linejoin="round" />
+											</svg>
+											Saldo coin
+										</span>
+										<span class="text-sm font-black tabular-nums text-amber-900">{coinBalanceLabel}</span>
+									</a>
 								</div>
 
 								<div class="py-1.5">
@@ -609,15 +631,15 @@
 										<span>Misi habit harian</span>
 									</a>
 									<a
-										href="/coins"
+										href="/coins/topup"
 										class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
 										role="menuitem"
 										on:click={closeOverlays}
 									>
 										<svg class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-											<path d={iconPaths.coins} stroke-linecap="round" stroke-linejoin="round" />
+											<path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round" />
 										</svg>
-										<span>Saldo coin</span>
+										<span>Topup coin</span>
 									</a>
 									{#if isSuperAdmin}
 										<a
