@@ -118,17 +118,18 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 
 	const isDashboardRoute = url.pathname === '/dashboard' || url.pathname.startsWith('/dashboard/');
 	const isLembagaRoute = url.pathname === '/lembaga' || url.pathname.startsWith('/lembaga/');
+	const isAkunRoute = url.pathname === '/akun' || url.pathname.startsWith('/akun/');
 	const orgId = user.orgId ?? null;
 	let org = null;
 
 	if (orgId) {
 		org = await getOrganizationById(locals.db, orgId);
-		if (!org && !isDashboardRoute) {
+		if (!org && !isDashboardRoute && !isAkunRoute) {
 			throw error(404, 'Lembaga tidak ditemukan');
 		}
 	} else if (isDashboardRoute) {
 		throw redirect(302, '/lembaga');
-	} else if (!isDashboardRoute && !isLembagaRoute) {
+	} else if (!isDashboardRoute && !isLembagaRoute && !isAkunRoute) {
 		throw error(403, 'Akun belum terhubung ke lembaga.');
 	}
 
