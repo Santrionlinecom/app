@@ -24,14 +24,10 @@
 				? 'Menu yang dibuka tidak ada atau sudah dipindah.'
 				: 'Ada gangguan saat memuat data. Tetap di dashboard, lalu coba buka ulang atau pilih menu lain.');
 
-	$: homeHref =
-		$page.data?.user &&
-		(String(($page.data.user as { role?: string }).role ?? '')
-			.toUpperCase()
-			.includes('SUPER') ||
-			($page.data as { appMenu?: unknown[] }).appMenu)
-			? '/admin/super/overview'
-			: '/dashboard';
+	$: isSuperAdmin = String(($page.data?.user as { role?: string } | undefined)?.role ?? '')
+		.toUpperCase()
+		.includes('SUPER');
+	$: homeHref = isSuperAdmin ? '/admin/super/overview' : '/dashboard';
 
 	$: homeLabel = homeHref.includes('super') ? 'Ke Overview' : 'Ke Dashboard';
 </script>

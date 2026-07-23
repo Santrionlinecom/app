@@ -20,7 +20,9 @@ export const initializeLucia = (D1: D1Database) => {
     return new Lucia(adapter, {
         sessionCookie: {
             attributes: {
-                secure: !dev
+                secure: !dev,
+                path: '/',
+                sameSite: 'lax'
             }
         },
         getUserAttributes: (attributes) => {

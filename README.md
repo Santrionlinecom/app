@@ -76,6 +76,6 @@ Endpoint pengecekan binding:
 - Route kanonis workflow TPQ adalah `/tpq/akademik/*`.
 - Route lama seperti `/akademik`, `/dashboard/setoran-hari-ini`, dan `/dashboard/review-setoran` hanya server-only redirect role-aware.
 - Sertifikat disimpan di R2, metadata-nya ada di D1.
-- Endpoint utilitas seperti `/api/admin/migrate` dan `/api/seed-admin` hanya untuk maintenance: superadmin-only, secret wajib di production, dan aktivitasnya dicatat di `system_logs`.
+- `/api/seed-admin` telah dinonaktifkan permanen. `/api/admin/migrate` hanya menerima secret melalui header, tetap superadmin-only, dan aktivitasnya dicatat di `system_logs`.
 - Endpoint AI yang mahal harus memakai quota/rate limit dan tidak boleh menjadi surface publik bebas.
 - Jika menambah fitur baru, prioritaskan konteks TPQ dan hindari memperluas modul legacy non-TPQ.

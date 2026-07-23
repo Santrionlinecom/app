@@ -165,7 +165,7 @@ Peta ini merangkum route yang benar-benar ada di repo saat ini. Beberapa route m
 | `/api/admin/streamer-licenses/[id]` | LIVE | Streamer license detail. |
 | `/api/admin/trigger-news` | LIVE | News worker trigger. |
 | `/api/admin/users` | LIVE | User management. |
-| `/api/seed-admin` | HARDENED | Seed demo users; superadmin-only, secret wajib di production, dan aktivitas dicatat. |
+| `/api/seed-admin` | RETIRED | Dinonaktifkan permanen (HTTP 410); akun harus dibuat melalui alur resmi. |
 
 ### TPQ, Kalender, Reports, dan Media
 

@@ -30,12 +30,12 @@ import { ensureKitabReferenceSchema } from '$lib/server/rag';
 import { requireMaintenanceAccess } from '$lib/server/admin-maintenance';
 import { getRequestIp, logActivity } from '$lib/server/logger';
 
-export const POST: RequestHandler = async ({ locals, platform, request, url }) => {
+export const POST: RequestHandler = async ({ locals, platform, request }) => {
 	const db = locals.db ?? platform?.env.DB;
 	if (!db) throw error(500, 'Layanan data tidak tersedia');
 
 	const secret = platform?.env?.MIGRATE_SECRET as string | undefined;
-	const token = request.headers.get('x-migrate-secret') ?? url.searchParams.get('token');
+	const token = request.headers.get('x-migrate-secret');
 	const { user } = requireMaintenanceAccess({
 		locals: { ...locals, db },
 		secret,

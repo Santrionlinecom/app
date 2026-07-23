@@ -14,6 +14,35 @@ import {
 import { sentryServerConfig } from '../sentry.server.config';
 import type { OrgRole, OrgType, Permission } from '$lib/types/rbac';
 
+const SECURITY_HEADERS: Record<string, string> = {
+	'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+	'X-Content-Type-Options': 'nosniff',
+	'X-Frame-Options': 'SAMEORIGIN',
+	'Referrer-Policy': 'strict-origin-when-cross-origin',
+	'Permissions-Policy': 'camera=(self), microphone=(self), geolocation=(self)',
+	'Content-Security-Policy-Report-Only': [
+		"default-src 'self'",
+		"base-uri 'self'",
+		"object-src 'none'",
+		"frame-ancestors 'self'",
+		"img-src 'self' data: blob: https:",
+		"media-src 'self' blob: https:",
+		"font-src 'self' data: https:",
+		"style-src 'self' 'unsafe-inline' https:",
+		"script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+		"connect-src 'self' https: wss:",
+		"frame-src 'self' https:"
+	].join('; ')
+};
+
+const securityHeadersHandle: Handle = async ({ event, resolve }) => {
+	const response = await resolve(event);
+	for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+		if (!response.headers.has(name)) response.headers.set(name, value);
+	}
+	return response;
+};
+
 const authHandle: Handle = async ({ event, resolve }) => {
 	const db = event.platform?.env.DB;
 
@@ -55,7 +84,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	if (session && session.fresh) {
 		const sessionCookie = lucia.createSessionCookie(session.id);
 		event.cookies.set(sessionCookie.name, sessionCookie.value, {
-			path: '.',
+			path: '/',
 			...sessionCookie.attributes
 		});
 	}
@@ -63,7 +92,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	if (!session) {
 		const sessionCookie = lucia.createBlankSessionCookie();
 		event.cookies.set(sessionCookie.name, sessionCookie.value, {
-			path: '.',
+			path: '/',
 			...sessionCookie.attributes
 		});
 	}
@@ -95,5 +124,6 @@ export const handleError = handleErrorWithSentry();
 export const handle: Handle = sequence(
 	initCloudflareSentryHandle(sentryServerConfig),
 	sentryHandle(),
+	securityHeadersHandle,
 	authHandle
 );
