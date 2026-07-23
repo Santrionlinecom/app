@@ -1,4 +1,4 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { ensureSantriUstadzSchema } from '$lib/server/domains/tpq/santri-ustadz';
 import { SURAH_DATA } from '$lib/surah-data';
@@ -70,159 +70,166 @@ type SetoranRow = {
 };
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-	const { db, user, institutionId, role } = await requireTpqAcademicContext(locals);
-	if (!canInputSetoran(role)) {
-		if (canReviewSetoran(role)) {
-			throw redirect(302, '/tpq/akademik/review');
+	try {
+		const { db, user, institutionId, role } = await requireTpqAcademicContext(locals);
+		if (!canInputSetoran(role)) {
+			if (canReviewSetoran(role)) {
+				throw redirect(302, '/tpq/akademik/review');
+			}
+			throw redirect(302, '/tpq/akademik/riwayat');
 		}
-		throw redirect(302, '/tpq/akademik/riwayat');
-	}
 
-	await assertTpqAcademicTables(db);
-	await ensureSantriUstadzSchema(db);
-	const canManageSetoranScope = locals.can('hafalan.review');
+		await assertTpqAcademicTables(db);
+		await ensureSantriUstadzSchema(db);
+		const canManageSetoranScope = locals.can('hafalan.review');
 
-	const selectedDateRaw = (url.searchParams.get('date') ?? '').trim();
-	const selectedDate = selectedDateRaw && isValidIsoDate(selectedDateRaw) ? selectedDateRaw : todayIsoDate();
+		const selectedDateRaw = (url.searchParams.get('date') ?? '').trim();
+		const selectedDate = selectedDateRaw && isValidIsoDate(selectedDateRaw) ? selectedDateRaw : todayIsoDate();
 
-	const { results: halaqohRaw } = await (canManageSetoranScope
-		? db.prepare(
-				`SELECT h.id,
-				        h.name,
-				        h.ustadz_user_id as ustadzUserId,
-				        COALESCE(u.username, u.email) as ustadzName,
-				        h.schedule_json as scheduleJson,
-				        h.created_at as createdAt
-				 FROM tpq_halaqoh h
-				 LEFT JOIN users u ON u.id = h.ustadz_user_id
-				 WHERE h.institution_id = ?
-				 ORDER BY h.name ASC
-				 LIMIT 300`
-			).bind(institutionId)
-		: db.prepare(
-				`SELECT h.id,
-				        h.name,
-				        h.ustadz_user_id as ustadzUserId,
-				        COALESCE(u.username, u.email) as ustadzName,
-				        h.schedule_json as scheduleJson,
-				        h.created_at as createdAt
-				 FROM tpq_halaqoh h
-				 LEFT JOIN users u ON u.id = h.ustadz_user_id
-				 WHERE h.institution_id = ? AND h.ustadz_user_id = ?
-				 ORDER BY h.name ASC
-				 LIMIT 300`
-			).bind(institutionId, user.id)
-	).all<HalaqohRow>();
+		const { results: halaqohRaw } = await (canManageSetoranScope
+			? db.prepare(
+					`SELECT h.id,
+					        h.name,
+					        h.ustadz_user_id as ustadzUserId,
+					        COALESCE(u.username, u.email) as ustadzName,
+					        h.schedule_json as scheduleJson,
+					        h.created_at as createdAt
+					 FROM tpq_halaqoh h
+					 LEFT JOIN users u ON u.id = h.ustadz_user_id
+					 WHERE h.institution_id = ?
+					 ORDER BY h.name ASC
+					 LIMIT 300`
+				).bind(institutionId)
+			: db.prepare(
+					`SELECT h.id,
+					        h.name,
+					        h.ustadz_user_id as ustadzUserId,
+					        COALESCE(u.username, u.email) as ustadzName,
+					        h.schedule_json as scheduleJson,
+					        h.created_at as createdAt
+					 FROM tpq_halaqoh h
+					 LEFT JOIN users u ON u.id = h.ustadz_user_id
+					 WHERE h.institution_id = ? AND h.ustadz_user_id = ?
+					 ORDER BY h.name ASC
+					 LIMIT 300`
+				).bind(institutionId, user.id)
+		).all<HalaqohRow>();
 
-	const { results: teachersRaw } = await db
-		.prepare(
-			`SELECT id, username, email, role
-			 FROM users
-			 WHERE org_id = ?
-			   AND (org_status IS NULL OR org_status = 'active')
-			   AND role IN ('admin', 'ustadz', 'ustadzah')
-			 ORDER BY CASE WHEN role = 'admin' THEN 0 ELSE 1 END, COALESCE(username, email) ASC
-			 LIMIT 500`
-		)
-		.bind(institutionId)
-		.all<TeacherRow>();
-
-	const { results: santriRaw } = await (canManageSetoranScope
-		? db.prepare(
-				`SELECT id, username, email
+		const { results: teachersRaw } = await db
+			.prepare(
+				`SELECT id, username, email, role
 				 FROM users
 				 WHERE org_id = ?
 				   AND (org_status IS NULL OR org_status = 'active')
-				   AND role IN ('santri', 'alumni')
-				 ORDER BY COALESCE(username, email) ASC
-				 LIMIT 1000`
-			).bind(institutionId)
-		: db.prepare(
-				`SELECT u.id, u.username, u.email
-				 FROM santri_ustadz su
-				 JOIN users u ON u.id = su.santri_id
-				 WHERE su.org_id = ?
-				   AND su.ustadz_id = ?
-				   AND (u.org_status IS NULL OR u.org_status = 'active')
-				 ORDER BY COALESCE(u.username, u.email) ASC
-				 LIMIT 1000`
-			).bind(institutionId, user.id)
-	).all<SantriRow>();
-
-	const recentConditions = ['s.institution_id = ?', 's.date = ?'];
-	const recentParams: Array<string | number> = [institutionId, selectedDate];
-	if (!canManageSetoranScope) {
-		recentConditions.push('s.ustadz_user_id = ?');
-		recentParams.push(user.id);
-	}
-
-	const { results: recentRaw } = await db
-		.prepare(
-			`SELECT s.id,
-			        s.date,
-			        s.type,
-			        s.surah,
-			        s.ayat_from as ayatFrom,
-			        s.ayat_to as ayatTo,
-			        s.quality,
-			        s.status,
-			        s.notes,
-			        COALESCE(us.username, us.email) as santriName,
-			        COALESCE(ut.username, ut.email) as ustadzName,
-			        h.name as halaqohName,
-			        s.created_at as createdAt
-			 FROM tpq_setoran s
-			 LEFT JOIN users us ON us.id = s.santri_user_id
-			 LEFT JOIN users ut ON ut.id = s.ustadz_user_id
-			 LEFT JOIN tpq_halaqoh h ON h.id = s.halaqoh_id
-			 WHERE ${recentConditions.join(' AND ')}
-			 ORDER BY s.created_at DESC
-			 LIMIT 120`
-		)
-		.bind(...recentParams)
-		.all<SetoranRow>();
-
-	const summaryConditions = ['institution_id = ?', 'date = ?'];
-	const summaryParams: Array<string | number> = [institutionId, todayIsoDate()];
-	if (!canManageSetoranScope) {
-		summaryConditions.push('ustadz_user_id = ?');
-		summaryParams.push(user.id);
-	}
-
-	const todaySummary =
-		(await db
-			.prepare(
-				`SELECT
-					COUNT(*) as total,
-					SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted,
-					SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
-					SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
-				 FROM tpq_setoran
-				 WHERE ${summaryConditions.join(' AND ')}`
+				   AND role IN ('admin', 'ustadz', 'ustadzah')
+				 ORDER BY CASE WHEN role = 'admin' THEN 0 ELSE 1 END, COALESCE(username, email) ASC
+				 LIMIT 500`
 			)
-			.bind(...summaryParams)
-			.first<{
-				total: number | null;
-				submitted: number | null;
-				approved: number | null;
-				rejected: number | null;
-			}>()) ?? { total: 0, submitted: 0, approved: 0, rejected: 0 };
+			.bind(institutionId)
+			.all<TeacherRow>();
 
-	return {
-		role,
-		selectedDate,
-		canChooseUstadz: canManageSetoranScope,
-		teachers: (teachersRaw ?? []) as TeacherRow[],
-		santri: (santriRaw ?? []) as SantriRow[],
-		halaqoh: (halaqohRaw ?? []) as HalaqohRow[],
-		recentSetoran: (recentRaw ?? []) as SetoranRow[],
-		todaySummary: {
-			total: todaySummary.total ?? 0,
-			submitted: todaySummary.submitted ?? 0,
-			approved: todaySummary.approved ?? 0,
-			rejected: todaySummary.rejected ?? 0
+		const { results: santriRaw } = await (canManageSetoranScope
+			? db.prepare(
+					`SELECT id, username, email
+					 FROM users
+					 WHERE org_id = ?
+					   AND (org_status IS NULL OR org_status = 'active')
+					   AND role IN ('santri', 'alumni')
+					 ORDER BY COALESCE(username, email) ASC
+					 LIMIT 1000`
+				).bind(institutionId)
+			: db.prepare(
+					`SELECT u.id, u.username, u.email
+					 FROM santri_ustadz su
+					 JOIN users u ON u.id = su.santri_id
+					 WHERE su.org_id = ?
+					   AND su.ustadz_id = ?
+					   AND (u.org_status IS NULL OR u.org_status = 'active')
+					 ORDER BY COALESCE(u.username, u.email) ASC
+					 LIMIT 1000`
+				).bind(institutionId, user.id)
+		).all<SantriRow>();
+
+		const recentConditions = ['s.institution_id = ?', 's.date = ?'];
+		const recentParams: Array<string | number> = [institutionId, selectedDate];
+		if (!canManageSetoranScope) {
+			recentConditions.push('s.ustadz_user_id = ?');
+			recentParams.push(user.id);
 		}
-	};
+
+		const { results: recentRaw } = await db
+			.prepare(
+				`SELECT s.id,
+				        s.date,
+				        s.type,
+				        s.surah,
+				        s.ayat_from as ayatFrom,
+				        s.ayat_to as ayatTo,
+				        s.quality,
+				        s.status,
+				        s.notes,
+				        COALESCE(us.username, us.email) as santriName,
+				        COALESCE(ut.username, ut.email) as ustadzName,
+				        h.name as halaqohName,
+				        s.created_at as createdAt
+				 FROM tpq_setoran s
+				 LEFT JOIN users us ON us.id = s.santri_user_id
+				 LEFT JOIN users ut ON ut.id = s.ustadz_user_id
+				 LEFT JOIN tpq_halaqoh h ON h.id = s.halaqoh_id
+				 WHERE ${recentConditions.join(' AND ')}
+				 ORDER BY s.created_at DESC
+				 LIMIT 120`
+			)
+			.bind(...recentParams)
+			.all<SetoranRow>();
+
+		const summaryConditions = ['institution_id = ?', 'date = ?'];
+		const summaryParams: Array<string | number> = [institutionId, todayIsoDate()];
+		if (!canManageSetoranScope) {
+			summaryConditions.push('ustadz_user_id = ?');
+			summaryParams.push(user.id);
+		}
+
+		const todaySummary =
+			(await db
+				.prepare(
+					`SELECT
+						COUNT(*) as total,
+						SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted,
+						SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+						SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
+					 FROM tpq_setoran
+					 WHERE ${summaryConditions.join(' AND ')}`
+				)
+				.bind(...summaryParams)
+				.first<{
+					total: number | null;
+					submitted: number | null;
+					approved: number | null;
+					rejected: number | null;
+				}>()) ?? { total: 0, submitted: 0, approved: 0, rejected: 0 };
+
+		return {
+			role,
+			selectedDate,
+			canChooseUstadz: canManageSetoranScope,
+			teachers: (teachersRaw ?? []) as TeacherRow[],
+			santri: (santriRaw ?? []) as SantriRow[],
+			halaqoh: (halaqohRaw ?? []) as HalaqohRow[],
+			recentSetoran: (recentRaw ?? []) as SetoranRow[],
+			todaySummary: {
+				total: todaySummary.total ?? 0,
+				submitted: todaySummary.submitted ?? 0,
+				approved: todaySummary.approved ?? 0,
+				rejected: todaySummary.rejected ?? 0
+			}
+		};
+	} catch (err) {
+		// Preserve redirects / HTTP errors from helpers.
+		if (err && typeof err === 'object' && 'status' in err) throw err;
+		console.error('[tpq/akademik/setoran] load failed', err);
+		throw error(500, 'Gagal memuat data setoran. Coba muat ulang atau buka ulang dari dashboard.');
+	}
 };
 
 export const actions: Actions = {

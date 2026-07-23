@@ -87,13 +87,24 @@ export const requireTpqAcademicContext = async (locals: App.Locals) => {
 		throw error(500, 'Layanan data tidak tersedia');
 	}
 
+	// Super Admin without impersonated/org context cannot open lembaga-only TPQ tools.
+	if (!user.orgId) {
+		throw error(
+			403,
+			'Menu akademik TPQ butuh lembaga aktif. Pilih/impersonate lembaga TPQ dulu, atau buka dari dashboard lembaga.'
+		);
+	}
+
 	const institutionId = assertOrgMember(user);
 	const org = await getOrganizationById(locals.db, institutionId);
 	if (!org) {
 		throw error(404, 'Lembaga tidak ditemukan');
 	}
 	if (org.type !== 'tpq') {
-		throw error(403, 'Workflow akademik ini hanya untuk TPQ.');
+		throw error(
+			403,
+			`Workflow akademik ini hanya untuk TPQ. Lembaga aktif sekarang: ${org.type || 'tidak dikenal'}.`
+		);
 	}
 	if (org.status !== 'active') {
 		throw error(403, 'Lembaga TPQ belum aktif.');
