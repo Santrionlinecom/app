@@ -21,8 +21,6 @@
 	const iconPaths = {
 		dashboard: 'M3 13h8V3H3v10Zm10 8h8V11h-8v10ZM3 21h8v-6H3v6Zm10-12h8V3h-8v6Z',
 		search: 'M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z',
-		sparkles:
-			'M12 3l1.7 4.6L18 9.3l-4.3 1.7L12 15.5 10.3 11 6 9.3l4.3-1.7L12 3Zm6 10 1 2.6 2.5 1-2.5 1-1 2.4-1-2.4-2.5-1 2.5-1 1-2.6ZM5 13l.8 2.1L8 16l-2.2.9L5 19l-.8-2.1L2 16l2.2-.9L5 13Z',
 		chevron: 'M9 18l6-6-6-6',
 		logout: 'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9',
 		user: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0H5z',
@@ -329,46 +327,6 @@
 				</section>
 			{/each}
 		</nav>
-
-		<div
-			class="mt-4 rounded-xl border border-so-gold/45 bg-so-green-3/55 p-4"
-			class:flex={desktopSidebarCollapsed}
-			class:justify-center={desktopSidebarCollapsed}
-			class:p-3={desktopSidebarCollapsed}
-		>
-			<div
-				class="flex items-start gap-3"
-				class:flex-col={desktopSidebarCollapsed}
-				class:items-center={desktopSidebarCollapsed}
-				class:gap-2={desktopSidebarCollapsed}
-			>
-				<span
-					class="grid h-9 w-9 place-items-center rounded-lg bg-so-gold text-so-green"
-					class:h-8={desktopSidebarCollapsed}
-					class:w-8={desktopSidebarCollapsed}
-				>
-					<svg
-						class="h-4 w-4"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.8"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<path d={iconPaths.sparkles} />
-					</svg>
-				</span>
-				{#if !desktopSidebarCollapsed}
-					<div>
-						<p class="font-display text-base font-bold">1 Dashboard</p>
-						<p class="mt-1 text-xs leading-5 text-white/67">
-							Semua menu lembaga, habit, belajar, dan sosial dalam satu shell.
-						</p>
-					</div>
-				{/if}
-			</div>
-		</div>
 	</aside>
 
 	<!-- Mobile drawer -->
