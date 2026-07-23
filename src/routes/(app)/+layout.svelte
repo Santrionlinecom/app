@@ -85,6 +85,8 @@
 	$: roleLabel = roleLabelMap[roleKey] ?? 'Pengguna';
 	$: displayName = data?.user?.username || data?.user?.email || 'Pengguna';
 	$: displayEmail = data?.user?.email || '';
+	$: avatarUrl =
+		(data?.user as { avatarUrl?: string | null } | null | undefined)?.avatarUrl?.trim() || '';
 	$: coinBalance = Number((data as any)?.coinBalance ?? 0);
 	$: coinBalanceLabel = coinBalance.toLocaleString('id-ID');
 	$: displayInitials =
@@ -246,11 +248,21 @@
 				class:flex-col={desktopSidebarCollapsed}
 				class:gap-0={desktopSidebarCollapsed}
 			>
-				<div
-					class="grid h-11 w-11 place-items-center rounded-full bg-so-cream text-xs font-black text-so-green"
-				>
-					{displayInitials}
-				</div>
+				{#if avatarUrl}
+					<img
+						src={avatarUrl}
+						alt={`Foto profil ${displayName}`}
+						class="h-11 w-11 rounded-full object-cover ring-2 ring-white/30"
+						loading="lazy"
+						referrerpolicy="no-referrer"
+					/>
+				{:else}
+					<div
+						class="grid h-11 w-11 place-items-center rounded-full bg-so-cream text-xs font-black text-so-green"
+					>
+						{displayInitials}
+					</div>
+				{/if}
 				{#if !desktopSidebarCollapsed}
 					<div class="min-w-0">
 						<p class="truncate text-sm font-bold">{displayName}</p>
@@ -477,11 +489,21 @@
 							aria-label="Menu profil akun"
 							on:click={toggleProfileMenu}
 						>
-							<div
-								class="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-so-green to-emerald-700 text-sm font-black text-white"
-							>
-								{displayInitials}
-							</div>
+							{#if avatarUrl}
+								<img
+									src={avatarUrl}
+									alt={`Foto profil ${displayName}`}
+									class="h-9 w-9 rounded-full object-cover ring-1 ring-so-border"
+									loading="lazy"
+									referrerpolicy="no-referrer"
+								/>
+							{:else}
+								<div
+									class="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-so-green to-emerald-700 text-sm font-black text-white"
+								>
+									{displayInitials}
+								</div>
+							{/if}
 							<div class="hidden min-w-0 text-left sm:block">
 								<p class="max-w-[120px] truncate text-sm font-bold text-so-ink">{displayName}</p>
 								<p class="max-w-[120px] truncate text-[11px] text-so-muted">{roleLabel}</p>
@@ -510,11 +532,21 @@
 							>
 								<div class="border-b border-slate-100 px-4 py-4">
 									<div class="flex items-center gap-3">
-										<div
-											class="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-so-green to-emerald-700 text-sm font-black text-white"
-										>
-											{displayInitials}
-										</div>
+										{#if avatarUrl}
+											<img
+												src={avatarUrl}
+												alt={`Foto profil ${displayName}`}
+												class="h-12 w-12 rounded-full object-cover ring-2 ring-emerald-100"
+												loading="lazy"
+												referrerpolicy="no-referrer"
+											/>
+										{:else}
+											<div
+												class="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-so-green to-emerald-700 text-sm font-black text-white"
+											>
+												{displayInitials}
+											</div>
+										{/if}
 										<div class="min-w-0">
 											<p class="truncate text-sm font-bold text-slate-900">{displayName}</p>
 											{#if displayEmail}
