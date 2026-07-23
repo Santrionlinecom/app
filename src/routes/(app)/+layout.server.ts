@@ -119,17 +119,25 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const isDashboardRoute = url.pathname === '/dashboard' || url.pathname.startsWith('/dashboard/');
 	const isLembagaRoute = url.pathname === '/lembaga' || url.pathname.startsWith('/lembaga/');
 	const isAkunRoute = url.pathname === '/akun' || url.pathname.startsWith('/akun/');
+	// CMS + other app-scoped admin tools (shell shared with dashboard)
+	const isAppAdminRoute =
+		url.pathname === '/admin/posts' ||
+		url.pathname.startsWith('/admin/posts/') ||
+		url.pathname === '/admin/licenses' ||
+		url.pathname.startsWith('/admin/licenses/') ||
+		url.pathname === '/admin/peta' ||
+		url.pathname.startsWith('/admin/peta/');
 	const orgId = user.orgId ?? null;
 	let org = null;
 
 	if (orgId) {
 		org = await getOrganizationById(locals.db, orgId);
-		if (!org && !isDashboardRoute && !isAkunRoute) {
+		if (!org && !isDashboardRoute && !isAkunRoute && !isAppAdminRoute) {
 			throw error(404, 'Lembaga tidak ditemukan');
 		}
 	} else if (isDashboardRoute) {
 		throw redirect(302, '/lembaga');
-	} else if (!isDashboardRoute && !isLembagaRoute && !isAkunRoute) {
+	} else if (!isDashboardRoute && !isLembagaRoute && !isAkunRoute && !isAppAdminRoute) {
 		throw error(403, 'Akun belum terhubung ke lembaga.');
 	}
 

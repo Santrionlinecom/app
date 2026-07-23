@@ -70,6 +70,9 @@ const appRoutePrefixes = [
 	'/habit',
 	'/beranda',
 	'/akun',
+	'/admin/posts',
+	'/admin/licenses',
+	'/admin/peta',
 	'/org'
 ];
 const isAppRoute = (path: string) =>
