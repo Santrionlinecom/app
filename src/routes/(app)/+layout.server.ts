@@ -119,14 +119,8 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const isDashboardRoute = url.pathname === '/dashboard' || url.pathname.startsWith('/dashboard/');
 	const isLembagaRoute = url.pathname === '/lembaga' || url.pathname.startsWith('/lembaga/');
 	const isAkunRoute = url.pathname === '/akun' || url.pathname.startsWith('/akun/');
-	// CMS + other app-scoped admin tools (shell shared with dashboard)
-	const isAppAdminRoute =
-		url.pathname === '/admin/posts' ||
-		url.pathname.startsWith('/admin/posts/') ||
-		url.pathname === '/admin/licenses' ||
-		url.pathname.startsWith('/admin/licenses/') ||
-		url.pathname === '/admin/peta' ||
-		url.pathname.startsWith('/admin/peta/');
+	// All /admin/* tools share the unified dashboard shell
+	const isAppAdminRoute = url.pathname === '/admin' || url.pathname.startsWith('/admin/');
 	const orgId = user.orgId ?? null;
 	let org = null;
 

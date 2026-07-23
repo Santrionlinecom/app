@@ -70,13 +70,12 @@ const appRoutePrefixes = [
 	'/habit',
 	'/beranda',
 	'/akun',
-	'/admin/posts',
-	'/admin/licenses',
-	'/admin/peta',
+	'/admin',
 	'/org'
 ];
 const isAppRoute = (path: string) =>
 	appRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+// Admin pages now live in the unified app shell; keep helper for legacy nav labels only.
 const isAdminRoute = (path: string) => path === '/admin' || path.startsWith('/admin/');
 let isAppRouteActive = false;
 let isAdminRouteActive = false;
@@ -1721,8 +1720,8 @@ $: if (pathname !== previousPathname) {
 		</footer>
 	{/if}
 
-	<!-- Bottom nav (mobile) - Always show for logged-in users -->
-	{#if data?.user && !hideMobileBottomNavigation}
+	<!-- Bottom nav (mobile) - only for logged-in users outside unified app shell -->
+	{#if data?.user && !hideMobileBottomNavigation && !isAppRouteActive}
 		<nav
 			class={`pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom transition-transform duration-300 ease-in-out will-change-transform ${
 				shouldHideMobileChrome ? 'translate-y-full' : 'translate-y-0'
