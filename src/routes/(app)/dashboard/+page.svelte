@@ -361,9 +361,7 @@
 						: `Ringkasan aktivitas ${orgName} sesuai izin akun.`;
 		contextPills = [
 			{ label: roleLabel, active: true },
-			{ label: orgTypeLabel },
-			{ label: dashboardModeLabel },
-			{ label: 'Tampilan mengikuti izin akun' }
+			{ label: orgTypeLabel }
 		];
 		featureCards =
 			orgType === 'masjid'
@@ -1454,31 +1452,29 @@
 
 <div class="dashboard-command-shell mx-auto w-full max-w-[90rem] space-y-6 text-so-ink">
 	<section class="fade-in admin-card min-w-0 overflow-hidden" style="animation-delay: 40ms;">
-		<div
-			class="grid min-w-0 gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)] lg:items-stretch"
-		>
-			<div class="min-w-0">
-				<div class="flex min-w-0 flex-wrap items-center gap-2">
-					{#each contextPills as pill}
-						<span
-							class={`inline-flex min-h-9 max-w-full items-center rounded-full border px-3 py-1.5 text-xs font-bold ${
-								pill.active
-									? 'border-so-green bg-so-green text-white shadow-sm'
-									: 'border-so-border bg-so-cream text-so-muted'
-							}`}
-						>
-							<span class="min-w-0 break-words">{pill.label}</span>
-						</span>
-					{/each}
-				</div>
-				<h1
-					class="font-display mt-4 break-words text-3xl font-bold leading-tight text-so-green sm:text-4xl"
-				>
-					{dashboardTitle}
-				</h1>
-				<p class="mt-2 max-w-3xl break-words text-sm leading-6 text-so-muted sm:text-base">
-					{dashboardSubtitle}
-				</p>
+		<div class="min-w-0 p-5 sm:p-6">
+			<div class="flex min-w-0 flex-wrap items-center gap-2">
+				{#each contextPills as pill}
+					<span
+						class={`inline-flex min-h-9 max-w-full items-center rounded-full border px-3 py-1.5 text-xs font-bold ${
+							pill.active
+								? 'border-so-green bg-so-green text-white shadow-sm'
+								: 'border-so-border bg-so-cream text-so-muted'
+						}`}
+					>
+						<span class="min-w-0 break-words">{pill.label}</span>
+					</span>
+				{/each}
+			</div>
+			<h1
+				class="font-display mt-4 break-words text-3xl font-bold leading-tight text-so-green sm:text-4xl"
+			>
+				{dashboardTitle}
+			</h1>
+			<p class="mt-2 max-w-3xl break-words text-sm leading-6 text-so-muted sm:text-base">
+				{dashboardSubtitle}
+			</p>
+			{#if statHighlights.length}
 				<div class="mt-5 grid min-w-0 gap-3 sm:grid-cols-3">
 					{#each statHighlights as item}
 						<a
@@ -1490,30 +1486,7 @@
 						</a>
 					{/each}
 				</div>
-			</div>
-			<div class="min-w-0 rounded-xl border border-so-border bg-so-cream p-3 shadow-sm sm:p-4">
-				<div
-					class="flex min-w-0 items-center gap-3 rounded-xl border border-so-border bg-white px-3 py-3 shadow-sm"
-				>
-					<Search size={18} class="shrink-0 text-so-muted" strokeWidth={2.2} />
-					<div class="min-w-0 flex-1">
-						<p class="truncate text-sm font-bold text-so-ink">
-							{displayName}
-						</p>
-						<p class="truncate text-xs text-so-muted">
-							{orgName} - {roleLabel}
-						</p>
-					</div>
-				</div>
-				<div
-					class="mt-3 flex min-w-0 items-start gap-2 rounded-xl border border-so-gold/30 bg-white/75 px-3 py-3 text-xs text-so-muted"
-				>
-					<ShieldCheck size={15} class="mt-0.5 shrink-0 text-so-green" strokeWidth={2.2} />
-					<span class="min-w-0 break-words"
-						>Ini bukan role switcher. Tampilan mengikuti izin akun aktif.</span
-					>
-				</div>
-			</div>
+			{/if}
 		</div>
 	</section>
 
@@ -1721,40 +1694,8 @@
 		</div>
 
 		<div
-			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-4"
+			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-8"
 			style="animation-delay: 190ms;"
-		>
-			<div class="flex min-w-0 items-start justify-between gap-3">
-				<div class="min-w-0">
-					<p class="text-xs font-bold uppercase text-so-green">Quick Actions</p>
-					<h2 class="font-display mt-1 break-words text-xl font-bold text-so-green">Akses Cepat</h2>
-				</div>
-				<Zap size={20} class="shrink-0 text-amber-600" strokeWidth={2.2} />
-			</div>
-			<div class="mt-4 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
-				{#each quickLinks as item}
-					<a
-						href={item.href}
-						class="group flex min-h-16 min-w-0 items-center gap-3 rounded-xl border border-so-border bg-white p-3 text-left transition hover:border-so-green hover:bg-so-cream/50 hover:shadow-sm"
-					>
-						<span
-							class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-so-green/10 text-so-green"
-						>
-							<svelte:component this={getQuickIcon(item.label)} size={19} strokeWidth={2.2} />
-						</span>
-						<span class="min-w-0 flex-1">
-							<span class="block break-words text-sm font-bold text-so-ink">{item.label}</span>
-							<span class="mt-1 block break-words text-xs leading-5 text-so-muted">{item.desc}</span
-							>
-						</span>
-					</a>
-				{/each}
-			</div>
-		</div>
-
-		<div
-			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-4"
-			style="animation-delay: 220ms;"
 		>
 			<div class="flex min-w-0 items-start justify-between gap-3">
 				<div class="min-w-0">
@@ -1765,7 +1706,7 @@
 				</div>
 				<Sparkles size={20} class="shrink-0 text-amber-600" strokeWidth={2.2} />
 			</div>
-			<div class="mt-4 space-y-3">
+			<div class="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
 				{#each insightCards as item}
 					<div class="flex min-w-0 gap-3 rounded-xl border border-so-border bg-so-cream/60 p-3">
 						<span
@@ -1790,52 +1731,6 @@
 		</div>
 	</section>
 
-	<section
-		class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
-		style="animation-delay: 250ms;"
-	>
-		<div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-			<div class="min-w-0">
-				<p class="text-xs font-bold uppercase text-so-green">Fitur Lembaga</p>
-				<h2 class="font-display mt-1 break-words text-xl font-bold text-so-green sm:text-2xl">
-					{orgName}
-				</h2>
-			</div>
-			<p class="break-words text-xs text-so-muted sm:text-sm">
-				Menu disesuaikan dengan tipe lembaga dan role akun.
-			</p>
-		</div>
-
-		<div class="mt-5 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-			{#each featureCards as card}
-				<a
-					href={card.href}
-					class="group flex min-h-[7rem] min-w-0 flex-col rounded-xl border border-so-border bg-white p-4 transition hover:border-so-green hover:bg-so-cream/50 hover:shadow-sm"
-				>
-					<div class="flex min-w-0 items-start justify-between gap-3">
-						<span
-							class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-so-green/10 text-so-green"
-						>
-							<svelte:component this={getQuickIcon(card.label)} size={19} strokeWidth={2.2} />
-						</span>
-						{#if isSoonLink(card.href)}
-							<span
-								class="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700"
-								>Segera</span
-							>
-						{/if}
-					</div>
-					<p class="mt-3 break-words text-sm font-bold text-so-ink">
-						{card.label}
-					</p>
-					<p class="mt-1.5 break-words text-xs leading-5 text-so-muted">
-						{card.desc}
-					</p>
-				</a>
-			{/each}
-		</div>
-	</section>
-
 	{#if orgType === 'tpq' && tpqDashboard}
 		<section
 			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
@@ -1855,8 +1750,7 @@
 				</div>
 				<div class="flex min-w-0 flex-wrap gap-2">
 					<a href={academicPrimaryHref} class="btn btn-sm btn-primary">Buka akademik</a>
-					<a href="/tpq/akademik/riwayat" class="btn btn-sm btn-outline">Riwayat</a>
-					<a href="/kalender" class="btn btn-sm btn-ghost">Agenda</a>
+					<a href="/habit" class="btn btn-sm btn-outline">Misi habit</a>
 				</div>
 			</div>
 
