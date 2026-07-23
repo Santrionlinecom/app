@@ -121,17 +121,49 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const isAkunRoute = url.pathname === '/akun' || url.pathname.startsWith('/akun/');
 	// All /admin/* tools share the unified dashboard shell
 	const isAppAdminRoute = url.pathname === '/admin' || url.pathname.startsWith('/admin/');
+	// Personal / shared app surfaces that must work with or without org context
+	const isPersonalAppRoute =
+		url.pathname === '/coins' ||
+		url.pathname.startsWith('/coins/') ||
+		url.pathname === '/buku/saya' ||
+		url.pathname.startsWith('/buku/saya/') ||
+		url.pathname === '/buku/studio' ||
+		url.pathname.startsWith('/buku/studio/') ||
+		url.pathname === '/menunggu' ||
+		url.pathname.startsWith('/menunggu/') ||
+		url.pathname === '/sertifikat' ||
+		url.pathname.startsWith('/sertifikat/') ||
+		url.pathname === '/addon' ||
+		url.pathname.startsWith('/addon/') ||
+		url.pathname === '/fitur-belum-tersedia' ||
+		url.pathname.startsWith('/fitur-belum-tersedia') ||
+		url.pathname === '/kalender' ||
+		url.pathname.startsWith('/kalender/') ||
+		url.pathname === '/habit' ||
+		url.pathname.startsWith('/habit/') ||
+		url.pathname === '/belajar' ||
+		url.pathname.startsWith('/belajar/') ||
+		url.pathname === '/beranda' ||
+		url.pathname.startsWith('/beranda/') ||
+		url.pathname === '/sosial' ||
+		url.pathname.startsWith('/sosial/');
 	const orgId = user.orgId ?? null;
 	let org = null;
 
 	if (orgId) {
 		org = await getOrganizationById(locals.db, orgId);
-		if (!org && !isDashboardRoute && !isAkunRoute && !isAppAdminRoute) {
+		if (!org && !isDashboardRoute && !isAkunRoute && !isAppAdminRoute && !isPersonalAppRoute) {
 			throw error(404, 'Lembaga tidak ditemukan');
 		}
 	} else if (isDashboardRoute) {
 		throw redirect(302, '/lembaga');
-	} else if (!isDashboardRoute && !isLembagaRoute && !isAkunRoute && !isAppAdminRoute) {
+	} else if (
+		!isDashboardRoute &&
+		!isLembagaRoute &&
+		!isAkunRoute &&
+		!isAppAdminRoute &&
+		!isPersonalAppRoute
+	) {
 		throw error(403, 'Akun belum terhubung ke lembaga.');
 	}
 

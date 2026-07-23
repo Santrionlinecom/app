@@ -133,6 +133,23 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'wali_kelas', 'ustadz', 'ustadzah']
 		},
 		{
+			label: 'Review Setoran',
+			href: '/tpq/akademik/review',
+			icon: ICONS.check,
+			allowedTypes: ['tpq'],
+			group: 'akademik',
+			permission: 'hafalan.review',
+			allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'ustadz', 'ustadzah']
+		},
+		{
+			label: 'Riwayat Setoran',
+			href: '/tpq/akademik/riwayat',
+			icon: ICONS.file,
+			allowedTypes: ['tpq'],
+			group: 'akademik',
+			anyPermission: ['hafalan.read', 'hafalan.input', 'hafalan.review']
+		},
+		{
 			label: 'Ujian',
 			href: '/dashboard/ujian-tahfidz',
 			icon: ICONS.star,
@@ -159,12 +176,37 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			]
 		},
 		{
+			label: 'Sertifikat',
+			href: '/dashboard/sertifikat',
+			icon: ICONS.star,
+			allowedTypes: ['tpq'],
+			group: 'akademik',
+			permission: 'raport.read',
+			allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'ustadz', 'ustadzah', 'santri']
+		},
+		{
 			label: 'Akademik',
 			href: '/tpq/akademik',
 			icon: ICONS.book,
 			allowedTypes: ['tpq'],
 			group: 'akademik',
 			anyPermission: ['hafalan.read', 'hafalan.input', 'hafalan.review']
+		},
+		{
+			label: 'Kelola Role',
+			href: '/dashboard/kelola-role',
+			icon: ICONS.shield,
+			allowedTypes: ['tpq'],
+			group: 'operasional',
+			allowedRoles: ['admin', 'kepala_tpq']
+		},
+		{
+			label: 'Kelola Lembaga',
+			href: '/dashboard/kelola-lembaga',
+			icon: ICONS.building,
+			allowedTypes: ['tpq'],
+			group: 'operasional',
+			allowedRoles: ['admin', 'kepala_tpq']
 		},
 		{
 			label: 'Jadwal',
@@ -293,6 +335,22 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			]
 		},
 		{
+			label: 'Aset',
+			href: '/dashboard/kelola-aset',
+			icon: ICONS.building,
+			allowedTypes: ['masjid'],
+			group: 'operasional',
+			allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'bendahara', 'operator']
+		},
+		{
+			label: 'Kelola Role',
+			href: '/dashboard/kelola-role',
+			icon: ICONS.shield,
+			allowedTypes: ['masjid'],
+			group: 'operasional',
+			allowedRoles: ['admin', 'ketua_takmir']
+		},
+		{
 			label: 'Qurban',
 			href: fallbackHref('Qurban'),
 			icon: ICONS.star,
@@ -352,6 +410,22 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			allowedTypes: ['musholla'],
 			group: 'operasional',
 			allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'imam', 'muadzin', 'operator']
+		},
+		{
+			label: 'Aset',
+			href: '/dashboard/kelola-aset',
+			icon: ICONS.building,
+			allowedTypes: ['musholla'],
+			group: 'operasional',
+			allowedRoles: ['admin', 'ketua_takmir', 'takmir', 'tamir', 'bendahara', 'operator']
+		},
+		{
+			label: 'Kelola Role',
+			href: '/dashboard/kelola-role',
+			icon: ICONS.shield,
+			allowedTypes: ['musholla'],
+			group: 'operasional',
+			allowedRoles: ['admin', 'ketua_takmir']
 		},
 		{
 			label: 'Qurban',

@@ -69,8 +69,18 @@ const appRoutePrefixes = [
 	'/belajar',
 	'/habit',
 	'/beranda',
+	'/sosial',
 	'/akun',
 	'/admin',
+	'/addon',
+	'/lembaga',
+	'/kalender',
+	'/coins',
+	'/menunggu',
+	'/sertifikat',
+	'/buku/saya',
+	'/buku/studio',
+	'/fitur-belum-tersedia',
 	'/org'
 ];
 const isAppRoute = (path: string) =>
