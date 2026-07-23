@@ -201,16 +201,14 @@
 			</div>
 
 			<!-- Action Buttons -->
-			{#if isPending}
+			{#if isPending && !req.paymentProvider && req.proofUrl}
 				<div class="mt-8 space-y-4">
-					<!-- Approve Form -->
 					<form method="POST" action="?/approve" use:enhance>
 						<button type="submit" class="btn btn-primary w-full">
 							✓ Setuju & Tambahkan Koin
 						</button>
 					</form>
 
-					<!-- Reject Form -->
 					<form method="POST" action="?/reject" use:enhance class="space-y-3">
 						<label for="admin_note" class="block text-sm font-medium text-slate-700">
 							Catatan Penolakan (opsional)
@@ -226,6 +224,16 @@
 							✕ Tolak Request
 						</button>
 					</form>
+				</div>
+			{:else if isPending && req.paymentProvider}
+				<div class="mt-8 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-center">
+					<p class="font-semibold text-sky-900">Pembayaran diproses otomatis</p>
+					<p class="mt-1 text-sm text-sky-700">Status Midtrans diperbarui melalui notifikasi pembayaran resmi.</p>
+				</div>
+			{:else if isPending}
+				<div class="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center">
+					<p class="font-semibold text-amber-900">Bukti pembayaran belum tersedia</p>
+					<p class="mt-1 text-sm text-amber-700">Top up manual belum dapat disetujui.</p>
 				</div>
 			{:else}
 				<div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center">

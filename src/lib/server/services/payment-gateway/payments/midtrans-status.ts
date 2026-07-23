@@ -13,8 +13,11 @@ export const mapMidtransPaymentStatus = (transactionStatus: string, fraudStatus:
 		case 'deny':
 			return 'denied';
 		case 'refund':
-		case 'partial_refund':
 			return 'refunded';
+		case 'partial_refund':
+			// Keep the order fulfilled: a partial refund does not justify revoking
+			// the entire coin credit or addon. provider_status still records it.
+			return 'sukses';
 		case 'failure':
 			return 'gagal';
 		default:

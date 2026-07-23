@@ -1,6 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
 
-export const COIN_TRANSACTION_TYPES = ['topup', 'unlock_chapter', 'adjustment', 'refund'] as const;
+export const COIN_TRANSACTION_TYPES = ['topup', 'unlock_chapter', 'purchase', 'adjustment', 'refund'] as const;
 export const COIN_TOPUP_STATUSES = ['pending', 'approved', 'rejected'] as const;
 
 export type CoinTransactionType = (typeof COIN_TRANSACTION_TYPES)[number];
@@ -96,7 +96,7 @@ export async function ensureBukuWalletSchema(db: D1Database) {
 			`CREATE TABLE IF NOT EXISTS coin_transactions (
 				id TEXT PRIMARY KEY,
 				user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-				type TEXT NOT NULL CHECK (type IN ('topup', 'unlock_chapter', 'adjustment', 'refund')),
+				type TEXT NOT NULL CHECK (type IN ('topup', 'unlock_chapter', 'purchase', 'adjustment', 'refund')),
 				amount INTEGER NOT NULL,
 				balance_after INTEGER,
 				description TEXT,

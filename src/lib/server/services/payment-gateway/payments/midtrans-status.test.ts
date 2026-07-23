@@ -21,6 +21,11 @@ test('Midtrans statuses map to internal payment statuses safely', () => {
 	assert.equal(mapMidtransPaymentStatus('cancel', ''), 'canceled');
 	assert.equal(mapMidtransPaymentStatus('deny', ''), 'denied');
 	assert.equal(mapMidtransPaymentStatus('refund', ''), 'refunded');
+	assert.equal(
+		mapMidtransPaymentStatus('partial_refund', ''),
+		'sukses',
+		'partial refund must preserve the remaining entitlement and must not trigger a full reversal'
+	);
 	assert.equal(mapMidtransPaymentStatus('failure', ''), 'gagal');
 	assert.equal(mapMidtransPaymentStatus('unknown', ''), 'pending');
 });

@@ -240,6 +240,7 @@
 				</div>
 			{:else}
 				<form on:submit={handlePurchase} class="mt-6 space-y-6">
+					<input type="hidden" name="purchaseKey" value={data.purchaseKey} />
 					<div class="grid gap-4 md:grid-cols-2">
 						<label class="block">
 							<span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"

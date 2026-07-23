@@ -285,6 +285,7 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 			`CREATE TABLE IF NOT EXISTS digital_product_sales (
 				id TEXT PRIMARY KEY,
 				product_id TEXT NOT NULL REFERENCES digital_products(id) ON DELETE CASCADE,
+				buyer_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
 				buyer_name TEXT,
 				buyer_contact TEXT,
 				amount INTEGER NOT NULL,
@@ -301,6 +302,7 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 				verified_by TEXT REFERENCES users(id) ON DELETE SET NULL,
 				verified_at INTEGER,
 				access_token TEXT,
+				purchase_key TEXT UNIQUE,
 				paid_at INTEGER,
 				created_at INTEGER NOT NULL,
 				updated_at INTEGER NOT NULL
@@ -363,6 +365,18 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 	} catch (_) {
 		// ignore when column already exists
 	}
+	try {
+		await db
+			.prepare('ALTER TABLE digital_product_sales ADD COLUMN buyer_user_id TEXT REFERENCES users(id) ON DELETE SET NULL')
+			.run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_product_sales ADD COLUMN purchase_key TEXT').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
 
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_digital_products_slug ON digital_products(slug)').run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_digital_products_status ON digital_products(status)').run();
@@ -389,6 +403,16 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 	await db
 		.prepare(
 			'CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_reference_code ON digital_product_sales(reference_code)'
+		)
+		.run();
+	await db
+		.prepare(
+			'CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_purchase_key ON digital_product_sales(purchase_key) WHERE purchase_key IS NOT NULL'
+		)
+		.run();
+	await db
+		.prepare(
+			'CREATE INDEX IF NOT EXISTS idx_digital_product_sales_buyer_user ON digital_product_sales(buyer_user_id, created_at DESC)'
 		)
 		.run();
 	await db

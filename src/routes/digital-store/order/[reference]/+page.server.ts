@@ -52,13 +52,7 @@ export const actions: Actions = {
 
 		await ensureDigitalCommerceSchema(locals.db);
 		const formData = await request.formData();
-		const turnstile = await verifyTurnstileFormData(formData, getRequestIp(request) ?? undefined);
-		if (!turnstile.success) {
-			return fail(400, { error: TURNSTILE_FAILURE_MESSAGE });
-		}
-
 		const token = normalizeText(formData.get('token'));
-		const proofFile = formData.get('proofFile');
 
 		if (!token) {
 			return fail(400, { error: 'Kode akses pesanan tidak valid.' });
@@ -68,6 +62,16 @@ export const actions: Actions = {
 		if (!order) {
 			return fail(404, { error: 'Pesanan tidak ditemukan.' });
 		}
+		if (order.paymentMethodType !== 'manual' || order.status !== 'pending') {
+			return fail(409, { error: 'Pesanan ini tidak menerima unggahan bukti pembayaran.' });
+		}
+
+		const turnstile = await verifyTurnstileFormData(formData, getRequestIp(request) ?? undefined);
+		if (!turnstile.success) {
+			return fail(400, { error: TURNSTILE_FAILURE_MESSAGE });
+		}
+
+		const proofFile = formData.get('proofFile');
 		if (!(proofFile instanceof File) || proofFile.size <= 0) {
 			return fail(400, { error: 'Pilih file bukti bayar terlebih dahulu.' });
 		}

@@ -3,7 +3,14 @@ import { generateId } from 'lucia';
 import { ensureBukuWalletSchema } from '$lib/server/domains/buku/wallet';
 import { dispatchPaymentSuccessNotificationsBestEffort } from '$lib/server/notifications/payment-success-notifications';
 import { ensurePaymentOrdersSchema } from '$lib/server/services/payment-gateway/payments/midtrans';
-import { fulfillPendingCoinTopup } from '$lib/server/services/payment-gateway/payments/coin-topup-fulfillment';
+import {
+	fulfillPendingCoinTopup,
+	reverseApprovedCoinTopup
+} from '$lib/server/services/payment-gateway/payments/coin-topup-fulfillment';
+import {
+	fulfillAddonPayment,
+	reverseAddonPayment
+} from '$lib/server/services/payment-gateway/payments/addon-fulfillment';
 import { fetchMidtransTransactionStatus } from '$lib/server/services/payment-gateway/payments/midtrans-status-api';
 import {
 	isSuccessfulMidtransTransaction,
@@ -117,11 +124,13 @@ const settleCoinTopup = async ({
 
 	if (isSuccessfulMidtransTransaction(transactionStatus, fraudStatus)) {
 		if (topup.status === 'approved') {
-			await db
-				.prepare("UPDATE payment_orders SET status = 'sukses', provider_status = ?, updated_at = ? WHERE id = ?")
+			const transition = await db
+				.prepare(
+					"UPDATE payment_orders SET status = 'sukses', provider_status = ?, updated_at = ? WHERE id = ? AND status <> 'refunded'"
+				)
 				.bind(transactionStatus, nowMs, orderId)
 				.run();
-			return true;
+			return Number(transition.meta?.changes ?? 0) === 1;
 		}
 
 		if (topup.status !== 'pending') {
@@ -145,6 +154,18 @@ const settleCoinTopup = async ({
 	}
 
 	const paymentStatus = mapMidtransPaymentStatus(transactionStatus, fraudStatus);
+	if (paymentStatus === 'refunded') {
+		await reverseApprovedCoinTopup({
+			db,
+			orderId,
+			userId: topup.userId,
+			coinAmount: Number(topup.coinAmount ?? 0),
+			transactionStatus,
+			nowIso,
+			nowMs
+		});
+		return false;
+	}
 	const shouldRejectTopup = ['gagal', 'expired', 'canceled', 'denied'].includes(paymentStatus);
 	await db.batch([
 		db
@@ -307,40 +328,31 @@ export const POST: RequestHandler = async ({ fetch, locals, platform, request })
 	}
 
 	if (isSuccessfulMidtransTransaction(transactionStatus, fraudStatus)) {
-		const now = Date.now();
-		const berlakuHingga = Math.floor(now / 1000) + 2592000;
-
-		await db.batch([
-			db.prepare("UPDATE billing SET status = 'sukses' WHERE id = ?").bind(orderId),
-			db
-				.prepare(
-					"UPDATE payment_orders SET status = 'sukses', provider_status = ?, updated_at = ? WHERE id = ?"
-				)
-				.bind(transactionStatus, now, orderId),
-			db
-				.prepare(
-					`INSERT INTO addon_lembaga (
-						id,
-						lembaga_id,
-						tipe_addon,
-						status,
-						berlaku_hingga,
-						created_at
-					)
-					VALUES (?, ?, ?, 'aktif', ?, ?)
-					ON CONFLICT(lembaga_id, tipe_addon) DO UPDATE SET
-						status = 'aktif',
-						berlaku_hingga = excluded.berlaku_hingga,
-						created_at = excluded.created_at`
-				)
-				.bind(nanoid(), paymentOrder.lembagaId, paymentOrder.productSlug, berlakuHingga, now)
-		]);
-		await sendSuccessNotifications();
+		const fulfilled = await fulfillAddonPayment({
+			db,
+			orderId,
+			lembagaId: paymentOrder.lembagaId,
+			addonType: paymentOrder.productSlug,
+			addonId: nanoid(),
+			transactionStatus
+		});
+		if (fulfilled) await sendSuccessNotifications();
 	} else {
-		await db
-			.prepare('UPDATE payment_orders SET status = ?, provider_status = ?, updated_at = ? WHERE id = ?')
-			.bind(mapMidtransPaymentStatus(transactionStatus, fraudStatus), transactionStatus, Date.now(), orderId)
-			.run();
+		const paymentStatus = mapMidtransPaymentStatus(transactionStatus, fraudStatus);
+		if (paymentStatus === 'refunded') {
+			await reverseAddonPayment({
+				db,
+				orderId,
+				lembagaId: paymentOrder.lembagaId,
+				addonType: paymentOrder.productSlug,
+				transactionStatus
+			});
+		} else {
+			await db
+				.prepare('UPDATE payment_orders SET status = ?, provider_status = ?, updated_at = ? WHERE id = ?')
+				.bind(paymentStatus, transactionStatus, Date.now(), orderId)
+				.run();
+		}
 	}
 
 	return json({ ok: true }, { status: 200 });

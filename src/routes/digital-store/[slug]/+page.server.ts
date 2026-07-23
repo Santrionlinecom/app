@@ -4,12 +4,9 @@ import {
 	ensureDigitalCommerceSchema,
 	getPublishedDigitalProductBySlug
 } from '$lib/server/domains/digital-store/commerce';
-import {
-	checkCoinBalance,
-	deductCoins,
-	rupiahToCoin
-} from '$lib/server/domains/buku/coin-operations';
-import { ensureCoinWallet, getCoinBalance } from '$lib/server/domains/buku/wallet';
+import { rupiahToCoin } from '$lib/server/domains/buku/coin-operations';
+import { getCoinBalance } from '$lib/server/domains/buku/wallet';
+import { checkoutDigitalProductWithCoins } from '$lib/server/domains/digital-store/coin-checkout';
 
 const normalizeText = (value: FormDataEntryValue | null) =>
 	typeof value === 'string' ? value.trim() : '';
@@ -35,7 +32,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		product,
 		coinBalance,
-		isLoggedIn: !!locals.user
+		isLoggedIn: !!locals.user,
+		purchaseKey: `checkout:${crypto.randomUUID()}`
 	};
 };
 
@@ -62,6 +60,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const buyerName = normalizeText(formData.get('buyerName'));
 		const buyerContact = normalizeText(formData.get('buyerContact'));
+		const purchaseKey = normalizeText(formData.get('purchaseKey'));
 
 		if (!buyerName) {
 			return fail(400, { error: 'Nama pembeli wajib diisi.' });
@@ -69,98 +68,51 @@ export const actions: Actions = {
 		if (!buyerContact) {
 			return fail(400, { error: 'Nomor WhatsApp atau kontak wajib diisi.' });
 		}
-
-		// Ensure coin wallet exists
-		await ensureCoinWallet(locals.db, locals.user.id);
+		if (!purchaseKey) {
+			return fail(400, { error: 'Sesi checkout tidak valid. Muat ulang halaman lalu coba lagi.' });
+		}
 
 		// Convert price to coin (1:1 conversion)
 		const coinRequired = rupiahToCoin(product.price);
 
-		// Check coin balance
-		const balanceCheck = await checkCoinBalance(locals.db, locals.user.id, coinRequired);
-		if (!balanceCheck.hasEnough) {
-			return fail(400, {
-				type: 'insufficient_coin',
-				error: 'Saldo coin tidak cukup.',
-				currentBalance: balanceCheck.currentBalance,
-				requiredAmount: balanceCheck.required,
-				shortfall: balanceCheck.shortfall,
-				productName: product.title
-			});
-		}
-
-		const orderId = crypto.randomUUID();
-		const referenceCode = `DS-${Date.now()}-${orderId.slice(0, 8).toUpperCase()}`;
-		const accessToken = crypto.randomUUID();
-		const now = new Date().toISOString();
-
 		try {
-			// Deduct coins
-			const deductResult = await deductCoins(
-				locals.db,
-				locals.user.id,
-				coinRequired,
-				`Pembelian ${product.title}`,
-				'digital_product',
-				orderId
-			);
+			const result = await checkoutDigitalProductWithCoins({
+				db: locals.db,
+				userId: locals.user.id,
+				productId: product.id,
+				productTitle: product.title,
+				coinAmount: coinRequired,
+				buyerName,
+				buyerContact,
+				purchaseKey
+			});
 
-			if (!deductResult.success) {
+			if (result.status === 'insufficient_coin') {
 				return fail(400, {
-					type: 'deduct_failed',
-					error: deductResult.error || 'Gagal memproses pembayaran coin.'
+					type: 'insufficient_coin',
+					error: 'Saldo coin tidak cukup.',
+					currentBalance: result.balance,
+					requiredAmount: result.required,
+					shortfall: Math.max(0, result.required - result.balance),
+					productName: product.title
 				});
 			}
 
-			// Create digital sale record
-			await locals.db
-				.prepare(
-					`INSERT INTO digital_sales (
-						id,
-						product_id,
-						buyer_user_id,
-						buyer_name,
-						buyer_contact,
-						reference_code,
-						access_token,
-						price_paid,
-						payment_method,
-						status,
-						created_at,
-						updated_at
-					)
-					VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'coin', 'completed', ?, ?)`
-				)
-				.bind(
-					orderId,
-					product.id,
-					locals.user.id,
-					buyerName,
-					buyerContact,
-					referenceCode,
-					accessToken,
-					product.price,
-					now,
-					now
-				)
-				.run();
-
 			console.info('digital_store_order_success_coin', {
-				order_id: orderId,
+				order_id: result.orderId,
 				product_id: product.id,
-				product_name: product.title,
 				coin_amount: coinRequired,
-				new_balance: deductResult.newBalance
+				new_balance: result.balanceAfter,
+				result: result.status
 			});
 
 			throw redirect(
 				303,
-				`/digital-store/order/${referenceCode}?token=${encodeURIComponent(accessToken)}`
+				`/digital-store/order/${result.referenceCode}?token=${encodeURIComponent(result.accessToken)}`
 			);
 		} catch (err: any) {
 			if (err?.status === 303) throw err;
 			console.error('digital_store_order_error', {
-				order_id: orderId,
 				product_id: product.id,
 				error: err.message
 			});

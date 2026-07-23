@@ -438,6 +438,7 @@ CREATE INDEX IF NOT EXISTS idx_digital_product_payment_methods_product ON digita
 CREATE TABLE IF NOT EXISTS digital_product_sales (
   id TEXT PRIMARY KEY,
   product_id TEXT NOT NULL REFERENCES digital_products(id) ON DELETE CASCADE,
+  buyer_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
   buyer_name TEXT,
   buyer_contact TEXT,
   amount INTEGER NOT NULL,
@@ -454,6 +455,7 @@ CREATE TABLE IF NOT EXISTS digital_product_sales (
   verified_by TEXT REFERENCES users(id) ON DELETE SET NULL,
   verified_at INTEGER,
   access_token TEXT,
+  purchase_key TEXT UNIQUE,
   paid_at INTEGER,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
@@ -461,6 +463,8 @@ CREATE TABLE IF NOT EXISTS digital_product_sales (
 CREATE INDEX IF NOT EXISTS idx_digital_product_sales_created ON digital_product_sales(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_digital_product_sales_product ON digital_product_sales(product_id, status);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_reference_code ON digital_product_sales(reference_code);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_purchase_key ON digital_product_sales(purchase_key) WHERE purchase_key IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_digital_product_sales_buyer_user ON digital_product_sales(buyer_user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_digital_product_sales_status_created ON digital_product_sales(status, created_at DESC);
 
 -- Public kitab library managed from CMS Hub
@@ -568,7 +572,7 @@ CREATE TABLE IF NOT EXISTS coin_wallets (
 CREATE TABLE IF NOT EXISTS coin_transactions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('topup', 'unlock_chapter', 'adjustment', 'refund')),
+  type TEXT NOT NULL CHECK (type IN ('topup', 'unlock_chapter', 'purchase', 'adjustment', 'refund')),
   amount INTEGER NOT NULL,
   balance_after INTEGER,
   description TEXT,

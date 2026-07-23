@@ -1,7 +1,10 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { generateId } from 'lucia';
 import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
+import {
+	approveManualCoinTopup,
+	rejectManualCoinTopup
+} from '$lib/server/services/payment-gateway/payments/manual-coin-topup-approval';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { db } = requireSuperAdmin(locals);
@@ -25,9 +28,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				t.reviewed_by as reviewedBy,
 				t.reviewed_at as reviewedAt,
 				t.created_at as createdAt,
-				t.updated_at as updatedAt
+				t.updated_at as updatedAt,
+				p.provider as paymentProvider
 			FROM coin_topup_requests t
 			LEFT JOIN users u ON t.user_id = u.id
+			LEFT JOIN payment_orders p ON p.id = t.id AND p.purpose = 'coin_topup'
 			WHERE t.id = ?
 			LIMIT 1`
 		)
@@ -55,62 +60,23 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 export const actions: Actions = {
 	approve: async ({ locals, params }) => {
 		const { db, user } = requireSuperAdmin(locals);
-
-		const { id } = params;
-		const adminNote = 'Approved';
-
-		// Get the request first
-		const existing = await db
-			.prepare('SELECT * FROM coin_topup_requests WHERE id = ?')
-			.bind(id)
-			.first<any>();
-
-		if (!existing) {
+		const result = await approveManualCoinTopup({
+			db,
+			orderId: params.id,
+			adminUserId: user.id
+		});
+		if (result.status === 'provider_managed') {
+			return fail(400, { message: 'Pembayaran Midtrans hanya boleh diproses otomatis oleh webhook.' });
+		}
+		if (result.status === 'proof_required') {
+			return fail(400, { message: 'Bukti pembayaran manual wajib tersedia sebelum persetujuan.' });
+		}
+		if (result.status === 'not_found') {
 			return fail(404, { message: 'Request topup tidak ditemukan' });
 		}
-
-		if (existing.status !== 'pending') {
+		if (result.status === 'already_processed') {
 			return fail(400, { message: 'Request sudah diproses sebelumnya' });
 		}
-
-		const now = new Date().toISOString();
-		const coinAmount = existing.coin_amount;
-		const userId = existing.user_id;
-
-		// Ensure wallet exists
-		await db.prepare('INSERT OR IGNORE INTO coin_wallets (user_id) VALUES (?)').bind(userId).run();
-
-		// Get current balance
-		const wallet = await db.prepare('SELECT balance FROM coin_wallets WHERE user_id = ?').bind(userId).first<{ balance: number }>();
-		const currentBalance = wallet?.balance ?? 0;
-		const newBalance = currentBalance + coinAmount;
-
-		// Update wallet balance
-		await db
-			.prepare('UPDATE coin_wallets SET balance = ?, updated_at = ? WHERE user_id = ?')
-			.bind(newBalance, now, userId)
-			.run();
-
-		// Record transaction
-		const txId = generateId(15);
-		await db
-			.prepare(
-				`INSERT INTO coin_transactions 
-				(id, user_id, type, amount, balance_after, description, reference_type, reference_id, created_at)
-				VALUES (?, ?, 'topup', ?, ?, 'Topup koin via request manual', 'coin_topup_requests', ?, ?)`
-			)
-			.bind(txId, userId, coinAmount, newBalance, id, now)
-			.run();
-
-		// Update request status
-		await db
-			.prepare(
-				`UPDATE coin_topup_requests 
-				SET status = 'approved', admin_note = ?, reviewed_by = ?, reviewed_at = ?, updated_at = ?
-				WHERE id = ?`
-			)
-			.bind(adminNote, user.id, now, now, id)
-			.run();
 
 		throw redirect(303, '/admin/super/coin-topups?success=approved');
 	},
@@ -122,31 +88,18 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const adminNote = formData.get('admin_note')?.toString()?.trim() ?? 'Rejected by admin';
 
-		// Get the request first
-		const existing = await db
-			.prepare('SELECT * FROM coin_topup_requests WHERE id = ?')
-			.bind(id)
-			.first<any>();
-
-		if (!existing) {
-			return fail(404, { message: 'Request topup tidak ditemukan' });
+		const result = await rejectManualCoinTopup({
+			db,
+			orderId: id,
+			adminUserId: user.id,
+			adminNote
+		});
+		if (result.status === 'provider_managed') {
+			return fail(400, { message: 'Pembayaran Midtrans hanya boleh diproses otomatis oleh webhook.' });
 		}
-
-		if (existing.status !== 'pending') {
+		if (result.status === 'already_processed') {
 			return fail(400, { message: 'Request sudah diproses sebelumnya' });
 		}
-
-		const now = new Date().toISOString();
-
-		// Update request status
-		await db
-			.prepare(
-				`UPDATE coin_topup_requests 
-				SET status = 'rejected', admin_note = ?, reviewed_by = ?, reviewed_at = ?, updated_at = ?
-				WHERE id = ?`
-			)
-			.bind(adminNote, user.id, now, now, id)
-			.run();
 
 		throw redirect(303, '/admin/super/coin-topups?success=rejected');
 	}

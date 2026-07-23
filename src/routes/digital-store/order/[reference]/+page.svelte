@@ -196,7 +196,7 @@
 					</div>
 				{/if}
 
-				{#if data.order.status !== 'paid'}
+				{#if data.order.paymentMethodType === 'manual' && data.order.status === 'pending'}
 					<form
 						method="POST"
 						action={`?/uploadProof&token=${encodeURIComponent(data.token)}`}
