@@ -483,11 +483,12 @@ export const GLOBAL_APP_NAVIGATION: AppNavigationItem[] = [
 
 export const SUPER_ADMIN_NAVIGATION: AppNavigationItem[] = [
 	{
-		label: 'Super Admin',
+		label: 'Overview',
 		href: '/admin/super/overview',
 		icon: ICONS.shield,
 		group: 'utama',
-		mobilePrimary: true
+		mobilePrimary: true,
+		description: 'Ringkasan sistem SantriOnline'
 	},
 	{
 		label: 'Peta Lembaga',

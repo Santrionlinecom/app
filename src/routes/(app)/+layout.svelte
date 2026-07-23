@@ -102,10 +102,10 @@
 	$: mobileQuickItems = getMobilePrimaryNav(menuItems, 5);
 	$: pageLabel =
 		findNavLabel(menuItems, $page.url.pathname) ||
-		(isSuperAdmin && !isImpersonating ? 'Super Admin' : 'Dashboard');
+		(isSuperAdmin && !isImpersonating ? 'Overview' : 'Dashboard');
 	$: headerTitle =
 		isSuperAdmin && !isImpersonating
-			? 'Panel Super Admin'
+			? 'Dashboard'
 			: orgType === 'tpq'
 				? 'Dashboard TPQ'
 				: orgType === 'pondok'
@@ -117,10 +117,19 @@
 							: orgType === 'rumah-tahfidz'
 								? 'Dashboard Rumah Tahfidz'
 								: 'Dashboard Lembaga';
+	// Role badge only on top-right profile; avoid repeating "Super Admin" in chrome.
 	$: pageSubtitle =
 		$page.url.pathname === APP_HOME_HREF || $page.url.pathname === '/admin/super/overview'
-			? `Ringkasan ${orgLabel} · ${roleLabel}`
-			: `${pageLabel} · ${orgLabel}`;
+			? isSuperAdmin && !isImpersonating
+				? 'Ringkasan sistem'
+				: `Ringkasan ${orgLabel}`
+			: isSuperAdmin && !isImpersonating
+				? pageLabel
+				: `${pageLabel} · ${orgLabel}`;
+	$: brandSubtitle =
+		isSuperAdmin && !isImpersonating ? 'SantriOnline App' : roleLabel;
+	$: sidebarUserMeta =
+		isSuperAdmin && !isImpersonating ? 'System' : `${roleLabel} · ${orgLabel}`;
 
 	$: navGroupKeys = navGroups.map((group) => group.key).join('|');
 	$: if (navGroupKeys) {
@@ -233,7 +242,7 @@
 			{#if !desktopSidebarCollapsed}
 				<div>
 					<p class="font-display text-xl font-bold leading-none">SantriOnline</p>
-					<p class="text-xs font-semibold text-white/65">{roleLabel}</p>
+					<p class="text-xs font-semibold text-white/65">{brandSubtitle}</p>
 				</div>
 			{/if}
 		</a>
@@ -266,7 +275,7 @@
 				{#if !desktopSidebarCollapsed}
 					<div class="min-w-0">
 						<p class="truncate text-sm font-bold">{displayName}</p>
-						<p class="mt-0.5 text-xs text-white/60">{roleLabel} · {orgLabel}</p>
+						<p class="mt-0.5 text-xs text-white/60">{sidebarUserMeta}</p>
 					</div>
 				{/if}
 			</div>
@@ -362,7 +371,7 @@
 						<img src={santriOnlineIconUrl} alt="SantriOnline" class="h-10 w-10 object-contain" />
 						<div>
 							<p class="font-display text-lg font-bold leading-none">SantriOnline</p>
-							<p class="text-xs text-white/65">{roleLabel}</p>
+							<p class="text-xs text-white/65">{brandSubtitle}</p>
 						</div>
 					</a>
 					<button
