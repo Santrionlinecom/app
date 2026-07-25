@@ -40,7 +40,7 @@
 	<title>Digital Store - Santri Online</title>
 	<meta
 		name="description"
-		content="Katalog produk digital Santri Online. Beli dengan Coin untuk akses instan."
+		content="Katalog produk digital SantriOnline: aplikasi desktop berlisensi, e-book, dan materi premium. Beli dengan Coin untuk akses unduhan."
 	/>
 </svelte:head>
 
@@ -51,9 +51,9 @@
 		<div class="relative grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
 			<div class="max-w-3xl">
 				<p class="text-xs uppercase tracking-[0.35em] text-emerald-200/70">Digital Store</p>
-				<h1 class="mt-3 text-3xl font-bold md:text-5xl">Produk digital pilihan SantriOnline</h1>
+				<h1 class="mt-3 text-3xl font-bold md:text-5xl">Produk digital & aplikasi desktop SantriOnline</h1>
 				<p class="mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
-					Beli produk digital menggunakan Coin untuk akses instan. E-book, modul, file panduan, dan materi premium lainnya tersedia di sini.
+					SantriPrint, SantriOCR, dan produk digital lain. Beli dengan Coin untuk akses unduhan. Lisensi desktop digenerate dari panel admin.
 				</p>
 				<div class="mt-6 flex flex-wrap gap-3">
 					<a href="#katalog" class="btn border-none bg-white text-slate-900 hover:bg-emerald-50">

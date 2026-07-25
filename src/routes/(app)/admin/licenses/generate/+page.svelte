@@ -22,7 +22,7 @@
 	};
 
 	type PageData = {
-		productFilter: 'all' | 'cleaner' | 'studio';
+		productFilter: 'all' | 'cleaner' | 'studio' | 'print' | 'ocr' | 'subtitle';
 		productOptions: ProductOption[];
 		licenses: DigitalLicenseItem[];
 	};
@@ -60,6 +60,9 @@
 	const productFamilyLabel = (value: string) => {
 		if (value === 'cleaner') return 'Santri Cleaner';
 		if (value === 'studio') return 'Santri Studio';
+		if (value === 'print') return 'SantriPrint';
+		if (value === 'ocr') return 'SantriOCR';
+		if (value === 'subtitle') return 'Santri Subtitle';
 		return 'Semua Produk';
 	};
 
@@ -99,12 +102,16 @@
 				<p class="text-xs uppercase tracking-[0.2em] text-white/70">SantriOnline Product License</p>
 				<h1 class="mt-2 text-xl font-bold sm:text-2xl">Generate License Produk Digital</h1>
 				<p class="mt-2 max-w-2xl text-sm text-white/85">
-					Buat license baru untuk produk desktop SantriOnline seperti Santri Cleaner dan Santri Studio.
+					Buat license baru untuk produk desktop SantriOnline (SantriPrint, SantriOCR, Cleaner, Studio, Subtitle).
+					Key plaintext hanya ditampilkan sekali.
 				</p>
 			</div>
-			<div class="flex w-full gap-2 md:w-auto">
+			<div class="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+				<a class="btn btn-sm w-full border-white/40 bg-white/10 text-white hover:bg-white/20 md:w-auto" href="/admin/licenses/manage">
+					Portal Manage Lisensi
+				</a>
 				<a class="btn btn-sm w-full border-white/40 bg-white/10 text-white hover:bg-white/20 md:w-auto" href="/admin/licenses">
-					Portal Cek License
+					Portal Streamer (lama)
 				</a>
 			</div>
 		</div>
@@ -222,8 +229,11 @@
 					<span class="label-text text-xs">Filter Produk</span>
 					<select class="select select-bordered select-sm w-full sm:w-48" name="product">
 						<option value="all" selected={data.productFilter === 'all'}>Semua Produk</option>
+						<option value="print" selected={data.productFilter === 'print'}>SantriPrint</option>
+						<option value="ocr" selected={data.productFilter === 'ocr'}>SantriOCR</option>
 						<option value="cleaner" selected={data.productFilter === 'cleaner'}>Santri Cleaner</option>
 						<option value="studio" selected={data.productFilter === 'studio'}>Santri Studio</option>
+						<option value="subtitle" selected={data.productFilter === 'subtitle'}>Santri Subtitle</option>
 					</select>
 				</label>
 				<div class="flex items-end">

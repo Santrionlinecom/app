@@ -17,6 +17,7 @@ import {
 	normalizeProductSlug,
 	upsertActivation
 } from '$lib/server/domains/digital-store/licenses/digital-products';
+import { licensePayload, parseLicenseApiBody } from '$lib/server/domains/digital-store/licenses/request';
 
 const RATE_LIMIT = {
 	scope: 'digital-license:activate',
@@ -24,62 +25,12 @@ const RATE_LIMIT = {
 	windowMs: 5 * 60 * 1000
 };
 
-const payloadResponse = (
-	status: string,
-	plan: string | null = null,
-	expiresAt: number | null = null,
-	features: string[] = [],
-	detail?: { missingFields?: string[]; invalidFields?: string[] }
-) => ({
-	status,
-	plan,
-	expiresAt,
-	features,
-	...(detail ? { detail } : {})
-});
-
-const parseBody = async (request: Request) => {
-	const body = await request.json().catch(() => ({}));
-	return {
-		licenseKey:
-			typeof body?.licenseKey === 'string'
-				? body.licenseKey.trim()
-				: typeof body?.license_key === 'string'
-					? body.license_key.trim()
-					: '',
-		deviceHash:
-			typeof body?.deviceHash === 'string'
-				? body.deviceHash.trim()
-				: typeof body?.device_hash === 'string'
-					? body.device_hash.trim()
-					: '',
-		productSlug:
-			typeof body?.productSlug === 'string'
-				? body.productSlug.trim()
-				: typeof body?.product_slug === 'string'
-					? body.product_slug.trim()
-					: '',
-		deviceName:
-			typeof body?.deviceName === 'string'
-				? body.deviceName.trim()
-				: typeof body?.device_name === 'string'
-					? body.device_name.trim()
-					: '',
-		appVersion:
-			typeof body?.appVersion === 'string'
-				? body.appVersion.trim()
-				: typeof body?.app_version === 'string'
-					? body.app_version.trim()
-					: ''
-	};
-};
-
 const getHashSecret = (platform: App.Platform | undefined) => platform?.env?.LICENSE_KEY_HASH_SECRET ?? null;
 
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const db = getD1({ locals, platform });
 	if (!db) {
-		return json(payloadResponse('service_unavailable'), { status: 503 });
+		return json(licensePayload('service_unavailable'), { status: 503 });
 	}
 
 	const ip = getRequestIp(request) ?? 'unknown';
@@ -91,35 +42,34 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		windowMs: RATE_LIMIT.windowMs
 	});
 	if (!limiter.allowed) {
-		return json(payloadResponse('rate_limited'), {
+		return json(licensePayload('rate_limited'), {
 			status: 429,
 			headers: buildRateLimitHeaders(limiter)
 		});
 	}
 
-	const { licenseKey, deviceHash: rawDeviceHash, productSlug: rawProductSlug, deviceName, appVersion } =
-		await parseBody(request);
-	const deviceHash = normalizeDeviceHash(rawDeviceHash);
-	const productSlug = normalizeProductSlug(rawProductSlug);
+	const body = await parseLicenseApiBody(request);
+	const deviceHash = normalizeDeviceHash(body.deviceHash);
+	const productSlug = normalizeProductSlug(body.productSlug);
 	const missingFields = [
-		!licenseKey ? 'licenseKey' : null,
-		!rawDeviceHash ? 'deviceHash' : null,
-		!rawProductSlug ? 'productSlug' : null
+		!body.licenseKey ? 'licenseKey' : null,
+		!body.deviceHash ? 'deviceHash' : null,
+		!body.productSlug ? 'productSlug' : null
 	].filter((field): field is string => Boolean(field));
 	const invalidFields = [
-		rawDeviceHash && !isValidDeviceHash(deviceHash) ? 'deviceHash' : null,
-		rawProductSlug && !isValidProductSlug(productSlug) ? 'productSlug' : null
+		body.deviceHash && !isValidDeviceHash(deviceHash) ? 'deviceHash' : null,
+		body.productSlug && !isValidProductSlug(productSlug) ? 'productSlug' : null
 	].filter((field): field is string => Boolean(field));
 	if (missingFields.length || invalidFields.length) {
-		return json(payloadResponse('invalid_payload', null, null, [], { missingFields, invalidFields }), {
+		return json(licensePayload('invalid_payload', null, null, [], { missingFields, invalidFields }), {
 			status: 400
 		});
 	}
 
-	const licenseKeyHash = await hashLicenseKey(licenseKey, getHashSecret(platform));
+	const licenseKeyHash = await hashLicenseKey(body.licenseKey, getHashSecret(platform));
 	const license = await getLicenseByKeyHash(db, licenseKeyHash, productSlug);
 	if (!license) {
-		return json(payloadResponse('not_found'), { status: 404 });
+		return json(licensePayload('not_found'), { status: 404 });
 	}
 
 	const plan = getPlanForLicense(license);
@@ -128,13 +78,13 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const now = Date.now();
 
 	if (license.productStatus === 'inactive') {
-		return json(payloadResponse('inactive_product', plan, expiresAt, features), { status: 403 });
+		return json(licensePayload('inactive_product', plan, expiresAt, features), { status: 403 });
 	}
 	if (license.status === 'revoked') {
-		return json(payloadResponse('revoked', plan, expiresAt, features), { status: 403 });
+		return json(licensePayload('revoked', plan, expiresAt, features), { status: 403 });
 	}
 	if (license.status === 'expired' || isLicenseExpired(license, now)) {
-		return json(payloadResponse('expired', plan, expiresAt, features), { status: 403 });
+		return json(licensePayload('expired', plan, expiresAt, features), { status: 403 });
 	}
 
 	const existingActivation = await getActivation(db, license.licenseId, deviceHash);
@@ -142,15 +92,15 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		const activeDevices = await countActiveActivations(db, license.licenseId);
 		const maxDevices = getMaxDevicesForLicense(license);
 		if (activeDevices >= maxDevices) {
-			return json(payloadResponse('device_limit_reached', plan, expiresAt, features), { status: 409 });
+			return json(licensePayload('device_limit_reached', plan, expiresAt, features), { status: 409 });
 		}
 	}
 
 	await upsertActivation(db, {
 		licenseId: license.licenseId,
 		deviceHash,
-		deviceName,
-		metadata: { ip, appVersion: appVersion || null },
+		deviceName: body.deviceName,
+		metadata: { ip, appVersion: body.appVersion || null },
 		now
 	});
 
@@ -159,5 +109,5 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		.bind(now, now, license.licenseId)
 		.run();
 
-	return json(payloadResponse('active', plan, expiresAt, features));
+	return json(licensePayload('active', plan, expiresAt, features));
 };

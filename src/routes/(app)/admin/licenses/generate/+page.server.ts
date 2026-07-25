@@ -76,12 +76,27 @@ const toProductOption = (product: ProductRow): ProductOption => {
 
 const listLicenseProducts = async (db: App.Locals['db']) => {
 	if (!db) return [];
+	// Include santriprint-* (no hyphen after santri) plus standard santri-* desktop catalog.
 	const rows = await db
 		.prepare(
 			`SELECT id, slug, name, plan, default_max_devices, features_json
 			 FROM products
-			 WHERE status = ? AND slug LIKE 'santri-%'
-			 ORDER BY slug ASC`
+			 WHERE status = ?
+			   AND (
+			     slug LIKE 'santri-%'
+			     OR slug LIKE 'santriprint-%'
+			     OR slug LIKE 'santriocr-%'
+			   )
+			 ORDER BY
+			   CASE
+			     WHEN slug LIKE 'santriprint-%' THEN 0
+			     WHEN slug LIKE 'santri-ocr-%' OR slug LIKE 'santriocr-%' THEN 1
+			     WHEN slug LIKE 'santri-cleaner-%' THEN 2
+			     WHEN slug LIKE 'santri-subtitle-%' THEN 3
+			     WHEN slug LIKE 'santri-studio-%' THEN 4
+			     ELSE 9
+			   END,
+			   slug ASC`
 		)
 		.bind('active')
 		.all<ProductRow>();
@@ -101,13 +116,24 @@ const parseExpiresAt = (value: FormDataEntryValue | null) => {
 };
 
 const normalizeFilter = (value: string | null) => {
-	if (value === 'cleaner' || value === 'studio') return value;
+	if (
+		value === 'cleaner' ||
+		value === 'studio' ||
+		value === 'print' ||
+		value === 'ocr' ||
+		value === 'subtitle'
+	) {
+		return value;
+	}
 	return 'all';
 };
 
 const buildProductFilterClause = (filter: string) => {
 	if (filter === 'cleaner') return "AND p.slug LIKE 'santri-cleaner-%'";
 	if (filter === 'studio') return "AND p.slug LIKE 'santri-studio-%'";
+	if (filter === 'print') return "AND p.slug LIKE 'santriprint-%'";
+	if (filter === 'ocr') return "AND (p.slug LIKE 'santri-ocr-%' OR p.slug LIKE 'santriocr-%')";
+	if (filter === 'subtitle') return "AND p.slug LIKE 'santri-subtitle-%'";
 	return '';
 };
 
@@ -192,7 +218,13 @@ export const actions: Actions = {
 			.prepare(
 				`SELECT id, slug, name, plan, default_max_devices, features_json
 				 FROM products
-				 WHERE slug = ? AND status = ? AND slug LIKE 'santri-%'`
+				 WHERE slug = ?
+				   AND status = ?
+				   AND (
+				     slug LIKE 'santri-%'
+				     OR slug LIKE 'santriprint-%'
+				     OR slug LIKE 'santriocr-%'
+				   )`
 			)
 			.bind(productSlug, 'active')
 			.first<ProductRow>();
