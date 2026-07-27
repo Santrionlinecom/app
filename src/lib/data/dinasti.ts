@@ -17,7 +17,8 @@ export const dynastyRegionKeys = [
 	'transoxiana',
 	'afghanistan',
 	'indiaUtara',
-	'indiaTengah'
+	'indiaTengah',
+	'nusantara'
 ] as const;
 
 export type DynastyRegionKey = (typeof dynastyRegionKeys)[number];
@@ -35,7 +36,47 @@ export type IslamicDynasty = {
 	summary: string;
 	legacy: string;
 	startYearCE: number;
+	keyFigures?: string[];
+	highlights?: string[];
+	story?: string;
+	lessons?: string[];
+	adabNote?: string;
 };
+
+export const dynastyPhases = [
+	{
+		period: '661–750 M',
+		title: 'Imperium Umayyah',
+		desc: 'Pusat di Damaskus, ekspansi lintas benua, dan peletakan birokrasi Arab.'
+	},
+	{
+		period: '750–945 M',
+		title: 'Abbasiyah klasik & cabang Barat',
+		desc: 'Baghdad sebagai magnet ilmu; Andalus dan Maghrib membangun pusat paralel.'
+	},
+	{
+		period: '945–1258 M',
+		title: 'Dinasti regional & sultanat',
+		desc: 'Fatimiyah, Seljuk, Ghaznawi, Ayyubiyah, dan pecahan Andalus hidup tumpang tindih.'
+	},
+	{
+		period: '1250–1517 M',
+		title: 'Dunia pasca-Baghdad',
+		desc: 'Mamluk menahan Mongol; Kairo menjadi pusat ulama; Delhi menata India utara.'
+	},
+	{
+		period: '1500–1922 M',
+		title: 'Tiga poros & kolonial',
+		desc: 'Utsmani, Safawi, Mughal; di Nusantara tumbuh Pasai–Malaka–Demak–Aceh–Mataram hingga era kolonial.'
+	}
+];
+
+export const dynastyAdabNotes = [
+	'Sejarah dinasti dibaca untuk ibrah, bukan fanatisme dinasti atau kebencian buta.',
+	'Bedakan jasa peradaban (ilmu, wakaf, kota) dari kezaliman politik yang dikritik ulama.',
+	'Garis waktu sering paralel: banyak dinasti hidup bersamaan di wilayah berbeda.',
+	'Untuk Nusantara, gabungkan sumber lokal dan tapisan akidah; tradisi tidak menasakh syariat.'
+];
 
 export const islamicDynasties: IslamicDynasty[] = [
 	{
@@ -46,26 +87,16 @@ export const islamicDynasties: IslamicDynasty[] = [
 		periodAH: '41-132 H',
 		capital: 'Damaskus',
 		regions: 'Syam, Irak, Mesir, Afrika Utara, Andalus, Persia hingga Asia Tengah',
-		mapRegions: [
-			'andalus',
-			'maghribAqsa',
-			'maghribTengah',
-			'ifriqiyah',
-			'mesir',
-			'syam',
-			'hijaz',
-			'jazirah',
-			'irak',
-			'persia',
-			'khurasan',
-			'transoxiana'
-		],
+		mapRegions: ['andalus', 'maghribAqsa', 'maghribTengah', 'ifriqiyah', 'mesir', 'syam', 'hijaz', 'jazirah', 'irak', 'persia', 'khurasan', 'transoxiana'],
 		type: 'Kekhalifahan',
-		summary:
-			'Dinasti besar pertama pasca-Khulafaur Rasyidin yang menata pemerintahan imperium, administrasi Arab, dan ekspansi lintas benua.',
-		legacy:
-			'Memindahkan pusat politik ke Damaskus, memperkuat birokrasi, dan mewariskan fondasi arsitektur Islam awal seperti Kubah Shakhrah serta masjid-masjid besar.',
-		startYearCE: 661
+		summary: 'Dinasti besar pertama pasca-Khulafaur Rasyidin yang menata pemerintahan imperium, administrasi Arab, dan ekspansi lintas benua.',
+		legacy: 'Memindahkan pusat politik ke Damaskus, memperkuat birokrasi, dan mewariskan fondasi arsitektur Islam awal seperti Kubah Shakhrah serta masjid-masjid besar.',
+		startYearCE: 661,
+		keyFigures: ['Muawiyah bin Abi Sufyan', 'Abdul Malik bin Marwan', 'Al-Walid bin Abdul Malik', 'Umar bin Abdul Aziz'],
+		highlights: ['Pemindahan pusat ke Damaskus', 'Arabisasi administrasi', 'Ekspansi Andalus & Transoxiana', 'Kubah Shakhrah & Masjid Agung Damaskus'],
+		story: 'Setelah era Khulafaur Rasyidin, Muawiyah memindahkan pusat politik ke Damaskus. Bani Umayyah membangun birokrasi imperium, angkatan laut, dan ekspansi hingga Andalus serta Asia Tengah. Di masa Abdul Malik dan al-Walid, Arabisasi administrasi dan monumen besar muncul. Umar bin Abdul Aziz menjadi simbol islah di dalam dinasti. Runtuhnya Umayyah di Timur (750 M) membuka jalan Abbasiyah, sementara cabang keluarga lolos ke Andalus.',
+		lessons: ['Kekuasaan luas butuh administrasi, bukan hanya penaklukan', 'Islah dari dalam dinasti tetap mungkin (Umar bin Abdul Aziz)', 'Pusat politik menentukan corak peradaban'],
+		adabNote: 'Dibaca sebagai sejarah politik umat, dengan membedakan jasa peradaban dan kritikan ulama atas fitnah/kezaliman.',
 	},
 	{
 		order: 2,
@@ -77,11 +108,14 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Irak, Persia, Jazirah, dan jaringan pengaruh luas Sunni',
 		mapRegions: ['mesir', 'syam', 'hijaz', 'jazirah', 'irak', 'persia', 'khurasan', 'transoxiana'],
 		type: 'Kekhalifahan',
-		summary:
-			'Menggeser pusat dunia Islam ke Irak dan melahirkan era intelektual besar di Baghdad, Basrah, Kufah, dan kota-kota ilmu lain.',
-		legacy:
-			'Menjadi payung politik dan simbolik bagi perkembangan hadis, fiqih mazhab, ilmu bahasa, filsafat, astronomi, serta jejaring madrasah klasik.',
-		startYearCE: 750
+		summary: 'Menggeser pusat dunia Islam ke Irak dan melahirkan era intelektual besar di Baghdad, Basrah, Kufah, dan kota-kota ilmu lain.',
+		legacy: 'Menjadi payung politik dan simbolik bagi perkembangan hadis, fiqih mazhab, ilmu bahasa, filsafat, astronomi, serta jejaring madrasah klasik.',
+		startYearCE: 750,
+		keyFigures: ['Abul Abbas as-Saffah', 'Al-Mansur', 'Harun ar-Rasyid', 'Al-Ma’mun', 'Nizam al-Mulk (era pengaruh Seljuk)'],
+		highlights: ['Baghdad sebagai pusat dunia', 'Bayt al-Hikmah & penerjemahan', 'Masa keemasan ilmu', 'Simbol khilafah hingga 1258'],
+		story: 'Abbasiyah menggeser pusat ke Irak dan membangun Baghdad. Era Harun ar-Rasyid dan al-Ma’mun sering dikaitkan dengan patronase ilmu, meskipun politiknya kompleks. Abbasiyah lama menjadi payung simbolik sementara kekuasaan efektif berpindah ke dinasti regional (Buwaih, Seljuk, dll.). Kejatuhan Baghdad oleh Mongol (1258) menandai luka besar, meski cabang Abbasiyah sempat dilanjutkan di Kairo di bawah Mamluk.',
+		lessons: ['Ilmu butuh kota, wakaf, dan keamanan', 'Simbol khilafah ≠ kekuasaan efektif', 'Jaringan ulama lebih awet daripada istana'],
+		adabNote: 'Kemegahan Baghdad dibaca bersama adab: jangan mengidolakan greget dunia tanpa menilai keadilan dan ilmu.',
 	},
 	{
 		order: 3,
@@ -93,11 +127,14 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Andalus dan bagian Semenanjung Iberia',
 		mapRegions: ['andalus'],
 		type: 'Emirat lalu Kekhalifahan',
-		summary:
-			'Kelanjutan politik Umayyah di Barat Islam yang menjadikan Cordoba pusat ilmu, seni, urbanisme, dan diplomasi dunia Mediterania.',
-		legacy:
-			'Masjid Cordoba, perpustakaan besar, dan tradisi ilmu Andalus menjadi warisan utama yang berpengaruh ke Eropa dan Maghrib.',
-		startYearCE: 756
+		summary: 'Kelanjutan politik Umayyah di Barat Islam yang menjadikan Cordoba pusat ilmu, seni, urbanisme, dan diplomasi dunia Mediterania.',
+		legacy: 'Masjid Cordoba, perpustakaan besar, dan tradisi ilmu Andalus menjadi warisan utama yang berpengaruh ke Eropa dan Maghrib.',
+		startYearCE: 756,
+		keyFigures: ['Abdurrahman ad-Dakhil', 'Abdurrahman an-Nashir', 'Al-Hakam II'],
+		highlights: ['Cordoba pusat ilmu Eropa', 'Masjid Cordoba', 'Perpustakaan & terjemah', 'Diplomasi Mediterania'],
+		story: 'Abdurrahman ad-Dakhil selamat dari revolusi Abbasiyah dan membangun emirat Andalus (756). Cordoba menjadi salah satu kota paling cerah di Eropa abad pertengahan: masjid agung, perpustakaan, kedokteran, dan filsafat. Khalifah an-Nashir mengangkat status menjadi kekhalifahan. Setelah 1031, Andalus pecah menjadi muluk ath-thawaif sebelum fase Murabithun/Muwahhidun.',
+		lessons: ['Diaspora politik bisa menumbuhkan peradaban baru', 'Ilmu adalah soft power', 'Fragmentasi politik merapuhkan wilayah'],
+		adabNote: 'Andalus dikenang untuk ilmu dan adab, bukan nostalgia romantis semata.',
 	},
 	{
 		order: 4,
@@ -109,11 +146,14 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Maghrib al-Aqsa / Maroko',
 		mapRegions: ['maghribAqsa'],
 		type: 'Dinasti regional',
-		summary:
-			'Salah satu dinasti Muslim awal di Maghrib yang membantu Islamisasi wilayah Maroko dan pertumbuhan kota Fes.',
-		legacy:
-			'Berperan dalam pembentukan pusat urban dan keilmuan Fes yang kemudian menjadi simpul penting di Afrika Utara.',
-		startYearCE: 789
+		summary: 'Salah satu dinasti Muslim awal di Maghrib yang membantu Islamisasi wilayah Maroko dan pertumbuhan kota Fes.',
+		legacy: 'Berperan dalam pembentukan pusat urban dan keilmuan Fes yang kemudian menjadi simpul penting di Afrika Utara.',
+		startYearCE: 789,
+		keyFigures: ['Idris bin Abdullah', 'Idris II'],
+		highlights: ['Islamisasi Maghrib al-Aqsa', 'Pertumbuhan Fes', 'Dinasti Alawi awal di Barat'],
+		story: 'Idrisiyah adalah di antara dinasti Muslim awal di Maroko, terkait keturunan ahlul bait yang menata wilayah Maghrib al-Aqsa. Fes tumbuh sebagai pusat urban dan kelak menjadi simpul ilmu Afrika Utara.',
+		lessons: ['Kota ilmu tumbuh dari stabilitas awal', 'Pinggiran imperium bisa jadi pusat baru'],
+		adabNote: 'Dibaca dalam kerangka sejarah regional Maghrib, bukan dikait-kaitkan secara berlebihan ke sengketa modern.',
 	},
 	{
 		order: 5,
@@ -125,11 +165,13 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Ifriqiyah, Sicilia, Afrika Utara tengah',
 		mapRegions: ['maghribTengah', 'ifriqiyah', 'sicilia'],
 		type: 'Dinasti regional di bawah legitimasi Abbasiyah',
-		summary:
-			'Menguatkan Islam di Afrika Utara tengah dan membuka jalur ekspansi ke Sicilia sambil tetap mengakui Abbasiyah secara nominal.',
-		legacy:
-			'Qayrawan berkembang sebagai pusat ilmu, arsitektur, dan koneksi dagang Mediterania.',
-		startYearCE: 800
+		summary: 'Menguatkan Islam di Afrika Utara tengah dan membuka jalur ekspansi ke Sicilia sambil tetap mengakui Abbasiyah secara nominal.',
+		legacy: 'Qayrawan berkembang sebagai pusat ilmu, arsitektur, dan koneksi dagang Mediterania.',
+		startYearCE: 800,
+		keyFigures: ['Ibrahim bin al-Aghlab'],
+		highlights: ['Qayrawan pusat ilmu', 'Ekspansi ke Sicilia', 'Otonomi di bawah legitimasi Abbasiyah'],
+		story: 'Aghlabiyah menguasai Ifriqiyah dengan otonomi luas namun mengakui Abbasiyah. Qayrawan menguat sebagai pusat fiqih Maliki dan arsitektur. Ekspansi ke Sicilia membuka jalur Islam di Mediterania tengah.',
+		lessons: ['Otonomi regional bisa produktif di bawah payung legitimasi', 'Pelabuhan dan pulau menentukan pengaruh dagang'],
 	},
 	{
 		order: 6,
@@ -137,15 +179,17 @@ export const islamicDynasties: IslamicDynasty[] = [
 		name: 'Dinasti Tuluniyah',
 		periodCE: '868-905 M',
 		periodAH: '254-292 H',
-		capital: "al-Qata'i",
+		capital: '',
 		regions: 'Mesir dan Syam',
 		mapRegions: ['mesir', 'syam'],
 		type: 'Dinasti regional',
-		summary:
-			'Salah satu dinasti semi-independen paling awal dari orbit Abbasiyah yang menjadikan Mesir basis militer dan ekonomi kuat.',
-		legacy:
-			'Masjid Ibn Tulun dan pembangunan administrasi Mesir menjadi warisan paling menonjol dari fase ini.',
-		startYearCE: 868
+		summary: 'Salah satu dinasti semi-independen paling awal dari orbit Abbasiyah yang menjadikan Mesir basis militer dan ekonomi kuat.',
+		legacy: 'Masjid Ibn Tulun dan pembangunan administrasi Mesir menjadi warisan paling menonjol dari fase ini.',
+		startYearCE: 868,
+		keyFigures: ['Ahmad bin Tulun'],
+		highlights: ['Mesir semi-independen', 'Masjid Ibnu Tulun', 'Administrasi & militer Mesir'],
+		story: 'Ahmad bin Tulun membangun kekuasaan semi-independen di Mesir, menandai pola “wilayah kaya yang otonom dari Baghdad”. Masjid Ibnu Tulun dan pembangunan al-Qata’i menjadi warisan visual fase ini.',
+		lessons: ['Wilayah ekonomis strategis cenderung menuntut otonomi', 'Arsitektur menandai legitimasi penguasa'],
 	},
 	{
 		order: 7,
@@ -157,11 +201,14 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Afrika Utara, Mesir, Hijaz, dan Syam pada periode tertentu',
 		mapRegions: ['maghribAqsa', 'maghribTengah', 'ifriqiyah', 'sicilia', 'mesir', 'syam', 'hijaz'],
 		type: 'Kekhalifahan Ismailiyah',
-		summary:
-			'Saingan besar Abbasiyah yang membangun kekhalifahan tersendiri dan mendirikan Kairo sebagai kota kekuasaan baru.',
-		legacy:
-			'Pendirian al-Azhar, pembangunan Kairo, dan jaringan dagang Laut Tengah - Laut Merah menjadi peninggalan utamanya.',
-		startYearCE: 909
+		summary: 'Saingan besar Abbasiyah yang membangun kekhalifahan tersendiri dan mendirikan Kairo sebagai kota kekuasaan baru.',
+		legacy: 'Pendirian al-Azhar, pembangunan Kairo, dan jaringan dagang Laut Tengah - Laut Merah menjadi peninggalan utamanya.',
+		startYearCE: 909,
+		keyFigures: ['Ubaidullah al-Mahdi', 'Al-Muizz', 'Al-Hakim bi-Amrillah'],
+		highlights: ['Pendirian Kairo', 'Al-Azhar', 'Kekhalifahan tandingan', 'Jaringan dagang Laut Merah–Mediterania'],
+		story: 'Fatimiyah membangun kekhalifahan Ismailiyah yang menandingi Abbasiyah, lalu memindahkan pusat ke Kairo. Al-Azhar didirikan dan kelak bertransformasi menjadi lembaga ilmu besar. Dinasti ini digantikan Ayyubiyah yang mengembalikan orientasi Sunni di Mesir.',
+		lessons: ['Kota baru bisa mengubah peta peradaban', 'Lembaga ilmu bisa melampaui dinasti pendirinya', 'Kompetisi politik menghasilkan pusat-pusat tandingan'],
+		adabNote: 'Dibahas sebagai fakta sejarah politik; akidah Aswaja dibedakan dari deskripsi dinasti.',
 	},
 	{
 		order: 8,
@@ -173,11 +220,13 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Mesir, Palestina, dan Syam selatan',
 		mapRegions: ['mesir', 'syam'],
 		type: 'Dinasti regional',
-		summary:
-			'Meneruskan pola Mesir semi-independen di bawah bayang-bayang Abbasiyah sebelum akhirnya digantikan Fatimiyah.',
-		legacy:
-			'Menjaga Mesir sebagai wilayah strategis dengan struktur birokrasi dan militer yang tetap kuat.',
-		startYearCE: 935
+		summary: 'Meneruskan pola Mesir semi-independen di bawah bayang-bayang Abbasiyah sebelum akhirnya digantikan Fatimiyah.',
+		legacy: 'Menjaga Mesir sebagai wilayah strategis dengan struktur birokrasi dan militer yang tetap kuat.',
+		startYearCE: 935,
+		keyFigures: ['Muhammad al-Ikhshid', 'Kafur'],
+		highlights: ['Menjaga Mesir pra-Fatimiyah', 'Kontrol Syam selatan'],
+		story: 'Ikhshidiyah meneruskan pola Mesir semi-independen sebelum Fatimiyah mengambil alih (969). Mereka menjaga jalur dagang dan posisi strategis antara Afrika dan Syam.',
+		lessons: ['Fase peralihan sering kurang “glamor” tapi penting stabilitas'],
 	},
 	{
 		order: 9,
@@ -189,11 +238,14 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Khurasan timur, Afghanistan, dan India utara',
 		mapRegions: ['khurasan', 'afghanistan', 'indiaUtara'],
 		type: 'Kesultanan',
-		summary:
-			'Dinasti Turko-Persia yang memperluas pengaruh Islam ke anak benua India dan membangun patronase sastra Persia.',
-		legacy:
-			'Menjadi penghubung penting antara dunia Iran, Asia Tengah, dan India dalam bidang militer, sastra, dan administrasi.',
-		startYearCE: 977
+		summary: 'Dinasti Turko-Persia yang memperluas pengaruh Islam ke anak benua India dan membangun patronase sastra Persia.',
+		legacy: 'Menjadi penghubung penting antara dunia Iran, Asia Tengah, dan India dalam bidang militer, sastra, dan administrasi.',
+		startYearCE: 977,
+		keyFigures: ['Sebuktegin', 'Mahmud al-Ghaznawi'],
+		highlights: ['Jembatan Iran–India', 'Patronase sastra Persia', 'Ekspansi ke India utara'],
+		story: 'Ghaznawiyah adalah dinasti Turko-Persia yang menjadikan Ghazni pusat. Ekspansi ke India utara dan patronase sastra (era Mahmud) menghubungkan Asia Tengah, Iran, dan anak benua.',
+		lessons: ['Budaya Persia menjadi lingua franca istana', 'Militer ekspansif butuh legitimasi ilmu/sastra'],
+		adabNote: 'Kisah penaklukan dibaca kritis: jangan merayakan kekerasan; fokus pada proses islamisasi dan peradaban.',
 	},
 	{
 		order: 10,
@@ -205,11 +257,13 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Persia, Irak, Anatolia, Syam pada berbagai fase',
 		mapRegions: ['syam', 'jazirah', 'irak', 'anatolia', 'persia', 'khurasan'],
 		type: 'Kesultanan Sunni',
-		summary:
-			'Seljuk menghidupkan kembali kekuatan politik Sunni dan melindungi orbit Abbasiyah lewat sistem sultanat yang kuat.',
-		legacy:
-			'Nizam al-Mulk, madrasah Nizamiyah, dan konsolidasi politik Sunni menjadi ciri penting eranya.',
-		startYearCE: 1037
+		summary: 'Seljuk menghidupkan kembali kekuatan politik Sunni dan melindungi orbit Abbasiyah lewat sistem sultanat yang kuat.',
+		legacy: 'Nizam al-Mulk, madrasah Nizamiyah, dan konsolidasi politik Sunni menjadi ciri penting eranya.',
+		startYearCE: 1037,
+		keyFigures: ['Thughril Beg', 'Alp Arslan', 'Maliksyah', 'Nizam al-Mulk'],
+		highlights: ['Kebangkitan politik Sunni', 'Madrasah Nizamiyah', 'Kemenangan Manzikert', 'Sistem sultanat'],
+		story: 'Seljuk menghidupkan kembali kekuatan politik Sunni dan melindungi orbit Abbasiyah. Nizam al-Mulk membangun jaringan madrasah Nizamiyah yang membentuk elite ulama-birokrat. Kemenangan di Anatolia membuka jalan bagi Islamisasi Asia Kecil.',
+		lessons: ['Madrasah adalah infrastruktur peradaban', 'Sultan dan khalifah bisa berbagi peran', 'Ulama-administrator menopang negara'],
 	},
 	{
 		order: 11,
@@ -221,11 +275,13 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Maghrib dan Andalus barat',
 		mapRegions: ['andalus', 'maghribAqsa', 'maghribTengah'],
 		type: 'Dinasti regional',
-		summary:
-			'Menghubungkan Sahara, Maghrib, dan Andalus dalam satu sistem politik yang memperkuat fiqih Maliki.',
-		legacy:
-			'Menjaga Andalus dari tekanan kerajaan Kristen dan mengokohkan Marrakesh sebagai pusat pemerintahan baru.',
-		startYearCE: 1040
+		summary: 'Menghubungkan Sahara, Maghrib, dan Andalus dalam satu sistem politik yang memperkuat fiqih Maliki.',
+		legacy: 'Menjaga Andalus dari tekanan kerajaan Kristen dan mengokohkan Marrakesh sebagai pusat pemerintahan baru.',
+		startYearCE: 1040,
+		keyFigures: ['Yusuf bin Tasyfin'],
+		highlights: ['Menyatukan Maghrib–Andalus', 'Marrakesh', 'Fiqih Maliki', 'Bantuan ke Andalus'],
+		story: 'Murabithun bangkit dari gerakan keagamaan-militer di Sahara/Maghrib, mendirikan Marrakesh, dan menyeberang membantu Andalus. Mereka mengokohkan fiqih Maliki di Barat Islam.',
+		lessons: ['Gerakan pinggiran bisa menyelamatkan pusat yang rapuh', 'Kesatuan Maghrib-Andalus strategis'],
 	},
 	{
 		order: 12,
@@ -237,11 +293,13 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Maghrib dan Andalus',
 		mapRegions: ['andalus', 'maghribAqsa', 'maghribTengah', 'ifriqiyah'],
 		type: 'Kekuasaan regional',
-		summary:
-			'Menggantikan Murabithun dan menguasai ruang Maghrib-Andalus dengan proyek reformasi ideologis dan administrasi baru.',
-		legacy:
-			'Warisan arsitektur dan urbanisme kuat tampak di Marrakesh, Rabat, dan Sevilla.',
-		startYearCE: 1121
+		summary: 'Menggantikan Murabithun dan menguasai ruang Maghrib-Andalus dengan proyek reformasi ideologis dan administrasi baru.',
+		legacy: 'Warisan arsitektur dan urbanisme kuat tampak di Marrakesh, Rabat, dan Sevilla.',
+		startYearCE: 1121,
+		keyFigures: ['Ibnu Tumart', 'Abdul Mu’min'],
+		highlights: ['Reformasi ideologis Maghrib', 'Arsitektur Marrakesh–Sevilla', 'Pengganti Murabithun'],
+		story: 'Muwahhidun menggantikan Murabithun dengan proyek reformasi dan administrasi baru di Maghrib-Andalus. Warisan urban dan arsitektur mereka kuat, meski tekanan di Andalus terus meningkat.',
+		lessons: ['Reformasi paksa berisiko fragmentasi jangka panjang', 'Arsitektur mencatat ambisi negara'],
 	},
 	{
 		order: 13,
@@ -253,11 +311,13 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Jazirah, Irak utara, Syam utara',
 		mapRegions: ['syam', 'jazirah', 'irak'],
 		type: 'Dinasti regional',
-		summary:
-			'Zankiyah menjadi pendahulu penting bagi konsolidasi militer Sunni di Syam dan perjuangan melawan Perang Salib.',
-		legacy:
-			'Tokoh seperti Imad al-Din Zangi dan Nur al-Din Mahmud membuka jalan bagi kebangkitan Ayyubiyah.',
-		startYearCE: 1127
+		summary: 'Zankiyah menjadi pendahulu penting bagi konsolidasi militer Sunni di Syam dan perjuangan melawan Perang Salib.',
+		legacy: 'Tokoh seperti Imad al-Din Zangi dan Nur al-Din Mahmud membuka jalan bagi kebangkitan Ayyubiyah.',
+		startYearCE: 1127,
+		keyFigures: ['Imaduddin Zanki', 'Nuruddin Mahmud'],
+		highlights: ['Konsolidasi Syam utara', 'Perlawanan Salib', 'Pendahulu Ayyubiyah'],
+		story: 'Zankiyah menata Mosul-Aleppo dan menjadi tulang punggung perlawanan terhadap Perang Salib di Syam. Nuruddin dikenal dengan penataan sunnah, keadilan, dan persiapan yang dimanfaatkan Salahuddin.',
+		lessons: ['Konsolidasi lokal mendahului kemenangan besar', 'Keadilan dalam negeri menopang jihad luar'],
 	},
 	{
 		order: 14,
@@ -269,11 +329,14 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Mesir, Syam, Hijaz, Yaman pada periode tertentu',
 		mapRegions: ['mesir', 'syam', 'hijaz', 'yaman', 'jazirah'],
 		type: 'Kesultanan Sunni',
-		summary:
-			'Dinasti Salahuddin yang mengakhiri Fatimiyah dan menyatukan Mesir-Syam untuk menghadapi Perang Salib.',
-		legacy:
-			'Pemulihan orientasi Sunni di Mesir, kemenangan Hattin, dan pembebasan al-Quds menjadi simbol terbesarnya.',
-		startYearCE: 1171
+		summary: 'Dinasti Salahuddin yang mengakhiri Fatimiyah dan menyatukan Mesir-Syam untuk menghadapi Perang Salib.',
+		legacy: 'Pemulihan orientasi Sunni di Mesir, kemenangan Hattin, dan pembebasan al-Quds menjadi simbol terbesarnya.',
+		startYearCE: 1171,
+		keyFigures: ['Salahuddin al-Ayyubi', 'Al-Adil'],
+		highlights: ['Mengakhiri Fatimiyah', 'Hattin & pembebasan al-Quds', 'Persatuan Mesir–Syam', 'Orientasi Sunni di Mesir'],
+		story: 'Salahuddin mengakhiri Fatimiyah, menyatukan Mesir-Syam, dan memimpin pembebasan al-Quds setelah Hattin. Ayyubiyah menjadi simbol kepemimpinan yang menggabungkan militer, diplomasi, dan citra keadilan. Dinasti kemudian terpecah di cabang keluarga sebelum Mamluk mengambil alih.',
+		lessons: ['Persatuan umat lebih strategis daripada heroisme individu', 'Kemenangan butuh logistik dan moral', 'Citra adil memperkuat legitimasi'],
+		adabNote: 'Salahuddin diteladani untuk adab dan strategi, tanpa mitologisasi berlebihan.',
 	},
 	{
 		order: 15,
@@ -285,11 +348,13 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Afghanistan, Khurasan timur, India utara',
 		mapRegions: ['khurasan', 'afghanistan', 'indiaUtara'],
 		type: 'Kesultanan',
-		summary:
-			'Dinasti pegunungan Ghur yang melanjutkan dorongan politik Islam ke India utara setelah fase Ghaznawiyah.',
-		legacy:
-			'Ekspansinya membuka jalan bagi kesultanan-kesultanan besar di Delhi.',
-		startYearCE: 1148
+		summary: 'Dinasti pegunungan Ghur yang melanjutkan dorongan politik Islam ke India utara setelah fase Ghaznawiyah.',
+		legacy: 'Ekspansinya membuka jalan bagi kesultanan-kesultanan besar di Delhi.',
+		startYearCE: 1148,
+		keyFigures: ['Muizzuddin Muhammad Ghur'],
+		highlights: ['Jembatan ke Kesultanan Delhi', 'Ekspansi India utara'],
+		story: 'Ghuriyah melanjutkan dorongan politik dari Afghanistan ke India utara dan membuka jalan bagi Kesultanan Delhi.',
+		lessons: ['Dinasti “jembatan” sering kurang terkenal tapi menentukan'],
 	},
 	{
 		order: 16,
@@ -301,11 +366,13 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'India utara dan tengah',
 		mapRegions: ['indiaUtara', 'indiaTengah'],
 		type: 'Kesultanan',
-		summary:
-			'Rangkaian dinasti Muslim di Delhi yang menjadi fondasi pemerintahan Islam besar di anak benua India.',
-		legacy:
-			'Administrasi, arsitektur, dan proses islamisasi kawasan India utara berkembang pesat pada masa ini.',
-		startYearCE: 1206
+		summary: 'Rangkaian dinasti Muslim di Delhi yang menjadi fondasi pemerintahan Islam besar di anak benua India.',
+		legacy: 'Administrasi, arsitektur, dan proses islamisasi kawasan India utara berkembang pesat pada masa ini.',
+		startYearCE: 1206,
+		keyFigures: ['Qutbuddin Aibak', 'Iltutmish', 'Alauddin Khilji', 'Muhammad bin Tughlaq'],
+		highlights: ['Fondasi kekuasaan Muslim di India utara', 'Administrasi & arsitektur', 'Rangkaian dinasti di Delhi'],
+		story: 'Kesultanan Delhi adalah rangkaian dinasti (Mamluk India, Khilji, Tughlaq, Sayyid, Lodi) yang menata pemerintahan Islam di anak benua sebelum Mughal. Delhi menjadi pusat politik, arsitektur, dan perjumpaan budaya.',
+		lessons: ['Rangkaian dinasti bisa satu “sistem kota”', 'Administrasi menahan keragaman wilayah'],
 	},
 	{
 		order: 17,
@@ -317,11 +384,13 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Mesir, Syam, Hijaz',
 		mapRegions: ['mesir', 'syam', 'hijaz'],
 		type: 'Kesultanan',
-		summary:
-			'Mamluk mempertahankan pusat dunia Islam barat setelah runtuhnya Baghdad dan menghadapi Mongol serta sisa-sisa Perang Salib.',
-		legacy:
-			'Kairo menjadi pusat ilmu, wakaf, arsitektur, dan jaringan ulama besar pada era Mamluk.',
-		startYearCE: 1250
+		summary: 'Mamluk mempertahankan pusat dunia Islam barat setelah runtuhnya Baghdad dan menghadapi Mongol serta sisa-sisa Perang Salib.',
+		legacy: 'Kairo menjadi pusat ilmu, wakaf, arsitektur, dan jaringan ulama besar pada era Mamluk.',
+		startYearCE: 1250,
+		keyFigures: ['Baibars', 'Qalawun', 'Barquq'],
+		highlights: ['Mengalahkan Mongol di Ain Jalut', 'Kairo pusat ulama', 'Menjaga Hijaz', 'Wakaf & madrasah'],
+		story: 'Mamluk bangkit di Mesir, menahan Mongol, dan mengakhiri sisa Perang Salib di kawasan. Kairo menjadi pusat ilmu dan wakaf. Mereka juga menjaga dua kota suci dalam orbit politiknya hingga Utsmani mengambil alih (1517).',
+		lessons: ['Pertahanan peradaban butuh institusi', 'Wakaf membuat ilmu bertahan', 'Kairo mewarisi peran Baghdad dalam banyak hal'],
 	},
 	{
 		order: 18,
@@ -333,11 +402,14 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Anatolia, Balkan, Syam, Mesir, Hijaz, Afrika Utara bagian tertentu',
 		mapRegions: ['ifriqiyah', 'mesir', 'syam', 'hijaz', 'jazirah', 'irak', 'anatolia', 'balkan'],
 		type: 'Kesultanan lalu Kekhalifahan',
-		summary:
-			'Kekuasaan Muslim paling panjang dan luas pada era modern awal yang menghubungkan Anatolia, Arab, dan Eropa tenggara.',
-		legacy:
-			'Menjadi payung politik banyak wilayah Muslim, mengelola dua kota suci, serta mewariskan tradisi hukum, arsitektur, dan administrasi yang besar.',
-		startYearCE: 1299
+		summary: 'Kekuasaan Muslim paling panjang dan luas pada era modern awal yang menghubungkan Anatolia, Arab, dan Eropa tenggara.',
+		legacy: 'Menjadi payung politik banyak wilayah Muslim, mengelola dua kota suci, serta mewariskan tradisi hukum, arsitektur, dan administrasi yang besar.',
+		startYearCE: 1299,
+		keyFigures: ['Utsman I', 'Mehmed II', 'Sulaiman al-Qanuni', 'Abdul Hamid II'],
+		highlights: ['Istanbul', 'Pengelolaan Haramain', 'Hukum & administrasi panjang', 'Jembatan Eropa–Arab'],
+		story: 'Utsmaniyah adalah kekuasaan Muslim paling panjang di era modern awal: dari beylik Anatolia menjadi imperium yang menghubungkan Balkan, Arab, dan Afrika Utara. Penaklukan Konstantinopel (1453) dan pengelolaan Haramain memberi legitimasi besar. Era akhir diwarnai reformasi, tekanan kolonial, dan akhirnya penghapusan kesultanan/khilafah di abad ke-20.',
+		lessons: ['Institusi panjang butuh adaptasi', 'Multi-etnis menuntut fiqih siyasah matang', 'Kehilangan kedaulatan modern adalah pelajaran pahit umat'],
+		adabNote: 'Dibaca utuh: jasa dan kelemahan, tanpa romantisme atau kebencian buta.',
 	},
 	{
 		order: 19,
@@ -349,11 +421,14 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'Iran dan kawasan sekitarnya',
 		mapRegions: ['irak', 'persia', 'khurasan'],
 		type: 'Kekuasaan regional besar',
-		summary:
-			'Safawiyah membentuk Iran awal modern dan menjadi salah satu poros politik utama dunia Islam pada era senjata api.',
-		legacy:
-			'Isfahan berkembang menjadi pusat seni, arsitektur, dan identitas politik Iran baru.',
-		startYearCE: 1501
+		summary: 'Safawiyah membentuk Iran awal modern dan menjadi salah satu poros politik utama dunia Islam pada era senjata api.',
+		legacy: 'Isfahan berkembang menjadi pusat seni, arsitektur, dan identitas politik Iran baru.',
+		startYearCE: 1501,
+		keyFigures: ['Ismail I', 'Abbas I'],
+		highlights: ['Iran awal modern', 'Isfahan', 'Poros politik era senjata api'],
+		story: 'Safawiyah membentuk Iran awal modern dengan pusat seni dan arsitektur di Isfahan, serta menjadi poros politik yang berinteraksi/berkonflik dengan Utsmani dan Mughal.',
+		lessons: ['Identitas negara bisa dibentuk kebijakan budaya', 'Rivalitas antar poros Muslim mengubah peta regional'],
+		adabNote: 'Deskripsi sejarah politik; perbedaan mazhab dibahas dengan adab, bukan hasutan.',
 	},
 	{
 		order: 20,
@@ -365,10 +440,108 @@ export const islamicDynasties: IslamicDynasty[] = [
 		regions: 'India utara dan sebagian besar anak benua India',
 		mapRegions: ['afghanistan', 'indiaUtara', 'indiaTengah'],
 		type: 'Kekaisaran',
-		summary:
-			'Puncak kekuasaan Muslim di India pada era awal modern dengan ekonomi besar, kota megah, dan patronase budaya luas.',
-		legacy:
-			'Warisan arsitektur, administrasi, dan urbanisme Mughal bertahan kuat dalam sejarah Asia Selatan hingga kini.',
-		startYearCE: 1526
-	}
+		summary: 'Puncak kekuasaan Muslim di India pada era awal modern dengan ekonomi besar, kota megah, dan patronase budaya luas.',
+		legacy: 'Warisan arsitektur, administrasi, dan urbanisme Mughal bertahan kuat dalam sejarah Asia Selatan hingga kini.',
+		startYearCE: 1526,
+		keyFigures: ['Babur', 'Akbar', 'Jahangir', 'Shah Jahan', 'Aurangzeb'],
+		highlights: ['Taj Mahal & urbanisme', 'Ekonomi anak benua', 'Administrasi luas', 'Sinkretisme & ketegangan budaya'],
+		story: 'Mughal mencapai puncak kekuasaan Muslim di India dengan ekonomi besar dan patronase seni. Agra, Fatehpur Sikri, dan Delhi menjadi ikon. Dinasti ini berakhir secara efektif di bawah tekanan kolonial Inggris (1857).',
+		lessons: ['Kemegahan seni tidak menjamin ketahanan geopolitik', 'Administrasi agraria menopang imperium', 'Kolonialisme memutus kesinambungan'],
+	},
+	{
+		order: 21,
+		slug: 'samudera-pasai',
+		name: 'Kesultanan Samudera Pasai',
+		periodCE: '±13–16 M',
+		periodAH: '±7–10 H',
+		capital: 'Pasai (Aceh Utara)',
+		regions: 'Pesisir Sumatra utara & jaringan Selat Malaka',
+		type: 'Kesultanan Nusantara',
+		summary: 'Di antara kesultanan Islam awal di Nusantara; simpul dagang dan islamisasi pesisir Sumatra.',
+		legacy: 'Menjadi gerbang penting masuknya Islam, jaringan ulama, dan perdagangan di Selat Malaka.',
+		startYearCE: 1290,
+		mapRegions: [],
+		keyFigures: ['Sultan Malik ash-Shalih (tradisi)', 'Para ulama pendatang'],
+		highlights: ['Islamisasi pesisir', 'Bandar dagang', 'Jembatan Arab–India–Nusantara'],
+		story: 'Samudera Pasai muncul di pesisir Sumatra utara sebagai kesultanan Islam awal yang terhubung dengan jalur dagang Samudera Hindia. Ia menjadi ruang perjumpaan pedagang, ulama, dan budaya lokal—fondasi islamisasi damai di Nusantara.',
+		lessons: ['Dagang dan dakwah sering berjalan beriringan', 'Pesisir adalah pintu peradaban'],
+		adabNote: 'Riwayat awal bersifat rekonstruksi sejarah; detail nama/tahun bisa berbeda antar sumber.',
+	},
+	{
+		order: 22,
+		slug: 'malaka',
+		name: 'Kesultanan Malaka',
+		periodCE: '±1400–1511 M',
+		periodAH: '±8–10 H',
+		capital: 'Malaka',
+		regions: 'Semenanjung Malaya & jaringan Selat Malaka',
+		type: 'Kesultanan Nusantara',
+		summary: 'Pusat dagang dan penyebaran Islam di Asia Tenggara sebelum jatuh ke Portugis (1511).',
+		legacy: 'Standar bahasa Melayu, jaringan ulama, dan model bandar Islam yang memengaruhi Jawa–Sumatra–Sulawesi.',
+		startYearCE: 1400,
+		mapRegions: [],
+		keyFigures: ['Parameswara / Iskandar Syah (tradisi)', 'Sultan Mansur Syah'],
+		highlights: ['Bandar dunia', 'Melayu sebagai lingua franca', 'Jatuh ke Portugis 1511'],
+		story: 'Malaka menjadi bandar paling strategis di Selat Malaka. Islam, dagang, dan bahasa Melayu menyatu. Kejatuhannya ke Portugis (1511) memaksa pusat-pusat Islam menyebar ke Aceh, Johor, Banten, Demak, dan lain-lain.',
+		lessons: ['Kontrol selat = kontrol peradaban maritim', 'Kekalahan bandar memindahkan pusat dakwah'],
+	},
+	{
+		order: 23,
+		slug: 'demak',
+		name: 'Kesultanan Demak',
+		periodCE: '±1475–1554 M',
+		periodAH: '±9–10 H',
+		capital: 'Bintoro Demak',
+		regions: 'Pantai utara Jawa & pengaruh Jawa–Sumatra',
+		type: 'Kesultanan Nusantara',
+		summary: 'Kesultanan Islam awal di Jawa yang berkaitan erat dengan jaringan Walisongo dan peralihan dari Majapahit.',
+		legacy: 'Masjid Agung Demak, patronase para wali, dan model politik Islam Jawa pesisir.',
+		startYearCE: 1475,
+		mapRegions: [],
+		keyFigures: ['Raden Patah', 'Sunan Kalijaga (jaringan)', 'Sunan Ampel (jaringan)'],
+		highlights: ['Islam Jawa pesisir', 'Masjid Demak', 'Jaringan Walisongo'],
+		story: 'Demak menandai fase penting berdirinya kekuasaan Islam di Jawa, beriringan dengan dakwah Walisongo. Ia menjadi pusat politik-pesisir yang menghubungkan dagang, masjid, dan penyebaran syariat secara bertahap di masyarakat agraris-maritim.',
+		lessons: ['Dakwah kultural dan politik bisa saling menopang', 'Pesisir Jawa adalah laboratorium islamisasi'],
+		adabNote: 'Tradisi lokal dibaca dengan tapisan akidah; karamah tidak menasakh syariat.',
+	},
+	{
+		order: 24,
+		slug: 'aceh-darussalam',
+		name: 'Kesultanan Aceh Darussalam',
+		periodCE: '±16–20 M',
+		periodAH: '±10–14 H',
+		capital: 'Banda Aceh',
+		regions: 'Sumatra utara & jaringan Samudera Hindia',
+		type: 'Kesultanan Nusantara',
+		summary: 'Kekuatan Islam maritim yang menentang kolonialisme dan menjadi pusat ulama di Asia Tenggara.',
+		legacy: 'Tradisi dayah, kitab kuning, dan perlawanan terhadap Portugis/Belanda; jejaring ulama Aceh–Haramain.',
+		startYearCE: 1514,
+		mapRegions: [],
+		keyFigures: ['Sultan Ali Mughayat Syah', 'Sultan Iskandar Muda', 'Hamzah Fansuri (jaringan intelektual)'],
+		highlights: ['Iskandar Muda', 'Dayah & ulama', 'Perlawanan kolonial', 'Sastra & tasawuf Sunni'],
+		story: 'Aceh bangkit setelah Malaka jatuh, menjadi sultanat kuat di Samudera Hindia. Di era Iskandar Muda, pengaruh politik dan dagang memuncak. Aceh juga pusat dayah dan penulisan yang menghubungkan Nusantara dengan Haramain.',
+		lessons: ['Ulama dan umara saling butuh', 'Perlawanan kolonial butuh basis ilmu', 'Bandar diganti bandar: Malaka → Aceh'],
+	},
+	{
+		order: 25,
+		slug: 'mataram-islam',
+		name: 'Kesultanan Mataram Islam',
+		periodCE: '±1586–1755 M',
+		periodAH: '±10–12 H',
+		capital: 'Kota Gede, Plered, Kartasura, lalu pecah',
+		regions: 'Jawa tengah–timur',
+		type: 'Kesultanan Nusantara',
+		summary: 'Kekuasaan Islam pedalaman Jawa yang menata politik agraris pasca-Demak/Pajang.',
+		legacy: 'Konfigurasi politik Jawa (Kesultanan/Yogya–Solo setelah Giyanti), Islam kejawen vs syariat, dan memori pesantren pedalaman.',
+		startYearCE: 1586,
+		mapRegions: [],
+		keyFigures: ['Panembahan Senopati', 'Sultan Agung'],
+		highlights: ['Sultan Agung', 'Integrasi pedalaman', 'Perjanjian Giyanti (1755)'],
+		story: 'Mataram Islam menggeser gravitasi dari pesisir Demak ke pedalaman Jawa. Sultan Agung menjadi tokoh penting konsolidasi. Tekanan VOC dan dinamika internal berujung fragmentasi politik lewat perjanjian kolonial, namun jejak Islam di pedalaman tetap berlanjut lewat pesantren dan budaya.',
+		lessons: ['Pedalaman dan pesisir punya logika politik berbeda', 'Kolonial memecah lewat diplomasi', 'Pesantren menjaga Islam meski istana pecah'],
+		adabNote: 'Sejarah Mataram dibaca untuk ibrah, bukan glorifikasi kekerasan internal.',
+	},
 ];
+
+export const getDynastyBySlug = (slug: string) => islamicDynasties.find((d) => d.slug === slug);
+export const dynastiesByStart = () => [...islamicDynasties].sort((a, b) => a.startYearCE - b.startYearCE);
