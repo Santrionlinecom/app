@@ -1,5 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { designTemplates } from '$lib/data/desain';
+import { islamicDynasties } from '$lib/data/dinasti';
 import type { RequestHandler } from './$types';
 
 const BASE_URL = 'https://app.santrionline.com';
@@ -31,7 +32,7 @@ const staticPages: SitemapPage[] = [
 	{ loc: '/fitur', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/tokoh', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/ulama', priority: '0.8', changefreq: 'weekly' },
-	{ loc: '/dinasti', priority: '0.7', changefreq: 'weekly' },
+	{ loc: '/dinasti', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/ormas', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/blog', priority: '0.9', changefreq: 'daily' },
 	{ loc: '/desain', priority: '0.9', changefreq: 'weekly' },
@@ -39,9 +40,15 @@ const staticPages: SitemapPage[] = [
 	{ loc: '/digital-store', priority: '0.7', changefreq: 'weekly' },
 	{ loc: '/tentang', priority: '0.5', changefreq: 'monthly' },
 	{ loc: '/kontak', priority: '0.5', changefreq: 'monthly' },
-	{ loc: '/privacy', priority: '0.4', changefreq: 'yearly' },
-	{ loc: '/syarat', priority: '0.4', changefreq: 'yearly' }
+	{ loc: '/privacy', priority: '0.5', changefreq: 'monthly' },
+	{ loc: '/syarat', priority: '0.5', changefreq: 'monthly' }
 ];
+
+const dynastyPages: SitemapPage[] = islamicDynasties.map((d) => ({
+	loc: `/dinasti/${d.slug}`,
+	priority: '0.7',
+	changefreq: 'monthly'
+}));
 
 const escapeXml = (value: string) =>
 	value
@@ -62,11 +69,11 @@ const loadArticlePages = async (db: D1Database): Promise<SitemapPage[]> => {
 	const { results } = await db
 		.prepare(
 			`SELECT slug, updated_at, created_at, scheduled_at
-			 FROM cms_posts
-			 WHERE status = 'published'
-			   AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now') * 1000)
-			 ORDER BY COALESCE(updated_at, scheduled_at, created_at) DESC
-			 LIMIT 1000`
+		 FROM cms_posts
+		 WHERE status = 'published'
+		   AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now') * 1000)
+		 ORDER BY COALESCE(updated_at, scheduled_at, created_at) DESC
+		 LIMIT 1000`
 		)
 		.all<CmsPostRow>();
 
@@ -82,10 +89,10 @@ const loadBookPages = async (db: D1Database): Promise<SitemapPage[]> => {
 	const { results } = await db
 		.prepare(
 			`SELECT slug, updated_at
-			 FROM buku_books
-			 WHERE status = 'published'
-			 ORDER BY updated_at DESC
-			 LIMIT 500`
+		 FROM buku_books
+		 WHERE status = 'published'
+		 ORDER BY updated_at DESC
+		 LIMIT 500`
 		)
 		.all<BookRow>();
 
@@ -129,6 +136,7 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 		'        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">',
 		...[
 			...staticPages,
+			...dynastyPages,
 			...designTemplates.map((template) => ({
 				loc: `/desain/${template.slug}`,
 				priority: '0.8',
