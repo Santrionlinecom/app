@@ -67,8 +67,8 @@
 {#if visible}
 	<div class="fixed inset-x-0 bottom-0 z-[100] px-3 pb-3 sm:left-auto sm:right-0 sm:w-[25rem] sm:px-4 sm:pb-4">
 		<div class="mx-auto max-w-3xl overflow-hidden rounded-xl border border-so-border bg-so-surface shadow-card sm:max-w-none">
-			<div class="grid gap-3 p-3 sm:p-4">
-				<div class="space-y-2.5">
+			<div class="grid gap-2 p-3 sm:gap-3 sm:p-4">
+				<div class="space-y-1.5 sm:space-y-2.5">
 					<div class="flex items-center gap-2.5">
 						<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-so-green text-white">
 							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.9">
@@ -82,8 +82,9 @@
 						</div>
 					</div>
 
-					<p class="max-w-2xl text-xs leading-5 text-so-muted">
-						Kami memakai cookie penting agar website berjalan baik. Dengan izin Anda, kami juga memakai analytics ringan dan privacy-friendly untuk memahami kunjungan tanpa iklan pelacak.
+					<p class="max-w-2xl text-[11px] leading-4 text-so-muted sm:text-xs sm:leading-5">
+						Cookie penting menjaga sesi. Analitik opsional membantu kami memperbaiki layanan tanpa iklan pelacak.
+						<a href="/privacy#cookie" class="font-semibold text-so-green hover:underline">Baca privasi</a>.
 					</p>
 
 					{#if showPreferences}
@@ -115,11 +116,11 @@
 						Tolak Analytics
 					</button>
 					{#if showPreferences}
-						<button type="button" class="btn btn-ghost btn-sm col-span-2 min-h-9 text-xs text-so-muted" on:click={() => saveConsent(analyticsEnabled)}>
+						<button type="button" class="btn btn-ghost btn-xs col-span-2 min-h-7 text-[11px] text-so-muted sm:btn-sm sm:min-h-9 sm:text-xs" on:click={() => saveConsent(analyticsEnabled)}>
 							Simpan Pilihan
 						</button>
 					{:else}
-						<button type="button" class="btn btn-ghost btn-sm col-span-2 min-h-9 text-xs text-so-muted" on:click={() => (showPreferences = true)}>
+						<button type="button" class="btn btn-ghost btn-xs col-span-2 min-h-7 text-[11px] text-so-muted sm:btn-sm sm:min-h-9 sm:text-xs" on:click={() => (showPreferences = true)}>
 							Atur Pilihan
 						</button>
 					{/if}

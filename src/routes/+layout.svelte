@@ -102,7 +102,7 @@ const isBookMenuActive = (path: string) =>
 	path === '/coins' ||
 	path.startsWith('/coins/');
 let usesStandalonePageContainer = false;
-$: usesStandalonePageContainer = isBookMenuActive(pathname);
+$: usesStandalonePageContainer = pathname === '/' || isBookMenuActive(pathname);
 const isRegisterMenuActive = (path: string) =>
 	path === '/register' ||
 	path.startsWith('/register/') ||
@@ -914,7 +914,7 @@ const getMobileContextMeta = (path: string) => {
 
 	return {
 		label: 'Beranda Santri',
-		note: 'Ringkasan platform dan fitur aktif'
+		note: 'Pembinaan generasi muslim'
 	};
 };
 
@@ -1166,33 +1166,33 @@ $: if (pathname !== previousPathname) {
 		}`}
 	>
 		<div class="md:hidden border-b border-white/60 bg-gradient-to-br from-emerald-50/90 via-white to-cyan-50/80">
-			<div class="container mx-auto max-w-6xl px-4 py-3">
-				<div class="rounded-[1.8rem] border border-white/70 bg-white/90 p-3 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-					<div class="flex items-start justify-between gap-3">
-						<a href="/" class="flex min-w-0 items-center gap-3">
+			<div class="container mx-auto max-w-6xl px-3 py-2.5 sm:px-4 sm:py-3">
+				<div class="rounded-[1.55rem] border border-white/70 bg-white/95 p-3 shadow-[0_14px_36px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:rounded-[1.8rem] sm:p-3.5">
+					<div class="flex items-center justify-between gap-2.5">
+						<a href="/" class="flex min-w-0 flex-1 items-center gap-2.5">
 							<img
 								src="https://files.santrionline.com/ICON%20SANTRI%20ONLINE%20COM%20kecil%20(1).png"
 								alt="Logo SantriOnline - Platform Manajemen Lembaga Islam"
-								class="h-12 w-12 shrink-0 object-contain"
+								class="h-11 w-11 shrink-0 object-contain sm:h-12 sm:w-12"
 								loading="lazy"
 							/>
-							<div class="min-w-0">
-								<p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-so-green">Santri Online</p>
-								<p class="truncate text-sm font-semibold text-so-ink">{mobileContext.label}</p>
-								<p class="truncate text-xs text-slate-500">{mobileContext.note}</p>
+							<div class="min-w-0 text-left">
+								<p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-so-green sm:text-[11px] sm:tracking-[0.28em]">Santri Online</p>
+								<p class="truncate text-[0.95rem] font-semibold leading-snug text-so-ink sm:text-sm">{mobileContext.label}</p>
+								<p class="truncate text-[11px] leading-4 text-slate-500 sm:text-xs">{mobileContext.note}</p>
 							</div>
 						</a>
 
-						<div class="flex items-center gap-2">
+						<div class="flex shrink-0 items-center gap-1.5 sm:gap-2">
 							<a
 								href={mobilePrimaryAction.href}
-								class="inline-flex h-11 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-so-green shadow-sm"
+								class="inline-flex h-10 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-so-green shadow-sm sm:h-11 sm:px-4"
 							>
 								{mobilePrimaryAction.label}
 							</a>
 							<button
 								type="button"
-								class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-so-muted shadow-sm transition hover:border-emerald-200 hover:text-so-green"
+								class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-so-muted shadow-sm transition hover:border-emerald-200 hover:text-so-green sm:h-11 sm:w-11"
 								aria-label="Buka menu mobile"
 								on:click={() => (mobileMenuOpen = true)}
 							>
@@ -1203,32 +1203,34 @@ $: if (pathname !== previousPathname) {
 						</div>
 					</div>
 
-					<div class="mobile-scroll-row mt-3 flex gap-2 overflow-x-auto pb-1">
-						{#each mobileTopMenus as menu}
-							<button
-								type="button"
-								class="mobile-top-trigger shrink-0"
-								class:mobile-top-trigger-active={menu.isActive(pathname) || mobileTopMenuOpen === menu.id}
-								aria-expanded={mobileTopMenuOpen === menu.id}
-								on:click={() => (mobileTopMenuOpen = mobileTopMenuOpen === menu.id ? null : menu.id)}
-							>
-								<span>{menu.label}</span>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 20 20"
-									fill="currentColor"
-									class="h-4 w-4 transition"
-									class:rotate-180={mobileTopMenuOpen === menu.id}
+					{#if pathname !== '/'}
+						<div class="mobile-scroll-row mt-2.5 flex justify-start gap-2 overflow-x-auto pb-0.5 sm:mt-3 sm:pb-1">
+							{#each mobileTopMenus as menu}
+								<button
+									type="button"
+									class="mobile-top-trigger shrink-0"
+									class:mobile-top-trigger-active={menu.isActive(pathname) || mobileTopMenuOpen === menu.id}
+									aria-expanded={mobileTopMenuOpen === menu.id}
+									on:click={() => (mobileTopMenuOpen = mobileTopMenuOpen === menu.id ? null : menu.id)}
 								>
-									<path
-										fill-rule="evenodd"
-										d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
-										clip-rule="evenodd"
-									/>
-								</svg>
-							</button>
-						{/each}
-					</div>
+									<span>{menu.label}</span>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 20 20"
+										fill="currentColor"
+										class="h-4 w-4 transition"
+										class:rotate-180={mobileTopMenuOpen === menu.id}
+									>
+										<path
+											fill-rule="evenodd"
+											d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z"
+											clip-rule="evenodd"
+										/>
+									</svg>
+								</button>
+							{/each}
+						</div>
+					{/if}
 
 					{#if activeMobileTopMenu}
 						<div class="mt-3 overflow-hidden rounded-[1.45rem] border border-slate-200/80 bg-white/95 p-2 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
@@ -1731,7 +1733,7 @@ $: if (pathname !== previousPathname) {
 	{/if}
 
 	<!-- Bottom nav (mobile) - only for logged-in users outside unified app shell -->
-	{#if data?.user && !hideMobileBottomNavigation && !isAppRouteActive}
+	{#if data?.user && pathname !== '/' && !hideMobileBottomNavigation && !isAppRouteActive}
 		<nav
 			class={`pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom transition-transform duration-300 ease-in-out will-change-transform ${
 				shouldHideMobileChrome ? 'translate-y-full' : 'translate-y-0'
@@ -1784,7 +1786,7 @@ $: if (pathname !== previousPathname) {
 				</div>
 			</div>
 		</nav>
-	{:else if !data?.user && !hideMobileBottomNavigation && !hidePageChrome && !isAppRouteActive && !isAdminRouteActive}
+	{:else if !data?.user && pathname !== '/' && !hideMobileBottomNavigation && !hidePageChrome && !isAppRouteActive && !isAdminRouteActive}
 		<!-- Bottom nav for non-logged-in users -->
 		<nav
 			class={`pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden safe-area-bottom transition-transform duration-300 ease-in-out will-change-transform ${
@@ -2085,20 +2087,20 @@ $: if (pathname !== previousPathname) {
 	.mobile-top-trigger {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.35rem;
+		gap: 0.3rem;
 		flex: 0 0 auto;
 		scroll-snap-align: start;
 		white-space: nowrap;
 		border-radius: 999px;
 		border: 1px solid rgba(226, 232, 240, 1);
 		background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
-		padding: 0.64rem 0.92rem;
-		font-size: 0.72rem;
+		padding: 0.58rem 0.88rem;
+		font-size: 0.7rem;
 		font-weight: 700;
-		letter-spacing: 0.12em;
+		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: #475569;
-		box-shadow: 0 10px 26px rgba(15, 23, 42, 0.04);
+		box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
 		transition:
 			background-color 0.18s ease,
 			color 0.18s ease,

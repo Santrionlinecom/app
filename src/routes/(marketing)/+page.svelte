@@ -18,7 +18,7 @@
 	import Medal from '@lucide/svelte/icons/medal';
 	import School from '@lucide/svelte/icons/school';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Sparkles from '@lucide/svelte/icons/sparkles';
+
 	import Users from '@lucide/svelte/icons/users';
 	import WalletCards from '@lucide/svelte/icons/wallet-cards';
 
@@ -45,12 +45,17 @@
 		{
 			icon: ShieldCheck,
 			title: 'Aqidah kuat',
-			desc: 'Materi Aswaja bertahap agar santri memahami iman, bukan sekadar hafal istilah.'
+			desc: 'Materi Aswaja bertahap agar santri meyakini iman dengan sadar, bukan sekadar hafal istilah.'
 		},
 		{
 			icon: HeartHandshake,
-			title: 'Adab jadi kebiasaan',
-			desc: 'Misi harian untuk shalat, Qur’an, birrul walidain, adab guru, dan adab digital.'
+			title: 'Adab & syariat',
+			desc: 'Shalat, Qur’an, birrul walidain, adab guru, adab digital, dan menjaga lisan jadi kebiasaan.'
+		},
+		{
+			icon: ClipboardCheck,
+			title: 'Amal & habit',
+			desc: 'Misi harian, streak, dan badge mengarahkan anak menang kecil setiap hari.'
 		},
 		{
 			icon: BookOpenText,
@@ -65,7 +70,7 @@
 		{
 			icon: Users,
 			title: 'Komunitas & mentor',
-			desc: 'Orang tua, guru, musyrif, dan lembaga punya dashboard pembinaan yang nyambung.'
+			desc: 'Orang tua, guru, musyrif, dan lembaga terhubung dalam satu alur pembinaan.'
 		}
 	];
 
@@ -83,33 +88,33 @@
 			desc: 'Guru input setoran, pembimbing review, admin melihat rekap, wali mendapat gambaran perkembangan.'
 		},
 		{
-			eyebrow: 'Kitab Digital RAG',
+			eyebrow: 'Kitab Digital',
 			title: 'Qur’an, kitab, dan rujukan',
-			desc: 'Mushaf, tafsir, asbabun nuzul, kitab turats, dan tanya kitab sebagai fondasi ilmu.'
+			desc: 'Mushaf, tafsir, kitab, dan rujukan Aswaja sebagai fondasi ilmu yang hidup.'
 		},
 		{
 			eyebrow: 'Habit System',
 			title: 'Misi, streak, dan badge',
-			desc: 'Anak diarahkan menang kecil setiap hari agar ibadah, adab, dan belajar terasa hidup.'
+			desc: 'Anak diarahkan menang kecil setiap hari agar ibadah, adab, dan belajar terasa keren.'
 		},
 		{
 			eyebrow: 'Operasional',
 			title: 'Lembaga lebih tertata',
-			desc: 'Multi-lembaga, role, addon, coin, pembayaran, kas, aset, kalender, dan laporan.'
+			desc: 'Multi-lembaga, role, addon, coin, kas, aset, kalender, dan laporan dalam satu tempat.'
 		}
 	];
 
 	const quickLinks = [
 		{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-		{ label: 'Katalog Addon', href: '/addon', icon: WalletCards },
+		{ label: 'Habit Santri', href: '/habit', icon: CalendarCheck },
 		{ label: 'Mushaf Qur’an', href: '/kitab/quran', icon: BookOpenText },
-		{ label: 'Kitab Turats', href: '/kitab', icon: BookOpenCheck },
+		{ label: 'Kitab & Ilmu', href: '/kitab', icon: BookOpenCheck },
 		{ label: 'Data Lembaga', href: '/lembaga', icon: Building2 },
-		{ label: 'Kalender', href: '/kalender', icon: CalendarCheck }
+		{ label: 'Addon Lembaga', href: '/addon', icon: WalletCards }
 	];
 
 	const readiness = [
-		'Aqidah + adab + amal, bukan sekadar aplikasi administrasi',
+		'Aqidah + Adab + Amal + Ilmu + Skill + Komunitas + Habit',
 		'Gamifikasi untuk melawan dopamin cepat game dan scrolling',
 		'Orang tua, guru, dan lembaga punya peran dalam satu alur',
 		'Tetap ringan, cepat, dan hemat biaya operasional'
@@ -130,29 +135,36 @@
 	<title>SantriOnline App - Sistem Pembinaan Generasi Muslim</title>
 	<meta
 		name="description"
-		content="SantriOnline App adalah sistem pembinaan generasi muslim untuk TPQ, pondok, rumah tahfidz, masjid, musholla, habit ibadah, adab, akademik, kitab digital, dan operasional lembaga."
+		content="SantriOnline adalah sistem pembinaan generasi muslim: aqidah, adab, amal, ilmu, skill, komunitas, dan habit untuk TPQ, pondok, rumah tahfidz, masjid, dan musholla."
 	/>
 </svelte:head>
 
 <div class="home-root min-h-screen overflow-hidden bg-so-cream text-so-ink">
-	<section class="hero relative isolate overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
-		<div class="hero-glow hero-glow-one"></div>
-		<div class="hero-glow hero-glow-two"></div>
-		<div class="mx-auto grid max-w-7xl gap-8 pt-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:pt-10">
+	<section class="so-hero relative isolate overflow-hidden px-4 sm:px-6 lg:px-8">
+		<div class="hero-grid-lines" aria-hidden="true"></div>
+		<div class="hero-glow hero-glow-one" aria-hidden="true"></div>
+		<div class="hero-glow hero-glow-two" aria-hidden="true"></div>
+
+		<div class="hero-layout mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
 			<div class="hero-copy relative z-10">
-				<div class="hero-badge inline-flex max-w-full items-center gap-2 rounded-full border border-white/20 bg-white/12 px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-so-gold-2 shadow-sm backdrop-blur">
-					<Sparkles class="h-4 w-4 shrink-0" strokeWidth={2.4} />
-					<span class="truncate">Aqidah · Adab · Ilmu · Skill · Habit</span>
+				<div class="hero-badge inline-flex max-w-full items-center gap-2 rounded-full">
+					<span class="hero-badge-dot"></span>
+					<span class="hero-badge-text">SantriOnline · Sistem Pembinaan Generasi</span>
 				</div>
 
-				<h1 class="hero-title mt-7 max-w-4xl text-4xl font-black leading-[0.96] tracking-[-0.06em] text-white sm:text-5xl md:text-6xl lg:text-7xl">
-					Sistem pembinaan generasi muslim, bukan sekadar aplikasi lembaga.
+				<h1 class="hero-title">
+					Membentuk generasi muslim.
+					<span>Berilmu. Beradab. Siap masa depan.</span>
 				</h1>
-				<p class="hero-lead mt-6 max-w-2xl text-base font-semibold leading-8 text-white/84 md:text-lg">
-					SantriOnline membantu TPQ, pondok, rumah tahfidz, masjid, dan musholla membentuk santri yang kuat aqidahnya, rapi ibadahnya, tinggi adabnya, hidup ilmunya, dan siap bersaing dengan skill masa depan.
+				<p class="hero-lead">
+					Bukan sekadar aplikasi lembaga. SantriOnline menyatukan aqidah Aswaja, habit ibadah, adab, ilmu agama, skill, serta pendampingan dalam satu perjalanan pembinaan.
 				</p>
 
-				<div class="hero-actions mt-8 flex flex-col gap-3 sm:flex-row">
+				<div class="hero-audience" aria-label="Lembaga yang didukung">
+					<span>TPQ</span><i></i><span>Pondok</span><i></i><span>Rumah Tahfidz</span><i></i><span>Masjid</span>
+				</div>
+
+				<div class="hero-actions flex flex-col gap-3 sm:flex-row">
 					<a class="btn-gold h-14 px-6" href={primaryAction.href}>
 						<svelte:component this={primaryAction.icon} class="h-5 w-5" strokeWidth={2.5} />
 						{primaryAction.label}
@@ -163,56 +175,72 @@
 					</a>
 				</div>
 
-				<div class="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
-					<div class="metric"><strong>5</strong><span>Pilar pembinaan</span></div>
-					<div class="metric"><strong>4</strong><span>Ruang kerja lembaga</span></div>
-					<div class="metric"><strong>1</strong><span>Ekosistem terpadu</span></div>
+				<div class="hero-proof">
+					<CheckCircle2 class="h-4 w-4" strokeWidth={2.5} />
+					<span>Aqidah + Adab + Amal + Ilmu + Skill + Komunitas + Habit</span>
 				</div>
 			</div>
 
-			<div class="relative z-10 rounded-[2rem] border border-white/14 bg-white/10 p-4 shadow-2xl backdrop-blur-xl md:p-5">
-				<div class="rounded-[1.5rem] border border-white/16 bg-so-surface p-4 text-so-green shadow-xl md:p-5">
-					<div class="flex items-center justify-between gap-3">
+			<div class="hero-visual relative z-10" aria-label="Pratinjau dashboard pembinaan SantriOnline">
+				<div class="floating-note floating-note-habit">
+					<CalendarCheck class="h-4 w-4" strokeWidth={2.4} />
+					<div><strong>Habit terjaga</strong><span>3 misi selesai</span></div>
+				</div>
+				<div class="floating-note floating-note-badge">
+					<Medal class="h-4 w-4" strokeWidth={2.4} />
+					<div><strong>Badge Amanah</strong><span>adab menjadi identitas</span></div>
+				</div>
+
+				<div class="product-window">
+					<div class="product-window-bar">
+						<div class="product-brand">
+							<div class="product-mark"><Compass class="h-5 w-5" strokeWidth={2.4} /></div>
+							<div><strong>Mission Control</strong><span>Rapor pembinaan santri</span></div>
+						</div>
+						<div class="window-dots"><i></i><i></i><i></i></div>
+					</div>
+
+					<div class="progress-card">
 						<div>
-							<p class="text-xs font-black uppercase tracking-[0.2em] text-so-gold">Mission Control</p>
-							<h2 class="mt-1 text-2xl font-black tracking-[-0.04em] text-so-green">Rapor Pembinaan</h2>
+							<span class="preview-eyebrow">Misi hari ini</span>
+							<strong>Menang kecil setiap hari.</strong>
+							<p>Subuh, Qur’an, adab, ilmu, dan skill tumbuh menjadi kebiasaan.</p>
 						</div>
-						<div class="grid h-12 w-12 place-items-center rounded-2xl bg-so-green text-so-gold-2">
-							<Compass class="h-6 w-6" strokeWidth={2.4} />
+						<div class="progress-ring"><b>3/5</b><span>selesai</span></div>
+					</div>
+
+					<div class="mission-list">
+						<div class="mission-row mission-done">
+							<span class="mission-check"><CheckCircle2 class="h-4 w-4" /></span>
+							<div><strong>Shalat Subuh tepat waktu</strong><span>Habit ibadah · selesai</span></div>
+							<b>+10</b>
+						</div>
+						<div class="mission-row mission-done">
+							<span class="mission-check"><BookOpenCheck class="h-4 w-4" /></span>
+							<div><strong>Baca Qur’an dan maknanya</strong><span>Ilmu yang hidup · selesai</span></div>
+							<b>+15</b>
+						</div>
+						<div class="mission-row">
+							<span class="mission-check"><HeartHandshake class="h-4 w-4" /></span>
+							<div><strong>Berbuat baik kepada orang tua</strong><span>Adab harian · lanjutkan</span></div>
+							<b>+10</b>
 						</div>
 					</div>
 
-					<div class="mt-5 grid gap-3 sm:grid-cols-2">
-						<div class="dash-card bg-so-green text-white">
-							<p>Habit Ibadah</p>
-							<strong>Streak Subuh + Qur’an</strong>
-							<span>misi harian santri</span>
-						</div>
-						<div class="dash-card">
-							<p>Akademik TPQ</p>
-							<strong>Setoran → Review</strong>
-							<span>guru dan pembimbing</span>
-						</div>
-						<div class="dash-card">
-							<p>Adab Digital</p>
-							<strong>Badge Amanah</strong>
-							<span>lisan, waktu, konten</span>
-						</div>
-						<div class="dash-card bg-so-gold-2">
-							<p>Kitab Digital</p>
-							<strong>Rujukan Aswaja</strong>
-							<span>Qur’an, tafsir, turats</span>
-						</div>
-					</div>
-
-					<div class="mt-4 rounded-2xl border border-so-border bg-white p-4">
-						<div class="flex items-center gap-3">
-							<Medal class="h-5 w-5 text-so-gold" strokeWidth={2.4} />
-							<p class="text-sm font-black text-so-green">Identitas santri digital: beradab, berilmu, disiplin, dan punya misi.</p>
-						</div>
+					<div class="preview-stats">
+						<div><span>Streak</span><strong>12 hari</strong></div>
+						<div><span>Setoran</span><strong>Review guru</strong></div>
+						<div><span>Rapor</span><strong>Tumbuh baik</strong></div>
 					</div>
 				</div>
 			</div>
+		</div>
+
+		<div class="hero-rail mx-auto max-w-7xl">
+			<div><ShieldCheck class="h-5 w-5" strokeWidth={2.3} /><span><b>Aqidah</b> keyakinan sadar</span></div>
+			<div><HeartHandshake class="h-5 w-5" strokeWidth={2.3} /><span><b>Adab</b> menjadi kebiasaan</span></div>
+			<div><ClipboardCheck class="h-5 w-5" strokeWidth={2.3} /><span><b>Amal</b> konsisten setiap hari</span></div>
+			<div><BrainCircuit class="h-5 w-5" strokeWidth={2.3} /><span><b>Skill</b> siap dunia nyata</span></div>
 		</div>
 	</section>
 
@@ -220,10 +248,10 @@
 		<div class="mx-auto max-w-7xl">
 			<div class="section-head">
 				<p>Fondasi SantriOnline</p>
-				<h2>Lima pilar yang menjaga arah produk tetap tarbiyah.</h2>
+				<h2>Enam pilar yang menjaga arah produk tetap tarbiyah.</h2>
 				<span>Setiap fitur harus membantu pembinaan, bukan hanya menambah menu.</span>
 			</div>
-			<div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+			<div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{#each pillars as item}
 					<article class="pillar-card">
 						<div class="icon-badge"><svelte:component this={item.icon} class="h-5 w-5" strokeWidth={2.4} /></div>
@@ -264,7 +292,7 @@
 			<div class="section-head max-w-3xl">
 				<p>Alur Produk</p>
 				<h2>Dari administrasi harian menuju pembentukan karakter.</h2>
-				<span>Fitur dibuat bertahap agar Mas Yogik bisa menjaga biaya, fokus, dan kualitas.</span>
+				<span>Fitur dibuat bertahap agar lembaga bisa menjaga biaya, fokus, dan kualitas pembinaan.</span>
 			</div>
 			<div class="mt-8 grid gap-5 lg:grid-cols-4">
 				{#each featureLanes as lane, index}
@@ -325,34 +353,464 @@
 		font-family: var(--font-sans, 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif);
 	}
 
-	.hero {
+	.so-hero {
+		display: flex;
+		flex-direction: column;
+		min-height: calc(100svh - 3.5rem);
+		padding-top: clamp(3.5rem, 6vw, 6rem);
+		padding-bottom: 1.25rem;
 		background:
-			radial-gradient(circle at 16% 18%, rgba(247, 216, 120, 0.22), transparent 28rem),
-			linear-gradient(135deg, #0f2f24 0%, #1b4332 46%, #2d6a4f 100%);
+			radial-gradient(circle at 12% 12%, rgb(232 201 122 / 0.18), transparent 27rem),
+			radial-gradient(circle at 88% 30%, rgb(82 143 108 / 0.28), transparent 30rem),
+			linear-gradient(135deg, #081c15 0%, #0f2f24 48%, #163f30 100%);
+	}
+
+	.hero-grid-lines {
+		position: absolute;
+		inset: 0;
+		background-image:
+			linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+			linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+		background-size: 58px 58px;
+		mask-image: linear-gradient(to bottom, black, transparent 88%);
+		pointer-events: none;
+	}
+
+	.hero-layout {
+		position: relative;
+		width: 100%;
+		flex: 1 1 auto;
+		padding-bottom: clamp(2.25rem, 4vw, 4rem);
 	}
 
 	.hero-glow {
 		position: absolute;
 		border-radius: 9999px;
-		filter: blur(48px);
-		opacity: 0.52;
+		filter: blur(64px);
+		opacity: 0.42;
 		pointer-events: none;
 	}
 
 	.hero-glow-one {
-		right: -8rem;
-		top: 4rem;
-		height: 18rem;
-		width: 18rem;
+		right: -7rem;
+		top: 8rem;
+		height: 24rem;
+		width: 24rem;
 		background: var(--color-so-gold);
 	}
 
 	.hero-glow-two {
-		bottom: -7rem;
-		left: 20%;
-		height: 16rem;
-		width: 16rem;
-		background: var(--color-so-green-2);
+		bottom: -9rem;
+		left: 14%;
+		height: 22rem;
+		width: 22rem;
+		background: #2d6a4f;
+	}
+
+	.hero-badge {
+		border: 1px solid rgb(255 255 255 / 0.16);
+		background: rgb(255 255 255 / 0.08);
+		padding: 0.65rem 0.95rem;
+		font-size: 0.7rem;
+		font-weight: 900;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: rgb(255 255 255 / 0.86);
+		box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+		backdrop-filter: blur(14px);
+	}
+
+	.hero-badge-dot {
+		height: 0.5rem;
+		width: 0.5rem;
+		flex: 0 0 auto;
+		border-radius: 9999px;
+		background: #7ad9a5;
+		box-shadow: 0 0 0 5px rgb(122 217 165 / 0.12), 0 0 18px rgb(122 217 165 / 0.5);
+	}
+
+	.hero-title {
+		margin-top: 1.5rem;
+		max-width: 14ch;
+		font-size: clamp(3rem, 4.5vw, 4.7rem);
+		font-weight: 950;
+		line-height: 0.96;
+		letter-spacing: -0.065em;
+		color: #ffffff;
+		text-wrap: balance;
+	}
+
+	.hero-title span {
+		display: block;
+		background: linear-gradient(100deg, #ffffff 0%, #f0d98f 52%, #d8b95f 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+
+	.hero-lead {
+		margin-top: 1.45rem;
+		max-width: 42rem;
+		font-size: clamp(0.96rem, 1.25vw, 1.1rem);
+		font-weight: 600;
+		line-height: 1.8;
+		color: rgb(255 255 255 / 0.72);
+	}
+
+	.hero-audience {
+		margin-top: 1.15rem;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.65rem;
+		font-size: 0.72rem;
+		font-weight: 850;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: rgb(255 255 255 / 0.58);
+	}
+
+	.hero-audience i {
+		height: 0.25rem;
+		width: 0.25rem;
+		border-radius: 9999px;
+		background: var(--color-so-gold-2);
+	}
+
+	.hero-actions {
+		margin-top: 1.75rem;
+	}
+
+	.hero-proof {
+		margin-top: 1rem;
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		font-size: 0.73rem;
+		font-weight: 750;
+		line-height: 1.5;
+		color: rgb(255 255 255 / 0.56);
+	}
+
+	.hero-proof :global(svg) {
+		flex: 0 0 auto;
+		color: var(--color-so-gold-2);
+	}
+
+	.hero-visual {
+		padding: 2rem 1rem 1rem;
+		perspective: 1200px;
+	}
+
+	.product-window {
+		position: relative;
+		border: 1px solid rgb(255 255 255 / 0.2);
+		border-radius: 2rem;
+		background: linear-gradient(180deg, rgb(255 255 255 / 0.98), rgb(247 245 238 / 0.98));
+		padding: 1.25rem;
+		box-shadow: 0 38px 90px rgb(0 0 0 / 0.36), inset 0 1px 0 rgb(255 255 255 / 0.9);
+		transform: rotateY(-2deg) rotateX(1deg);
+	}
+
+	.product-window::before {
+		content: '';
+		position: absolute;
+		inset: -0.65rem;
+		z-index: -1;
+		border: 1px solid rgb(255 255 255 / 0.12);
+		border-radius: 2.35rem;
+		background: rgb(255 255 255 / 0.06);
+		backdrop-filter: blur(12px);
+	}
+
+	.product-window-bar,
+	.product-brand {
+		display: flex;
+		align-items: center;
+	}
+
+	.product-window-bar {
+		justify-content: space-between;
+		gap: 1rem;
+	}
+
+	.product-brand {
+		gap: 0.7rem;
+	}
+
+	.product-mark {
+		display: grid;
+		height: 2.6rem;
+		width: 2.6rem;
+		place-items: center;
+		border-radius: 0.9rem;
+		background: var(--color-so-green);
+		color: var(--color-so-gold-2);
+	}
+
+	.product-brand strong,
+	.product-brand span {
+		display: block;
+	}
+
+	.product-brand strong {
+		font-size: 0.85rem;
+		font-weight: 950;
+		color: var(--color-so-green);
+	}
+
+	.product-brand span {
+		margin-top: 0.15rem;
+		font-size: 0.68rem;
+		font-weight: 700;
+		color: var(--color-so-muted);
+	}
+
+	.window-dots {
+		display: flex;
+		gap: 0.35rem;
+	}
+
+	.window-dots i {
+		height: 0.45rem;
+		width: 0.45rem;
+		border-radius: 9999px;
+		background: #d9d4c8;
+	}
+
+	.window-dots i:first-child {
+		background: var(--color-so-gold);
+	}
+
+	.progress-card {
+		margin-top: 1rem;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 1rem;
+		border-radius: 1.35rem;
+		background: linear-gradient(135deg, #143f2f, #236346);
+		padding: 1.15rem;
+		color: white;
+		box-shadow: 0 15px 28px rgb(15 47 36 / 0.18);
+	}
+
+	.preview-eyebrow {
+		font-size: 0.61rem;
+		font-weight: 950;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: var(--color-so-gold-2);
+	}
+
+	.progress-card > div:first-child > strong {
+		margin-top: 0.35rem;
+		display: block;
+		font-size: 1.18rem;
+		font-weight: 950;
+		letter-spacing: -0.035em;
+	}
+
+	.progress-card p {
+		margin-top: 0.35rem;
+		max-width: 23rem;
+		font-size: 0.69rem;
+		font-weight: 650;
+		line-height: 1.55;
+		color: rgb(255 255 255 / 0.68);
+	}
+
+	.progress-ring {
+		display: grid;
+		height: 4.5rem;
+		width: 4.5rem;
+		place-content: center;
+		border-radius: 9999px;
+		background: radial-gradient(circle at center, #1b4d39 59%, transparent 61%), conic-gradient(var(--color-so-gold-2) 0 60%, rgb(255 255 255 / 0.14) 60% 100%);
+		text-align: center;
+	}
+
+	.progress-ring b,
+	.progress-ring span {
+		display: block;
+	}
+
+	.progress-ring b {
+		font-size: 0.95rem;
+		font-weight: 950;
+	}
+
+	.progress-ring span {
+		font-size: 0.55rem;
+		font-weight: 750;
+		color: rgb(255 255 255 / 0.62);
+	}
+
+	.mission-list {
+		margin-top: 0.75rem;
+		display: grid;
+		gap: 0.55rem;
+	}
+
+	.mission-row {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0.65rem;
+		border: 1px solid #e8e4dc;
+		border-radius: 1.05rem;
+		background: rgb(255 255 255 / 0.82);
+		padding: 0.75rem;
+	}
+
+	.mission-check {
+		display: grid;
+		height: 2.1rem;
+		width: 2.1rem;
+		place-items: center;
+		border-radius: 0.75rem;
+		background: #f1eee5;
+		color: var(--color-so-gold);
+	}
+
+	.mission-done .mission-check {
+		background: #e3f4e9;
+		color: #218252;
+	}
+
+	.mission-row strong,
+	.mission-row span {
+		display: block;
+	}
+
+	.mission-row strong {
+		font-size: 0.73rem;
+		font-weight: 900;
+		color: var(--color-so-green);
+	}
+
+	.mission-row span {
+		margin-top: 0.15rem;
+		font-size: 0.61rem;
+		font-weight: 650;
+		color: var(--color-so-muted);
+	}
+
+	.mission-row > b {
+		font-size: 0.65rem;
+		font-weight: 950;
+		color: var(--color-so-gold);
+	}
+
+	.preview-stats {
+		margin-top: 0.75rem;
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.55rem;
+	}
+
+	.preview-stats > div {
+		border-radius: 0.95rem;
+		background: #f0ede5;
+		padding: 0.75rem;
+	}
+
+	.preview-stats span,
+	.preview-stats strong {
+		display: block;
+	}
+
+	.preview-stats span {
+		font-size: 0.56rem;
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--color-so-muted);
+	}
+
+	.preview-stats strong {
+		margin-top: 0.25rem;
+		font-size: 0.68rem;
+		font-weight: 950;
+		color: var(--color-so-green);
+	}
+
+	.floating-note {
+		position: absolute;
+		z-index: 3;
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		border: 1px solid rgb(255 255 255 / 0.25);
+		border-radius: 1rem;
+		background: rgb(9 31 23 / 0.78);
+		padding: 0.7rem 0.85rem;
+		color: var(--color-so-gold-2);
+		box-shadow: 0 18px 34px rgb(0 0 0 / 0.24);
+		backdrop-filter: blur(18px);
+	}
+
+	.floating-note strong,
+	.floating-note span {
+		display: block;
+	}
+
+	.floating-note strong {
+		font-size: 0.67rem;
+		font-weight: 950;
+		color: white;
+	}
+
+	.floating-note span {
+		margin-top: 0.1rem;
+		font-size: 0.57rem;
+		font-weight: 700;
+		color: rgb(255 255 255 / 0.58);
+	}
+
+	.floating-note-habit {
+		right: -0.5rem;
+		top: -0.35rem;
+	}
+
+	.floating-note-badge {
+		bottom: 0.1rem;
+		left: -0.5rem;
+	}
+
+	.hero-rail {
+		position: relative;
+		z-index: 2;
+		width: 100%;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		border-top: 1px solid rgb(255 255 255 / 0.12);
+	}
+
+	.hero-rail > div {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		border-right: 1px solid rgb(255 255 255 / 0.1);
+		padding: 1rem 1.1rem;
+		color: var(--color-so-gold-2);
+	}
+
+	.hero-rail > div:last-child {
+		border-right: 0;
+	}
+
+	.hero-rail span {
+		font-size: 0.68rem;
+		font-weight: 650;
+		color: rgb(255 255 255 / 0.58);
+	}
+
+	.hero-rail b {
+		display: block;
+		font-size: 0.77rem;
+		font-weight: 950;
+		color: white;
 	}
 
 	.btn-gold,
@@ -396,54 +854,6 @@
 	.btn-dark:hover,
 	.quick-link:hover {
 		transform: translateY(-2px);
-	}
-
-	.metric {
-		border: 1px solid rgb(255 255 255 / 0.16);
-		border-radius: 1.25rem;
-		background: rgb(255 255 255 / 0.1);
-		padding: 1rem;
-		color: white;
-		backdrop-filter: blur(12px);
-	}
-
-	.metric strong {
-		display: block;
-		font-size: 2rem;
-		line-height: 1;
-		font-weight: 950;
-		color: var(--color-so-gold-2);
-	}
-
-	.metric span {
-		margin-top: 0.35rem;
-		display: block;
-		font-size: 0.78rem;
-		font-weight: 800;
-		color: rgb(255 255 255 / 0.74);
-	}
-
-	.dash-card {
-		min-height: 8rem;
-		border-radius: 1.25rem;
-		border: 1px solid var(--color-so-border);
-		background: white;
-		padding: 1rem;
-	}
-
-	.dash-card p,
-	.dash-card span {
-		font-size: 0.75rem;
-		font-weight: 800;
-		opacity: 0.72;
-	}
-
-	.dash-card strong {
-		margin-top: 1.2rem;
-		display: block;
-		font-size: 1rem;
-		font-weight: 950;
-		letter-spacing: -0.03em;
 	}
 
 	.section-head p {
@@ -583,70 +993,93 @@
 	}
 
 	@media (max-width: 640px) {
-		.hero {
-			padding-top: 0.6rem;
-			padding-bottom: 0.9rem;
-			background: var(--color-so-cream);
+		.so-hero {
+			display: block;
+			min-height: auto;
+			padding: 2rem 1rem 0.75rem;
+			background:
+				radial-gradient(circle at 50% 0%, rgb(201 168 76 / 0.18), transparent 17rem),
+				linear-gradient(180deg, #0b281e 0%, #123729 68%, #0d2d22 100%);
+		}
+
+		.hero-grid-lines {
+			background-size: 42px 42px;
+			opacity: 0.7;
+		}
+
+		.hero-layout {
+			gap: 2.25rem !important;
+			padding-bottom: 1.75rem;
 		}
 
 		.hero-glow {
-			display: none;
+			display: block;
+			opacity: 0.2;
 		}
 
 		.hero-copy {
-			width: 100%;
-			border: 1px solid rgba(184, 156, 73, 0.18);
-			border-radius: 1.85rem;
-			background: linear-gradient(180deg, #ffffff 0%, #faf8f3 100%);
-			padding: 1.05rem;
-			text-align: center;
 			display: flex;
+			width: 100%;
 			flex-direction: column;
 			align-items: center;
-			box-shadow: 0 10px 28px rgba(23, 61, 44, 0.05);
-		}
-
-		.hero-copy::before {
-			content: '';
-			display: block;
-			width: 4rem;
-			height: 0.25rem;
-			border-radius: 9999px;
-			background: linear-gradient(90deg, transparent, #c9a84c, transparent);
-			margin-bottom: 0.4rem;
+			text-align: center;
 		}
 
 		.hero-badge {
-			border-color: rgba(184, 156, 73, 0.24);
-			background: rgba(247, 216, 120, 0.12);
-			color: var(--color-so-gold);
 			justify-content: center;
-			font-size: 0.66rem;
-			letter-spacing: 0.2em;
+			padding: 0.55rem 0.75rem;
+			font-size: 0.59rem;
+			letter-spacing: 0.08em;
+			line-height: 1.35;
+			text-align: center;
 		}
 
-		.hero-title {
-			max-width: 11ch;
-			font-size: clamp(2.05rem, 8.9vw, 2.7rem);
-			line-height: 0.98;
-			letter-spacing: -0.06em;
-			color: var(--color-so-green);
+		.hero-badge-text {
+			white-space: normal;
 			text-wrap: balance;
 		}
 
+		.hero-title {
+			margin-top: 1.15rem;
+			max-width: 17ch;
+			width: 100%;
+			font-size: clamp(2.05rem, 9.2vw, 2.65rem);
+			line-height: 1.02;
+			letter-spacing: -0.055em;
+			text-align: center;
+		}
+
 		.hero-lead {
-			max-width: 31rem;
-			line-height: 1.78;
-			color: var(--color-so-muted);
+			margin-top: 1rem;
+			max-width: 34rem;
+			width: 100%;
+			font-size: 0.91rem;
+			line-height: 1.72;
+			text-align: center;
+		}
+
+		.hero-audience {
+			justify-content: center;
+			gap: 0.45rem;
+			font-size: 0.61rem;
+			letter-spacing: 0.055em;
 		}
 
 		.hero-actions {
+			margin-top: 1.25rem;
 			width: 100%;
 			align-items: stretch;
 		}
 
 		.hero-actions > a {
 			width: 100%;
+			min-height: 3.15rem;
+		}
+
+		.hero-proof {
+			justify-content: center;
+			font-size: 0.65rem;
+			text-align: left;
 		}
 
 		.btn-gold {
@@ -656,44 +1089,132 @@
 		}
 
 		.btn-glass {
-			border-color: var(--color-so-border);
-			background: #fff;
-			color: var(--color-so-green);
+			border-color: rgb(255 255 255 / 0.2);
+			background: rgb(255 255 255 / 0.08);
+			color: white;
 		}
 
-		.metric {
+		.hero-visual {
+			padding: 0 0.25rem 0.5rem;
+		}
+
+		.product-window {
+			border-radius: 1.45rem;
+			padding: 0.85rem;
+			transform: none;
+		}
+
+		.product-window::before {
+			inset: -0.4rem;
+			border-radius: 1.7rem;
+		}
+
+		.floating-note {
+			display: none;
+		}
+
+		.progress-card {
+			padding: 0.9rem;
+		}
+
+		.progress-card > div:first-child > strong {
+			font-size: 1rem;
+		}
+
+		.progress-card p {
+			font-size: 0.63rem;
+		}
+
+		.progress-ring {
+			height: 3.8rem;
+			width: 3.8rem;
+		}
+
+		.mission-row {
+			padding: 0.65rem;
+		}
+
+		.mission-check {
+			height: 1.9rem;
+			width: 1.9rem;
+		}
+
+		.preview-stats {
+			grid-template-columns: 1fr;
+		}
+
+		.preview-stats > div {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0.65rem 0.75rem;
+		}
+
+		.preview-stats strong {
+			margin-top: 0;
+		}
+
+		.hero-rail {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.hero-rail > div {
+			border-bottom: 1px solid rgb(255 255 255 / 0.09);
+			padding: 0.8rem 0.45rem;
+		}
+
+		.hero-rail > div:nth-child(2) {
+			border-right: 0;
+		}
+
+		.hero-rail span {
+			font-size: 0.59rem;
+		}
+
+		.hero-rail b {
+			font-size: 0.68rem;
+		}
+
+		.section-head {
 			text-align: center;
-			background: linear-gradient(180deg, #ffffff, #faf8f3);
-			border-color: rgba(184, 156, 73, 0.16);
-			color: var(--color-so-green);
-			box-shadow: 0 8px 18px rgba(23, 61, 44, 0.04);
-		}
-
-		.metric strong {
-			color: var(--color-so-gold);
-		}
-
-		.metric span {
-			color: var(--color-so-muted);
-		}
-
-		.dash-card {
-			border-color: rgba(184, 156, 73, 0.16);
-			background: linear-gradient(180deg, #ffffff, #faf8f3);
-			box-shadow: 0 8px 18px rgba(23, 61, 44, 0.04);
-		}
-
-		.dash-card strong {
-			color: var(--color-so-green);
-		}
-
-		.dash-card p,
-		.dash-card span {
-			opacity: 0.78;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
 		}
 
 		.section-head h2 {
-			letter-spacing: -0.045em;
+			max-width: 20ch;
+			letter-spacing: -0.04em;
+			line-height: 1.12;
+			text-wrap: balance;
+		}
+
+		.section-head span {
+			max-width: 34rem;
+			text-align: center;
+		}
+
+		.pillar-card,
+		.workspace-card,
+		.lane-card {
+			padding: 1.15rem 1.1rem 1.2rem;
+			text-align: center;
+		}
+
+		.pillar-card .icon-badge,
+		.workspace-card .icon-badge {
+			margin-left: auto;
+			margin-right: auto;
+		}
+
+		.lane-card {
+			min-height: 0;
+			text-align: left;
+		}
+
+		section.px-4 {
+			padding-top: 2.25rem;
+			padding-bottom: 2.25rem;
 		}
 	}
 </style>
