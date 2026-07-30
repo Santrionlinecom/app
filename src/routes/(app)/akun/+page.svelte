@@ -9,14 +9,11 @@
 		ExternalLink,
 		ImageUp,
 		KeyRound,
-		LogOut,
 		MapPin,
 		Plus,
 		Share2,
-		ShieldCheck,
 		Smartphone,
 		UserRound,
-		WalletCards,
 		X
 	} from 'lucide-svelte';
 	import KoordinatInput from '$lib/components/admin/KoordinatInput.svelte';
@@ -128,9 +125,77 @@
 
 	let copyMessage = '';
 	let canNativeShare = false;
+	let activeSection = 'ringkasan';
+	let accountSectionNav: HTMLElement | null = null;
+
+	const accountNavItems = [
+		{ id: 'ringkasan', label: 'Ringkasan', icon: UserRound, show: () => true },
+		{ id: 'lembaga', label: 'Lembaga', icon: Building2, show: () => true },
+		{ id: 'tautan', label: 'Tautan', icon: Share2, show: () => Boolean(bioLink || shareLink) },
+		{ id: 'lokasi', label: 'Lokasi', icon: MapPin, show: () => Boolean(org && data.canManageOrgLocation) },
+		{ id: 'profil', label: 'Profil', icon: Camera, show: () => true },
+		{ id: 'keamanan', label: 'Keamanan', icon: KeyRound, show: () => true }
+	];
+
+	$: visibleAccountNavItems = accountNavItems.filter((item) => item.show());
+
+	const revealActiveLink = (sectionId: string) => {
+		requestAnimationFrame(() => {
+			const scroller = accountSectionNav?.querySelector<HTMLElement>('.account-nav-scroll');
+			const link = accountSectionNav?.querySelector<HTMLElement>(`[data-account-section="${sectionId}"]`);
+			if (!scroller || !link) return;
+
+			const scrollerRect = scroller.getBoundingClientRect();
+			const linkRect = link.getBoundingClientRect();
+			if (linkRect.left >= scrollerRect.left && linkRect.right <= scrollerRect.right) return;
+
+			link.scrollIntoView({
+				behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+				block: 'nearest',
+				inline: 'center'
+			});
+		});
+	};
 
 	onMount(() => {
 		canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+		const shellHeader = document.querySelector<HTMLElement>('[data-app-shell-header]');
+		const syncNavigationMetrics = () => {
+			const headerHeight = shellHeader?.getBoundingClientRect().height ?? 0;
+			const navHeight = accountSectionNav?.getBoundingClientRect().height ?? 0;
+			document.documentElement.style.setProperty('--account-shell-header-height', `${Math.ceil(headerHeight)}px`);
+			document.documentElement.style.setProperty('--account-section-nav-height', `${Math.ceil(navHeight)}px`);
+		};
+		const metricsObserver = new ResizeObserver(syncNavigationMetrics);
+		if (shellHeader) metricsObserver.observe(shellHeader);
+		if (accountSectionNav) metricsObserver.observe(accountSectionNav);
+		window.addEventListener('resize', syncNavigationMetrics);
+		syncNavigationMetrics();
+
+		const sections = visibleAccountNavItems
+			.map((item) => document.getElementById(item.id))
+			.filter((section): section is HTMLElement => Boolean(section));
+		const observer = new IntersectionObserver(
+			(entries) => {
+				const visible = entries
+					.filter((entry) => entry.isIntersecting)
+					.sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+				if (visible?.target.id) {
+					activeSection = visible.target.id;
+					revealActiveLink(activeSection);
+				}
+			},
+			{ rootMargin: '-28% 0px -58% 0px', threshold: [0.05, 0.25, 0.55] }
+		);
+
+		sections.forEach((section) => observer.observe(section));
+		return () => {
+			observer.disconnect();
+			metricsObserver.disconnect();
+			window.removeEventListener('resize', syncNavigationMetrics);
+			document.documentElement.style.removeProperty('--account-shell-header-height');
+			document.documentElement.style.removeProperty('--account-section-nav-height');
+		};
 	});
 
 	const flash = (message: string) => {
@@ -201,7 +266,7 @@
 
 <div class="min-h-screen bg-so-cream font-sans text-so-ink">
 	<div class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-		<section class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
+		<section id="ringkasan" class="account-anchor rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
 			<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
 				<div class="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-center">
 					{#if avatarUrl}
@@ -220,11 +285,11 @@
 					{/if}
 					<div class="min-w-0">
 						<p class="text-sm font-bold text-so-gold">Akun SantriOnline</p>
-						<h1 class="mt-1 break-words text-2xl font-black text-so-green md:text-3xl">
+						<h2 class="mt-1 break-words text-2xl font-black text-so-green md:text-3xl">
 							{displayName}
-						</h1>
+						</h2>
 						<p class="mt-2 max-w-2xl text-sm leading-6 text-so-muted">
-							Kelola profil, lembaga yang Anda pegang, status addon, link publik, dan keamanan akun dari satu halaman.
+							Pilih bagian di bawah untuk mengatur profil, lembaga, tautan publik, dan keamanan akun dengan lebih cepat.
 						</p>
 						<div class="mt-4 flex flex-wrap gap-2">
 							<span class="rounded-full border border-so-border bg-so-cream px-3 py-1 text-xs font-bold text-so-muted">
@@ -260,36 +325,30 @@
 			</div>
 		</section>
 
-		<section class="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-			<a class="quick-card" href="/dashboard">
-				<Building2 size={20} />
-				<span>Dashboard</span>
-			</a>
-			<a class="quick-card" href="/lembaga">
-				<ShieldCheck size={20} />
-				<span>Lembaga</span>
-			</a>
-			<a class="quick-card" href="/lembaga/tambah">
-				<Plus size={20} />
-				<span>Tambah Lembaga</span>
-			</a>
-			<a class="quick-card" href="/addon">
-				<WalletCards size={20} />
-				<span>Addon</span>
-			</a>
-			<a class="quick-card" href="/akun/perangkat">
-				<Smartphone size={20} />
-				<span>Perangkat</span>
-			</a>
-			<form method="POST" action="/logout" class="contents">
-				<button type="submit" class="quick-card text-left text-red-700">
-					<LogOut size={20} />
-					<span>Logout</span>
-				</button>
-			</form>
-		</section>
+		<nav bind:this={accountSectionNav} class="account-section-nav" aria-label="Navigasi pengaturan akun">
+			<div class="account-nav-scroll">
+				{#each visibleAccountNavItems as item}
+					<a
+						class="account-nav-link"
+						class:account-nav-link-active={activeSection === item.id}
+						data-account-section={item.id}
+						href={`#${item.id}`}
+						aria-current={activeSection === item.id ? 'location' : undefined}
+						on:click={() => (activeSection = item.id)}
+					>
+						<svelte:component this={item.icon} size={17} aria-hidden="true" />
+						<span>{item.label}</span>
+					</a>
+				{/each}
+				<a class="account-nav-link" href="/akun/perangkat">
+					<Smartphone size={17} aria-hidden="true" />
+					<span>Perangkat</span>
+					<ArrowRight class="ml-0.5" size={14} aria-hidden="true" />
+				</a>
+			</div>
+		</nav>
 
-		<div class="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
+		<div id="lembaga" class="account-anchor grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
 			<section class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<div>
@@ -389,7 +448,7 @@
 		</div>
 
 		{#if bioLink || shareLink}
-			<section class="grid gap-6 xl:grid-cols-2">
+			<section id="tautan" class="account-anchor grid gap-6 xl:grid-cols-2">
 				{#if bioLink}
 					<div class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
 						<p class="text-sm font-bold text-so-gold">Link Publik</p>
@@ -460,7 +519,7 @@
 		{/if}
 
 		{#if org && data.canManageOrgLocation}
-			<form method="POST" action="?/updateOrgLocation" class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
+			<form id="lokasi" method="POST" action="?/updateOrgLocation" class="account-anchor rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
 				<input type="hidden" name="orgId" value={org.id} />
 				<div class="flex items-start gap-3">
 					<span class="settings-icon"><MapPin size={20} /></span>
@@ -513,7 +572,7 @@
 			</form>
 		{/if}
 
-		<div class="grid gap-6 xl:grid-cols-4">
+		<div id="profil" class="account-anchor grid gap-6 xl:grid-cols-2">
 			<div class="settings-card">
 				<div class="flex items-start gap-3">
 					<span class="settings-icon"><Camera size={20} /></span>
@@ -650,7 +709,7 @@
 				</div>
 			</form>
 
-			<form method="POST" action="?/updatePassword" class="settings-card">
+			<form id="keamanan" method="POST" action="?/updatePassword" class="account-anchor settings-card">
 				<div class="flex items-start gap-3">
 					<span class="settings-icon"><KeyRound size={20} /></span>
 					<div>
@@ -697,7 +756,6 @@
 </div>
 
 <style>
-	.quick-card,
 	.btn-primary,
 	.btn-secondary {
 		display: inline-flex;
@@ -715,17 +773,86 @@
 			transform 160ms ease;
 	}
 
-	.quick-card {
-		border: 1px solid var(--color-so-border);
-		background: #fff;
-		padding: 0.875rem 1rem;
-		color: var(--color-so-green);
-		box-shadow: var(--shadow-card);
+	.account-anchor {
+		scroll-margin-top: calc(
+			var(--account-shell-header-height, 0px) + var(--account-section-nav-height, 0px) + 1.5rem
+		);
 	}
 
-	.quick-card:hover {
-		border-color: rgb(27 67 50 / 0.35);
-		transform: translateY(-1px);
+	.account-section-nav {
+		position: sticky;
+		top: calc(var(--account-shell-header-height, 0px) + 0.5rem);
+		z-index: 20;
+		max-width: 100%;
+		border: 1px solid rgb(220 211 190 / 0.9);
+		border-radius: 1rem;
+		background: rgb(255 255 255 / 0.92);
+		padding: 0.5rem;
+		box-shadow: 0 10px 30px rgb(27 67 50 / 0.1);
+		backdrop-filter: blur(14px);
+	}
+
+	.account-nav-scroll {
+		display: flex;
+		max-width: 100%;
+		gap: 0.5rem;
+		overflow-x: auto;
+		scroll-snap-type: x proximity;
+		scrollbar-width: thin;
+		overscroll-behavior-inline: contain;
+	}
+
+	.account-nav-link {
+		display: inline-flex;
+		min-height: 2.75rem;
+		flex: 0 0 auto;
+		align-items: center;
+		justify-content: center;
+		gap: 0.45rem;
+		scroll-snap-align: start;
+		white-space: nowrap;
+		border: 1px solid transparent;
+		border-radius: 0.75rem;
+		padding: 0 0.85rem;
+		font-size: 0.8125rem;
+		font-weight: 800;
+		color: var(--color-so-muted);
+		transition:
+			background-color 160ms ease,
+			border-color 160ms ease,
+			color 160ms ease,
+			box-shadow 160ms ease;
+	}
+
+	.account-nav-link:hover {
+		border-color: rgb(27 67 50 / 0.16);
+		background: rgb(27 67 50 / 0.05);
+		color: var(--color-so-green);
+	}
+
+	.account-nav-link-active {
+		border-color: rgb(27 67 50 / 0.2);
+		background: linear-gradient(135deg, var(--color-so-green) 0%, var(--color-so-green-2) 100%);
+		color: #fff;
+		box-shadow: 0 6px 16px rgb(27 67 50 / 0.2);
+	}
+
+	.account-nav-link:focus-visible {
+		outline: 3px solid rgb(201 168 76 / 0.35);
+		outline-offset: 2px;
+	}
+
+	@media (max-width: 639px) {
+		.account-section-nav {
+			margin-inline: -0.25rem;
+			border-radius: 0.875rem;
+			padding: 0.375rem;
+		}
+
+		.account-nav-link {
+			padding-inline: 0.75rem;
+			font-size: 0.75rem;
+		}
 	}
 
 	.btn-primary {

@@ -431,6 +431,7 @@
 
 	<main class="min-w-0 pb-24 lg:pb-8">
 		<header
+			data-app-shell-header
 			class="sticky top-0 z-30 border-b border-so-border/70 bg-so-cream/88 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8"
 		>
 			<div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
