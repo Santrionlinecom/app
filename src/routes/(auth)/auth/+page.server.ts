@@ -6,10 +6,20 @@ import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logg
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
 import { isSuperAdminUser } from '$lib/auth/session-user';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
+import { env as privateEnv } from '$env/dynamic/private';
+import {
+	isPasswordLoginAllowedForIdentity,
+	parseSuperAdminEmailAllowlist
+} from '$lib/server/auth/super-admin-security';
 import type { Actions, PageServerLoad } from './$types';
 
 const safeRedirectPath = (value?: string | null) =>
 	value && value.startsWith('/') && !value.startsWith('//') ? value : null;
+
+const superAdminEmails = parseSuperAdminEmailAllowlist(
+	privateEnv.SUPER_ADMIN_EMAILS,
+	privateEnv.SUPER_ADMIN_EMAIL
+);
 
 // Jika user sudah login, lempar ke dashboard
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -44,16 +54,21 @@ export const actions: Actions = {
 		const db = locals.db ?? platform?.env.DB;
 		if (!db) return fail(500, { message: 'Layanan data sedang tidak tersedia.' });
 
-			let user: { id: string; password_hash: unknown; role: string | null } | null = null;
+			let user: { id: string; email: string; password_hash: unknown; role: string | null } | null = null;
 			try {
 				// 2. Cari user di database
 				user = await db
-					.prepare('SELECT id, password_hash, role FROM users WHERE email = ?')
+					.prepare('SELECT id, email, password_hash, role FROM users WHERE email = ?')
 					.bind(email)
-					.first<{ id: string; password_hash: unknown; role: string | null }>();
+					.first<{ id: string; email: string; password_hash: unknown; role: string | null }>();
 
 				if (!user) {
 					return fail(400, { message: 'Email atau Password salah.' });
+				}
+				if (!isPasswordLoginAllowedForIdentity({ role: user.role, email: user.email, allowlist: superAdminEmails })) {
+					return fail(403, {
+						message: 'Akun Super Admin hanya dapat masuk melalui Google.'
+					});
 				}
 
 			// 3. Cek Password Hash

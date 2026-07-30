@@ -5,6 +5,12 @@ import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import type { D1Database } from '@cloudflare/workers-types';
 import { isSuperAdminUser } from '$lib/auth/session-user';
+import { env as privateEnv } from '$env/dynamic/private';
+import {
+	clampSuperAdminSession,
+	isSuperAdminSessionAllowed,
+	parseSuperAdminEmailAllowlist
+} from '$lib/server/auth/super-admin-security';
 import { hasPermission } from '$lib/rbac/permissions';
 import {
 	applySuperAdminImpersonation,
@@ -13,6 +19,11 @@ import {
 } from '$lib/server/auth/impersonation';
 import { sentryServerConfig } from '../sentry.server.config';
 import type { OrgRole, OrgType, Permission } from '$lib/types/rbac';
+
+const superAdminEmails = parseSuperAdminEmailAllowlist(
+	privateEnv.SUPER_ADMIN_EMAILS,
+	privateEnv.SUPER_ADMIN_EMAIL
+);
 
 const SECURITY_HEADERS: Record<string, string> = {
 	'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
@@ -71,7 +82,16 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	const { session, user } = await lucia.validateSession(sessionId);
+	let { session, user } = await lucia.validateSession(sessionId);
+	if (session && user && isSuperAdminUser(user)) {
+		if (!isSuperAdminSessionAllowed({ role: user.role, email: user.email, allowlist: superAdminEmails })) {
+			await lucia.invalidateSession(session.id);
+			session = null;
+			user = null;
+		} else {
+			await clampSuperAdminSession(db, session.id);
+		}
+	}
 	let resolvedUser = user;
 	const impersonatedOrgId = getImpersonatedOrgId(event.cookies);
 

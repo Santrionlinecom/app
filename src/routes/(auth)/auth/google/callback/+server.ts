@@ -9,10 +9,16 @@ import { env as privateEnv } from '$env/dynamic/private';
 import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
+import {
+	clampSuperAdminSession,
+	evaluateSuperAdminOAuth,
+	parseSuperAdminEmailAllowlist
+} from '$lib/server/auth/super-admin-security';
 
 type GoogleProfile = {
 	sub: string;
 	email: string;
+	email_verified?: boolean;
 	name?: string;
 	picture?: string;
 };
@@ -38,18 +44,9 @@ type UserRow = {
 
 type MemberContext = { orgId: string; role: string } | null;
 
-const DEFAULT_SUPER_ADMIN_EMAIL = 'masyogikonline@gmail.com';
-
-const parseEmailList = (value?: string | null) =>
-	(value ?? '')
-		.split(/[,\s]+/)
-		.map((email) => email.trim().toLowerCase())
-		.filter(Boolean);
-
-const superAdminEmails = new Set(
-	parseEmailList(
-		privateEnv.SUPER_ADMIN_EMAILS ?? privateEnv.SUPER_ADMIN_EMAIL ?? DEFAULT_SUPER_ADMIN_EMAIL
-	)
+const superAdminEmails = parseSuperAdminEmailAllowlist(
+	privateEnv.SUPER_ADMIN_EMAILS,
+	privateEnv.SUPER_ADMIN_EMAIL
 );
 
 const parseOAuthContext = (value?: string | null) => {
@@ -159,8 +156,6 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 			throw error(400, 'Data Google tidak lengkap. Silakan coba lagi.');
 		}
 
-		const isSuperAdmin = superAdminEmails.has(email.toLowerCase());
-		const memberContext = await resolveMemberContext(db, oauthContext);
 		const columns = await getUserColumns(db);
 		const selectFields = ['id', 'email'];
 		if (columns.has('role')) selectFields.push('role');
@@ -183,6 +178,17 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 			.prepare(`SELECT ${selectFields.join(', ')} FROM users WHERE ${whereFields.join(' OR ')} LIMIT 1`)
 			.bind(...whereValues)
 			.first<UserRow>();
+		const superAdminPolicy = evaluateSuperAdminOAuth({
+			email,
+			emailVerified: googleUser.email_verified === true,
+			currentRole: existingUser?.role,
+			allowlist: superAdminEmails
+		});
+		if (superAdminPolicy === 'deny') {
+			throw error(403, 'Akses Super Admin memerlukan akun Google resmi yang terverifikasi.');
+		}
+		const isSuperAdmin = superAdminPolicy === 'grant';
+		const memberContext = await resolveMemberContext(db, oauthContext);
 
 		let userId: string;
 		let finalRole = isSuperAdmin ? 'SUPER_ADMIN' : memberContext?.role ?? 'santri';
@@ -307,6 +313,9 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 		}
 
 		const session = await lucia.createSession(userId, {});
+		if (isSuperAdminRole(finalRole)) {
+			await clampSuperAdminSession(db, session.id);
+		}
 		const sessionCookie = lucia.createSessionCookie(session.id);
 		cookies.set(sessionCookie.name, sessionCookie.value, { path: '/', ...sessionCookie.attributes });
 		await logActivity(db, {

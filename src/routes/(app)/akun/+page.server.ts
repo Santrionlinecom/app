@@ -12,6 +12,11 @@ import { seedHafalanDefault } from '$lib/server/domains/tpq/db-hafalan';
 import { SEED_HAFALAN_DEFAULT } from '$lib/server/domains/tpq/seed-hafalan-default';
 import { buildR2PublicUrl, requireR2Bucket } from '$lib/server/cloudflare';
 import { isSuperAdminUser } from '$lib/auth/session-user';
+import { env as privateEnv } from '$env/dynamic/private';
+import {
+	isPasswordLoginAllowedForIdentity,
+	parseSuperAdminEmailAllowlist
+} from '$lib/server/auth/super-admin-security';
 import { canManageOrgLocation } from '$lib/server/org-location-access';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -22,6 +27,10 @@ const avatarMimeToExt: Record<string, string> = {
 	'image/png': 'png',
 	'image/webp': 'webp'
 };
+const superAdminEmails = parseSuperAdminEmailAllowlist(
+	privateEnv.SUPER_ADMIN_EMAILS,
+	privateEnv.SUPER_ADMIN_EMAIL
+);
 
 type ManagedLembagaRow = {
 	id: string;
@@ -396,6 +405,16 @@ export const actions: Actions = {
 
 	updatePassword: async ({ request, locals }) => {
 		if (!locals.user) return fail(401, { message: 'Unauthenticated' });
+		if (!isPasswordLoginAllowedForIdentity({
+			role: locals.user.role,
+			email: locals.user.email,
+			allowlist: superAdminEmails
+		})) {
+			return fail(403, {
+				message: 'Password lokal dinonaktifkan untuk Super Admin. Gunakan akun Google resmi.',
+				type: 'password'
+			});
+		}
 		const form = await request.formData();
 		const password = form.get('password');
 		const confirm = form.get('confirm');

@@ -88,6 +88,9 @@
 	};
 
 	$: profile = data.profile;
+	$: isSuperAdminAccount = ['SUPER_ADMIN', 'SUPERADMIN'].includes(
+		`${profile?.role ?? ''}`.trim().replace(/[-\s]+/g, '_').toUpperCase()
+	);
 	$: org = data.org;
 	$: managedLembaga = (data.managedLembaga ?? []) as ManagedLembaga[];
 	$: addonAktif = (data.addonAktif ?? []) as AddonAktif[];
@@ -709,6 +712,28 @@
 				</div>
 			</form>
 
+			{#if isSuperAdminAccount}
+				<section id="keamanan" class="account-anchor settings-card" aria-labelledby="super-admin-security-title">
+					<div class="flex items-start gap-3">
+						<span class="settings-icon"><BadgeCheck size={20} /></span>
+						<div>
+							<p class="text-xs font-black uppercase tracking-[0.16em] text-so-gold">High Security</p>
+							<h2 id="super-admin-security-title" class="mt-1 text-lg font-black text-so-green">Super Admin terlindungi</h2>
+							<p class="mt-2 text-sm leading-6 text-so-muted">
+								Login password lokal dinonaktifkan. Gunakan akun Google resmi yang terverifikasi.
+							</p>
+						</div>
+					</div>
+					<ul class="mt-5 space-y-2 text-sm font-semibold text-so-green" aria-label="Proteksi Super Admin aktif">
+						<li>✓ Google-only dan email wajib terverifikasi</li>
+						<li>✓ Allowlist Super Admin bersifat fail-closed</li>
+						<li>✓ Masa session maksimal 8 jam</li>
+					</ul>
+					<p class="mt-4 rounded-xl border border-so-gold/30 bg-so-gold/10 px-4 py-3 text-xs leading-5 text-so-muted">
+						Pastikan Verifikasi 2 Langkah atau passkey aktif pada akun Google Mas Yogik.
+					</p>
+				</section>
+			{:else}
 			<form id="keamanan" method="POST" action="?/updatePassword" class="account-anchor settings-card">
 				<div class="flex items-start gap-3">
 					<span class="settings-icon"><KeyRound size={20} /></span>
@@ -737,6 +762,7 @@
 					<button class="btn-primary w-full" type="submit">Simpan Password</button>
 				</div>
 			</form>
+			{/if}
 		</div>
 
 		{#if orgMedia.length > 0}
