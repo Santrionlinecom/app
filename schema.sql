@@ -465,6 +465,7 @@ CREATE INDEX IF NOT EXISTS idx_digital_product_sales_product ON digital_product_
 CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_reference_code ON digital_product_sales(reference_code);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_purchase_key ON digital_product_sales(purchase_key) WHERE purchase_key IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_digital_product_sales_buyer_user ON digital_product_sales(buyer_user_id, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_paid_owner ON digital_product_sales(buyer_user_id, product_id) WHERE buyer_user_id IS NOT NULL AND status = 'paid';
 CREATE INDEX IF NOT EXISTS idx_digital_product_sales_status_created ON digital_product_sales(status, created_at DESC);
 
 -- Public kitab library managed from CMS Hub
@@ -574,7 +575,9 @@ CREATE TABLE IF NOT EXISTS coin_transactions (
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN ('topup', 'unlock_chapter', 'purchase', 'adjustment', 'refund')),
   amount INTEGER NOT NULL,
+  balance_before INTEGER,
   balance_after INTEGER,
+  order_id TEXT,
   description TEXT,
   reference_type TEXT,
   reference_id TEXT,
@@ -582,6 +585,7 @@ CREATE TABLE IF NOT EXISTS coin_transactions (
 );
 CREATE INDEX IF NOT EXISTS idx_coin_transactions_user ON coin_transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_coin_transactions_type ON coin_transactions(type);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_coin_transactions_order_type ON coin_transactions(order_id, type) WHERE order_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS coin_topup_requests (
   id TEXT PRIMARY KEY,

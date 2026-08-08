@@ -7,6 +7,7 @@ import {
 	fulfillPendingCoinTopup,
 	reverseApprovedCoinTopup
 } from '$lib/server/services/payment-gateway/payments/coin-topup-fulfillment';
+import { validateStoredCoinTopupPackage } from '$lib/server/services/payment-gateway/payments/coin-topup-validation';
 import {
 	fulfillAddonPayment,
 	reverseAddonPayment
@@ -89,11 +90,15 @@ const isAddonTipe = (value: string): value is AddonTipe =>
 const settleCoinTopup = async ({
 	db,
 	orderId,
+	packageId,
+	paymentGrossAmount,
 	transactionStatus,
 	fraudStatus
 }: {
 	db: App.Locals['db'];
 	orderId: string;
+	packageId: string;
+	paymentGrossAmount: number;
 	transactionStatus: string;
 	fraudStatus: string;
 }) => {
@@ -141,7 +146,17 @@ const settleCoinTopup = async ({
 			return false;
 		}
 
-		const coinAmount = Number(topup.coinAmount ?? 0);
+		const validatedPackage = validateStoredCoinTopupPackage({
+			packageId,
+			paymentGrossAmount,
+			topupAmountRupiah: Number(topup.amountRupiah ?? 0),
+			topupCoinAmount: Number(topup.coinAmount ?? 0)
+		});
+		if (!validatedPackage.ok) {
+			throw new Error(`Konfigurasi paket topup tidak valid: ${validatedPackage.reason}`);
+		}
+
+		const coinAmount = validatedPackage.coinAmount;
 		return fulfillPendingCoinTopup({
 			db,
 			orderId,
@@ -307,7 +322,14 @@ export const POST: RequestHandler = async ({ fetch, locals, platform, request })
 
 	if (paymentOrder.purpose === 'coin_topup') {
 		try {
-			const paymentSucceeded = await settleCoinTopup({ db, orderId, transactionStatus, fraudStatus });
+			const paymentSucceeded = await settleCoinTopup({
+				db,
+				orderId,
+				packageId: paymentOrder.productSlug,
+				paymentGrossAmount: paymentOrder.grossAmount,
+				transactionStatus,
+				fraudStatus
+			});
 			if (paymentSucceeded) {
 				await sendSuccessNotifications();
 			}

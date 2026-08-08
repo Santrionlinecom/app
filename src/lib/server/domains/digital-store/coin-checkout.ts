@@ -54,6 +54,18 @@ const readSaleByPurchaseKey = async (
 		.bind(purchaseKey, userId, productId)
 		.first<SaleIdentity>();
 
+const readOwnedSale = async (db: D1Database, userId: string, productId: string) =>
+	db
+		.prepare(
+			`SELECT id, reference_code AS referenceCode, access_token AS accessToken
+			 FROM digital_product_sales
+			 WHERE buyer_user_id = ? AND product_id = ? AND status = 'paid'
+			 ORDER BY created_at ASC
+			 LIMIT 1`
+		)
+		.bind(userId, productId)
+		.first<SaleIdentity>();
+
 export async function checkoutDigitalProductWithCoins(
 	input: DigitalCoinCheckoutInput
 ): Promise<DigitalCoinCheckoutResult> {
@@ -86,6 +98,17 @@ export async function checkoutDigitalProductWithCoins(
 		};
 	}
 
+	const owned = await readOwnedSale(input.db, input.userId, input.productId);
+	if (owned) {
+		return {
+			status: 'already_purchased',
+			orderId: owned.id,
+			referenceCode: owned.referenceCode,
+			accessToken: owned.accessToken,
+			balanceAfter: await readBalance(input.db, input.userId)
+		};
+	}
+
 	const orderId = crypto.randomUUID();
 	const referenceCode = `SO-COIN-${orderId.replace(/-/g, '').slice(0, 12).toUpperCase()}`;
 	const accessToken = `${crypto.randomUUID()}${crypto.randomUUID().replace(/-/g, '')}`;
@@ -107,6 +130,10 @@ export async function checkoutDigitalProductWithCoins(
 				)
 				  AND NOT EXISTS (
 					SELECT 1 FROM digital_product_sales WHERE purchase_key = ?
+				  )
+				  AND NOT EXISTS (
+					SELECT 1 FROM digital_product_sales
+					WHERE buyer_user_id = ? AND product_id = ? AND status = 'paid'
 				  )`
 			)
 			.bind(
@@ -124,7 +151,9 @@ export async function checkoutDigitalProductWithCoins(
 				nowMs,
 				input.userId,
 				coinAmount,
-				input.purchaseKey
+				input.purchaseKey,
+				input.userId,
+				input.productId
 			),
 		input.db
 			.prepare(
@@ -138,10 +167,10 @@ export async function checkoutDigitalProductWithCoins(
 		input.db
 			.prepare(
 				`INSERT INTO coin_transactions (
-					id, user_id, type, amount, balance_after, description,
+					id, user_id, type, amount, balance_before, balance_after, order_id, description,
 					reference_type, reference_id, created_at
 				)
-				SELECT ?, ?, 'purchase', ?, balance, ?, 'digital_product', ?, ?
+				SELECT ?, ?, 'purchase', ?, balance + ?, balance, ?, ?, 'digital_product', ?, ?
 				FROM coin_wallets
 				WHERE user_id = ?
 				  AND EXISTS (SELECT 1 FROM digital_product_sales WHERE id = ?)`
@@ -150,6 +179,8 @@ export async function checkoutDigitalProductWithCoins(
 				ledgerId,
 				input.userId,
 				-coinAmount,
+				coinAmount,
+				orderId,
 				`Pembelian ${input.productTitle}`,
 				orderId,
 				nowIso,
@@ -180,6 +211,17 @@ export async function checkoutDigitalProductWithCoins(
 			orderId: replayed.id,
 			referenceCode: replayed.referenceCode,
 			accessToken: replayed.accessToken,
+			balanceAfter: await readBalance(input.db, input.userId)
+		};
+	}
+
+	const concurrentlyOwned = await readOwnedSale(input.db, input.userId, input.productId);
+	if (concurrentlyOwned) {
+		return {
+			status: 'already_purchased',
+			orderId: concurrentlyOwned.id,
+			referenceCode: concurrentlyOwned.referenceCode,
+			accessToken: concurrentlyOwned.accessToken,
 			balanceAfter: await readBalance(input.db, input.userId)
 		};
 	}

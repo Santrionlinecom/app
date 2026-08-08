@@ -1,6 +1,12 @@
 import type { D1Database } from '@cloudflare/workers-types';
 
-export const MIDTRANS_SNAP_TRANSACTION_URL = 'https://app.midtrans.com/snap/v1/transactions';
+export const getMidtransSnapTransactionUrl = (isProduction: boolean) =>
+	isProduction
+		? 'https://app.midtrans.com/snap/v1/transactions'
+		: 'https://app.sandbox.midtrans.com/snap/v1/transactions';
+
+export const getMidtransSnapScriptUrl = (isProduction: boolean) =>
+	isProduction ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js';
 export const MIDTRANS_ORDER_ID_PATTERN = /^[A-Za-z0-9._~-]+$/;
 const RANDOM_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const MAX_MIDTRANS_ORDER_ID_LENGTH = 49;

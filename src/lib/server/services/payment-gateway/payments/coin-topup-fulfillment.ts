@@ -44,8 +44,8 @@ export const fulfillPendingCoinTopup = async ({
 		db
 			.prepare(
 				`INSERT INTO coin_transactions
-				(id, user_id, type, amount, balance_after, description, reference_type, reference_id, created_at)
-				SELECT ?, ?, 'topup', ?, balance, 'Topup koin via Midtrans', 'coin_topup_requests', ?, ?
+				(id, user_id, type, amount, balance_before, balance_after, order_id, description, reference_type, reference_id, created_at)
+				SELECT ?, ?, 'topup', ?, balance - ?, balance, ?, 'Topup koin via Midtrans', 'coin_topup_requests', ?, ?
 				FROM coin_wallets
 				WHERE user_id = ?
 				  AND EXISTS (
@@ -57,7 +57,7 @@ export const fulfillPendingCoinTopup = async ({
 					WHERE id = ? AND status <> 'refunded'
 				  )`
 			)
-			.bind(transactionId, userId, coinAmount, orderId, nowIso, userId, orderId, orderId),
+			.bind(transactionId, userId, coinAmount, coinAmount, orderId, orderId, nowIso, userId, orderId, orderId),
 		db
 			.prepare(
 				`UPDATE coin_topup_requests
@@ -121,14 +121,14 @@ export const reverseApprovedCoinTopup = async ({
 		db
 			.prepare(
 				`INSERT INTO coin_transactions
-				(id, user_id, type, amount, balance_after, description, reference_type, reference_id, created_at)
-				SELECT ?, ?, 'refund', ?, balance, 'Reversal topup karena refund Midtrans', 'coin_topup_requests', ?, ?
+				(id, user_id, type, amount, balance_before, balance_after, order_id, description, reference_type, reference_id, created_at)
+				SELECT ?, ?, 'refund', ?, balance + ?, balance, ?, 'Reversal topup karena refund Midtrans', 'coin_topup_requests', ?, ?
 				FROM coin_wallets
 				WHERE user_id = ?
 				  AND EXISTS (SELECT 1 FROM coin_topup_requests WHERE id = ? AND status = 'approved')
 				  AND NOT EXISTS (SELECT 1 FROM coin_transactions WHERE id = ?)`
 			)
-			.bind(reversalId, userId, -coinAmount, orderId, nowIso, userId, orderId, reversalId),
+			.bind(reversalId, userId, -coinAmount, coinAmount, orderId, orderId, nowIso, userId, orderId, reversalId),
 		db
 			.prepare(
 				`UPDATE coin_topup_requests

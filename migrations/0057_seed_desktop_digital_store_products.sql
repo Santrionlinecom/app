@@ -29,7 +29,7 @@ Cara pakai:
 
 Versi paket: 0.2.0 (setup x64).
 Target: studio foto, panitia event, lembaga, dan UMKM cetak.',
-  99000,
+  9900,
   'https://files.santrionline.com/digital-products/santriprint/cover.png',
   'https://files.santrionline.com/digital-products/santriprint/SantriPrint_0.2.0_x64-setup.exe',
   'published',
@@ -59,7 +59,7 @@ SELECT
   'santriprint-pro',
   'Aplikasi desktop cetak foto & layout ukuran fisik. Export PDF dan Cetak Windows asli. Lisensi: santriprint-pro.',
   'SantriPrint Pro — desktop Windows layout cetak + PDF + native print. Unduh setup, aktifkan key Pro. Product slug: santriprint-pro. Versi 0.2.0.',
-  99000,
+  9900,
   'https://files.santrionline.com/digital-products/santriprint/cover.png',
   'https://files.santrionline.com/digital-products/santriprint/SantriPrint_0.2.0_x64-setup.exe',
   'published',
@@ -96,7 +96,7 @@ Status rilis:
 • Setelah bayar, Anda mendapat akses katalog + key; unduhan installer final diumumkan di halaman produk
 
 Kisaran harga ritel: Rp79.000–Rp149.000.',
-  99000,
+  9900,
   NULL,
   NULL,
   'published',
@@ -123,7 +123,7 @@ SELECT
   'santri-ocr-pro',
   'Ubah kitab, modul TPQ, dan dokumen Arab menjadi teks editable. Lisensi: santri-ocr-pro.',
   'SantriOCR Pro — OCR Arab–Indonesia ke DOCX/TXT, multi-page, offline. Installer final P1. Lisensi santri-ocr-pro.',
-  99000,
+  9900,
   NULL,
   NULL,
   'published',
@@ -151,7 +151,7 @@ Fitur Pro (lisensi):
 
 Product slug lisensi: santri-cleaner-pro (max 3 perangkat).
 Installer/bundle rilis disusulkan di halaman unduhan setelah paket final siap.',
-  79000,
+  9900,
   NULL,
   NULL,
   'published',
@@ -178,7 +178,7 @@ SELECT
   'santri-cleaner-pro',
   'Pembersih file sampah developer & creator di Windows. Lisensi: santri-cleaner-pro.',
   'Santri Cleaner Pro — deep scan, developer/creator cleaner. Lisensi santri-cleaner-pro.',
-  79000,
+  9900,
   NULL,
   NULL,
   'published',
@@ -205,7 +205,7 @@ Fitur Pro:
 
 Product slug lisensi: santri-subtitle-pro (max 2 perangkat).
 Installer final menyusul; key sudah bisa digenerate dari admin.',
-  79000,
+  9900,
   NULL,
   NULL,
   'published',
@@ -232,7 +232,7 @@ SELECT
   'santri-subtitle-pro',
   'Editor subtitle untuk konten dakwah & pembelajaran. Lisensi: santri-subtitle-pro.',
   'Santri Subtitle Pro — edit/export SRT, batch, template. Lisensi santri-subtitle-pro.',
-  79000,
+  9900,
   NULL,
   NULL,
   'published',

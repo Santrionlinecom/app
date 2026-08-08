@@ -105,7 +105,7 @@
 		}
 	};
 
-	$: canAfford = data.isLoggedIn && data.coinBalance >= data.product.price;
+	$: canAfford = data.isLoggedIn && data.purchaseAvailable && data.coinBalance >= data.product.price;
 	$: formError = form && 'error' in form ? form.error : '';
 	$: formType = form && 'type' in form && typeof form.type === 'string' ? form.type : null;
 </script>
@@ -238,6 +238,13 @@
 						Login Sekarang
 					</a>
 				</div>
+			{:else if !data.purchaseAvailable}
+				<div class="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-6 py-8 text-center">
+					<p class="text-sm font-semibold text-amber-900">Installer final belum tersedia.</p>
+					<p class="mt-2 text-sm text-amber-800">
+						Pembelian dinonaktifkan agar Coin Anda tidak terpotong tanpa file produk.
+					</p>
+				</div>
 			{:else}
 				<form on:submit={handlePurchase} class="mt-6 space-y-6">
 					<input type="hidden" name="purchaseKey" value={data.purchaseKey} />
@@ -297,7 +304,7 @@
 						{#if !canAfford}
 							<a href="/coins/topup" class="btn btn-warning flex-1">
 								<Coins class="h-4 w-4" />
-								Isi Saldo Coin
+								Top Up Coin
 							</a>
 						{:else}
 							<button type="submit" class="btn btn-primary flex-1" disabled={isProcessing}>
@@ -306,7 +313,7 @@
 									Memproses...
 								{:else}
 									<Coins class="h-4 w-4" />
-									Beli Sekarang
+									Beli Sekarang — {formatCoin(data.product.price)} Coin
 								{/if}
 							</button>
 						{/if}

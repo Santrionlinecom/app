@@ -18,7 +18,9 @@ export type CoinTransaction = {
 	userId: string;
 	type: CoinTransactionType;
 	amount: number;
+	balanceBefore: number | null;
 	balanceAfter: number | null;
+	orderId: string | null;
 	description: string | null;
 	referenceType: string | null;
 	referenceId: string | null;
@@ -98,7 +100,9 @@ export async function ensureBukuWalletSchema(db: D1Database) {
 				user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 				type TEXT NOT NULL CHECK (type IN ('topup', 'unlock_chapter', 'purchase', 'adjustment', 'refund')),
 				amount INTEGER NOT NULL,
+				balance_before INTEGER,
 				balance_after INTEGER,
+				order_id TEXT,
 				description TEXT,
 				reference_type TEXT,
 				reference_id TEXT,
@@ -106,6 +110,7 @@ export async function ensureBukuWalletSchema(db: D1Database) {
 			)`
 		)
 		.run();
+
 
 	await db
 		.prepare(
@@ -128,6 +133,12 @@ export async function ensureBukuWalletSchema(db: D1Database) {
 
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_coin_transactions_user ON coin_transactions(user_id)').run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_coin_transactions_type ON coin_transactions(type)').run();
+	await db
+		.prepare(
+			`CREATE UNIQUE INDEX IF NOT EXISTS idx_coin_transactions_order_type
+			 ON coin_transactions(order_id, type) WHERE order_id IS NOT NULL`
+		)
+		.run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_coin_topup_requests_user ON coin_topup_requests(user_id)').run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_coin_topup_requests_status ON coin_topup_requests(status)').run();
 }

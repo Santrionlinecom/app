@@ -23,7 +23,9 @@ test('fulfillPendingCoinTopup credits a concurrently replayed order exactly once
 				user_id TEXT NOT NULL,
 				type TEXT NOT NULL,
 				amount INTEGER NOT NULL,
+				balance_before INTEGER,
 				balance_after INTEGER,
+				order_id TEXT,
 				description TEXT,
 				reference_type TEXT,
 				reference_id TEXT,
@@ -74,8 +76,8 @@ test('fulfillPendingCoinTopup credits a concurrently replayed order exactly once
 			{ total: 1 }
 		);
 		assert.deepEqual(
-			await db.prepare('SELECT id, balance_after AS balanceAfter FROM coin_transactions').first(),
-			{ id: 'coin-topup:SO-C-1', balanceAfter: 100 }
+			await db.prepare('SELECT id, balance_before AS balanceBefore, balance_after AS balanceAfter, order_id AS orderId FROM coin_transactions').first(),
+			{ id: 'coin-topup:SO-C-1', balanceBefore: 0, balanceAfter: 100, orderId: 'SO-C-1' }
 		);
 		assert.deepEqual(
 			await db.prepare('SELECT status FROM coin_topup_requests WHERE id = ?').bind('SO-C-1').first(),
@@ -98,7 +100,7 @@ test('reverseApprovedCoinTopup reverses a refunded order exactly once, including
 			db.prepare('CREATE TABLE coin_wallets (user_id TEXT PRIMARY KEY, balance INTEGER NOT NULL, updated_at TEXT)'),
 			db.prepare(`CREATE TABLE coin_transactions (
 				id TEXT PRIMARY KEY, user_id TEXT NOT NULL, type TEXT NOT NULL, amount INTEGER NOT NULL,
-				balance_after INTEGER, description TEXT, reference_type TEXT, reference_id TEXT, created_at TEXT NOT NULL
+				balance_before INTEGER, balance_after INTEGER, order_id TEXT, description TEXT, reference_type TEXT, reference_id TEXT, created_at TEXT NOT NULL
 			)`),
 			db.prepare(`CREATE TABLE coin_topup_requests (
 				id TEXT PRIMARY KEY, user_id TEXT NOT NULL, coin_amount INTEGER NOT NULL, status TEXT NOT NULL,
@@ -145,7 +147,7 @@ test('a terminal refund prevents a later settlement from crediting coins', async
 			db.prepare('CREATE TABLE coin_wallets (user_id TEXT PRIMARY KEY, balance INTEGER NOT NULL DEFAULT 0, updated_at TEXT)'),
 			db.prepare(`CREATE TABLE coin_transactions (
 				id TEXT PRIMARY KEY, user_id TEXT NOT NULL, type TEXT NOT NULL, amount INTEGER NOT NULL,
-				balance_after INTEGER, description TEXT, reference_type TEXT, reference_id TEXT, created_at TEXT NOT NULL
+				balance_before INTEGER, balance_after INTEGER, order_id TEXT, description TEXT, reference_type TEXT, reference_id TEXT, created_at TEXT NOT NULL
 			)`),
 			db.prepare(`CREATE TABLE coin_topup_requests (
 				id TEXT PRIMARY KEY, user_id TEXT NOT NULL, coin_amount INTEGER NOT NULL, status TEXT NOT NULL,

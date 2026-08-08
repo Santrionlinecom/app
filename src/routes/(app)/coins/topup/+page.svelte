@@ -54,6 +54,11 @@
 			minimumFractionDigits: 0
 		}).format(value);
 
+	const formatEffectiveRate = (value: number) =>
+		new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(value);
+	const formatSavings = (value: number) =>
+		new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(value);
+
 	const showToast = (kind: 'success' | 'pending' | 'error', message: string) => {
 		if (toastTimer) {
 			clearTimeout(toastTimer);
@@ -133,7 +138,7 @@
 <svelte:head>
 	<title>Top Up Koin - SantriOnline</title>
 	<meta name="description" content="Tambah saldo koin SantriOnline melalui Midtrans." />
-	<script src="https://app.midtrans.com/snap/snap.js" data-client-key={midtransClientKey}></script>
+	<script src={data.midtransSnapScriptUrl} data-client-key={midtransClientKey}></script>
 </svelte:head>
 
 <div class="mx-auto min-h-screen w-full max-w-[1440px] space-y-6 px-4 pb-36 pt-6 sm:px-6 md:pb-12 lg:px-8 lg:pt-10">
@@ -179,7 +184,7 @@
 		<div class="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-600">
 			<CheckCircle2 class="mt-0.5 h-5 w-5 shrink-0" />
 			<p class="text-sm font-medium">
-				Permintaan top up berhasil dikirim. Admin akan memverifikasi bukti transfer Anda.
+				Order Midtrans berhasil dibuat. Coin hanya masuk setelah pembayaran terverifikasi oleh webhook.
 			</p>
 		</div>
 	{/if}
@@ -191,13 +196,13 @@
 					<div>
 						<legend class="text-lg font-semibold text-slate-950">Pilih Paket</legend>
 						<p class="mt-1 text-sm text-slate-500">
-							Rasio dasar 1 koin = Rp 10. Beberapa paket memiliki bonus koin.
+							Semakin besar top-up, semakin murah harga per coin. Rasio dasar 1 coin = Rp10.
 						</p>
 					</div>
 					<WalletCards class="mt-1 h-5 w-5 shrink-0 text-slate-400" />
 				</div>
 
-				<div class="grid gap-4 xl:grid-cols-2">
+				<div class="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
 					{#each packages as pkg}
 						<label
 							class={`group cursor-pointer rounded-xl border-2 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow-md ${
@@ -217,7 +222,12 @@
 
 							<div class="flex items-start justify-between gap-3">
 								<div>
-									<p class="text-base font-semibold text-slate-950">{pkg.name}</p>
+									<div class="flex flex-wrap items-center gap-2">
+										<p class="text-base font-semibold text-slate-950">{pkg.icon} {pkg.name}</p>
+										{#if pkg.badge}
+											<span class="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-bold tracking-wide text-amber-800">{pkg.badge}</span>
+										{/if}
+									</div>
 									<p class="mt-1 min-h-10 text-sm leading-5 text-slate-500">{pkg.description}</p>
 								</div>
 								<span
@@ -245,15 +255,15 @@
 								</div>
 							</div>
 
-							<div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
-								<span class="font-medium text-slate-500">Bonus</span>
+							<div class="mt-4 grid gap-2 border-t border-slate-100 pt-3 text-xs">
 								{#if pkg.bonusCoin > 0}
-									<span class="font-semibold text-emerald-600">
-										+{pkg.bonusCoin.toLocaleString('id-ID')} koin
-									</span>
-								{:else}
-									<span class="font-medium text-slate-400">Standar</span>
+									<div class="flex justify-between gap-3"><span class="font-medium text-slate-500">Bonus</span><span class="font-semibold text-emerald-600">+{pkg.bonusCoin.toLocaleString('id-ID')} coin</span></div>
 								{/if}
+								<div class="flex justify-between gap-3"><span class="font-medium text-slate-500">Harga / Coin</span><span class="font-semibold text-slate-800">± Rp{formatEffectiveRate(pkg.effectiveRupiahPerCoin)}</span></div>
+								{#if pkg.savingsPercent > 0.01}
+									<div class="flex justify-between gap-3"><span class="font-medium text-slate-500">Hemat</span><span class="font-semibold text-amber-700">±{formatSavings(pkg.savingsPercent)}%</span></div>
+								{/if}
+								<p class="mt-1 rounded-lg bg-slate-50 px-3 py-2 leading-5 text-slate-600">{pkg.toolPurchaseHint}</p>
 							</div>
 						</label>
 					{/each}
@@ -277,7 +287,7 @@
 					<div>
 						<h2 class="text-lg font-semibold text-slate-950">Catatan Pembayaran</h2>
 						<p class="mt-1 text-sm text-slate-500">
-							Tambahkan nomor referensi atau nama rekening pengirim bila diperlukan.
+							Catatan opsional untuk membantu identifikasi order Anda.
 						</p>
 					</div>
 					<ReceiptText class="mt-1 h-5 w-5 shrink-0 text-slate-400" />

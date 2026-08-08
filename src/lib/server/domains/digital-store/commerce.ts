@@ -97,6 +97,7 @@ export interface PublicDigitalProductListItem {
 	description: string | null;
 	price: number;
 	coverUrl: string | null;
+	fileAvailable: boolean;
 	featured: boolean;
 	updatedAt: number;
 	paymentMethods: DigitalProductPaymentMethodSummary[];
@@ -229,6 +230,7 @@ const mapPublicProduct = (
 	description: row.description,
 	price: normalizeMoney(row.price),
 	coverUrl: row.cover_url,
+	fileAvailable: Boolean(row.file_url),
 	featured: normalizeFlag(row.featured),
 	updatedAt: row.updated_at,
 	paymentMethods: (methodsByProduct.get(row.id) ?? []).filter((method) => method.isActive)
@@ -378,6 +380,7 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 		// ignore when column already exists
 	}
 
+
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_digital_products_slug ON digital_products(slug)').run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_digital_products_status ON digital_products(status)').run();
 	await db
@@ -413,6 +416,13 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 	await db
 		.prepare(
 			'CREATE INDEX IF NOT EXISTS idx_digital_product_sales_buyer_user ON digital_product_sales(buyer_user_id, created_at DESC)'
+		)
+		.run();
+	await db
+		.prepare(
+			`CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_paid_owner
+			 ON digital_product_sales(buyer_user_id, product_id)
+			 WHERE buyer_user_id IS NOT NULL AND status = 'paid'`
 		)
 		.run();
 	await db

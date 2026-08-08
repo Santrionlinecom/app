@@ -26,6 +26,14 @@ test('digital store route uses canonical atomic coin checkout and requires an id
 	assert.match(commerce, /purchase_key TEXT UNIQUE/);
 });
 
+test('digital tool without an installer is rejected before wallet checkout', async () => {
+	const route = await readFile(routePath, 'utf8');
+	const artifactGuard = route.indexOf('product.fileAvailable');
+	const checkoutCall = route.indexOf('checkoutDigitalProductWithCoins({');
+	assert.ok(artifactGuard > 0, 'route must validate the product artifact');
+	assert.ok(artifactGuard < checkoutCall, 'artifact validation must happen before wallet debit');
+});
+
 test('paid or non-manual orders are rejected before any proof upload side effect', async () => {
 	const [route, page] = await Promise.all([
 		readFile(orderRoutePath, 'utf8'),

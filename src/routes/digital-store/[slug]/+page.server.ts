@@ -33,6 +33,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		product,
 		coinBalance,
 		isLoggedIn: !!locals.user,
+		purchaseAvailable: product.fileAvailable,
 		purchaseKey: `checkout:${crypto.randomUUID()}`
 	};
 };
@@ -55,6 +56,12 @@ export const actions: Actions = {
 		const product = await getPublishedDigitalProductBySlug(locals.db, params.slug);
 		if (!product) {
 			return fail(404, { error: 'Produk digital tidak ditemukan.' });
+		}
+		if (!product.fileAvailable) {
+			return fail(409, {
+				type: 'artifact_unavailable',
+				error: 'Produk belum dapat dibeli karena installer final belum tersedia.'
+			});
 		}
 
 		const formData = await request.formData();

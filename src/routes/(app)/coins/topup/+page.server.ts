@@ -6,7 +6,8 @@ import {
 	createMidtransAuthorization,
 	createMidtransOrderId,
 	ensurePaymentOrdersSchema,
-	MIDTRANS_SNAP_TRANSACTION_URL
+	getMidtransSnapScriptUrl,
+	getMidtransSnapTransactionUrl
 } from '$lib/server/services/payment-gateway/payments/midtrans';
 
 type MidtransSnapResponse = {
@@ -25,7 +26,8 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 	return {
 		user: locals.user,
 		packages: getCoinTopupPackages(),
-		midtransClientKey: platform?.env?.MIDTRANS_CLIENT_KEY ?? ''
+		midtransClientKey: platform?.env?.MIDTRANS_CLIENT_KEY ?? '',
+		midtransSnapScriptUrl: getMidtransSnapScriptUrl(platform?.env?.MIDTRANS_IS_PRODUCTION === 'true')
 	};
 };
 
@@ -44,6 +46,7 @@ export const actions: Actions = {
 		if (!serverKey) {
 			return fail(500, { message: 'Konfigurasi Midtrans belum tersedia.' });
 		}
+		const midtransIsProduction = platform?.env?.MIDTRANS_IS_PRODUCTION === 'true';
 
 		const formData = await request.formData();
 		const packageId = formData.get('package_id');
@@ -137,7 +140,7 @@ export const actions: Actions = {
 			product_slug: selectedPackage.id
 		});
 
-		const snapResponse = await fetch(MIDTRANS_SNAP_TRANSACTION_URL, {
+		const snapResponse = await fetch(getMidtransSnapTransactionUrl(midtransIsProduction), {
 			method: 'POST',
 			headers: {
 				Authorization: createMidtransAuthorization(serverKey),
