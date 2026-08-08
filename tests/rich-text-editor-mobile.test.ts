@@ -7,7 +7,7 @@ const editorSource = readFileSync(
 	'utf8'
 );
 const newPostSource = readFileSync(
-	new URL('../src/routes/(cms)/admin/posts/new/+page.svelte', import.meta.url),
+	new URL('../src/routes/(app)/admin/posts/new/+page.svelte', import.meta.url),
 	'utf8'
 );
 

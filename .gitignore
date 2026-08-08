@@ -45,3 +45,8 @@ data/tafsir/tafsir-ringkas-draft.json
 .dev.vars
 .bob/
 DESIGN.md
+
+# Local temp / artifacts
+.tmp/
+nul
+pnpm-lock.yaml

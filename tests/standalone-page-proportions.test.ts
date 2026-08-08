@@ -6,22 +6,22 @@ import { test } from 'node:test';
 const readRoute = (path: string) => readFile(resolve('src/routes', path), 'utf8');
 
 const wideRoutes = [
-	'coins/+page.svelte',
-	'coins/topup/+page.svelte',
+	'(app)/coins/+page.svelte',
+	'(app)/coins/topup/+page.svelte',
 	'buku/+page.svelte',
 	'buku/[slug]/+page.svelte',
 	'buku/[slug]/baca/+page.svelte',
-	'buku/saya/+page.svelte',
-	'buku/studio/+page.svelte',
-	'buku/studio/earnings/+page.svelte'
+	'(app)/buku/saya/+page.svelte',
+	'(app)/buku/studio/+page.svelte',
+	'(app)/buku/studio/earnings/+page.svelte'
 ];
 
 const focusedRoutes = [
-	'buku/studio/new/+page.svelte',
-	'buku/studio/[id]/edit/+page.svelte',
-	'buku/studio/[id]/chapters/new/+page.svelte',
-	'buku/studio/[id]/chapters/[chapterId]/edit/+page.svelte',
-	'akun/perangkat/+page.svelte'
+	'(app)/buku/studio/new/+page.svelte',
+	'(app)/buku/studio/[id]/edit/+page.svelte',
+	'(app)/buku/studio/[id]/chapters/new/+page.svelte',
+	'(app)/buku/studio/[id]/chapters/[chapterId]/edit/+page.svelte',
+	'(app)/akun/perangkat/+page.svelte'
 ];
 
 const chapterReaderRoute = 'buku/[slug]/bab/[chapter]/+page.svelte';
@@ -55,7 +55,7 @@ test('reader bab memiliki lebar baca fokus dan ruang aman di atas navigasi mobil
 });
 
 test('baris riwayat Koin tetap terbaca untuk teks panjang di layar kecil', async () => {
-	const source = await readRoute('coins/+page.svelte');
+	const source = await readRoute('(app)/coins/+page.svelte');
 	const responsiveRows = source.match(/flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6/g) ?? [];
 	const wrappedDescriptions = source.match(/break-words text-sm leading-6/g) ?? [];
 
@@ -65,8 +65,10 @@ test('baris riwayat Koin tetap terbaca untuk teks panjang di layar kecil', async
 	assert.match(source, /self-end text-right sm:self-auto/);
 });
 
-test('shell global tidak memberi padding kedua pada Buku dan Koin', async () => {
-	const source = await readRoute('+layout.svelte');
-	assert.match(source, /usesStandalonePageContainer = isBookMenuActive\(pathname\)/);
-	assert.match(source, /hidePageChrome \|\| usesStandalonePageContainer/);
+test('shell global menyerahkan halaman login ke unified app shell tanpa padding kedua', async () => {
+	const rootLayout = await readRoute('+layout.svelte');
+	const appLayout = await readRoute('(app)/+layout.svelte');
+	assert.match(rootLayout, /hidePageChrome = hideChrome \|\| hideChromeFromRoute \|\| Boolean\(data\?\.user\)/);
+	assert.match(appLayout, /let desktopSidebarCollapsed = false/);
+	assert.match(appLayout, /<slot \/>/);
 });

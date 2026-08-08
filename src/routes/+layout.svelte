@@ -322,8 +322,8 @@ const adminBookMenuItems: HeaderMenuItem[] = [
 	},
 	{
 		label: 'Licenses',
-		href: '/admin/licenses',
-		note: 'Akses license tetap tersedia'
+		href: '/admin/licenses/manage',
+		note: 'Portal lisensi produk digital'
 	}
 ];
 
@@ -721,7 +721,7 @@ const adminNav = [
 	},
 	{
 		label: 'Lisensi',
-		href: '/admin/licenses',
+		href: '/admin/licenses/manage',
 		icon: 'M4.5 8V6.5A2.5 2.5 0 017 4h10a2.5 2.5 0 012.5 2.5V8M3.5 9.5h17v8A2.5 2.5 0 0118 20H6a2.5 2.5 0 01-2.5-2.5v-8zM9 14h6M12 11.5v5',
 		description: 'Akses',
 		tone: 'from-violet-500 to-fuchsia-500',

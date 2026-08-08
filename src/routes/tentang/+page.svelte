@@ -1,146 +1,332 @@
-<svelte:head>
-	<title>Tentang Kami - Santri Online</title>
-</svelte:head>
+<script lang="ts">
+	import SeoHead from '$lib/components/seo/SeoHead.svelte';
+	import BookOpenText from '@lucide/svelte/icons/book-open-text';
+	import BrainCircuit from '@lucide/svelte/icons/brain-circuit';
+	import Building2 from '@lucide/svelte/icons/building-2';
+	import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
+	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
+	import HeartHandshake from '@lucide/svelte/icons/heart-handshake';
+	import School from '@lucide/svelte/icons/school';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import Users from '@lucide/svelte/icons/users';
+	import WalletCards from '@lucide/svelte/icons/wallet-cards';
+	import Printer from '@lucide/svelte/icons/printer';
+	import ScanText from '@lucide/svelte/icons/scan-text';
 
-<div class="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 py-12">
-	<div class="max-w-6xl mx-auto px-4">
-		<!-- Hero -->
-		<div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-8 md:p-16 text-white shadow-2xl mb-12">
-			<div class="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-white/10 blur-3xl"></div>
-			<div class="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-white/10 blur-3xl"></div>
-			<div class="relative z-10 text-center">
-				<span class="text-6xl mb-4 block">🕌</span>
-				<h1 class="text-4xl md:text-5xl font-bold mb-4">Tentang Santri Online</h1>
-				<p class="text-xl md:text-2xl opacity-90 italic max-w-3xl mx-auto">
-					"Menghubungkan Tradisi Pesantren dengan Masa Depan Digital"
+	const lastUpdated = '25 Juli 2026';
+
+	const pillars = [
+		{
+			icon: ShieldCheck,
+			title: 'Aqidah kuat',
+			desc: 'Aswaja bertahap, ringan, jelas, membentuk keyakinan sadar.'
+		},
+		{
+			icon: HeartHandshake,
+			title: 'Adab & syariat',
+			desc: 'Shalat, Qur’an, birrul walidain, adab guru, adab digital jadi kebiasaan.'
+		},
+		{
+			icon: ClipboardCheck,
+			title: 'Amal & habit',
+			desc: 'Misi harian, streak, dan badge agar anak menang kecil setiap hari.'
+		},
+		{
+			icon: BookOpenText,
+			title: 'Ilmu hidup',
+			desc: 'Sirah, sahabat, fiqih praktis, akhlak, kitab, dan Qur’an dekat dengan anak.'
+		},
+		{
+			icon: BrainCircuit,
+			title: 'Skill masa depan',
+			desc: 'Literasi digital, AI, menulis, desain, komunikasi, dan problem solving halal.'
+		},
+		{
+			icon: Users,
+			title: 'Komunitas & mentor',
+			desc: 'Orang tua, guru, musyrif, dan lembaga dalam satu alur pembinaan.'
+		}
+	];
+
+	const audiences = [
+		{ icon: School, title: 'TPQ', desc: 'Setoran, review, santri, rapor, dan progres hafalan.' },
+		{ icon: GraduationCap, title: 'Pondok', desc: 'Data santri, jadwal, kas, aset, dan pembinaan harian.' },
+		{
+			icon: BookOpenText,
+			title: 'Rumah Tahfidz',
+			desc: 'Tahfidz, murojaah, ujian, sertifikat, dan monitoring.'
+		},
+		{
+			icon: Building2,
+			title: 'Masjid / Musholla',
+			desc: 'Jamaah, agenda, takmir, kas, dan administrasi ringan.'
+		}
+	];
+
+	const productLines = [
+		{
+			icon: Building2,
+			title: 'Dashboard lembaga',
+			desc: 'Operasional multi-peran: santri, jadwal, addon, kas, kalender, laporan.',
+			href: '/dashboard'
+		},
+		{
+			icon: ClipboardCheck,
+			title: 'Habit system',
+			desc: 'Misi, streak, dan badge untuk melawan dopamin game & scrolling.',
+			href: '/habit'
+		},
+		{
+			icon: BookOpenText,
+			title: 'Kitab & Qur’an',
+			desc: 'Mushaf, kitab, dan rujukan Aswaja sebagai fondasi ilmu.',
+			href: '/kitab'
+		},
+		{
+			icon: WalletCards,
+			title: 'Digital Store',
+			desc: 'Produk digital & aplikasi desktop berlisensi, dibeli dengan Coin.',
+			href: '/digital-store'
+		},
+		{
+			icon: Printer,
+			title: 'SantriPrint',
+			desc: 'Aplikasi desktop layout cetak & PDF ukuran fisik untuk Windows.',
+			href: '/digital-store/santriprint-pro'
+		},
+		{
+			icon: ScanText,
+			title: 'SantriOCR',
+			desc: 'Arah produk: kitab/modul/scan Arab–Indonesia menjadi teks editable.',
+			href: '/digital-store/santri-ocr-pro'
+		}
+	];
+
+	const principles = [
+		'AI membantu tarbiyah, bukan mengganti murabbi atau mengeluarkan fatwa otonom.',
+		'Sosial dan habit dirancang adab-first — bukan reels, doomscroll, atau piety leaderboard.',
+		'Monetisasi (coin, addon, lisensi) mendukung misi pembinaan, bukan menggantikannya.',
+		'Tidak memakai Google AdSense; fokus nilai manfaat untuk lembaga dan keluarga muslim.',
+		'Keputusan lembaga sensitif tetap human-in-the-loop oleh pengurus / Super Admin.'
+	];
+
+	const socials = [
+		{ name: 'Instagram', url: 'https://instagram.com/idsantrionline', label: '@idsantrionline' },
+		{ name: 'YouTube', url: 'https://www.youtube.com/@websantrionline', label: '@websantrionline' },
+		{ name: 'TikTok', url: 'https://tiktok.com/@santrionline.com', label: '@santrionline.com' },
+		{
+			name: 'Facebook',
+			url: 'https://facebook.com/yogikpratamaisabuzaid',
+			label: 'Yogik Pratama'
+		}
+	];
+</script>
+
+<SeoHead
+	title="Tentang SantriOnline — Sistem Pembinaan Generasi Muslim"
+	description="SantriOnline adalah sistem pembinaan generasi muslim: aqidah, adab, amal, ilmu, skill, komunitas, dan habit untuk TPQ, pondok, rumah tahfidz, masjid, dan musholla."
+	keywords="tentang santrionline, visi santrionline, pembinaan generasi muslim, aswaja, tpq digital"
+	canonical="/tentang"
+/>
+
+<div class="min-h-screen bg-gradient-to-b from-slate-50 via-emerald-50/50 to-white py-10 md:py-14">
+	<div class="mx-auto max-w-6xl space-y-8 px-4">
+		<header
+			class="relative overflow-hidden rounded-[1.85rem] border border-emerald-100 bg-gradient-to-br from-emerald-800 via-teal-700 to-cyan-700 p-8 text-white shadow-xl md:p-12"
+		>
+			<div class="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10 blur-3xl"></div>
+			<div class="absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-cyan-300/10 blur-3xl"></div>
+			<div class="relative z-10 max-w-3xl">
+				<p class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-50">
+					<Sparkles class="h-3.5 w-3.5" />
+					Aqidah · Adab · Amal · Ilmu · Skill · Habit
+				</p>
+				<h1 class="mt-5 text-3xl font-black tracking-tight md:text-5xl">Tentang SantriOnline</h1>
+				<p class="mt-4 text-base font-medium leading-8 text-white/90 md:text-lg">
+					Sistem pembinaan generasi muslim — bukan sekadar aplikasi lembaga, bukan sekadar platform konten, dan
+					bukan sekadar proyek AI Islami.
+				</p>
+				<p class="mt-3 text-sm leading-7 text-emerald-50/90">
+					Kami membantu TPQ, pondok, rumah tahfidz, masjid, dan musholla membentuk santri yang kuat aqidahnya,
+					rapi ibadahnya, tinggi adabnya, hidup ilmunya, berkomunitas, dan siap bersaing dengan skill masa depan.
+				</p>
+				<p class="mt-5 text-xs text-emerald-100/80">Diperbarui: {lastUpdated}</p>
+			</div>
+		</header>
+
+		<section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+			<p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Assalamualaikum</p>
+			<div class="mt-4 space-y-4 text-sm leading-7 text-slate-700 md:text-base">
+				<p>
+					Di tengah dopamin cepat dari game, scrolling, dan tren kosong, anak muda butuh lebih dari sekadar materi
+					agama di layar. Mereka butuh <strong>identitas, adab, amal, ilmu, skill, dan lingkungan</strong> yang
+					menjaga pertumbuhan.
+				</p>
+				<p>
+					<strong class="text-emerald-800">SantriOnline</strong> dibangun sebagai mesin pembinaan:
+					<strong>Aqidah + Adab + Amal + Ilmu + Skill + Komunitas + Habit System</strong>. Landasan aqidah kami
+					adalah <strong>Ahlussunnah wal Jama’ah (Aswaja)</strong> — empat mazhab dan warisan adab pesantren —
+					disampaikan bertahap, jelas, dan membentuk keyakinan sadar.
+				</p>
+				<p>
+					Teknologi (dashboard, habit, kitab digital, coin, lisensi desktop, AI bantu) hanyalah sarana. Ruhnya
+					tetap tarbiyah: mencetak generasi muslim yang berilmu, beradab, disiplin, dan kompeten di dunia nyata.
 				</p>
 			</div>
-		</div>
+		</section>
 
-		<!-- Intro -->
-		<div class="rounded-3xl border-2 border-emerald-200 bg-white p-8 shadow-xl mb-12">
-			<p class="text-lg text-gray-700 leading-relaxed mb-4">
-				<strong>Assalamualaikum Warahmatullahi Wabarakatuh.</strong>
-			</p>
-			<p class="text-gray-700 leading-relaxed mb-4">
-				Selamat datang di <strong class="text-emerald-600">SantriOnline.com</strong>. Di era di mana informasi bergerak sangat cepat, santri tidak boleh tertinggal. Kami hadir sebagai inisiatif baru untuk menjembatani tradisi keilmuan pesantren dengan kemajuan teknologi modern.
-			</p>
-			<p class="text-gray-700 leading-relaxed">
-				Kami bercita-cita menjadi sebuah <strong>Super App</strong> (aplikasi serba ada) khusus untuk ekosistem santri berlandaskan pemahaman <strong>Ahlussunnah wal Jama'ah</strong>.
-			</p>
-		</div>
-
-		<!-- Visi Misi -->
-		<div class="grid gap-8 md:grid-cols-2 mb-12">
-			<div class="rounded-3xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-8 shadow-xl">
-				<div class="flex items-center gap-3 mb-6">
-					<span class="text-5xl">🎯</span>
-					<h2 class="text-3xl font-bold text-blue-800">Visi Kami</h2>
-				</div>
-				<p class="text-gray-700 leading-relaxed italic">
-					"Menjadi ekosistem digital rujukan utama bagi generasi santri yang berwawasan global, melek teknologi, namun tetap teguh berpegang pada akhlak karimah dan akidah Ahlussunnah wal Jama'ah."
+		<section class="grid gap-5 md:grid-cols-2">
+			<div class="rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-sm md:p-8">
+				<h2 class="text-2xl font-bold text-emerald-900">Visi</h2>
+				<p class="mt-4 text-sm leading-7 text-slate-700 md:text-base">
+					Menjadi sistem digital pembinaan generasi muslim yang membentuk identitas, adab, aqidah, amal, ilmu,
+					dan skill — sehingga santri siap hidup di zaman AI tanpa kehilangan arah syariat dan akhlak.
 				</p>
 			</div>
-
-			<div class="rounded-3xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-8 shadow-xl">
-				<div class="flex items-center gap-3 mb-6">
-					<span class="text-5xl">🚀</span>
-					<h2 class="text-3xl font-bold text-purple-800">Misi Kami</h2>
-				</div>
-				<ul class="space-y-3 text-gray-700">
-					<li class="flex items-start gap-2">
-						<span class="text-purple-600 font-bold">•</span>
-						<span><strong>Edukasi Bersanad:</strong> Konten valid dari ulama mu'tabar</span>
-					</li>
-					<li class="flex items-start gap-2">
-						<span class="text-purple-600 font-bold">•</span>
-						<span><strong>Benteng Digital:</strong> Islam Wasathiyah anti-radikalisme</span>
-					</li>
-					<li class="flex items-start gap-2">
-						<span class="text-purple-600 font-bold">•</span>
-						<span><strong>Teknologi Terdepan:</strong> Akses cepat dan mudah</span>
-					</li>
-					<li class="flex items-start gap-2">
-						<span class="text-purple-600 font-bold">•</span>
-						<span><strong>Kemandirian Umat:</strong> Ekonomi santri digital</span>
-					</li>
+			<div class="rounded-3xl border border-teal-100 bg-gradient-to-br from-teal-50 to-white p-6 shadow-sm md:p-8">
+				<h2 class="text-2xl font-bold text-teal-900">Misi</h2>
+				<ul class="mt-4 space-y-2.5 text-sm leading-7 text-slate-700">
+					<li>• Membangun kurikulum & habit yang menolong anak lebih tertarik daripada game biasa.</li>
+					<li>• Menguatkan aqidah Aswaja, adab, sirah, fiqih praktis, dan skill masa depan.</li>
+					<li>• Menghubungkan orang tua, guru, mentor, dan lembaga dalam satu alur.</li>
+					<li>• Menyediakan tools operasional & produk digital yang hemat, aman, dan bermanfaat.</li>
+					<li>• Menjaga AI sebagai pembantu tarbiyah — bukan pengganti murabbi atau fatwa otonom.</li>
 				</ul>
 			</div>
-		</div>
+		</section>
 
-		<!-- Features Grid -->
-		<div class="mb-12">
-			<h2 class="text-3xl font-bold text-center text-gray-900 mb-8">✨ Fitur Unggulan</h2>
-			<div class="grid gap-6 md:grid-cols-3">
-				{#each [
-					{ icon: '📖', title: 'Kisah 25 Nabi', desc: 'Pelajari perjalanan para nabi dengan dalil Al-Quran', link: '/nabi' },
-					{ icon: '⭐', title: 'Sahabat Rasul', desc: 'Khulafaur Rasyidin dan Ahlul Badar', link: '/sahabat' },
-					{ icon: '🎓', title: 'Jaringan Ulama', desc: 'Dari Baghdad, Damaskus, Mesir hingga Walisongo', link: '/ulama' },
-					{ icon: '🕌', title: 'Walisongo', desc: '9 Wali penyebar Islam di Tanah Jawa', link: '/walisongo' },
-					{ icon: '📚', title: 'Kitab Turats', desc: 'Kitab dasar pesantren Ahlussunnah', link: '/kitab' },
-					{ icon: '📅', title: 'Kalender Pasaran', desc: 'Kalender Hijriyah dengan pasaran Jawa', link: '/kalender' }
-				] as feature}
-					<a href={feature.link} class="group rounded-2xl border-2 border-emerald-200 bg-white p-6 shadow-lg transition hover:scale-105 hover:shadow-2xl">
-						<span class="text-5xl mb-3 block">{feature.icon}</span>
-						<h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600">{feature.title}</h3>
-						<p class="text-gray-600">{feature.desc}</p>
-					</a>
-				{/each}
+		<section>
+			<div class="mb-5 text-center">
+				<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Fondasi</p>
+				<h2 class="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">Enam pilar SantriOnline</h2>
 			</div>
-		</div>
-
-		<!-- Developer -->
-		<div class="rounded-3xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-8 shadow-xl mb-12">
-			<div class="flex items-center gap-3 mb-6">
-				<span class="text-5xl">👨‍💻</span>
-				<h2 class="text-3xl font-bold text-amber-800">Di Balik Layar</h2>
-			</div>
-			<p class="text-gray-700 leading-relaxed mb-4">
-				Platform ini dikembangkan oleh <a href="https://www.facebook.com/yogikpratamaisabuzaid/" target="_blank" rel="noreferrer" class="font-bold text-amber-700 hover:underline">Yogik Pratama</a>. Berlandaskan nilai Aswaja dan didukung teknologi modern yang aman dan ringan, kami berupaya memberikan yang terbaik untuk umat.
-			</p>
-			<p class="text-sm text-gray-600">
-				Pembaruan terbaru: halaman Sahabat Rasul, perluasan kajian ulama (Baghdad, Damaskus, Mesir, Hadramaut, Walisongo), serta penambahan tema harian di kalender pasaran.
-			</p>
-		</div>
-
-		<!-- Social Media -->
-		<div class="rounded-3xl border-2 border-rose-200 bg-white p-8 shadow-xl mb-12">
-			<h2 class="text-3xl font-bold text-center text-gray-900 mb-8">📱 Ikuti Jejak Digital Kami</h2>
-			<div class="grid gap-4 md:grid-cols-4">
-				{#each [
-					{ icon: '📸', name: 'Instagram', url: 'https://instagram.com/idsantrionline', color: 'from-pink-500 to-purple-500' },
-					{ icon: '▶️', name: 'YouTube', url: 'https://www.youtube.com/@websantrionline', color: 'from-red-500 to-rose-500' },
-					{ icon: '🎵', name: 'TikTok', url: 'https://tiktok.com/@santrionline.com', color: 'from-cyan-500 to-blue-500' },
-					{ icon: '📘', name: 'Facebook', url: 'https://facebook.com/yogikpratamaisabuzaid', color: 'from-blue-600 to-indigo-600' }
-				] as social}
-					<a href={social.url} target="_blank" rel="noreferrer" class="group relative overflow-hidden rounded-2xl bg-gradient-to-r {social.color} p-6 text-white shadow-lg transition hover:scale-105">
-						<div class="absolute top-0 right-0 h-20 w-20 rounded-full bg-white/10 blur-2xl"></div>
-						<div class="relative text-center">
-							<span class="text-4xl mb-2 block">{social.icon}</span>
-							<p class="font-bold">{social.name}</p>
+			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				{#each pillars as item}
+					<article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+						<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+							<svelte:component this={item.icon} class="h-5 w-5" strokeWidth={2.3} />
 						</div>
+						<h3 class="mt-4 text-lg font-semibold text-slate-900">{item.title}</h3>
+						<p class="mt-2 text-sm leading-6 text-slate-600">{item.desc}</p>
+					</article>
+				{/each}
+			</div>
+		</section>
+
+		<section>
+			<div class="mb-5 text-center">
+				<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Untuk siapa</p>
+				<h2 class="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">Lembaga yang kami dampingi</h2>
+			</div>
+			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+				{#each audiences as item}
+					<article class="rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm">
+						<div class="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+							<svelte:component this={item.icon} class="h-5 w-5" strokeWidth={2.3} />
+						</div>
+						<h3 class="mt-3 font-semibold text-slate-900">{item.title}</h3>
+						<p class="mt-2 text-sm leading-6 text-slate-600">{item.desc}</p>
+					</article>
+				{/each}
+			</div>
+		</section>
+
+		<section>
+			<div class="mb-5 text-center">
+				<p class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Produk</p>
+				<h2 class="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">Yang sedang dibangun</h2>
+				<p class="mx-auto mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+					Fitur dibuat bertahap agar lembaga menjaga biaya, fokus, dan kualitas pembinaan.
+				</p>
+			</div>
+			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				{#each productLines as item}
+					<a
+						href={item.href}
+						class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+					>
+						<div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 text-emerald-700">
+							<svelte:component this={item.icon} class="h-5 w-5" strokeWidth={2.3} />
+						</div>
+						<h3 class="mt-4 text-lg font-semibold text-slate-900">{item.title}</h3>
+						<p class="mt-2 text-sm leading-6 text-slate-600">{item.desc}</p>
+						<span class="mt-3 inline-block text-xs font-semibold uppercase tracking-wide text-emerald-700"
+							>Lihat →</span
+						>
 					</a>
 				{/each}
 			</div>
-		</div>
+		</section>
 
-		<!-- Dakwah Digital -->
-		<div class="rounded-3xl border-2 border-teal-200 bg-white p-8 shadow-xl">
-			<div class="flex items-center gap-3 mb-6">
-				<span class="text-5xl">💡</span>
-				<h2 class="text-3xl font-bold text-teal-800">Peran Santri dalam Dakwah Digital</h2>
+		<section class="rounded-3xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm md:p-8">
+			<h2 class="text-2xl font-bold text-amber-900">Prinsip di era AI</h2>
+			<ul class="mt-4 space-y-2.5 text-sm leading-7 text-slate-700">
+				{#each principles as line}
+					<li class="flex gap-2">
+						<span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"></span>
+						<span>{line}</span>
+					</li>
+				{/each}
+			</ul>
+		</section>
+
+		<section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+			<h2 class="text-2xl font-bold text-slate-900">Di balik layar</h2>
+			<p class="mt-4 text-sm leading-7 text-slate-700 md:text-base">
+				SantriOnline dikembangkan oleh
+				<a
+					href="https://www.facebook.com/yogikpratamaisabuzaid/"
+					target="_blank"
+					rel="noreferrer"
+					class="font-semibold text-emerald-700 hover:underline">Yogik Pratama Aprilian</a
+				>
+				bersama arah pembinaan Aswaja dari Batu, Jawa Timur — dengan pengalaman sebagai pengajar TPQ, pengurus
+				masjid, dan praktisi web/AI. Tim berupaya menjaga produk tetap ringan, hemat, dan bermanfaat untuk umat.
+			</p>
+			<p class="mt-3 text-sm leading-7 text-slate-600">
+				Pembaruan arah terbaru: homepage & visi pembinaan generasi, habit system, digital store + lisensi desktop
+				(SantriPrint/SantriOCR), kebijakan privasi & syarat yang selaras fitur terkini, serta penegasan AI sebagai
+				pembantu — bukan pengganti tarbiyah.
+			</p>
+			<div class="mt-6 flex flex-wrap gap-3">
+				<a href="/register" class="btn border-none bg-emerald-700 text-white hover:bg-emerald-800">Daftar lembaga</a>
+				<a href="/digital-store" class="btn btn-outline border-emerald-200 text-emerald-800">Lihat Digital Store</a>
+				<a href="/kontak" class="btn btn-ghost text-slate-700">Kontak</a>
+				<a href="/privacy" class="btn btn-ghost text-slate-700">Privasi</a>
 			</div>
-			<div class="space-y-4 text-gray-700 leading-relaxed">
-				<p>
-					Ekosistem <strong>santri online</strong> kami terhubung dengan kajian <a href="/ulama" class="text-teal-600 hover:underline font-semibold">ulama</a>, riwayat <a href="/sahabat" class="text-teal-600 hover:underline font-semibold">sahabat</a>, rujukan <a href="/kitab" class="text-teal-600 hover:underline font-semibold">kitab</a>, hingga agenda <a href="/kalender" class="text-teal-600 hover:underline font-semibold">kalender pasaran</a> dan progres hafalan di dashboard.
-				</p>
-				<p>
-					Santri hari ini menghadapi lanskap dakwah yang sangat berbeda. Jika dulu keilmuan berputar di serambi pesantren, kini pesan kebaikan melaju melalui layar ponsel dan jejaring sosial. Inilah alasan mengapa penting bagi santri untuk hadir, berdaya, dan memimpin di ruang digital.
-				</p>
-				<p>
-					Keutamaan ilmu yang bersanad menuntut penjagaan niat dan disiplin verifikasi. Santri terbiasa menelusuri sumber, merujuk guru, dan mengecek kesahihan. Kebiasaan ini adalah vaksin terhadap misinformasi yang kerap beredar di internet.
-				</p>
+		</section>
+
+		<section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+			<h2 class="text-center text-2xl font-bold text-slate-900">Jejak digital</h2>
+			<div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+				{#each socials as social}
+					<a
+						href={social.url}
+						target="_blank"
+						rel="noreferrer"
+						class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-center transition hover:border-emerald-200 hover:bg-emerald-50"
+					>
+						<p class="font-semibold text-slate-900">{social.name}</p>
+						<p class="mt-1 text-xs text-slate-500">{social.label}</p>
+					</a>
+				{/each}
 			</div>
-		</div>
+		</section>
+
+		<section class="rounded-3xl border border-teal-100 bg-teal-50/60 p-6 text-sm leading-7 text-slate-700 md:p-8">
+			<h2 class="text-xl font-bold text-teal-900">Dakwah digital yang beradab</h2>
+			<p class="mt-3">
+				Santri hari ini berdakwah di layar yang sama dengan tren rusak. SantriOnline mengajak hadir di ruang digital
+				dengan bekal sanad, adab, dan skill — merujuk
+				<a href="/kitab" class="font-semibold text-teal-800 hover:underline">kitab</a>, menjaga
+				<a href="/habit" class="font-semibold text-teal-800 hover:underline">habit</a>, dan menata lembaga lewat
+				<a href="/dashboard" class="font-semibold text-teal-800 hover:underline">dashboard</a>.
+			</p>
+			<p class="mt-3">
+				Keutamaan ilmu bersanad menuntut niat dan verifikasi. Kebiasaan merujuk guru dan sumber adalah vaksin
+				terhadap misinformasi — termasuk keluaran AI yang “kelihatan benar” tetapi bisa salah di titik kritis.
+			</p>
+		</section>
 	</div>
 </div>
