@@ -115,12 +115,11 @@
 
 		<div class="hero-grid">
 			<div class="hero-copy">
-				<p class="eyebrow">SantriOnline AI • Rilis Promosi</p>
-				<h1 id="promo-title">AI yang membantu ngaji, membina habit, dan menjaga adab.</h1>
+				<p class="eyebrow">SantriOnline AI resmi rilis</p>
+				<h1 id="promo-title">AI yang ngaji kitab dulu sebelum jawab.</h1>
 				<p class="lead">
-					Platform pembinaan generasi muslim yang menggabungkan kitab digital, asisten dakwah,
-					habit syariat, komunitas, dan skill masa depan — dengan pengingat jelas bahwa AI bukan
-					pengganti guru, ustadz, dan ulama.
+					Menyelami ilmu Islam klasik dengan bantuan AI: cari rujukan, susun bahan dakwah,
+					bina habit santri, dan tetap ingat bahwa keputusan agama kembali kepada guru serta ulama.
 				</p>
 				<div class="hero-actions">
 					<a class="btn primary" href="/register">Daftar Gratis</a>
@@ -129,27 +128,59 @@
 				<div class="warning-note">AI bisa salah. Keputusan agama tetap melalui talaqqi, guru, dan ulama yang jelas sanadnya.</div>
 			</div>
 
-			<div class="chat-card" aria-label="Contoh tampilan chat SantriOnline AI">
-				<div class="chat-header">
-					<div>
-						<strong>SantriOnline AI — Chat</strong>
-						<span>Asisten kitab & dakwah</span>
+			<div class="device-stage" aria-label="Mockup layar SantriOnline AI versi desktop dan HP">
+				<div class="zoom-orbit desktop-orbit" aria-hidden="true"></div>
+				<div class="desktop-frame zoom-in-out">
+					<div class="browser-bar">
+						<span></span><span></span><span></span>
+						<strong>app.santrionline.com/promosi</strong>
 					</div>
-					<span class="status-dot"></span>
+					<div class="desktop-screen">
+						<aside class="mock-sidebar">
+							<div class="mini-brand">SO</div>
+							<span class="active"></span><span></span><span></span><span></span>
+						</aside>
+						<section class="mock-main">
+							<div class="mock-topline">
+								<p>SantriOnline AI</p>
+								<div class="mock-chip">Aswaja • Kitab • Habit</div>
+							</div>
+							<div class="mock-chat user">Bagaimana menyiapkan kultum tentang adab kepada guru?</div>
+							<div class="mock-answer">
+								<p class="tag">📖 Bahan Kajian</p>
+								<strong>Struktur kultum siap pakai</strong>
+								<div class="answer-lines"><span></span><span></span><span></span></div>
+								<div class="source-box">Rujukan diverifikasi lagi ke guru/kitab sebelum disampaikan.</div>
+							</div>
+							<div class="mock-tools"><span>Terjemah</span><span>Tarkib</span><span>Lacak Kitab</span></div>
+						</section>
+					</div>
 				</div>
-				<div class="bubble user">Bagaimana menyiapkan kultum tentang adab kepada guru?</div>
-				<div class="bubble bot">
-					<p class="tag">📖 Bahan Kajian</p>
-					<strong>Struktur kultum:</strong>
-					<ol>
-						<li>Pembukaan: keutamaan ilmu.</li>
-						<li>Isi: adab sebelum, saat, dan setelah belajar.</li>
-						<li>Penutup: ajakan praktik 1 adab hari ini.</li>
-					</ol>
-					<div class="source-box">Rujukan perlu diverifikasi ulang ke guru/kitab sebelum disampaikan.</div>
+
+				<div class="phone-frame zoom-out-in">
+					<div class="phone-notch"></div>
+					<div class="phone-screen">
+						<div class="phone-header">
+							<span class="avatar">SO</span>
+							<div><strong>SantriOnline</strong><small>AI Islami aktif</small></div>
+						</div>
+						<div class="phone-bubble user">Tanya kitab</div>
+						<div class="phone-bubble bot">Jawaban ringkas + rujukan + pengingat talaqqi.</div>
+						<div class="phone-card">
+							<b>Habit hari ini</b>
+							<span>Adab kepada guru • Subuh • Qur’an</span>
+						</div>
+						<button>Mulai Ngaji</button>
+					</div>
 				</div>
-				<div class="chat-tools">
-					<span>Terjemah</span><span>Tarkib</span><span>Lacak rujukan</span>
+
+				<div class="floating-card kitab-card">
+					<span>📚</span>
+					<div><b>7K+ Rujukan</b><small>kitab & materi</small></div>
+				</div>
+				<div class="floating-card zoom-card">
+					<span>🔎</span>
+					<div><b>Zoom UI</b><small>desktop + HP</small></div>
 				</div>
 			</div>
 		</div>
@@ -355,9 +386,9 @@
 
 	.hero-grid {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(320px, 0.82fr);
+		grid-template-columns: minmax(0, 0.9fr) minmax(430px, 1.1fr);
 		align-items: center;
-		gap: clamp(2rem, 6vw, 5rem);
+		gap: clamp(2rem, 5vw, 4.5rem);
 	}
 
 	.eyebrow {
@@ -397,7 +428,7 @@
 	}
 
 	.hero-actions,
-	.chat-tools {
+	.mock-tools {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.8rem;
@@ -449,7 +480,6 @@
 		font-size: 0.92rem;
 	}
 
-	.chat-card,
 	.feature-card,
 	.testimonial-card,
 	.price-card,
@@ -461,59 +491,143 @@
 		backdrop-filter: blur(14px);
 	}
 
-	.chat-card {
-		border-color: rgba(255, 255, 255, 0.18);
-		border-radius: 2rem;
-		padding: 1rem;
-		background: rgba(255, 250, 241, 0.94);
-		color: #153827;
-		transform: rotate(1.2deg);
+	.device-stage {
+		position: relative;
+		min-height: 620px;
+		perspective: 1400px;
+		isolation: isolate;
 	}
 
-	.chat-header {
+	.zoom-orbit {
+		position: absolute;
+		inset: 11% 5% auto auto;
+		width: 78%;
+		height: 62%;
+		border-radius: 999px;
+		background: radial-gradient(circle, rgba(255, 216, 134, 0.25), rgba(39, 169, 113, 0.18) 42%, transparent 68%);
+		filter: blur(10px);
+		animation: pulseGlow 5s ease-in-out infinite;
+	}
+
+	.desktop-frame {
+		position: absolute;
+		top: 4%;
+		right: 0;
+		width: min(720px, 100%);
+		border: 1px solid rgba(255, 255, 255, 0.28);
+		border-radius: 2.2rem;
+		background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248,242,231,0.94));
+		box-shadow: 0 34px 100px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255,255,255,0.7);
+		overflow: hidden;
+		transform: rotateY(-10deg) rotateX(4deg);
+	}
+
+	.browser-bar {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		border-radius: 1.35rem;
-		padding: 1rem;
+		gap: 0.5rem;
+		padding: 0.85rem 1rem;
+		background: rgba(18, 59, 43, 0.96);
+		color: rgba(255,255,255,0.72);
+		font-size: 0.76rem;
+	}
+
+	.browser-bar span {
+		width: 0.65rem;
+		height: 0.65rem;
+		border-radius: 999px;
+		background: #f4d58a;
+	}
+
+	.browser-bar span:nth-child(2) { background: #8fd5aa; }
+	.browser-bar span:nth-child(3) { background: #ffffff; opacity: 0.72; }
+	.browser-bar strong { margin-left: 0.45rem; font-weight: 750; }
+
+	.desktop-screen {
+		display: grid;
+		grid-template-columns: 78px 1fr;
+		min-height: 430px;
+		background:
+			radial-gradient(circle at top right, rgba(232,178,83,0.24), transparent 20rem),
+			linear-gradient(135deg, #f8f2e7, #ffffff);
+	}
+
+	.mock-sidebar {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		padding: 1.1rem 0;
 		background: #123b2b;
-		color: white;
 	}
 
-	.chat-header span:not(.status-dot) {
-		display: block;
-		margin-top: 0.2rem;
-		color: rgba(255, 255, 255, 0.68);
-		font-size: 0.82rem;
+	.mini-brand {
+		display: grid;
+		width: 2.5rem;
+		height: 2.5rem;
+		place-items: center;
+		border-radius: 0.9rem;
+		background: #f4d58a;
+		color: #123b2b;
+		font-weight: 950;
 	}
 
-	.status-dot {
-		width: 0.8rem;
-		height: 0.8rem;
-		border-radius: 99px;
-		background: #52e09d;
-		box-shadow: 0 0 0 6px rgba(82, 224, 157, 0.18);
+	.mock-sidebar span {
+		width: 2.2rem;
+		height: 0.55rem;
+		border-radius: 999px;
+		background: rgba(255,255,255,0.22);
 	}
 
-	.bubble {
-		margin-top: 1rem;
+	.mock-sidebar span.active { background: #f4d58a; }
+
+	.mock-main {
+		padding: 1.15rem;
+		color: #153827;
+	}
+
+	.mock-topline {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		align-items: center;
+		margin-bottom: 1rem;
+	}
+
+	.mock-topline p {
+		margin: 0;
+		font-weight: 950;
+	}
+
+	.mock-chip,
+	.mock-tools span {
+		border-radius: 999px;
+		background: #e7f4ec;
+		padding: 0.45rem 0.7rem;
+		color: #12543a;
+		font-size: 0.75rem;
+		font-weight: 850;
+	}
+
+	.mock-chat,
+	.mock-answer {
 		border-radius: 1.2rem;
 		padding: 1rem;
-		line-height: 1.6;
+		line-height: 1.55;
 	}
 
-	.bubble.user {
-		margin-left: 2rem;
+	.mock-chat.user {
+		margin-left: auto;
+		max-width: 78%;
 		background: #dff7e9;
+		font-weight: 700;
 	}
 
-	.bubble.bot {
-		margin-right: 1rem;
+	.mock-answer {
+		margin-top: 1rem;
+		max-width: 88%;
 		background: #fff7e7;
-	}
-
-	.bubble ol {
-		padding-left: 1.2rem;
+		box-shadow: 0 14px 45px rgba(21,56,39,0.08);
 	}
 
 	.tag {
@@ -525,6 +639,22 @@
 		text-transform: uppercase;
 	}
 
+	.answer-lines {
+		display: grid;
+		gap: 0.5rem;
+		margin: 0.8rem 0;
+	}
+
+	.answer-lines span {
+		display: block;
+		height: 0.55rem;
+		border-radius: 999px;
+		background: rgba(21, 56, 39, 0.15);
+	}
+
+	.answer-lines span:nth-child(2) { width: 86%; }
+	.answer-lines span:nth-child(3) { width: 62%; }
+
 	.source-box {
 		border-radius: 0.9rem;
 		padding: 0.8rem;
@@ -533,17 +663,136 @@
 		font-size: 0.88rem;
 	}
 
-	.chat-tools {
-		padding: 1rem 0.25rem 0.25rem;
+	.mock-tools {
+		padding-top: 1rem;
 	}
 
-	.chat-tools span {
+	.phone-frame {
+		position: absolute;
+		right: 4%;
+		bottom: 2%;
+		width: 230px;
+		border: 10px solid #0c241b;
+		border-radius: 2.3rem;
+		background: #0c241b;
+		box-shadow: 0 28px 80px rgba(0,0,0,0.42);
+		transform: rotate(4deg);
+		overflow: hidden;
+		z-index: 3;
+	}
+
+	.phone-notch {
+		position: absolute;
+		top: 0.45rem;
+		left: 50%;
+		z-index: 4;
+		width: 5.2rem;
+		height: 0.42rem;
 		border-radius: 999px;
-		background: #f1e2c6;
-		padding: 0.45rem 0.7rem;
-		font-size: 0.78rem;
-		font-weight: 800;
-		color: #795116;
+		background: #0c241b;
+		transform: translateX(-50%);
+	}
+
+	.phone-screen {
+		display: flex;
+		min-height: 410px;
+		flex-direction: column;
+		gap: 0.75rem;
+		border-radius: 1.65rem;
+		padding: 1.35rem 0.8rem 0.8rem;
+		background: linear-gradient(180deg, #f8f2e7, #ffffff);
+		color: #153827;
+	}
+
+	.phone-header {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		border-radius: 1rem;
+		padding: 0.7rem;
+		background: #123b2b;
+		color: white;
+	}
+
+	.avatar {
+		display: grid;
+		width: 2rem;
+		height: 2rem;
+		place-items: center;
+		border-radius: 0.7rem;
+		background: #f4d58a;
+		color: #123b2b;
+		font-size: 0.72rem;
+		font-weight: 950;
+	}
+
+	.phone-header small,
+	.floating-card small,
+	.phone-card span {
+		display: block;
+		font-size: 0.72rem;
+		opacity: 0.72;
+	}
+
+	.phone-bubble,
+	.phone-card {
+		border-radius: 1rem;
+		padding: 0.75rem;
+		font-size: 0.8rem;
+		line-height: 1.45;
+	}
+
+	.phone-bubble.user { align-self: flex-end; background: #dff7e9; }
+	.phone-bubble.bot { background: #fff7e7; }
+	.phone-card { background: #eaf6ee; }
+
+	.phone-screen button {
+		margin-top: auto;
+		border: 0;
+		border-radius: 999px;
+		padding: 0.85rem;
+		background: #153827;
+		color: white;
+		font-weight: 900;
+	}
+
+	.floating-card {
+		position: absolute;
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		border: 1px solid rgba(255,255,255,0.32);
+		border-radius: 1.1rem;
+		padding: 0.75rem 0.9rem;
+		background: rgba(255, 250, 241, 0.92);
+		box-shadow: 0 20px 55px rgba(0,0,0,0.22);
+		color: #153827;
+		z-index: 4;
+	}
+
+	.floating-card > span {
+		font-size: 1.25rem;
+	}
+
+	.kitab-card { left: 0; bottom: 18%; }
+	.zoom-card { right: 28%; top: 0; }
+
+	.zoom-in-out { animation: zoomInOut 6.5s ease-in-out infinite; }
+	.zoom-out-in { animation: zoomOutIn 6.5s ease-in-out infinite; }
+
+	@keyframes zoomInOut {
+		0%, 100% { transform: rotateY(-10deg) rotateX(4deg) scale(0.96); }
+		50% { transform: rotateY(-7deg) rotateX(2deg) scale(1.04); }
+	}
+
+	@keyframes zoomOutIn {
+		0%, 100% { transform: rotate(4deg) scale(1.05); }
+		50% { transform: rotate(2deg) scale(0.96); }
+	}
+
+	@keyframes pulseGlow {
+		0%, 100% { opacity: 0.55; transform: scale(0.95); }
+		50% { opacity: 1; transform: scale(1.05); }
 	}
 
 	.stats-strip,
@@ -803,8 +1052,37 @@
 			justify-content: center;
 		}
 
-		.chat-card {
-			transform: none;
+		.device-stage {
+			min-height: 560px;
+			max-width: 680px;
+			margin: 0 auto;
+		}
+
+		.desktop-frame {
+			right: 50%;
+			width: min(650px, 96vw);
+			transform: translateX(50%) rotateY(0deg) rotateX(0deg);
+		}
+
+		.phone-frame {
+			right: 2%;
+			bottom: 0;
+			width: 205px;
+		}
+
+		.kitab-card {
+			left: 2%;
+			bottom: 14%;
+		}
+
+		.zoom-card {
+			right: 10%;
+			top: 1%;
+		}
+
+		.zoom-in-out,
+		.zoom-out-in {
+			animation-duration: 7s;
 		}
 
 		.stats-strip,
@@ -842,8 +1120,58 @@
 			grid-template-columns: 1fr;
 		}
 
-		.stats-strip {
-			margin-top: -2rem;
+		.device-stage {
+			min-height: 480px;
+			overflow: visible;
+		}
+
+		.desktop-frame {
+			left: 50%;
+			right: auto;
+			width: 112%;
+			transform: translateX(-50%) scale(0.86);
+			transform-origin: top center;
+			border-radius: 1.4rem;
+		}
+
+		.desktop-screen {
+			grid-template-columns: 52px 1fr;
+			min-height: 360px;
+		}
+
+		.mock-main {
+			padding: 0.8rem;
+		}
+
+		.mock-chat.user,
+		.mock-answer {
+			max-width: 96%;
+			font-size: 0.78rem;
+		}
+
+		.phone-frame {
+			right: 0;
+			bottom: 0.25rem;
+			width: 168px;
+			border-width: 8px;
+		}
+
+		.phone-screen {
+			min-height: 330px;
+		}
+
+		.floating-card {
+			font-size: 0.78rem;
+			padding: 0.6rem 0.7rem;
+		}
+
+		.kitab-card {
+			left: 0;
+			bottom: 10%;
+		}
+
+		.zoom-card {
+			display: none;
 		}
 
 		.section,

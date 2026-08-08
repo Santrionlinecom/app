@@ -31,7 +31,9 @@ type PageDataWithChrome = {
 };
 
 let pathname = '/';
+let isPromosiPage = false;
 $: pathname = $page.url.pathname as string;
+$: isPromosiPage = pathname === '/promosi';
 let isSuperAdmin = false;
 let isImpersonating = false;
 const mobileChromeScrollThreshold = 10;
@@ -50,7 +52,7 @@ $: scrollingDown = $scrollDirection.scrollingDown;
 $: hideChromeFromRoute = Boolean(($page.data as PageDataWithChrome | undefined)?.hideChrome);
 // Auto-hide header/footer when user is logged in
 $: hidePageChrome = hideChrome || hideChromeFromRoute || Boolean(data?.user);
-$: hideMobileBottomNavigation = pathname === '/register' || pathname.startsWith('/register/');
+$: hideMobileBottomNavigation = pathname === '/register' || pathname.startsWith('/register/') || isPromosiPage;
 $: shouldHideMobileChrome =
 	!hidePageChrome &&
 	isMobileViewport &&
@@ -1153,7 +1155,9 @@ $: if (pathname !== previousPathname) {
 
 <UmamiAnalytics />
 <ClarityAnalytics />
-<CookieConsent />
+{#if !isPromosiPage}
+	<CookieConsent />
+{/if}
 <SeoHead canonical={pathname} noindex={isAdminRouteActive || isAppRouteActive || pathname.startsWith('/auth') || pathname.startsWith('/akun')} />
 <SchemaOrg type="website" />
 <SchemaOrg type="organization" />
@@ -1819,7 +1823,7 @@ $: if (pathname !== previousPathname) {
 		</nav>
 	{/if}
 
-	{#if showInstallPopup}
+	{#if showInstallPopup && !isPromosiPage}
 		<div
 			class="fixed inset-0 z-[60] flex items-end justify-center px-2 py-2 sm:items-center sm:px-4"
 		>
