@@ -244,6 +244,20 @@
 		</div>
 	</section>
 
+	<section class="border-y border-so-border/80 bg-white px-4 py-12 sm:px-6 lg:px-8 lg:py-16" aria-labelledby="meaning-title">
+		<div class="mx-auto grid max-w-7xl gap-7 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+			<div class="section-head">
+				<p>Mengenal SantriOnline</p>
+				<h2 id="meaning-title">Santri adalah semangat belajar sepanjang hayat.</h2>
+			</div>
+			<div class="rounded-[28px] border border-so-border bg-so-cream p-6 sm:p-8">
+				<p class="text-lg font-semibold leading-8 text-so-ink">Dalam semangat SantriOnline, siapa saja dapat terus mengaji, belajar, menjaga adab, dan mengikuti bimbingan ulama dengan memanfaatkan teknologi digital.</p>
+				<p class="mt-4 leading-7 text-so-muted"><strong class="text-so-green">Teknologi tidak menggantikan ulama, guru, atau pesantren.</strong> SantriOnline menjadi jembatan agar kesibukan dan jarak tidak memutus semangat mencari ilmu.</p>
+				<a href="/blog/apa-itu-santri-online" class="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-so-green px-6 py-3 font-bold text-white">Baca Penjelasan Lengkap <ArrowRight class="h-4 w-4" /></a>
+			</div>
+		</div>
+	</section>
+
 	<section class="px-4 py-12 sm:px-6 lg:px-8">
 		<div class="mx-auto max-w-7xl">
 			<div class="section-head">

@@ -35,6 +35,7 @@ const staticPages: SitemapPage[] = [
 	{ loc: '/dinasti', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/ormas', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/blog', priority: '0.9', changefreq: 'daily' },
+	{ loc: '/blog/apa-itu-santri-online', priority: '0.9', changefreq: 'monthly' },
 	{ loc: '/desain', priority: '0.9', changefreq: 'weekly' },
 	{ loc: '/desain/cetak', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/digital-store', priority: '0.7', changefreq: 'weekly' },

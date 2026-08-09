@@ -143,6 +143,17 @@
 			</div>
 		</section>
 
+		<section class="py-5" aria-labelledby="literasi-santri-title">
+			<a href="/blog/apa-itu-santri-online" class="group grid gap-5 rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-950 to-emerald-800 p-6 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg md:grid-cols-[1fr_auto] md:items-center md:p-8">
+				<div>
+					<p class="text-xs font-bold uppercase tracking-[0.18em] text-amber-300">Literasi Pilihan</p>
+					<h2 id="literasi-santri-title" class="mt-3 text-2xl font-extrabold tracking-tight md:text-4xl">Apa Itu Santri Online?</h2>
+					<p class="mt-3 max-w-3xl leading-7 text-emerald-50/85">SantriOnline adalah jembatan untuk terus mengaji dan mengikuti bimbingan ulama. Teknologi tidak menggantikan guru atau pesantren.</p>
+				</div>
+				<span class="inline-flex min-h-11 items-center justify-center rounded-full bg-amber-400 px-5 py-2.5 font-bold text-emerald-950">Baca Artikel →</span>
+			</a>
+		</section>
+
 		{#if items.length === 0}
 			<section class="py-10">
 				<div class="border border-slate-200 bg-white p-6 text-sm text-slate-500">
