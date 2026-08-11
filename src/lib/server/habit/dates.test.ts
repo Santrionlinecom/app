@@ -11,7 +11,14 @@ import {
 	isValidLocalDate,
 	weekStartMonday
 } from './dates.ts';
-import { normalizeCheckinPayload, supportCopyFor, dayStatusFor } from './service.ts';
+import {
+	canRestartStreak,
+	normalizeCheckinPayload,
+	parseCheckinBody,
+	stripSensitiveCheckinForMentor,
+	supportCopyFor,
+	dayStatusFor
+} from './service.ts';
 import type { HabitCheckin } from './types.ts';
 
 describe('habit dates', () => {
@@ -55,6 +62,21 @@ describe('habit dates', () => {
 });
 
 describe('habit normalize checkin', () => {
+	it('rejects client-supplied authority fields', () => {
+		assert.throws(
+			() =>
+				parseCheckinBody({
+					userId: 'other-user',
+					localDate: '2026-08-01',
+					rewardXp: 999,
+					missionKey: 'quran_harian',
+					mode: 'membaca',
+					durationBucket: '10-19'
+				}),
+			/diatur server/
+		);
+	});
+
 	it('marks quran met only at 10+ minutes', () => {
 		const short = normalizeCheckinPayload({
 			missionKey: 'quran_harian',
@@ -107,6 +129,13 @@ describe('habit normalize checkin', () => {
 });
 
 describe('habit ui helpers', () => {
+	it('allows restart only for a previously earned streak that is already broken', () => {
+		assert.equal(canRestartStreak(null), false);
+		assert.equal(canRestartStreak({ currentStreak: 3, bestStreak: 3 }), false);
+		assert.equal(canRestartStreak({ currentStreak: 0, bestStreak: 0 }), false);
+		assert.equal(canRestartStreak({ currentStreak: 0, bestStreak: 3 }), true);
+	});
+
 	it('maps day status and support copy', () => {
 		assert.equal(dayStatusFor(null), 'pending');
 		const partial: HabitCheckin = {
@@ -124,5 +153,25 @@ describe('habit ui helpers', () => {
 		};
 		assert.equal(dayStatusFor(partial), 'partial');
 		assert.match(supportCopyFor('quran_harian', partial), /Usahamu/);
+	});
+
+	it('keeps mentor summaries coarse and removes worship details', () => {
+		const privateCheckin: HabitCheckin = {
+			id: 'private-1',
+			userId: 'u',
+			missionKey: 'shalat_wajib',
+			localDate: '2026-07-22',
+			status: 'sebagian',
+			detail: { times: { subuh: 'belum', zuhur: 'tepat_waktu' }, keptCount: 1 },
+			durationBucket: null,
+			optionalReflection: 'Catatan pribadi',
+			isDayMet: true,
+			createdAt: 1,
+			updatedAt: 1
+		};
+		const mentorView = stripSensitiveCheckinForMentor(privateCheckin);
+		assert.equal(mentorView.status, 'tercatat');
+		assert.equal(mentorView.detail, null);
+		assert.equal(mentorView.optionalReflection, null);
 	});
 });

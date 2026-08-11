@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { ArrowRight, Medal } from 'lucide-svelte';
 	import ModulCard from '$lib/components/belajar/ModulCard.svelte';
 	import ProgressXP from '$lib/components/belajar/ProgressXP.svelte';
@@ -12,6 +11,10 @@
 		judul: string;
 		deskripsi: string | null;
 		kategori: string;
+		path_key: string;
+		path_title: string;
+		path_purpose: string;
+		path_order: number;
 		urutan: number;
 		total_soal: number;
 		soal_selesai: number;
@@ -20,6 +23,18 @@
 		xp: number;
 		locked: boolean;
 		terkunci: boolean;
+	};
+
+	type PathGroup = {
+		key: string;
+		title: string;
+		purpose: string;
+		order: number;
+		modules: ApiModule[];
+		completedModules: number;
+		totalQuestions: number;
+		solvedQuestions: number;
+		progressPercent: number;
 	};
 
 	type ApiSummary = {
@@ -37,6 +52,10 @@
 			judul: module.judul,
 			deskripsi: module.deskripsi,
 			kategori: module.kategori,
+			path_key: module.pathKey,
+			path_title: module.pathTitle,
+			path_purpose: module.pathPurpose,
+			path_order: module.pathOrder,
 			urutan: module.urutan,
 			total_soal: module.totalSoal,
 			soal_selesai: module.soalSelesai,
@@ -55,34 +74,48 @@
 		return 'Mulai Belajar';
 	};
 
+	const groupByPath = (items: ApiModule[]): PathGroup[] => {
+		const groups = new Map<string, Omit<PathGroup, 'completedModules' | 'totalQuestions' | 'solvedQuestions' | 'progressPercent'>>();
+		for (const module of items) {
+			const key = module.path_key || 'arabic_nahwu';
+			const group = groups.get(key) ?? {
+				key,
+				title: module.path_title || 'Bahasa Arab & Nahwu',
+				purpose: module.path_purpose || 'Fondasi belajar bertahap untuk santri.',
+				order: Number(module.path_order ?? 999),
+				modules: []
+			};
+			group.modules.push(module);
+			groups.set(key, group);
+		}
+
+		return Array.from(groups.values())
+			.map((group) => {
+				const totalQuestions = group.modules.reduce((total, module) => total + module.total_soal, 0);
+				const solvedQuestions = group.modules.reduce((total, module) => total + module.soal_selesai, 0);
+				const completedModules = group.modules.filter((module) => module.progress_persen >= 100).length;
+				return {
+					...group,
+					modules: [...group.modules].sort((a, b) => a.urutan - b.urutan),
+					completedModules,
+					totalQuestions,
+					solvedQuestions,
+					progressPercent: totalQuestions ? Math.round((solvedQuestions / totalQuestions) * 100) : 0
+				};
+			})
+			.sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
+	};
+
 	let modules: ApiModule[] = (data.modules ?? []).map(fromServerModule);
 	let summary: ApiSummary = {
 		xp_sekarang: data.summary.totalXp,
 		xp_target: Math.max(100, (Math.floor(data.summary.totalXp / 100) + 1) * 100),
 		streak_hari: data.summary.streakHari
 	};
-	let isLoading = false;
-	let loadError = '';
-
-	onMount(async () => {
-		isLoading = true;
-		try {
-			const response = await fetch('/api/belajar/modul');
-			const payload = await response.json();
-			if (!response.ok || !payload.ok) {
-				throw new Error(payload.error ?? 'Gagal memuat modul belajar.');
-			}
-			modules = payload.modules ?? modules;
-			summary = payload.summary ?? summary;
-		} catch (err) {
-			loadError = err instanceof Error ? err.message : 'Gagal memuat modul belajar.';
-		} finally {
-			isLoading = false;
-		}
-	});
 
 	$: completedCount = modules.filter((module) => module.progress_persen >= 100).length;
 	$: totalQuestions = modules.reduce((total, module) => total + module.total_soal, 0);
+	$: pathGroups = groupByPath(modules);
 </script>
 
 <svelte:head>
@@ -108,8 +141,9 @@
 					Belajar bertahap, tumbuh setiap hari
 				</h1>
 				<p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
-					Mulai dari pondasi Bahasa Arab dan Nahwu melalui pelajaran singkat, latihan langsung,
-					serta progres yang tersimpan. Selesaikan satu tingkat sebelum membuka tingkat berikutnya.
+					Pilih jalur pembinaan sesuai kebutuhan: aqidah, adab, fikih praktis, sirah,
+					skill masa depan, atau Bahasa Arab dan Nahwu. Progress dibuka bertahap di dalam
+					masing-masing jalur.
 				</p>
 			</div>
 
@@ -138,8 +172,8 @@
 			<p class="mt-2 text-2xl font-extrabold text-[#1B4332]">{completedCount}/{modules.length}</p>
 		</div>
 		<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-			<p class="text-sm font-semibold text-slate-500">XP per benar</p>
-			<p class="mt-2 text-2xl font-extrabold text-[#1B4332]">+10</p>
+			<p class="text-sm font-semibold text-slate-500">Jalur tersedia</p>
+			<p class="mt-2 text-2xl font-extrabold text-[#1B4332]">{pathGroups.length}</p>
 		</div>
 		<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
 			<p class="text-sm font-semibold text-slate-500">Latihan tersedia</p>
@@ -147,51 +181,78 @@
 		</div>
 	</div>
 
-	{#if loadError}
-		<p class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
-			{loadError}
-		</p>
-	{/if}
-
 	<section aria-labelledby="active-curriculum-title">
 		<div class="mb-4 flex flex-wrap items-end justify-between gap-3">
 			<div>
-				<p class="text-xs font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Jalur aktif</p>
+				<p class="text-xs font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Jalur pembinaan</p>
 				<h2 id="active-curriculum-title" class="mt-1 text-2xl font-extrabold text-[#1B4332]">
-					Bahasa Arab & Nahwu Dasar
+					Pilih jalur yang ingin dilanjutkan
 				</h2>
 			</div>
-			<p class="text-sm font-semibold text-slate-500">{modules.length} tingkat pembelajaran</p>
+			<p class="text-sm font-semibold text-slate-500">{modules.length} modul pembelajaran</p>
 		</div>
 
-		<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-		{#each modules as module}
-			<div class="space-y-3">
-				{#if module.locked}
-					<ModulCard modul={module} />
-					<button
-						type="button"
-						class="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-extrabold text-slate-500"
-						disabled
-					>
-						Terkunci
-					</button>
-				{:else}
-					<a href={`/belajar/${module.id}`} class="block">
-						<ModulCard modul={module} />
-					</a>
-					<a
-						href={`/belajar/${module.id}`}
-						class="inline-flex w-full items-center justify-center rounded-xl bg-[#1B4332] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#143527]"
-					>
-						{actionLabel(module)}
-					</a>
-				{/if}
-			</div>
-		{/each}
+		<div class="space-y-6">
+			{#each pathGroups as group}
+				<section class="space-y-4" aria-labelledby={`path-${group.key}`}>
+					<div class="rounded-xl border border-[#1B4332]/10 bg-white p-4 shadow-sm sm:p-5">
+						<div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+							<div class="min-w-0">
+								<h3 id={`path-${group.key}`} class="text-xl font-extrabold text-[#1B4332]">
+									{group.title}
+								</h3>
+								<p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{group.purpose}</p>
+							</div>
+							<div class="shrink-0 rounded-xl bg-[#FAF8F3] px-4 py-3 text-sm font-bold text-[#1B4332]">
+								{group.completedModules}/{group.modules.length} modul
+							</div>
+						</div>
+
+						<div class="mt-4">
+							<div class="flex items-center justify-between gap-3 text-xs font-bold text-slate-500">
+								<span>{group.solvedQuestions}/{group.totalQuestions} latihan</span>
+								<span>{group.progressPercent}%</span>
+							</div>
+							<div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+								<div
+									class="h-full rounded-full bg-[#C9A84C] transition-all duration-500"
+									style={`width: ${group.progressPercent}%`}
+								></div>
+							</div>
+						</div>
+					</div>
+
+					<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+						{#each group.modules as module}
+							<div class="space-y-3">
+								{#if module.locked}
+									<ModulCard modul={module} />
+									<button
+										type="button"
+										class="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-extrabold text-slate-500"
+										disabled
+									>
+										Terkunci
+									</button>
+								{:else}
+									<a href={`/belajar/${module.id}`} class="block">
+										<ModulCard modul={module} />
+									</a>
+									<a
+										href={`/belajar/${module.id}`}
+										class="inline-flex w-full items-center justify-center rounded-xl bg-[#1B4332] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#143527]"
+									>
+										{actionLabel(module)}
+									</a>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				</section>
+			{/each}
 		</div>
 
-		{#if !isLoading && modules.length === 0}
+		{#if modules.length === 0}
 			<div class="rounded-xl border border-[#C9A84C]/30 bg-[#FAF8F3] p-6 text-center">
 				<h3 class="text-lg font-extrabold text-[#1B4332]">Modul sedang disiapkan</h3>
 				<p class="mt-2 text-sm leading-6 text-slate-600">
@@ -200,21 +261,6 @@
 			</div>
 		{/if}
 	</section>
-
-	<aside class="rounded-xl border border-[#1B4332]/10 bg-[#F2F7F4] p-5 sm:p-6" aria-labelledby="next-path-title">
-		<p class="text-xs font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Roadmap kurikulum</p>
-		<h2 id="next-path-title" class="mt-1 text-xl font-extrabold text-[#1B4332]">
-			Jalur pembinaan berikutnya
-		</h2>
-		<p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-			Materi Aqidah Aswaja, adab, fikih ibadah, sirah Rasulullah ﷺ, dan keterampilan digital
-			akan dibuka bertahap agar belajar tidak berhenti pada pengetahuan, tetapi menjadi kebiasaan baik.
-		</p>
-	</aside>
-
-	{#if isLoading}
-		<p class="text-center text-sm font-semibold text-slate-500">Memuat ulang modul...</p>
-	{/if}
 </section>
 
 <style>

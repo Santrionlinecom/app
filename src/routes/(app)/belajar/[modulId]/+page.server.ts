@@ -6,7 +6,8 @@ import {
 	getLearnSummary,
 	listLearnModules,
 	listLearnQuestions,
-	requireSantriLearnContext
+	requireSantriLearnContext,
+	toPublicLearnQuestion
 } from '$lib/server/santri-learn';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -31,11 +32,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		throw redirect(302, '/belajar');
 	}
 
-	const nextModule = modules[currentIndex + 1] ?? null;
-	const publicQuestions = questions.map(
-		({ jawabanBenar: _jawabanBenar, answerKey: _answerKey, correctAnswerText: _correctAnswerText, ...question }) =>
-			question
-	);
+	const nextModule =
+		modules.slice(currentIndex + 1).find((item) => item.pathKey === modules[currentIndex]?.pathKey) ?? null;
+	const publicQuestions = questions.map(toPublicLearnQuestion);
 
 	return {
 		module: modules[currentIndex],

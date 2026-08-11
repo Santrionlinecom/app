@@ -3,7 +3,8 @@ import type { RequestHandler } from './$types';
 import {
 	listLearnModules,
 	listLearnQuestions,
-	requireSantriLearnContext
+	requireSantriLearnContext,
+	toPublicLearnQuestion
 } from '$lib/server/santri-learn';
 
 const shuffle = <T>(items: T[]) =>
@@ -31,7 +32,7 @@ export const GET: RequestHandler = async ({ locals, params, setHeaders }) => {
 		return json({ ok: false, error: 'Modul belajar masih terkunci.' }, { status: 403 });
 	}
 
-	const questions = shuffle(await listLearnQuestions(db, params.id));
+	const questions = shuffle(await listLearnQuestions(db, params.id)).map(toPublicLearnQuestion);
 
 	return json({
 		ok: true,
@@ -39,7 +40,9 @@ export const GET: RequestHandler = async ({ locals, params, setHeaders }) => {
 			id: module.id,
 			judul: module.judul,
 			deskripsi: module.deskripsi,
-			kategori: module.kategori
+			kategori: module.kategori,
+			path_key: module.pathKey,
+			path_title: module.pathTitle
 		},
 		soal: questions.map((question) => ({
 			id: question.id,

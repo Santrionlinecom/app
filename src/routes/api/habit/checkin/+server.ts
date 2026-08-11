@@ -22,15 +22,7 @@ export const POST: RequestHandler = async ({ locals, request, setHeaders }) => {
 
 	try {
 		const input = parseCheckinBody(body);
-		const localDate =
-			body && typeof body === 'object' && 'localDate' in body && typeof (body as { localDate?: unknown }).localDate === 'string'
-				? (body as { localDate: string }).localDate
-				: todayWib();
-
-		// Pilot: only allow "today" check-in from client to reduce backdating abuse.
-		if (localDate !== todayWib()) {
-			return json({ ok: false, error: 'Check-in pilot hanya untuk hari ini (WIB).' }, { status: 400 });
-		}
+		const localDate = todayWib();
 
 		const result = await upsertCheckin(locals.db, {
 			userId: locals.user.id,

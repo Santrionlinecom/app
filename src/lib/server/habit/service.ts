@@ -124,20 +124,26 @@ const isDurationBucket = (value: string): value is QuranDurationBucket =>
 const isKebaikanCategory = (value: string): value is KebaikanCategory =>
 	(KEBAIKAN_CATEGORIES as readonly string[]).includes(value);
 
-/** Strip uzur details for mentor-facing payloads (uzur stays opaque). */
+const CLIENT_AUTHORITY_FIELDS = new Set([
+	'userId',
+	'user_id',
+	'localDate',
+	'local_date',
+	'date',
+	'reward',
+	'rewardXp',
+	'reward_xp',
+	'xp',
+	'points'
+]);
+
+/** Return only a coarse completion summary; personal worship detail stays private. */
 export const stripSensitiveCheckinForMentor = (checkin: HabitCheckin): HabitCheckin => {
-	if (checkin.missionKey !== 'shalat_wajib' || !checkin.detail) return checkin;
-	const times = (checkin.detail.times ?? {}) as Record<string, string>;
-	const sanitized: Record<string, string> = {};
-	for (const [time, status] of Object.entries(times)) {
-		sanitized[time] = status === 'uzur' ? 'uzur' : status;
-	}
 	return {
 		...checkin,
-		detail: {
-			times: sanitized,
-			keptCount: checkin.detail.keptCount ?? 0
-		},
+		status: checkin.isDayMet ? 'tercatat' : 'belum',
+		detail: null,
+		durationBucket: null,
 		optionalReflection: null
 	};
 };
@@ -450,6 +456,12 @@ export async function upsertCheckin(
 	return { checkin, streak };
 }
 
+export function canRestartStreak(
+	streak: Pick<HabitStreak, 'currentStreak' | 'bestStreak'> | null
+): boolean {
+	return Boolean(streak && streak.currentStreak === 0 && streak.bestStreak > 0);
+}
+
 export async function restartStreak(
 	db: D1Database,
 	userId: string,
@@ -458,6 +470,9 @@ export async function restartStreak(
 ): Promise<HabitStreak> {
 	if (!isHabitMissionKey(missionKey)) throw error(400, 'Misi tidak valid.');
 	const existing = await getStreak(db, userId, missionKey);
+	if (!canRestartStreak(existing)) {
+		throw error(409, 'Streak hanya dapat dimulai ulang setelah terputus.');
+	}
 	await db
 		.prepare(
 			`INSERT INTO habit_streaks (user_id, mission_key, current_streak, best_streak, last_met_date, restarted_at)
@@ -574,6 +589,11 @@ export async function getHabitDailyStreakSummary(
 export function parseCheckinBody(body: unknown): CheckinInput {
 	if (!body || typeof body !== 'object') throw error(400, 'Body tidak valid.');
 	const data = body as Record<string, unknown>;
+	for (const key of Object.keys(data)) {
+		if (CLIENT_AUTHORITY_FIELDS.has(key)) {
+			throw error(400, 'user, tanggal, dan reward check-in diatur server.');
+		}
+	}
 	const missionKey = data.missionKey ?? data.mission_key;
 	if (!isHabitMissionKey(missionKey)) throw error(400, 'missionKey tidak valid untuk pilot.');
 

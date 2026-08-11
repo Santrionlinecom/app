@@ -6,6 +6,8 @@
 		judul: string;
 		deskripsi?: string | null;
 		kategori: string;
+		path_key?: string;
+		path_title?: string;
 		progress_persen: number;
 		locked?: boolean;
 		terkunci?: boolean;
@@ -19,11 +21,20 @@
 		shorof: 'ص',
 		kitab: 'ق'
 	};
+	const pathIcon: Record<string, string> = {
+		aqidah_aswaja: 'A',
+		adab: 'Ad',
+		fikih_praktis: 'F',
+		sirah: 'S',
+		skill_masa_depan: 'Sk',
+		arabic_nahwu: 'ع'
+	};
 
 	$: progress = Math.min(100, Math.max(0, Number(modul.progress_persen ?? 0)));
 	$: isLocked = Boolean(modul.locked ?? modul.terkunci);
 	$: isDone = progress >= 100;
-	$: icon = categoryIcon[modul.kategori] ?? '📖';
+	$: icon = pathIcon[modul.path_key ?? ''] ?? categoryIcon[modul.kategori] ?? '📖';
+	$: label = modul.path_title ?? modul.kategori;
 </script>
 
 <article
@@ -32,7 +43,7 @@
 >
 	<div class="flex items-start justify-between gap-3">
 		<div class="grid h-12 w-12 place-items-center rounded-xl bg-[#1B4332] text-2xl font-extrabold text-white">
-			<span class:font-arabic={modul.kategori === 'hijaiyah'}>{icon}</span>
+			<span class:font-arabic={modul.kategori === 'hijaiyah' || modul.path_key === 'arabic_nahwu'}>{icon}</span>
 		</div>
 
 		{#if isLocked}
@@ -47,7 +58,7 @@
 	</div>
 
 	<p class="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-		{modul.kategori}
+		{label}
 	</p>
 	<h2 class="mt-2 line-clamp-2 text-lg font-extrabold leading-snug text-[#1B4332]">
 		{modul.judul}

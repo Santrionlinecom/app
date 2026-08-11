@@ -15,9 +15,15 @@
 		pilihan_b: string;
 		pilihan_c: string;
 		pilihan_d: string;
-		jawaban_benar: string;
 		penjelasan: string | null;
 		urutan: number;
+	};
+
+	type QuestionFeedback = {
+		selected: string;
+		benar: boolean;
+		penjelasan: string | null;
+		jawabanTeks: string | null;
 	};
 
 	let questions: QuizQuestion[] = [];
@@ -27,9 +33,11 @@
 	let isLoading = true;
 	let isSubmitting = false;
 	let errorMessage = '';
+	let feedbackByQuestion: Record<string, QuestionFeedback> = {};
 
 	$: totalQuestions = questions.length;
 	$: currentQuestion = questions[currentIndex] ?? null;
+	$: currentFeedback = currentQuestion ? feedbackByQuestion[currentQuestion.id] ?? null : null;
 	$: isComplete = totalQuestions > 0 && currentIndex >= totalQuestions;
 	$: progressPercent = totalQuestions
 		? Math.round((Math.min(currentIndex, totalQuestions) / totalQuestions) * 100)
@@ -44,6 +52,7 @@
 			}
 			questions = payload.soal ?? [];
 			currentIndex = 0;
+			feedbackByQuestion = {};
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Gagal memuat soal.';
 		} finally {
@@ -51,8 +60,8 @@
 		}
 	});
 
-	const submitProgress = async (payload: { jawaban: string; benar: boolean }) => {
-		if (!currentQuestion) return;
+	const submitProgress = async (payload: { jawaban: string }) => {
+		if (!currentQuestion) return false;
 		isSubmitting = true;
 		errorMessage = '';
 
@@ -63,18 +72,28 @@
 				body: JSON.stringify({
 					modul_id: data.module.id,
 					soal_id: currentQuestion.id,
-					jawaban: payload.jawaban,
-					benar: payload.benar
+					jawaban: payload.jawaban
 				})
 			});
 			const result = await response.json();
 			if (!response.ok || !result.ok) {
 				throw new Error(result.error ?? 'Gagal menyimpan progress.');
 			}
+			feedbackByQuestion = {
+				...feedbackByQuestion,
+				[currentQuestion.id]: {
+					selected: payload.jawaban,
+					benar: Boolean(result.benar),
+					penjelasan: result.penjelasan ?? currentQuestion.penjelasan ?? null,
+					jawabanTeks: result.jawaban_teks ?? null
+				}
+			};
 			sessionXp += Number(result.xp_didapat ?? 0);
 			totalXp = Number(result.xp_total ?? totalXp);
+			return true;
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Gagal menyimpan progress.';
+			return false;
 		} finally {
 			isSubmitting = false;
 		}
@@ -112,7 +131,9 @@
 	</div>
 
 	<header class="rounded-xl border border-[#1B4332]/10 bg-[#FAF8F3] p-5 shadow-sm sm:p-6">
-		<p class="text-xs font-bold uppercase tracking-[0.22em] text-[#C9A84C]">SantriLearn</p>
+		<p class="text-xs font-bold uppercase tracking-[0.22em] text-[#C9A84C]">
+			{data.module.pathTitle}
+		</p>
 		<h1 class="mt-2 text-2xl font-extrabold tracking-tight text-[#1B4332] md:text-4xl">
 			{data.module.judul}
 		</h1>
@@ -164,6 +185,7 @@
 	{:else if currentQuestion}
 		<SoalQuiz
 			soal={currentQuestion}
+			feedback={currentFeedback}
 			disabled={isSubmitting}
 			onAnswered={submitProgress}
 			onNext={goNext}

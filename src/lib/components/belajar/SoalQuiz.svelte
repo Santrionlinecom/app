@@ -6,44 +6,63 @@
 		pilihan_b: string;
 		pilihan_c: string;
 		pilihan_d: string;
-		jawaban_benar: string;
-		penjelasan?: string | null;
 	};
+	export let feedback: {
+		selected: string;
+		benar: boolean;
+		penjelasan: string | null;
+		jawabanTeks: string | null;
+	} | null = null;
 	export let disabled = false;
-	export let onAnswered: (payload: { jawaban: string; benar: boolean }) => void = () => {};
+	export let onAnswered: (payload: { jawaban: string }) => Promise<boolean> = async () => false;
 	export let onNext: () => void = () => {};
 
 	const normalize = (value: string) => value.trim().toLowerCase();
 	const hasArabic = (value: string) => /[\u0600-\u06ff]/.test(value);
+	const displayKeys = ['a', 'b', 'c', 'd'];
+	let pilihan: Array<{ key: string; label: string; displayKey: string }> = [];
+	const stableOffset = (id = '') =>
+		Array.from(id).reduce((total, character) => total + character.charCodeAt(0), 0);
 
-	$: pilihan = [
-		{ key: 'a', label: soal.pilihan_a },
-		{ key: 'b', label: soal.pilihan_b },
-		{ key: 'c', label: soal.pilihan_c },
-		{ key: 'd', label: soal.pilihan_d }
-	].filter((item) => item.label);
+	$: {
+		const source = [
+			{ key: 'a', label: soal.pilihan_a },
+			{ key: 'b', label: soal.pilihan_b },
+			{ key: 'c', label: soal.pilihan_c },
+			{ key: 'd', label: soal.pilihan_d }
+		].filter((item) => item.label);
+		const offset = source.length ? stableOffset(soal.id) % source.length : 0;
+		pilihan = [...source.slice(offset), ...source.slice(0, offset)].map((item, index) => ({
+			...item,
+			displayKey: displayKeys[index]
+		}));
+	}
 
 	let selected = '';
 
 	$: if (soal?.id) {
-		selected = '';
+		selected = feedback?.selected ?? '';
 	}
 
-	const isCorrect = (key: string, label: string) => {
-		const answer = normalize(soal.jawaban_benar);
-		return answer === key || answer === normalize(label);
-	};
+	$: explanation = feedback?.penjelasan ?? null;
+	$: correctAnswerText = feedback?.jawabanTeks ?? null;
 
-	const choose = (key: string, label: string) => {
-		if (selected || disabled) return;
+	const choose = async (key: string) => {
+		if (selected || disabled || feedback) return;
 		selected = key;
-		onAnswered({ jawaban: key, benar: isCorrect(key, label) });
+		const saved = await onAnswered({ jawaban: key });
+		if (!saved) selected = '';
 	};
 
 	const optionClass = (key: string, label: string) => {
 		if (!selected) return 'border-slate-200 bg-white text-slate-800 hover:border-[#C9A84C]';
-		if (isCorrect(key, label)) return 'border-emerald-500 bg-emerald-50 text-emerald-900';
-		if (selected === key) return 'border-red-500 bg-red-50 text-red-900';
+		const isCorrectOption =
+			feedback &&
+			(correctAnswerText
+				? normalize(correctAnswerText) === normalize(label)
+				: feedback.selected === key && feedback.benar);
+		if (isCorrectOption) return 'border-emerald-500 bg-emerald-50 text-emerald-900';
+		if (feedback && selected === key && !feedback.benar) return 'border-red-500 bg-red-50 text-red-900';
 		return 'border-slate-200 bg-slate-50 text-slate-400';
 	};
 </script>
@@ -66,10 +85,10 @@
 				class:font-arabic={hasArabic(item.label)}
 				dir={hasArabic(item.label) ? 'rtl' : 'ltr'}
 				disabled={Boolean(selected) || disabled}
-				on:click={() => choose(item.key, item.label)}
+				on:click={() => choose(item.key)}
 			>
 				<span class="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs uppercase text-slate-500">
-					{item.key}
+					{item.displayKey}
 				</span>
 				{item.label}
 			</button>
@@ -78,13 +97,13 @@
 
 	{#if selected}
 		<div class="mt-5 rounded-xl border border-[#C9A84C]/30 bg-[#FAF8F3] px-4 py-3 text-sm leading-6 text-[#1B4332]">
-			<p class="font-bold">Penjelasan</p>
-			<p class="mt-1">{soal.penjelasan}</p>
+			<p class="font-bold">{feedback ? 'Penjelasan' : 'Menyimpan jawaban...'}</p>
+			<p class="mt-1">{feedback ? explanation : 'Jawaban sedang diperiksa oleh server.'}</p>
 		</div>
 		<button
 			type="button"
 			class="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-[#1B4332] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#143527] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-			disabled={disabled}
+			disabled={disabled || !feedback}
 			on:click={onNext}
 		>
 			Lanjut

@@ -7,6 +7,7 @@ import {
 } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
 import { resolveLearnLembagaId } from '$lib/server/santri-learn-scope';
+import { applyTrackLocks } from '$lib/server/santri-learn-locks';
 
 export type LearnCategory =
 	| 'hijaiyah'
@@ -22,9 +23,21 @@ export type LearnQuestionType =
 	| 'susun_kata'
 	| 'dengar_pilih';
 
+export type LearnPath = {
+	key: string;
+	title: string;
+	purpose: string;
+	sortOrder: number;
+	isActive: number;
+};
+
 export type LearnModule = {
 	id: string;
 	lembagaId: string | null;
+	pathKey: string;
+	pathTitle: string;
+	pathPurpose: string;
+	pathOrder: number;
 	judul: string;
 	deskripsi: string | null;
 	kategori: LearnCategory;
@@ -57,6 +70,22 @@ export type LearnQuestion = {
 	answerKey: 'a' | 'b' | 'c' | 'd' | null;
 	correctAnswerText: string;
 };
+
+export type PublicLearnQuestion = Omit<
+	LearnQuestion,
+	'jawabanBenar' | 'answerKey' | 'correctAnswerText' | 'penjelasan'
+>;
+
+export function toPublicLearnQuestion(question: LearnQuestion): PublicLearnQuestion {
+	const {
+		jawabanBenar: _jawabanBenar,
+		answerKey: _answerKey,
+		correctAnswerText: _correctAnswerText,
+		penjelasan: _penjelasan,
+		...publicQuestion
+	} = question;
+	return publicQuestion;
+}
 
 export type LearnSummary = {
 	totalXp: number;
@@ -117,10 +146,27 @@ const BADGE_BY_CATEGORY: Partial<
 	shorof: { tipe: 'mutasharrif', label: 'Mutasharrif' }
 };
 
+const DEFAULT_LEARN_PATH = {
+	key: 'arabic_nahwu',
+	title: 'Bahasa Arab & Nahwu',
+	purpose: 'Fondasi bahasa untuk membaca dan memahami teks Arab dasar.',
+	sortOrder: 60
+};
+
 const SANTRI_LEARN_SCHEMA_SQL = `
+CREATE TABLE IF NOT EXISTS learn_paths (
+  key TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  purpose TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER DEFAULT (CAST(strftime('%s','now') AS INTEGER)*1000)
+);
+
 CREATE TABLE IF NOT EXISTS learn_modul (
   id TEXT PRIMARY KEY,
   lembaga_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
+  path_key TEXT NOT NULL DEFAULT 'arabic_nahwu',
   judul TEXT NOT NULL,
   deskripsi TEXT,
   kategori TEXT NOT NULL CHECK(kategori IN ('hijaiyah','mufrodat','nahwu','shorof','kitab','percakapan')),
@@ -177,13 +223,28 @@ CREATE TABLE IF NOT EXISTS learn_badge (
 CREATE INDEX IF NOT EXISTS idx_learn_progress_user ON learn_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_learn_soal_modul ON learn_soal(modul_id);
 CREATE INDEX IF NOT EXISTS idx_learn_jawaban_user ON learn_jawaban(user_id);
+CREATE INDEX IF NOT EXISTS idx_learn_modul_path_order ON learn_modul(path_key, urutan);
 
-INSERT OR IGNORE INTO learn_modul (id, lembaga_id, judul, deskripsi, kategori, urutan, is_aktif)
+INSERT OR IGNORE INTO learn_paths (key, title, purpose, sort_order, is_active)
 VALUES
-  ('global-hijaiyah-01', NULL, 'Huruf Hijaiyah', 'Kenali huruf-huruf dasar sebelum membaca kata Arab.', 'hijaiyah', 1, 1),
-  ('global-mufrodat-01', NULL, 'Mufrodat Dasar', 'Latihan menghubungkan kata Arab umum dengan artinya.', 'mufrodat', 2, 1),
-  ('global-nahwu-01', NULL, 'Nahwu Dasar - Isim & Fi''il', 'Bedakan kata benda dan kata kerja dalam kalimat pendek.', 'nahwu', 3, 1),
-  ('global-shorof-01', NULL, 'Shorof Dasar - Tasrif', 'Lengkapi bentuk dasar tasrif dari pola fi''il sederhana.', 'shorof', 4, 1);
+  ('aqidah_aswaja', 'Aqidah Aswaja', 'Mengenal identitas Ahlussunnah wal Jamaah secara dasar, tenang, dan beradab.', 10, 1),
+  ('adab', 'Adab', 'Membiasakan hormat kepada orang tua, guru, teman, dan lingkungan belajar.', 20, 1),
+  ('fikih_praktis', 'Fikih Praktis', 'Memahami kebersihan, wudhu, dan persiapan shalat pada tingkat pengantar.', 30, 1),
+  ('sirah', 'Sirah', 'Mengenal perjalanan Nabi Muhammad sebagai teladan akhlak dan amanah.', 40, 1),
+  ('skill_masa_depan', 'Skill Masa Depan', 'Melatih tanggung jawab digital, keamanan akun, dan penggunaan teknologi yang bermanfaat.', 50, 1),
+  ('arabic_nahwu', 'Bahasa Arab & Nahwu', 'Fondasi bahasa untuk membaca dan memahami teks Arab dasar.', 60, 1);
+
+INSERT OR IGNORE INTO learn_modul (id, lembaga_id, path_key, judul, deskripsi, kategori, urutan, is_aktif)
+VALUES
+  ('global-hijaiyah-01', NULL, 'arabic_nahwu', 'Huruf Hijaiyah', 'Kenali huruf-huruf dasar sebelum membaca kata Arab.', 'hijaiyah', 1, 1),
+  ('global-mufrodat-01', NULL, 'arabic_nahwu', 'Mufrodat Dasar', 'Latihan menghubungkan kata Arab umum dengan artinya.', 'mufrodat', 2, 1),
+  ('global-nahwu-01', NULL, 'arabic_nahwu', 'Nahwu Dasar - Isim & Fi''il', 'Bedakan kata benda dan kata kerja dalam kalimat pendek.', 'nahwu', 3, 1),
+  ('global-shorof-01', NULL, 'arabic_nahwu', 'Shorof Dasar - Tasrif', 'Lengkapi bentuk dasar tasrif dari pola fi''il sederhana.', 'shorof', 4, 1),
+  ('learn-aqidah-aswaja-01', NULL, 'aqidah_aswaja', 'Mengenal Aswaja dengan Tenang', 'Pengantar identitas Aswaja, adab belajar aqidah, dan sikap saling menghormati.', 'kitab', 1, 1),
+  ('learn-adab-01', NULL, 'adab', 'Adab Santri Sehari-hari', 'Latihan memilih sikap beradab kepada orang tua, guru, teman, dan lingkungan.', 'kitab', 1, 1),
+  ('learn-fikih-praktis-01', NULL, 'fikih_praktis', 'Bersuci dan Siap Shalat', 'Dasar menjaga kebersihan, wudhu, dan persiapan shalat harian.', 'kitab', 1, 1),
+  ('learn-sirah-01', NULL, 'sirah', 'Sirah Nabi sebagai Teladan', 'Mengenal tempat, peristiwa besar, dan akhlak Nabi Muhammad secara pengantar.', 'kitab', 1, 1),
+  ('learn-skill-masa-depan-01', NULL, 'skill_masa_depan', 'Tanggung Jawab Digital', 'Dasar menjaga akun, memeriksa informasi, dan memakai teknologi untuk kebaikan.', 'percakapan', 1, 1);
 
 INSERT OR IGNORE INTO learn_soal (id, modul_id, tipe, pertanyaan, pilihan, jawaban_benar, urutan)
 VALUES
@@ -207,6 +268,27 @@ VALUES
   ('shorof-03-dharaba', 'global-shorof-01', 'isi_titik', 'Lengkapi mudhari dari ضَرَبَ: ____', NULL, 'يَضْرِبُ', 3),
   ('shorof-04-fatha', 'global-shorof-01', 'isi_titik', 'Lengkapi masdar dari فَتَحَ: ____', NULL, 'فَتْحٌ', 4),
   ('shorof-05-ilm', 'global-shorof-01', 'isi_titik', 'Lengkapi masdar dari عَلِمَ: ____', NULL, 'عِلْمٌ', 5);
+
+INSERT OR IGNORE INTO learn_soal (
+  id, modul_id, tipe, pertanyaan, pilihan, pilihan_a, pilihan_b, pilihan_c, pilihan_d,
+  jawaban_benar, penjelasan, urutan
+)
+VALUES
+  ('learn-aqidah-aswaja-01-q01', 'learn-aqidah-aswaja-01', 'pilihan_ganda', 'Aswaja adalah singkatan dari?', '["Ahlussunnah wal Jamaah","Nama kota","Jenis kitab","Nama bulan"]', 'Ahlussunnah wal Jamaah', 'Nama kota', 'Jenis kitab', 'Nama bulan', 'a', 'Aswaja merujuk pada Ahlussunnah wal Jamaah, identitas umum umat yang mengikuti tuntunan Nabi dan jamaah ulama.', 1),
+  ('learn-aqidah-aswaja-01-q02', 'learn-aqidah-aswaja-01', 'pilihan_ganda', 'Sikap terbaik saat belajar aqidah adalah?', '["Belajar dengan guru dan adab","Mengejek yang belum paham","Memutuskan sendiri tanpa ilmu","Memburu debat"]', 'Belajar dengan guru dan adab', 'Mengejek yang belum paham', 'Memutuskan sendiri tanpa ilmu', 'Memburu debat', 'a', 'Aqidah dipelajari dengan bimbingan guru, bahasa yang tenang, dan adab agar hati tetap jernih.', 2),
+  ('learn-aqidah-aswaja-01-q03', 'learn-aqidah-aswaja-01', 'pilihan_ganda', 'Yang termasuk bekal dasar seorang santri Aswaja adalah?', '["Iman, ibadah, akhlak, dan cinta ilmu","Merasa paling benar sendiri","Menjauhi nasihat guru","Menyebar celaan"]', 'Iman, ibadah, akhlak, dan cinta ilmu', 'Merasa paling benar sendiri', 'Menjauhi nasihat guru', 'Menyebar celaan', 'a', 'Pengantar Aswaja di sini menekankan iman, ibadah, akhlak, dan cinta ilmu tanpa membuka perdebatan rinci.', 3),
+  ('learn-adab-01-q01', 'learn-adab-01', 'pilihan_ganda', 'Saat guru menjelaskan, adab yang tepat adalah?', '["Mendengarkan dan tidak memotong","Berbicara keras sendiri","Menertawakan teman","Meninggalkan majelis tanpa sebab"]', 'Mendengarkan dan tidak memotong', 'Berbicara keras sendiri', 'Menertawakan teman', 'Meninggalkan majelis tanpa sebab', 'a', 'Mendengarkan guru membantu ilmu masuk dan menunjukkan hormat kepada orang yang mengajar.', 1),
+  ('learn-adab-01-q02', 'learn-adab-01', 'pilihan_ganda', 'Jika berbeda pendapat dengan teman, pilih sikap yang paling beradab.', '["Bicara baik dan mencari penjelasan","Mengejek di depan orang lain","Menyebar aibnya","Memaksa semua setuju"]', 'Bicara baik dan mencari penjelasan', 'Mengejek di depan orang lain', 'Menyebar aibnya', 'Memaksa semua setuju', 'a', 'Perbedaan dibahas dengan bahasa baik, tabayyun, dan bimbingan guru bila perlu.', 2),
+  ('learn-adab-01-q03', 'learn-adab-01', 'pilihan_ganda', 'Contoh adab kepada orang tua adalah?', '["Menjawab lembut dan membantu sesuai mampu","Membentak saat diminta tolong","Mengabaikan nasihat baik","Berbohong agar bebas tugas"]', 'Menjawab lembut dan membantu sesuai mampu', 'Membentak saat diminta tolong', 'Mengabaikan nasihat baik', 'Berbohong agar bebas tugas', 'a', 'Adab kepada orang tua dimulai dari tutur kata lembut, jujur, dan membantu sesuai kemampuan.', 3),
+  ('learn-fikih-praktis-01-q01', 'learn-fikih-praktis-01', 'pilihan_ganda', 'Sebelum shalat, hal dasar yang perlu dijaga adalah?', '["Bersuci dan memastikan waktu shalat","Memilih tempat paling ramai","Membawa banyak barang","Membaca pesan dulu"]', 'Bersuci dan memastikan waktu shalat', 'Memilih tempat paling ramai', 'Membawa banyak barang', 'Membaca pesan dulu', 'a', 'Pada tingkat dasar, santri diingatkan untuk bersuci dan memperhatikan waktu sebelum shalat.', 1),
+  ('learn-fikih-praktis-01-q02', 'learn-fikih-praktis-01', 'pilihan_ganda', 'Wudhu dilakukan untuk?', '["Bersuci sebelum ibadah tertentu","Mengganti semua mandi","Agar pakaian baru","Supaya tidak perlu shalat"]', 'Bersuci sebelum ibadah tertentu', 'Mengganti semua mandi', 'Agar pakaian baru', 'Supaya tidak perlu shalat', 'a', 'Wudhu adalah cara bersuci yang diajarkan sebelum ibadah tertentu seperti shalat.', 2),
+  ('learn-fikih-praktis-01-q03', 'learn-fikih-praktis-01', 'pilihan_ganda', 'Jika belum paham tata cara ibadah, sikap terbaik adalah?', '["Bertanya kepada guru atau orang tua","Menebak-nebak sendiri","Mengejek teman","Berhenti belajar"]', 'Bertanya kepada guru atau orang tua', 'Menebak-nebak sendiri', 'Mengejek teman', 'Berhenti belajar', 'a', 'Masalah ibadah dipelajari bertahap dengan bertanya kepada guru atau orang tua yang membimbing.', 3),
+  ('learn-sirah-01-q01', 'learn-sirah-01', 'pilihan_ganda', 'Nabi Muhammad lahir di kota?', '["Makkah","Madinah","Damaskus","Baghdad"]', 'Makkah', 'Madinah', 'Damaskus', 'Baghdad', 'a', 'Secara umum sirah mengenalkan bahwa Nabi Muhammad lahir di Makkah.', 1),
+  ('learn-sirah-01-q02', 'learn-sirah-01', 'pilihan_ganda', 'Sifat Nabi yang patut diteladani santri adalah?', '["Jujur dan amanah","Suka berdusta","Kasar kepada keluarga","Meremehkan ilmu"]', 'Jujur dan amanah', 'Suka berdusta', 'Kasar kepada keluarga', 'Meremehkan ilmu', 'a', 'Nabi dikenal dengan kejujuran dan amanah, dua sifat ini menjadi latihan akhlak harian.', 2),
+  ('learn-sirah-01-q03', 'learn-sirah-01', 'pilihan_ganda', 'Hijrah Nabi yang masyhur adalah dari Makkah menuju?', '["Madinah","Yaman","Mesir","Syam"]', 'Madinah', 'Yaman', 'Mesir', 'Syam', 'a', 'Peristiwa hijrah yang masyhur adalah perjalanan Nabi dan kaum muslimin dari Makkah ke Madinah.', 3),
+  ('learn-skill-masa-depan-01-q01', 'learn-skill-masa-depan-01', 'pilihan_ganda', 'Saat mendapat kabar mengejutkan di grup, langkah bertanggung jawab adalah?', '["Cek sumber sebelum membagikan","Langsung sebarkan","Tambahkan judul menakutkan","Hapus nama pengirim"]', 'Cek sumber sebelum membagikan', 'Langsung sebarkan', 'Tambahkan judul menakutkan', 'Hapus nama pengirim', 'a', 'Tanggung jawab digital dimulai dari tabayyun: memeriksa sumber sebelum ikut menyebarkan kabar.', 1),
+  ('learn-skill-masa-depan-01-q02', 'learn-skill-masa-depan-01', 'pilihan_ganda', 'Password akun pribadi sebaiknya?', '["Kuat dan tidak dibagikan","Sama dengan nama panggilan","Dikirim ke semua teman","Ditulis di komentar umum"]', 'Kuat dan tidak dibagikan', 'Sama dengan nama panggilan', 'Dikirim ke semua teman', 'Ditulis di komentar umum', 'a', 'Menjaga password adalah bagian dari amanah terhadap data pribadi dan keamanan akun.', 2),
+  ('learn-skill-masa-depan-01-q03', 'learn-skill-masa-depan-01', 'pilihan_ganda', 'Penggunaan gawai yang baik membantu santri untuk?', '["Belajar, berkarya, dan menjaga kewajiban","Lupa waktu shalat","Menghina orang lain","Mengabaikan keluarga"]', 'Belajar, berkarya, dan menjaga kewajiban', 'Lupa waktu shalat', 'Menghina orang lain', 'Mengabaikan keluarga', 'a', 'Teknologi dipakai sebagai alat manfaat: belajar, berkarya, dan tetap menjaga kewajiban serta adab.', 3);
 `;
 
 const readInt = (value: unknown, fallback = 0) => {
@@ -249,6 +331,10 @@ const optionByKey = (question: Pick<LearnQuestion, 'pilihanA' | 'pilihanB' | 'pi
 const mapModule = (row: LearnModuleRow): LearnModule => ({
 	id: row.id,
 	lembagaId: row.lembagaId ?? null,
+	pathKey: row.pathKey ?? DEFAULT_LEARN_PATH.key,
+	pathTitle: row.pathTitle ?? DEFAULT_LEARN_PATH.title,
+	pathPurpose: row.pathPurpose ?? DEFAULT_LEARN_PATH.purpose,
+	pathOrder: readInt(row.pathOrder, DEFAULT_LEARN_PATH.sortOrder),
 	judul: row.judul,
 	deskripsi: row.deskripsi ?? null,
 	kategori: row.kategori,
@@ -348,14 +434,26 @@ const nextStreak = (previousLastBelajar: number | null, previousStreak: number, 
 	return 1;
 };
 
-const withLocks = (modules: LearnModule[]) =>
-	modules.map((module, index) => ({
-		...module,
-		locked: index > 0 && modules[index - 1]?.status !== 'selesai'
-	}));
+const withLocks = (modules: LearnModule[]) => applyTrackLocks(modules);
+
+const isMissingLearnPathMetadataError = (err: unknown) => {
+	const message = `${(err as Error)?.message ?? err}`.toLowerCase();
+	return message.includes('no such column: m.path_key') || message.includes('no such table: learn_paths');
+};
+
+const runSqlStatements = async (db: D1Database, sql: string) => {
+	const statements = sql
+		.split(';')
+		.map((statement) => statement.trim())
+		.filter(Boolean);
+
+	for (const statement of statements) {
+		await db.prepare(statement).run();
+	}
+};
 
 export const ensureSantriLearnSchema = async (db: D1Database) => {
-	await db.exec(SANTRI_LEARN_SCHEMA_SQL);
+	await runSqlStatements(db, SANTRI_LEARN_SCHEMA_SQL);
 };
 
 export const requireSantriLearnContext = async (locals: App.Locals): Promise<LearnContext> => {
@@ -383,11 +481,49 @@ export const listLearnModules = async (
 	lembagaId: string | null,
 	userId: string
 ): Promise<LearnModule[]> => {
+	const pathAwareSql = `SELECT
+			m.id,
+			m.lembaga_id AS lembagaId,
+			COALESCE(NULLIF(m.path_key, ''), '${DEFAULT_LEARN_PATH.key}') AS pathKey,
+			COALESCE(lp.title, '${DEFAULT_LEARN_PATH.title}') AS pathTitle,
+			COALESCE(lp.purpose, '${DEFAULT_LEARN_PATH.purpose}') AS pathPurpose,
+			COALESCE(lp.sort_order, ${DEFAULT_LEARN_PATH.sortOrder}) AS pathOrder,
+			m.judul,
+			m.deskripsi,
+			m.kategori,
+			m.urutan,
+			m.is_aktif AS isAktif,
+			COUNT(s.id) AS totalSoal,
+			COALESCE(p.soal_selesai, 0) AS soalSelesai,
+			COALESCE(p.xp, 0) AS xp,
+			COALESCE(p.streak_hari, 0) AS streakHari,
+			p.last_belajar AS lastBelajar,
+			COALESCE(p.status, 'belum') AS status
+		 FROM learn_modul m
+		 LEFT JOIN learn_paths lp ON lp.key = COALESCE(NULLIF(m.path_key, ''), '${DEFAULT_LEARN_PATH.key}')
+		 LEFT JOIN learn_soal s ON s.modul_id = m.id
+		 LEFT JOIN learn_progress p ON p.user_id = ? AND p.modul_id = m.id
+		 WHERE (m.lembaga_id IS NULL OR m.lembaga_id = ?)
+		   AND COALESCE(m.is_aktif, 1) = 1
+		 GROUP BY m.id
+		 ORDER BY pathOrder ASC, m.urutan ASC, m.created_at ASC`;
+
+	try {
+		const { results } = await db.prepare(pathAwareSql).bind(userId, lembagaId).all<LearnModuleRow>();
+		return withLocks((results ?? []).map(mapModule));
+	} catch (err) {
+		if (!isMissingLearnPathMetadataError(err)) throw err;
+	}
+
 	const { results } = await db
 		.prepare(
 			`SELECT
 				m.id,
 				m.lembaga_id AS lembagaId,
+				'${DEFAULT_LEARN_PATH.key}' AS pathKey,
+				'${DEFAULT_LEARN_PATH.title}' AS pathTitle,
+				'${DEFAULT_LEARN_PATH.purpose}' AS pathPurpose,
+				${DEFAULT_LEARN_PATH.sortOrder} AS pathOrder,
 				m.judul,
 				m.deskripsi,
 				m.kategori,
@@ -476,11 +612,49 @@ export const getLearnModule = async (
 	modulId: string,
 	userId: string
 ) => {
+	const pathAwareSql = `SELECT
+			m.id,
+			m.lembaga_id AS lembagaId,
+			COALESCE(NULLIF(m.path_key, ''), '${DEFAULT_LEARN_PATH.key}') AS pathKey,
+			COALESCE(lp.title, '${DEFAULT_LEARN_PATH.title}') AS pathTitle,
+			COALESCE(lp.purpose, '${DEFAULT_LEARN_PATH.purpose}') AS pathPurpose,
+			COALESCE(lp.sort_order, ${DEFAULT_LEARN_PATH.sortOrder}) AS pathOrder,
+			m.judul,
+			m.deskripsi,
+			m.kategori,
+			m.urutan,
+			m.is_aktif AS isAktif,
+			COUNT(s.id) AS totalSoal,
+			COALESCE(p.soal_selesai, 0) AS soalSelesai,
+			COALESCE(p.xp, 0) AS xp,
+			COALESCE(p.streak_hari, 0) AS streakHari,
+			p.last_belajar AS lastBelajar,
+			COALESCE(p.status, 'belum') AS status
+		 FROM learn_modul m
+		 LEFT JOIN learn_paths lp ON lp.key = COALESCE(NULLIF(m.path_key, ''), '${DEFAULT_LEARN_PATH.key}')
+		 LEFT JOIN learn_soal s ON s.modul_id = m.id
+		 LEFT JOIN learn_progress p ON p.user_id = ? AND p.modul_id = m.id
+		 WHERE m.id = ?
+		   AND (m.lembaga_id IS NULL OR m.lembaga_id = ?)
+		   AND COALESCE(m.is_aktif, 1) = 1
+		 GROUP BY m.id`;
+
+	try {
+		const row = await db.prepare(pathAwareSql).bind(userId, modulId, lembagaId).first<LearnModuleRow>();
+		return row ? mapModule(row) : null;
+	} catch (err) {
+		if (!isMissingLearnPathMetadataError(err)) throw err;
+	}
+
 	const row = await db
 		.prepare(
 			`SELECT
 				m.id,
 				m.lembaga_id AS lembagaId,
+				'${DEFAULT_LEARN_PATH.key}' AS pathKey,
+				'${DEFAULT_LEARN_PATH.title}' AS pathTitle,
+				'${DEFAULT_LEARN_PATH.purpose}' AS pathPurpose,
+				${DEFAULT_LEARN_PATH.sortOrder} AS pathOrder,
 				m.judul,
 				m.deskripsi,
 				m.kategori,
@@ -900,7 +1074,6 @@ export const saveLearnProgressAnswer = async (
 		status,
 		modul_selesai: modulSelesai,
 		penjelasan: question.penjelasan ?? null,
-		jawaban_benar: question.jawabanBenar,
 		jawaban_teks: resolveQuestionAnswer(question).correctAnswerText
 	};
 };
