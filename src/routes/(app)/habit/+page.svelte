@@ -94,6 +94,13 @@
 		{ value: 'belum', label: 'Belum' },
 		{ value: 'uzur', label: 'Uzur' }
 	];
+	const statusLabel = (value?: string) =>
+		prayerStatuses.find((status) => status.value === value)?.label ?? 'Belum diisi';
+	const shouldOpenPrayerTime = (key: string, index: number) => {
+		if (shalatTimes[key]) return false;
+		const firstIncompleteIndex = prayerTimes.findIndex((time) => !shalatTimes[time.key]);
+		return firstIncompleteIndex === index;
+	};
 	const quranModes = [
 		{ value: 'membaca', label: 'Membaca' },
 		{ value: 'menyimak', label: 'Menyimak' },
@@ -296,12 +303,23 @@
 									<p class="text-xs leading-5 text-slate-500">
 										Uzur cukup dipilih tanpa rincian. Ini catatan privat, bukan penilaian publik.
 									</p>
-									{#each prayerTimes as time}
-										<div class="space-y-2 rounded-xl border border-slate-100 p-3">
-											<p class="text-sm font-bold text-slate-700">{time.label}</p>
-											<div class="grid gap-2 sm:grid-cols-4">
+									{#each prayerTimes as time, index}
+										<details
+											class="prayer-time-accordion group overflow-hidden rounded-xl border border-slate-200 bg-white open:border-emerald-200 open:bg-emerald-50/30"
+											open={shouldOpenPrayerTime(time.key, index)}
+										>
+											<summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-emerald-600">
+												<span class="text-sm font-bold text-slate-700">{time.label}</span>
+												<span class="flex items-center gap-2">
+													<span class={`rounded-full px-2 py-1 text-[11px] font-semibold ${shalatTimes[time.key] ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}`}>
+														{statusLabel(shalatTimes[time.key])}
+													</span>
+													<span aria-hidden="true" class="text-slate-400 transition-transform group-open:rotate-180">⌄</span>
+												</span>
+											</summary>
+											<div class="grid gap-2 border-t border-slate-100 p-3 sm:grid-cols-4">
 												{#each prayerStatuses as status}
-													<label class="flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700">
+													<label class={`flex min-h-11 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold ${shalatTimes[time.key] === status.value ? 'border-emerald-400 bg-emerald-50 text-emerald-900' : 'border-slate-200 bg-white text-slate-700'}`}>
 														<input
 															type="radio"
 															name={`shalat-${time.key}`}
@@ -314,7 +332,7 @@
 													</label>
 												{/each}
 											</div>
-										</div>
+										</details>
 									{/each}
 								</fieldset>
 								<label class="block text-sm font-semibold text-slate-700">
