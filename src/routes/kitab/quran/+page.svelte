@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { onMount, tick } from 'svelte';
+	import { buildQuranVerseShareText } from '$lib/quran-share';
 	import { SURAH_DATA } from '$lib/surah-data';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import BookmarkCheck from '@lucide/svelte/icons/bookmark-check';
@@ -451,6 +452,8 @@
 	let insightsLoading = false;
 	let insightsError = '';
 	let selectedVerseKey = '';
+	let copiedVerseKey = '';
+	let copyVerseErrorKey = '';
 	let selectedTafsirSource: TafsirSourceKey = 'jalalain';
 	let tafsirIndonesiaCache: Record<string, TafsirIndonesiaResponse> = {};
 	let tafsirIndonesiaLoadingKey = '';
@@ -672,6 +675,29 @@
 
 	const verseSharePath = (verse: Verse | { surahNumber: number; ayahNumber: number }) =>
 		`/kitab/quran/${verse.surahNumber}/${verse.ayahNumber}`;
+
+	const copyVerseForSharing = async (verse: Verse, translation?: string) => {
+		const url = new URL(verseSharePath(verse), window.location.origin).toString();
+		const shareText = buildQuranVerseShareText({
+			surahName: surahName(verse.surahNumber),
+			ayahNumber: verse.ayahNumber,
+			arabic: verse.text,
+			translation,
+			url
+		});
+
+		try {
+			await navigator.clipboard.writeText(shareText);
+			copiedVerseKey = verse.verse_key;
+			copyVerseErrorKey = '';
+			window.setTimeout(() => {
+				if (copiedVerseKey === verse.verse_key) copiedVerseKey = '';
+			}, 2500);
+		} catch {
+			copiedVerseKey = '';
+			copyVerseErrorKey = verse.verse_key;
+		}
+	};
 
 	const loginHrefForVerse = (verse: Verse | { surahNumber: number; ayahNumber: number } | null | undefined) =>
 		`/auth?redirect=${encodeURIComponent(verse ? verseSharePath(verse) : '/kitab/quran')}`;
@@ -1944,10 +1970,18 @@
 												<BookOpenText class="h-4 w-4" />
 												Tafsir & Asbab
 											</button>
-											<a class="btn btn-sm btn-outline" href={verseSharePath(verse)}>
+											<button
+												type="button"
+												class={`btn btn-sm ${copiedVerseKey === verse.verse_key ? 'btn-success' : 'btn-outline'}`}
+												on:click={() => copyVerseForSharing(verse, insight?.translation)}
+												aria-label={`Salin Surah ${surahName(verse.surahNumber)} ayat ${verse.ayahNumber} beserta tautannya`}
+											>
 												<LinkIcon class="h-4 w-4" />
-												Link ayat
-											</a>
+												{copiedVerseKey === verse.verse_key ? 'Tersalin — siap ke WA' : 'Salin ayat + link'}
+											</button>
+											{#if copyVerseErrorKey === verse.verse_key}
+												<span class="text-xs text-error">Tidak dapat menyalin. Izinkan akses clipboard lalu coba lagi.</span>
+											{/if}
 											{#if selectedVerseKey === verse.verse_key}
 												{#if isLoggedIn}
 													<button
