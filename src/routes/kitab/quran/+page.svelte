@@ -4,8 +4,15 @@
 	import { SURAH_DATA } from '$lib/surah-data';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import BookmarkCheck from '@lucide/svelte/icons/bookmark-check';
+	import BookOpen from '@lucide/svelte/icons/book-open';
 	import BookOpenText from '@lucide/svelte/icons/book-open-text';
 	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
+	import Headphones from '@lucide/svelte/icons/headphones';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import Languages from '@lucide/svelte/icons/languages';
 	import LinkIcon from '@lucide/svelte/icons/link';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import Search from '@lucide/svelte/icons/search';
@@ -425,6 +432,11 @@
 
 	let activeTab: 'mushaf' | 'sejarah' = 'mushaf';
 	let viewMode: 'lembaran' | 'teks' = 'lembaran';
+	let readingMode: 'baca' | 'arab' = 'baca';
+	let hafalanMode = false;
+	let hafalanArabicRevealed = false;
+	let hafalanTranslationRevealed = false;
+	let viewBeforeHafalan: 'lembaran' | 'teks' = 'lembaran';
 	let isLoggedIn = false;
 	let filterPanelOpen = false;
 	let infoPanelOpen = false;
@@ -898,6 +910,7 @@
 	};
 
 	const selectVerse = (verse: Verse) => {
+		if (hafalanMode && selectedVerseKey !== verse.verse_key) resetHafalanReveals();
 		selectedVerseKey = verse.verse_key;
 		syncNavigationFromVerse(verse);
 	};
@@ -1035,6 +1048,11 @@
 		} else {
 			destroyFlipbook();
 		}
+	};
+
+	const handleReadingMode = (mode: 'baca' | 'arab') => {
+		readingMode = mode;
+		if (viewMode !== 'teks') handleViewChange('teks');
 	};
 
 	const loadAsbabForVerse = async (verse: Verse | null | undefined) => {
@@ -1336,6 +1354,40 @@
 		void openVerseReference(nextSurah, nextAyah);
 	};
 
+	const resetHafalanReveals = () => {
+		hafalanArabicRevealed = false;
+		hafalanTranslationRevealed = false;
+	};
+
+	const enterHafalanMode = async () => {
+		viewBeforeHafalan = viewMode;
+		hafalanMode = true;
+		resetHafalanReveals();
+		if (viewMode !== 'teks') {
+			viewMode = 'teks';
+			destroyFlipbook();
+		}
+		const verse = selectedVerse ?? verses[0];
+		if (verse) selectVerse(verse);
+		await tick();
+		document.getElementById('hafalan-practice-card')?.focus();
+	};
+
+	const leaveHafalanMode = async () => {
+		hafalanMode = false;
+		viewMode = viewBeforeHafalan;
+		resetHafalanReveals();
+		if (viewMode === 'lembaran') {
+			await tick();
+			await initFlipbook();
+		}
+	};
+
+	const navigateHafalanVerse = (step: -1 | 1) => {
+		resetHafalanReveals();
+		navigateRelativeVerse(step);
+	};
+
 	const flipPrev = () => {
 		flipInstance?.flipPrev();
 	};
@@ -1476,13 +1528,12 @@
 	<title>Mushaf Utsmani - Santri Online</title>
 </svelte:head>
 
-<section class="max-w-7xl mx-auto py-10 space-y-6">
-	<header class="space-y-3 text-center">
-		<p class="text-sm uppercase tracking-[0.3em] text-emerald-500">Mushaf Utsmani</p>
-		<h1 class="text-3xl md:text-4xl font-bold text-slate-900">Baca Al-Qur'an 30 Juz</h1>
-		<p class="text-slate-600">
-			Tampilan lembaran mushaf yang mirip kitab asli, dengan opsi teks untuk pencarian cepat.
-		</p>
+<section class="quran-workspace max-w-7xl mx-auto space-y-5 py-5 md:py-8">
+	<header class="quran-hero overflow-hidden rounded-3xl border border-emerald-900/10 p-5 text-white shadow-sm md:p-8">
+		<div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+			<div class="max-w-2xl"><p class="text-xs font-bold uppercase tracking-[0.28em] text-amber-300">SantriOnline · Al-Qur'an</p><h1 class="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Ruang tilawah yang tenang dan terarah</h1><p class="mt-3 max-w-xl text-sm leading-6 text-emerald-50/85 md:text-base">Baca ayat, pahami terjemah dan tafsir yang tersedia, lalu lanjutkan dari bacaan terakhir.</p></div>
+			<div class="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm backdrop-blur"><p class="font-semibold">Juz {selectedJuzNumber} · {surahName(Number(selectedSurah))} {selectedAyah}</p><p class="mt-1 text-xs text-emerald-50/75">Data ayat per juz; bukan replika tata letak Mushaf Madinah 604 halaman.</p></div>
+		</div>
 	</header>
 
 	<div class="tabs tabs-boxed justify-center">
@@ -1495,7 +1546,79 @@
 	</div>
 
 	{#if activeTab === 'mushaf'}
-		<div class="rounded-2xl border bg-base-100 p-4 md:p-6 shadow-sm space-y-4">
+		<div class="reader-command sticky top-16 z-20 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg shadow-slate-900/5 backdrop-blur md:p-4">
+			<div class="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Pilihan tampilan bacaan">
+				<button type="button" class:active={readingMode === 'baca'} class="mode-button" aria-pressed={readingMode === 'baca'} on:click={() => handleReadingMode('baca')}><BookOpen class="h-4 w-4" /> Baca & terjemah</button>
+				<button type="button" class:active={readingMode === 'arab'} class="mode-button" aria-pressed={readingMode === 'arab'} on:click={() => handleReadingMode('arab')}><Languages class="h-4 w-4" /> Arab saja</button>
+				<button type="button" class:active={hafalanMode} class="mode-button" aria-pressed={hafalanMode} on:click={() => (hafalanMode ? leaveHafalanMode() : enterHafalanMode())}><EyeOff class="h-4 w-4" /> Hafalan</button>
+				<span class="mode-unavailable" role="note">Tajwid <small>belum tersedia</small><span class="sr-only">Pewarnaan tajwid per huruf belum tersedia.</span></span>
+				<span class="mode-unavailable" role="note"><Headphones class="h-4 w-4" /> Murottal <small>belum tersedia</small><span class="sr-only">Audio murottal belum tersedia pada sumber saat ini.</span></span>
+			</div>
+			<div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[110px_minmax(0,1fr)] md:grid-cols-[130px_minmax(180px,1fr)_110px_auto]"><select aria-label="Pilih juz" class="select select-bordered select-sm" bind:value={selectedJuz} on:change={handleJuzChange}>{#each JUZ_RANGES as range}<option value={String(range.juz)}>Juz {range.juz}</option>{/each}</select><select aria-label="Pilih surah" class="select select-bordered select-sm" bind:value={selectedSurah} on:change={handleSurahChange}>{#each SURAH_DATA as surah}<option value={String(surah.number)}>{surah.number}. {surah.name}</option>{/each}</select><input aria-label="Nomor ayat" class="input input-bordered input-sm" type="number" min="1" max={selectedSurahMeta.totalAyah} bind:value={selectedAyah} on:change={handleSurahChange} /><button class="btn btn-primary btn-sm sm:col-span-2 md:col-span-1" on:click={openSelectedAyah} disabled={loading}>Buka ayat</button></div>
+		</div>
+
+		{#if hafalanMode}
+			<section class="hafalan-shell" aria-labelledby="hafalan-heading">
+				<div class="hafalan-heading-row">
+					<div>
+						<p class="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Latihan ingatan aktif</p>
+						<h2 id="hafalan-heading" class="mt-1 text-xl font-bold text-slate-950 sm:text-2xl">Hafalan satu ayat</h2>
+						<p class="mt-1 text-sm leading-6 text-slate-600">Baca rujukan, lafalkan dari ingatan, lalu buka Arab dan arti secara terpisah untuk memeriksa.</p>
+					</div>
+					<button type="button" class="btn btn-sm btn-outline" on:click={leaveHafalanMode}>Keluar Hafalan</button>
+				</div>
+
+				{#if selectedVerse}
+					{@const hafalanInsight = insightFor(selectedVerse)}
+					<div id="hafalan-practice-card" class="hafalan-card" tabindex="-1" aria-live="polite">
+						<div class="flex flex-wrap items-center justify-between gap-2">
+							<p class="font-semibold text-slate-900">{surahName(selectedVerse.surahNumber)} • Ayat {selectedVerse.ayahNumber}</p>
+							<span class={`badge ${selectedVerseMemorized ? 'badge-success' : 'badge-outline'}`}>
+								{selectedVerseMemorized ? 'Sudah tercatat hafal' : 'Belum tercatat hafal'}
+							</span>
+						</div>
+
+						<div class="hafalan-recall" aria-label="Area latihan hafalan">
+							{#if hafalanArabicRevealed}
+								<p class="arabic-text w-full max-w-full break-words">{selectedVerse.text}</p>
+							{:else}
+								<p class="text-center text-sm font-medium leading-7 text-slate-500">Teks Arab disembunyikan. Lafalkan ayat ini dari ingatan sebelum membuka jawaban.</p>
+							{/if}
+						</div>
+
+						<div class="grid gap-2 sm:grid-cols-2">
+							<button type="button" class="btn btn-outline min-h-11" aria-pressed={hafalanArabicRevealed} on:click={() => (hafalanArabicRevealed = !hafalanArabicRevealed)}>
+								{#if hafalanArabicRevealed}<EyeOff class="h-4 w-4" /> Sembunyikan Arab{:else}<Eye class="h-4 w-4" /> Tampilkan Arab{/if}
+							</button>
+							<button type="button" class="btn btn-outline min-h-11" aria-pressed={hafalanTranslationRevealed} on:click={() => (hafalanTranslationRevealed = !hafalanTranslationRevealed)} disabled={!hafalanInsight?.translation}>
+								{#if hafalanTranslationRevealed}<EyeOff class="h-4 w-4" /> Sembunyikan arti{:else}<Eye class="h-4 w-4" /> {hafalanInsight?.translation ? 'Tampilkan arti' : 'Arti belum tersedia'}{/if}
+							</button>
+						</div>
+
+						{#if hafalanTranslationRevealed && hafalanInsight?.translation}
+							<div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-slate-700">{hafalanInsight.translation}</div>
+						{/if}
+
+						{#if !isLoggedIn}
+							<div class="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm leading-6 text-sky-950">
+								<p>Mode latihan dapat dipakai tanpa akun. Masuk diperlukan agar status hafalan dan progres bacaan tersimpan di akun.</p>
+								<a class="btn btn-sm btn-primary mt-3" href={loginHrefForVerse(selectedVerse)}>Masuk / Daftar</a>
+							</div>
+						{:else}
+							<p class="text-xs leading-5 text-slate-500">Status di atas berasal dari progres hafalan tervalidasi akun. Ayat aktif disimpan melalui progres bacaan yang sudah tersedia.</p>
+						{/if}
+
+						<nav class="hafalan-nav" aria-label="Navigasi latihan ayat">
+							<button type="button" class="btn btn-outline min-h-12" on:click={() => navigateHafalanVerse(-1)} disabled={selectedVerse.surahNumber === 1 && selectedVerse.ayahNumber === 1 || loading} aria-label="Latihan ayat sebelumnya"><ChevronLeft class="h-5 w-5" /> Ayat sebelumnya</button>
+							<button type="button" class="btn btn-primary min-h-12" on:click={() => navigateHafalanVerse(1)} disabled={selectedVerse.surahNumber === 114 && selectedVerse.ayahNumber === selectedSurahMeta.totalAyah || loading} aria-label="Latihan ayat berikutnya">Ayat berikutnya <ChevronRight class="h-5 w-5" /></button>
+						</nav>
+					</div>
+				{:else}
+					<p class="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600">Ayat sedang dimuat untuk latihan.</p>
+				{/if}
+			</section>
+		{:else}
+		<div class="rounded-2xl border bg-base-100 p-3 shadow-sm space-y-4 md:p-5">
 			<!-- Collapsible Filter Panel -->
 			<div class="space-y-3">
 				<button
@@ -1932,7 +2055,7 @@
 											</div>
 										</div>
 										<p class="arabic-text w-full max-w-full break-words">{verse.text}</p>
-										{#if insight?.translation}
+										{#if insight?.translation && readingMode !== 'arab'}
 											<p class="mt-5 text-base leading-8 text-slate-700">{insight.translation}</p>
 										{/if}
 										<div class="mt-3 flex flex-wrap items-center gap-2">
@@ -2161,8 +2284,9 @@
 				</div>
 			</div>
 		</div>
+		{/if}
 		<p class="text-xs text-slate-500 text-center">
-			Setelah juz dibuka sekali, data akan tersimpan otomatis dan bisa diakses tanpa internet.
+			Teks Al-Qur'an dimuat dari paket data Quran SantriOnline; terjemah, tafsir, dan asbab menampilkan sumber pada tiap materi. Gunakan sebagai pendamping belajar—talaqqi dan koreksi guru tetap utama. Setelah juz dibuka sekali, data tersimpan untuk akses offline.
 		</p>
 	{:else}
 		<section class="rounded-2xl border bg-white p-5 shadow-sm md:p-6">
@@ -2284,6 +2408,25 @@
 </section>
 
 <style>
+	.quran-workspace { padding-inline: clamp(0.75rem, 2vw, 1.5rem); }
+	.quran-hero { background: radial-gradient(circle at 85% 0%, rgba(245, 183, 48, .25), transparent 34%), linear-gradient(135deg, #064e3b, #0f766e); }
+	.mode-button, .mode-unavailable { display: inline-flex; min-height: 2.5rem; flex: 0 0 auto; align-items: center; gap: .45rem; border-radius: .8rem; border: 1px solid #e2e8f0; padding: .55rem .8rem; font-size: .82rem; font-weight: 700; color: #475569; background: #fff; }
+	.mode-button { cursor: pointer; transition: 150ms ease; }
+	.mode-button:hover { border-color: #10b981; color: #047857; }
+	.mode-button.active { border-color: #047857; color: white; background: #047857; }
+	.mode-unavailable { color: #94a3b8; background: #f8fafc; }
+	.mode-unavailable small { border-radius: 999px; background: #e2e8f0; padding: .1rem .35rem; font-size: .6rem; text-transform: uppercase; }
+	.hafalan-shell { margin-inline: auto; max-width: 52rem; border: 1px solid #a7f3d0; border-radius: 1.25rem; background: linear-gradient(180deg, #f0fdf4, #fff); padding: clamp(1rem, 3vw, 2rem); box-shadow: 0 18px 50px rgba(6, 78, 59, .08); }
+	.hafalan-heading-row { display: flex; flex-direction: column; gap: 1rem; }
+	.hafalan-card { margin-top: 1.25rem; display: flex; flex-direction: column; gap: 1rem; border: 1px solid #d1fae5; border-radius: 1rem; background: #fff; padding: clamp(1rem, 3vw, 1.5rem); outline: none; }
+	.hafalan-card:focus-visible { box-shadow: 0 0 0 3px rgba(16, 185, 129, .3); }
+	.hafalan-recall { display: flex; min-height: clamp(10rem, 26vw, 16rem); align-items: center; justify-content: center; border: 1px dashed #94a3b8; border-radius: 1rem; background: #f8fafc; padding: clamp(1rem, 4vw, 2rem); }
+	.hafalan-nav { display: grid; grid-template-columns: 1fr; gap: .75rem; padding-top: .25rem; }
+	@media (min-width: 640px) {
+		.hafalan-heading-row { flex-direction: row; align-items: flex-start; justify-content: space-between; }
+		.hafalan-nav { grid-template-columns: 1fr 1fr; }
+	}
+
 	.quran-reader-grid {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
