@@ -146,11 +146,22 @@
 			<div class="mt-6 flex flex-wrap gap-3">
 				{#if data.order.status === 'paid'}
 					<a href={`/digital-store/order/${data.order.referenceCode}/download?token=${encodeURIComponent(data.token)}`} class="btn btn-primary">
-						Download File Digital
+						Unduh Installer SantriPrint
 					</a>
+					<form method="POST" action="?/claimLicense">
+						<input type="hidden" name="token" value={data.token} />
+						<button type="submit" class="btn btn-outline">Klaim Lisensi</button>
+					</form>
 				{/if}
 				<a href={`/digital-store/${data.order.productSlug || ''}`} class="btn btn-outline">Kembali ke Produk</a>
 			</div>
+			{#if form && 'type' in form && form.type === 'license_claimed' && 'licenseKey' in form}
+				<div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+					<p class="text-xs font-semibold uppercase tracking-[0.2em]">Lisensi berhasil diklaim</p>
+					<code class="mt-2 block break-all text-base font-bold">{form.licenseKey}</code>
+					<p class="mt-2 text-sm">Simpan key ini untuk aktivasi SantriPrint. Paket: {form.packageSlug}.</p>
+				</div>
+			{/if}
 		</article>
 
 		<article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">

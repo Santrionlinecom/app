@@ -1,0 +1,69 @@
+-- SantriPrint 1.3.6: three paid store SKUs mapped to one compatible runtime license product.
+-- Store package identity stays on digital_products/license rows; desktop activation keeps santriprint-pro.
+PRAGMA foreign_keys = ON;
+
+ALTER TABLE digital_products ADD COLUMN license_product_id TEXT NULL REFERENCES products(id) ON DELETE SET NULL;
+ALTER TABLE digital_products ADD COLUMN license_package TEXT NULL;
+ALTER TABLE licenses ADD COLUMN source_sale_id TEXT NULL REFERENCES digital_product_sales(id) ON DELETE SET NULL;
+ALTER TABLE licenses ADD COLUMN package_slug TEXT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_licenses_source_sale_id
+  ON licenses(source_sale_id) WHERE source_sale_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_digital_products_license_product
+  ON digital_products(license_product_id);
+
+INSERT INTO products (
+  id, slug, name, plan, status, default_max_devices, features_json, created_at, updated_at
+) VALUES (
+  'prod_santriprint_pro', 'santriprint-pro', 'SantriPrint Pro 1.3.6', 'pro', 'active', 2,
+  '["print_layout","export_pdf","native_print","multi_page","templates"]',
+  CAST(strftime('%s', 'now') AS INTEGER) * 1000,
+  CAST(strftime('%s', 'now') AS INTEGER) * 1000
+)
+ON CONFLICT(id) DO UPDATE SET
+  slug = excluded.slug, name = excluded.name, plan = excluded.plan, status = excluded.status,
+  default_max_devices = excluded.default_max_devices, features_json = excluded.features_json,
+  updated_at = excluded.updated_at;
+
+INSERT INTO digital_products (
+  id, title, slug, summary, description, price, cover_url, file_url, status, featured,
+  created_at, updated_at, license_product_id, license_package
+) VALUES
+(
+  'dprod_santriprint_promo', 'SantriPrint Promo', 'santriprint-promo',
+  'Lisensi SantriPrint 1.3.6 harga promo untuk 2 perangkat.',
+  'Paket Promo SantriPrint 1.3.6 untuk membuat layout cetak foto, ekspor PDF, dan cetak langsung dari Windows. Harga sekali beli. Aktivasi maksimal 2 perangkat.',
+  69000, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
+  'r2://digital-products/santriprint/SantriPrint_1.3.6_x64-setup.exe', 'published', 1,
+  CAST(strftime('%s', 'now') AS INTEGER) * 1000, CAST(strftime('%s', 'now') AS INTEGER) * 1000,
+  'prod_santriprint_pro', 'promo'
+),
+(
+  'dprod_santriprint_pro', 'SantriPrint Pro', 'santriprint-pro',
+  'Lisensi SantriPrint 1.3.6 Pro untuk 2 perangkat.',
+  'Paket Pro SantriPrint 1.3.6 untuk membuat layout cetak foto, ekspor PDF, dan cetak langsung dari Windows. Harga sekali beli. Aktivasi maksimal 2 perangkat.',
+  129000, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
+  'r2://digital-products/santriprint/SantriPrint_1.3.6_x64-setup.exe', 'published', 1,
+  CAST(strftime('%s', 'now') AS INTEGER) * 1000, CAST(strftime('%s', 'now') AS INTEGER) * 1000,
+  'prod_santriprint_pro', 'pro'
+),
+(
+  'dprod_santriprint_bantuan', 'SantriPrint Bantuan', 'santriprint-bantuan',
+  'Lisensi SantriPrint 1.3.6 dengan bantuan instalasi dan onboarding.',
+  'Paket Bantuan SantriPrint 1.3.6 mencakup lisensi, bantuan instalasi, dan onboarding penggunaan. Membuat layout cetak foto, ekspor PDF, dan cetak langsung dari Windows. Harga sekali beli. Aktivasi maksimal 2 perangkat.',
+  199000, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
+  'r2://digital-products/santriprint/SantriPrint_1.3.6_x64-setup.exe', 'published', 1,
+  CAST(strftime('%s', 'now') AS INTEGER) * 1000, CAST(strftime('%s', 'now') AS INTEGER) * 1000,
+  'prod_santriprint_pro', 'bantuan'
+)
+ON CONFLICT(id) DO UPDATE SET
+  title = excluded.title, slug = excluded.slug, summary = excluded.summary,
+  description = excluded.description, price = excluded.price, cover_url = excluded.cover_url,
+  file_url = excluded.file_url, status = excluded.status, featured = excluded.featured,
+  license_product_id = excluded.license_product_id, license_package = excluded.license_package,
+  updated_at = excluded.updated_at;
+
+INSERT OR IGNORE INTO digital_product_payment_methods (product_id, payment_method_id, created_at)
+SELECT p.id, m.id, CAST(strftime('%s', 'now') AS INTEGER) * 1000
+FROM digital_products p CROSS JOIN digital_payment_methods m
+WHERE p.slug IN ('santriprint-promo', 'santriprint-pro', 'santriprint-bantuan') AND m.is_active = 1;

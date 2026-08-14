@@ -8,6 +8,7 @@ import {
 } from '$lib/server/domains/digital-store/commerce';
 import { getRequestIp } from '$lib/server/logger';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
+import { claimPaidDigitalOrderLicense } from '$lib/server/domains/digital-store/licenses/paid-entitlement';
 
 const normalizeText = (value: FormDataEntryValue | null) =>
 	typeof value === 'string' ? value.trim() : '';
@@ -45,6 +46,28 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 };
 
 export const actions: Actions = {
+	claimLicense: async ({ request, params, locals, platform }) => {
+		if (!locals.user) return fail(401, { error: 'Silakan login untuk klaim lisensi.' });
+		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia.' });
+		const secret = platform?.env?.LICENSE_KEY_HASH_SECRET?.trim();
+		if (!secret) return fail(503, { error: 'Layanan lisensi belum siap. Silakan hubungi admin.' });
+
+		await ensureDigitalCommerceSchema(locals.db);
+		const formData = await request.formData();
+		const token = normalizeText(formData.get('token'));
+		try {
+			const claimed = await claimPaidDigitalOrderLicense({
+				db: locals.db,
+				referenceCode: params.reference,
+				accessToken: token,
+				userId: locals.user.id,
+				secret
+			});
+			return { success: true, type: 'license_claimed', ...claimed };
+		} catch (err) {
+			return fail(403, { error: err instanceof Error ? err.message : 'Lisensi gagal diklaim.' });
+		}
+	},
 	uploadProof: async ({ request, params, locals, platform }) => {
 		if (!locals.db) {
 			return fail(500, { error: 'Layanan data tidak tersedia.' });

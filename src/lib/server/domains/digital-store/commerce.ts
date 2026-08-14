@@ -379,7 +379,26 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 	} catch (_) {
 		// ignore when column already exists
 	}
-
+	try {
+		await db.prepare('ALTER TABLE digital_products ADD COLUMN license_product_id TEXT REFERENCES products(id) ON DELETE SET NULL').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_products ADD COLUMN license_package TEXT').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE licenses ADD COLUMN source_sale_id TEXT REFERENCES digital_product_sales(id) ON DELETE SET NULL').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE licenses ADD COLUMN package_slug TEXT').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
 
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_digital_products_slug ON digital_products(slug)').run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_digital_products_status ON digital_products(status)').run();
@@ -417,6 +436,12 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 		.prepare(
 			'CREATE INDEX IF NOT EXISTS idx_digital_product_sales_buyer_user ON digital_product_sales(buyer_user_id, created_at DESC)'
 		)
+		.run();
+	await db
+		.prepare('CREATE INDEX IF NOT EXISTS idx_digital_products_license_product ON digital_products(license_product_id)')
+		.run();
+	await db
+		.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_licenses_source_sale_id ON licenses(source_sale_id) WHERE source_sale_id IS NOT NULL')
 		.run();
 	await db
 		.prepare(
