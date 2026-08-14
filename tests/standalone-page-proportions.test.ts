@@ -10,7 +10,6 @@ const wideRoutes = [
 	'(app)/coins/topup/+page.svelte',
 	'buku/+page.svelte',
 	'buku/[slug]/+page.svelte',
-	'buku/[slug]/baca/+page.svelte',
 	'(app)/buku/saya/+page.svelte',
 	'(app)/buku/studio/+page.svelte',
 	'(app)/buku/studio/earnings/+page.svelte'
@@ -49,9 +48,8 @@ test('form dan editor mempertahankan lebar baca yang fokus', async () => {
 
 test('reader bab memiliki lebar baca fokus dan ruang aman di atas navigasi mobile', async () => {
 	const source = await readRoute(chapterReaderRoute);
-	assert.match(source, /max-w-5xl/);
-	assert.match(source, /pb-36/);
-	assert.match(source, /md:pb-12/);
+	assert.match(source, /max-w-3xl/);
+	assert.match(source, /pb-32/);
 });
 
 test('baris riwayat Koin tetap terbaca untuk teks panjang di layar kecil', async () => {

@@ -2,14 +2,29 @@
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import InsufficientCoinNotice from '$lib/components/InsufficientCoinNotice.svelte';
-	import { toBukuParagraphs } from '$lib/utils/buku-reader-text';
+	import { estimateBukuReadingMinutes, toBukuParagraphs } from '$lib/utils/buku-reader-text';
 	import type { ActionData, PageData } from './$types';
 
 	export let data: PageData;
-	export let form: ActionData | undefined;
+	export let form: ActionData | null = null;
 
 	type ReaderFontSize = 'small' | 'normal' | 'large';
 	type ReaderTheme = 'light' | 'dark';
+
+	const FONT_KEY = 'santrionline:buku:font-size';
+	const THEME_KEY = 'santrionline:buku:theme';
+
+	let fontSize: ReaderFontSize = 'normal';
+	let theme: ReaderTheme = 'light';
+	let settingsOpen = false;
+	let shareStatus = '';
+	let progressPercent = Number(data.readingProgress?.progressPercent ?? 0);
+	let latestSavedProgress = progressPercent;
+	let progressTimer: ReturnType<typeof setTimeout> | undefined;
+	let chapterBookmarked = Boolean(data.chapterBookmark);
+	let bookmarkBusy = false;
+	let bookmarkError = '';
+
 	type InsufficientCoinForm = {
 		type: 'insufficient_coin';
 		error: string;
@@ -19,623 +34,250 @@
 		productName?: string;
 	};
 
-	const FONT_STORAGE_KEY = 'santrionline:buku-reader-font-size';
-	const THEME_STORAGE_KEY = 'santrionline:buku-reader-theme';
-
-	const isReaderFontSize = (value: string | null): value is ReaderFontSize =>
-		value === 'small' || value === 'normal' || value === 'large';
-
-	const isReaderTheme = (value: string | null): value is ReaderTheme =>
-		value === 'light' || value === 'dark';
-	const isInsufficientCoinForm = (value: unknown): value is InsufficientCoinForm =>
-		Boolean(
-			value &&
-				typeof value === 'object' &&
-				'type' in value &&
-				(value as { type?: unknown }).type === 'insufficient_coin'
+	function isInsufficientCoinForm(value: unknown): value is InsufficientCoinForm {
+		return (
+			typeof value === 'object' &&
+			value !== null &&
+			'type' in value &&
+			(value as { type?: unknown }).type === 'insufficient_coin'
 		);
+	}
 
-	let readerFontSize: ReaderFontSize = 'normal';
-	let readerTheme: ReaderTheme = 'light';
-	let progressPercent = Number(data.readingProgress?.progressPercent ?? 0);
-	let latestSavedProgress = progressPercent;
-	let progressTimer: ReturnType<typeof setTimeout> | null = null;
-	let chapterBookmarked = Boolean(data.chapterBookmark);
-	let bookmarkBusy = false;
-	let bookmarkError = '';
-	let formError = '';
-	let formType: string | null = null;
-	let insufficientCoinForm: InsufficientCoinForm | null = null;
-
-	onMount(() => {
-		const storedFontSize = localStorage.getItem(FONT_STORAGE_KEY);
-		const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-
-		if (isReaderFontSize(storedFontSize)) {
-			readerFontSize = storedFontSize;
-		}
-
-		if (isReaderTheme(storedTheme)) {
-			readerTheme = storedTheme;
-		}
-	});
-
-	const setReaderFontSize = (value: ReaderFontSize) => {
-		readerFontSize = value;
-		if (browser) {
-			localStorage.setItem(FONT_STORAGE_KEY, value);
-		}
-	};
-
-	const setReaderTheme = (value: ReaderTheme) => {
-		readerTheme = value;
-		if (browser) {
-			localStorage.setItem(THEME_STORAGE_KEY, value);
-		}
-	};
+	function getFormError(value: unknown): string {
+		return typeof value === 'object' &&
+			value !== null &&
+			'error' in value &&
+			typeof (value as { error?: unknown }).error === 'string'
+			? (value as { error: string }).error
+			: '';
+	}
 
 	$: book = data.book;
 	$: chapter = data.chapter;
 	$: isLocked = data.access === 'locked';
-	$: isUnlocked = data.access === 'unlocked';
-	$: accessLabel = isLocked ? 'Terkunci' : isUnlocked ? 'Terbuka' : 'Gratis';
 	$: paragraphs = toBukuParagraphs(chapter.content);
+	$: readingMinutes = estimateBukuReadingMinutes(chapter.content);
 	$: previousChapter = data.previousChapter;
 	$: nextChapter = data.nextChapter;
-	$: formBalance =
-		form && 'balance' in form && typeof form.balance === 'number' ? form.balance : null;
-	$: formError = form && 'error' in form ? form.error : '';
-	$: formType = form && 'type' in form && typeof form.type === 'string' ? form.type : null;
+	$: chapterPrice = Number(book.pricePerChapter ?? 0);
 	$: insufficientCoinForm = isInsufficientCoinForm(form) ? form : null;
-	$: walletBalance = formBalance ?? data.walletBalance ?? 0;
-	$: canUnlock = data.isLoggedIn && isLocked && walletBalance >= book.pricePerChapter;
-	$: isDarkReader = readerTheme === 'dark';
-	$: readerFontClass =
-		readerFontSize === 'small'
-			? 'text-[1rem] leading-8 md:text-[1.06rem] md:leading-9'
-			: readerFontSize === 'large'
-				? 'text-[1.2rem] leading-[2.1rem] md:text-[1.3rem] md:leading-[2.7rem]'
-				: 'text-[1.1rem] leading-9 md:text-[1.18rem] md:leading-10';
-	$: shellClass = isDarkReader
-		? 'bg-[radial-gradient(circle_at_top_left,_rgba(217,119,6,0.12),_transparent_34%),linear-gradient(180deg,_#12110d_0%,_#1c1917_58%,_#0f172a_100%)] text-stone-100'
-		: 'bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.13),_transparent_32%),linear-gradient(180deg,_#f8fafc_0%,_#fdf6e8_52%,_#ecfdf5_100%)] text-slate-900';
-	$: panelClass = isDarkReader
-		? 'border-stone-700/80 bg-stone-900/78 text-stone-100 shadow-[0_28px_90px_rgba(0,0,0,0.34)]'
-		: 'border-amber-100 bg-[#fff9ea] text-slate-900 shadow-[0_28px_90px_rgba(15,23,42,0.1)]';
-	$: paperClass = isDarkReader
-		? 'border-stone-700 bg-[#1f1b16] text-stone-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
-		: 'border-amber-100 bg-[#fffdf6] text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]';
-	$: mutedTextClass = isDarkReader ? 'text-stone-300' : 'text-slate-600';
-	$: softCardClass = isDarkReader
-		? 'border-stone-700 bg-stone-950/55 text-stone-200'
-		: 'border-slate-200 bg-white/82 text-slate-700';
+	$: walletBalance = Number(insufficientCoinForm?.currentBalance ?? data.walletBalance ?? 0);
+	$: canUnlock = data.isLoggedIn && isLocked && walletBalance >= chapterPrice;
+	$: formError = getFormError(form);
+	$: articleSizeClass = fontSize === 'small' ? 'text-[17px]' : fontSize === 'large' ? 'text-[22px]' : 'text-[19px]';
+	$: pageThemeClass = theme === 'dark' ? 'bg-[#171717] text-stone-100' : 'bg-[#f8f6f1] text-stone-900';
+	$: mutedClass = theme === 'dark' ? 'text-stone-400' : 'text-stone-500';
+	$: lineClass = theme === 'dark' ? 'border-stone-700' : 'border-stone-300';
 
-	const getScrollProgressPercent = () => {
-		if (!browser) return progressPercent;
-		const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
-		if (scrollableHeight <= 0) return 100;
-		return Math.min(100, Math.max(0, Math.round((window.scrollY / scrollableHeight) * 100)));
-	};
+	function persistSettings() {
+		if (!browser) return;
+		localStorage.setItem(FONT_KEY, fontSize);
+		localStorage.setItem(THEME_KEY, theme);
+	}
 
-	const saveProgressPercent = async (percent: number) => {
-		if (!data.isLoggedIn || isLocked) return;
+	function setFontSize(value: ReaderFontSize) {
+		fontSize = value;
+		persistSettings();
+	}
+
+	function setTheme(value: ReaderTheme) {
+		theme = value;
+		persistSettings();
+	}
+
+	function getScrollProgressPercent() {
+		if (!browser) return 0;
+		const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+		if (scrollable <= 0) return 100;
+		return Math.min(100, Math.max(0, Math.round((window.scrollY / scrollable) * 100)));
+	}
+
+	async function saveProgress(percent: number) {
+		if (!data.isLoggedIn || isLocked || percent <= latestSavedProgress) return;
 		try {
 			const response = await fetch('/api/buku/progress', {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({
-					bookId: book.id,
-					chapterId: chapter.id,
-					progressPercent: percent
-				})
+				body: JSON.stringify({ bookId: book.id, chapterId: chapter.id, progressPercent: percent })
 			});
-
 			if (!response.ok) return;
-
-			const payload = await response.json().catch(() => ({}));
-			const savedPercent = Number(payload.progress?.progressPercent ?? percent);
-			latestSavedProgress = Math.max(latestSavedProgress, savedPercent);
-			progressPercent = Math.max(progressPercent, latestSavedProgress);
-		} catch (_) {
-			// Progress baca tidak boleh mengganggu reader.
+			const payload = await response.json();
+			latestSavedProgress = Number(payload.progress?.progressPercent ?? percent);
+		} catch {
+			// Reading must remain available even when progress syncing fails.
 		}
-	};
+	}
 
-	const queueProgressSave = () => {
-		if (!browser || !data.isLoggedIn || isLocked) return;
+	function queueProgressSave() {
+		if (isLocked) return;
 		progressPercent = Math.max(progressPercent, getScrollProgressPercent());
-
-		if (progressPercent < 100 && progressPercent < latestSavedProgress + 5) return;
+		if (!data.isLoggedIn || progressPercent < latestSavedProgress + 5) return;
 		if (progressTimer) clearTimeout(progressTimer);
+		progressTimer = setTimeout(() => saveProgress(progressPercent), 700);
+	}
 
-		progressTimer = setTimeout(() => {
-			void saveProgressPercent(progressPercent);
-		}, 700);
-	};
-
-	const toggleChapterBookmark = async () => {
+	async function toggleBookmark() {
+		if (!data.isLoggedIn) {
+			window.location.href = `/auth?redirect=${encodeURIComponent(window.location.pathname)}`;
+			return;
+		}
 		if (bookmarkBusy) return;
 		bookmarkBusy = true;
 		bookmarkError = '';
-
 		try {
 			const response = await fetch('/api/buku/bookmark', {
 				method: chapterBookmarked ? 'DELETE' : 'POST',
 				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({
-					bookId: book.id,
-					chapterId: chapter.id
-				})
+				body: JSON.stringify({ bookId: book.id, chapterId: chapter.id })
 			});
-			const payload = await response.json().catch(() => ({}));
-
-			if (!response.ok) {
-				bookmarkError = payload.error ?? 'Bookmark gagal diproses.';
-				return;
-			}
-
+			if (!response.ok) throw new Error('Gagal memperbarui bookmark.');
 			chapterBookmarked = !chapterBookmarked;
-		} catch (_) {
-			bookmarkError = 'Bookmark gagal diproses.';
+		} catch (error) {
+			bookmarkError = error instanceof Error ? error.message : 'Gagal memperbarui bookmark.';
 		} finally {
 			bookmarkBusy = false;
 		}
-	};
+	}
+
+	async function shareChapter() {
+		const url = window.location.href;
+		const shareData = { title: `${chapter.title} — ${book.title}`, text: `Baca ${chapter.title} dari ${book.title}`, url };
+		try {
+			if (navigator.share) await navigator.share(shareData);
+			else {
+				await navigator.clipboard.writeText(url);
+				shareStatus = 'Tautan disalin';
+				setTimeout(() => (shareStatus = ''), 1800);
+			}
+		} catch {
+			// User cancelling the native share sheet is not an error.
+		}
+	}
 
 	onMount(() => {
-		if (!data.isLoggedIn || isLocked) return;
+		const storedFont = localStorage.getItem(FONT_KEY);
+		const storedTheme = localStorage.getItem(THEME_KEY);
+		if (storedFont === 'small' || storedFont === 'normal' || storedFont === 'large') fontSize = storedFont;
+		if (storedTheme === 'light' || storedTheme === 'dark') theme = storedTheme;
 
-		const handleScroll = () => queueProgressSave();
-		window.addEventListener('scroll', handleScroll, { passive: true });
-		window.addEventListener('resize', handleScroll);
-		queueProgressSave();
-
+		if (!isLocked) {
+			window.addEventListener('scroll', queueProgressSave, { passive: true });
+			window.addEventListener('resize', queueProgressSave);
+			queueProgressSave();
+		}
 		return () => {
-			window.removeEventListener('scroll', handleScroll);
-			window.removeEventListener('resize', handleScroll);
+			window.removeEventListener('scroll', queueProgressSave);
+			window.removeEventListener('resize', queueProgressSave);
 			if (progressTimer) clearTimeout(progressTimer);
-			void saveProgressPercent(progressPercent);
+			void saveProgress(getScrollProgressPercent());
 		};
 	});
 </script>
 
 <svelte:head>
-	<title>{chapter.title} - {book.title}</title>
-	<meta
-		name="description"
-		content={`Baca ${chapter.title} dari ${book.title} di Buku SantriOnline.`}
-	/>
+	<title>{chapter.title} — {book.title} | SantriOnline</title>
+	<meta name="description" content={`Baca ${chapter.title} dari buku ${book.title} di SantriOnline.`} />
 </svelte:head>
 
-<div
-	class={`min-h-screen px-3 pb-36 pt-4 transition-colors duration-300 sm:px-5 md:px-8 md:pb-12 md:pt-8 ${shellClass}`}
->
-	<div class="reader-enter mx-auto max-w-5xl space-y-4 md:space-y-6">
-		<nav class={`rounded-3xl border px-4 py-3 text-sm backdrop-blur ${softCardClass}`}>
-			<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-				<div class="min-w-0">
-					<a href="/buku" class="font-semibold text-emerald-600 hover:text-emerald-500">Buku</a>
-					<span class={isDarkReader ? 'px-2 text-stone-600' : 'px-2 text-slate-300'}>/</span>
-					<a
-						href={`/buku/${book.slug}`}
-						class="font-semibold text-emerald-600 hover:text-emerald-500"
-					>
-						{book.title}
-					</a>
-					<span class={isDarkReader ? 'px-2 text-stone-600' : 'px-2 text-slate-300'}>/</span>
-					<span class={mutedTextClass}>Bab {chapter.chapterNumber}</span>
-				</div>
-				<a href={`/buku/${book.slug}`} class="btn btn-sm btn-outline">Daftar Bab</a>
+<div class={`min-h-screen transition-colors ${pageThemeClass}`}>
+	<header class={`sticky top-0 z-30 border-b backdrop-blur-xl ${lineClass} ${theme === 'dark' ? 'bg-[#171717]/95' : 'bg-[#f8f6f1]/95'}`}>
+		<div class="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
+			<a href={`/buku/${book.slug}`} class="grid h-10 w-10 place-items-center rounded-full hover:bg-black/10" aria-label="Kembali ke detail buku">←</a>
+			<div class="min-w-0 flex-1 text-center">
+				<p class={`truncate text-[11px] font-medium uppercase tracking-[0.16em] ${mutedClass}`}>{book.title}</p>
+				<p class="truncate text-sm font-semibold">#{chapter.chapterNumber} · {chapter.title}</p>
 			</div>
-		</nav>
+			<button type="button" class="grid h-10 w-10 place-items-center rounded-full hover:bg-black/10" on:click={shareChapter} aria-label="Bagikan bab">↗</button>
+		</div>
+		<div class="h-0.5 bg-black/10"><div class="h-full bg-emerald-600 transition-[width]" style={`width: ${Math.min(100, progressPercent)}%`}></div></div>
+	</header>
 
-		<header
-			class={`overflow-hidden rounded-[2rem] border p-5 backdrop-blur md:p-7 ${softCardClass}`}
-		>
-			<div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-				<div class="min-w-0">
-					<div class="flex flex-wrap items-center gap-2">
-						<span
-							class="rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-white"
-						>
-							Bab {chapter.chapterNumber}
-						</span>
-						<span
-							class={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] ${
-								isLocked
-									? 'bg-amber-100 text-amber-800'
-									: isUnlocked
-										? 'bg-sky-100 text-sky-800'
-										: 'bg-emerald-100 text-emerald-600'
-							}`}
-						>
-							{accessLabel}
-						</span>
-						{#if book.category}
-							<span
-								class={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] ${
-									isDarkReader
-										? 'bg-stone-800 text-stone-300 ring-1 ring-stone-700'
-										: 'bg-white text-slate-500 ring-1 ring-slate-200'
-								}`}
-							>
-								{book.category}
-							</span>
-						{/if}
-					</div>
-					<p class={`mt-5 text-xs font-semibold uppercase tracking-[0.28em] ${mutedTextClass}`}>
-						{book.title}
-					</p>
-					<h1 class="mt-2 text-3xl font-semibold leading-tight tracking-[-0.03em] md:text-5xl">
-						{chapter.title}
-					</h1>
-				</div>
+	{#if shareStatus}<div class="fixed left-1/2 top-20 z-50 -translate-x-1/2 rounded-full bg-stone-900 px-4 py-2 text-xs text-white shadow-lg">{shareStatus}</div>{/if}
 
-				<div class={`rounded-3xl border p-4 ${softCardClass}`}>
-					<p class="text-xs font-semibold uppercase tracking-[0.24em] opacity-70">Progress Baca</p>
-					<div class="mt-3 grid grid-cols-2 gap-3 text-sm">
-						<div>
-							<p class="opacity-60">Bab aktif</p>
-							<p class="font-bold">Bab {chapter.chapterNumber}</p>
-						</div>
-						<div>
-							<p class="opacity-60">Status</p>
-							<p class="font-bold">{accessLabel}</p>
-						</div>
-					</div>
-					{#if data.isLoggedIn && !isLocked}
-						<div class="mt-4">
-							<div
-								class={`h-2 overflow-hidden rounded-full ${isDarkReader ? 'bg-stone-800' : 'bg-slate-200'}`}
-							>
-								<div
-									class="h-full rounded-full bg-emerald-500"
-									style={`width: ${progressPercent}%`}
-								></div>
-							</div>
-							<p class="mt-2 text-xs opacity-65">{progressPercent}% tersimpan</p>
-						</div>
-					{/if}
-				</div>
+	<main class="mx-auto max-w-3xl px-5 pb-32 pt-10 sm:px-8 sm:pt-14">
+		<header class={`mb-9 border-b pb-7 ${lineClass}`}>
+			<p class={`mb-3 text-sm font-semibold ${mutedClass}`}>#{chapter.chapterNumber}</p>
+			<h1 class="font-serif text-3xl font-bold leading-tight sm:text-4xl">{chapter.title}</h1>
+			<div class={`mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm ${mutedClass}`}>
+				<span>{readingMinutes > 0 ? `${readingMinutes} menit baca` : 'Bab terkunci'}</span>
+				{#if data.isLoggedIn}<span>{Math.round(progressPercent)}% selesai</span>{/if}
 			</div>
 		</header>
 
-		<section class={`rounded-[2rem] border p-4 backdrop-blur md:p-5 ${softCardClass}`}>
-			<div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-				<div class="grid gap-3 sm:grid-cols-2">
-					<div>
-						<p class="mb-2 text-xs font-semibold uppercase tracking-[0.22em] opacity-60">
-							Ukuran Font
-						</p>
-						<div class="join w-full">
-							<button
-								type="button"
-								class={`btn join-item btn-sm flex-1 ${readerFontSize === 'small' ? 'btn-primary' : 'btn-outline'}`}
-								aria-pressed={readerFontSize === 'small'}
-								on:click={() => setReaderFontSize('small')}
-							>
-								Kecil
-							</button>
-							<button
-								type="button"
-								class={`btn join-item btn-sm flex-1 ${readerFontSize === 'normal' ? 'btn-primary' : 'btn-outline'}`}
-								aria-pressed={readerFontSize === 'normal'}
-								on:click={() => setReaderFontSize('normal')}
-							>
-								Normal
-							</button>
-							<button
-								type="button"
-								class={`btn join-item btn-sm flex-1 ${readerFontSize === 'large' ? 'btn-primary' : 'btn-outline'}`}
-								aria-pressed={readerFontSize === 'large'}
-								on:click={() => setReaderFontSize('large')}
-							>
-								Besar
-							</button>
-						</div>
-					</div>
-
-					<div>
-						<p class="mb-2 text-xs font-semibold uppercase tracking-[0.22em] opacity-60">
-							Mode Baca
-						</p>
-						<div class="join w-full">
-							<button
-								type="button"
-								class={`btn join-item btn-sm flex-1 ${readerTheme === 'light' ? 'btn-primary' : 'btn-outline'}`}
-								aria-pressed={readerTheme === 'light'}
-								on:click={() => setReaderTheme('light')}
-							>
-								Terang
-							</button>
-							<button
-								type="button"
-								class={`btn join-item btn-sm flex-1 ${readerTheme === 'dark' ? 'btn-primary' : 'btn-outline'}`}
-								aria-pressed={readerTheme === 'dark'}
-								on:click={() => setReaderTheme('dark')}
-							>
-								Gelap
-							</button>
-						</div>
-					</div>
-				</div>
-
-				<div class="grid gap-2 sm:grid-cols-3 lg:min-w-[28rem]">
-					{#if previousChapter}
-						<a
-							href={`/buku/${book.slug}/bab/${previousChapter.chapterNumber}`}
-							class="btn btn-outline btn-sm"
-						>
-							Bab Sebelumnya
-						</a>
-					{:else}
-						<span class="btn btn-disabled btn-sm">Bab Sebelumnya</span>
-					{/if}
-
-					{#if nextChapter}
-						<a
-							href={`/buku/${book.slug}/bab/${nextChapter.chapterNumber}`}
-							class="btn btn-primary btn-sm"
-						>
-							Bab Berikutnya
-						</a>
-					{:else}
-						<span class="btn btn-disabled btn-sm">Bab Berikutnya</span>
-					{/if}
-
-					{#if data.isLoggedIn}
-						<button
-							type="button"
-							class={`btn btn-sm ${chapterBookmarked ? 'btn-warning' : 'btn-outline'}`}
-							disabled={bookmarkBusy}
-							on:click={toggleChapterBookmark}
-						>
-							{chapterBookmarked ? 'Hapus Bookmark' : 'Simpan Bab'}
-						</button>
-					{:else}
-						<a href="/auth" class="btn btn-outline btn-sm">Simpan Bab</a>
-					{/if}
-				</div>
+		{#if isLocked}
+			<section class={`mx-auto max-w-xl rounded-3xl border p-6 text-center shadow-sm sm:p-8 ${lineClass} ${theme === 'dark' ? 'bg-stone-900' : 'bg-white/70'}`}>
+				<p class="text-4xl">🔒</p>
+				<h2 class="mt-4 text-xl font-bold">Buka bab ini</h2>
+				<p class={`mt-2 text-sm leading-relaxed ${mutedClass}`}>Bab premium ini dapat dibaca dengan {chapterPrice} koin. Saldo Anda: {walletBalance} koin.</p>
+				{#if data.isLoggedIn && !canUnlock}
+			<div class="mt-5">
+				<InsufficientCoinNotice
+					currentBalance={Number(insufficientCoinForm?.currentBalance ?? walletBalance)}
+					requiredAmount={Number(insufficientCoinForm?.requiredAmount ?? chapterPrice)}
+					shortfall={Number(insufficientCoinForm?.shortfall ?? Math.max(0, chapterPrice - walletBalance))}
+					productName={String(insufficientCoinForm?.productName ?? `${book.title} - Bab ${chapter.chapterNumber}`)}
+				/>
 			</div>
-			{#if bookmarkError}
-				<p class="mt-3 text-sm text-amber-600">{bookmarkError}</p>
+		{/if}
+				{#if !data.isLoggedIn}
+					<a href={`/auth?redirect=${encodeURIComponent(`/buku/${book.slug}/bab/${chapter.chapterNumber}`)}`} class="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-700 px-6 font-semibold text-white">Masuk untuk melanjutkan</a>
+				{:else if canUnlock}
+					<form method="POST" action="?/unlock" class="mt-5">
+						<button class="min-h-11 rounded-full bg-emerald-700 px-6 font-semibold text-white" type="submit">Buka dengan {chapterPrice} koin</button>
+					</form>
+				{:else}
+					<a href="/coins/topup" class="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-700 px-6 font-semibold text-white">Isi koin</a>
+				{/if}
+				{#if formError}<p class="mt-4 text-sm text-red-500">{formError}</p>{/if}
+			</section>
+		{:else}
+			<article class={`reader-copy font-serif leading-[1.9] ${articleSizeClass}`}>
+				{#each paragraphs as paragraph}
+					<p>{paragraph}</p>
+				{/each}
+			</article>
+		{/if}
+
+		<nav class={`mt-14 grid gap-3 border-t pt-7 sm:grid-cols-2 ${lineClass}`} aria-label="Navigasi bab">
+			{#if previousChapter}
+				<a class={`rounded-2xl border p-4 transition hover:border-emerald-600 ${lineClass}`} href={`/buku/${book.slug}/bab/${previousChapter.chapterNumber}`}>
+					<span class={`text-xs ${mutedClass}`}>← Sebelumnya</span><strong class="mt-1 block text-sm">{previousChapter.title}</strong>
+				</a>
+			{:else}<span></span>{/if}
+			{#if nextChapter}
+				<a class={`rounded-2xl border p-4 text-right transition hover:border-emerald-600 ${lineClass}`} href={`/buku/${book.slug}/bab/${nextChapter.chapterNumber}`}>
+					<span class={`text-xs ${mutedClass}`}>Selanjutnya →</span><strong class="mt-1 block text-sm">{nextChapter.title}</strong>
+				</a>
 			{/if}
-		</section>
+		</nav>
+	</main>
 
-		<article class={`relative overflow-hidden rounded-[2.25rem] border p-3 md:p-6 ${panelClass}`}>
-			<div
-				class="pointer-events-none absolute inset-x-8 top-0 h-12 rounded-b-full bg-white/20 blur-2xl"
-			></div>
-			<div
-				class="absolute bottom-6 left-0 top-6 hidden w-5 rounded-r-full bg-black/5 md:block"
-			></div>
-
-			<div
-				class={`book-paper relative mx-auto max-w-3xl rounded-[1.6rem] border px-5 py-8 sm:px-8 md:px-12 md:py-14 ${paperClass}`}
-			>
-				<div
-					class={`mb-8 flex items-start justify-between gap-4 border-b pb-4 ${isDarkReader ? 'border-stone-700' : 'border-amber-100'}`}
-				>
-					<div class="min-w-0">
-						<p class={`text-[11px] font-semibold uppercase tracking-[0.26em] ${mutedTextClass}`}>
-							{book.title}
-						</p>
-						<p class="mt-1 text-sm font-semibold">Bab {chapter.chapterNumber}</p>
-					</div>
-					<span
-						class={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] ${
-							isLocked
-								? 'bg-amber-100 text-amber-800'
-								: isUnlocked
-									? 'bg-sky-100 text-sky-800'
-									: 'bg-emerald-100 text-emerald-600'
-						}`}
-					>
-						{accessLabel}
-					</span>
-				</div>
-
-				{#if isLocked}
-					<div
-						class={`mx-auto max-w-2xl rounded-[1.5rem] border px-5 py-8 text-center md:px-8 md:py-10 ${
-							isDarkReader
-								? 'border-amber-700/70 bg-amber-950/30 text-stone-100'
-								: 'border-amber-200 bg-amber-50 text-slate-900'
-						}`}
-					>
-						<p class="text-xs font-bold uppercase tracking-[0.28em] text-amber-700">Bab Premium</p>
-						<h2 class="mt-3 text-2xl font-semibold">Bab ini terkunci</h2>
-						<p
-							class={`mt-4 text-sm leading-7 ${isDarkReader ? 'text-stone-300' : 'text-slate-700'}`}
-						>
-							Bab ini bisa dibuka permanen memakai coin. Pengurangan coin diproses secara aman.
-						</p>
-						<div
-							class={`mt-6 rounded-2xl border px-4 py-4 text-sm ${
-								isDarkReader
-									? 'border-amber-800/80 bg-stone-950/55 text-stone-300'
-									: 'border-amber-200 bg-white text-slate-600'
-							}`}
-						>
-							Harga unlock: <span class="font-semibold">{book.pricePerChapter} coin</span>
-						</div>
-
-						{#if insufficientCoinForm}
-							<div class="mt-5">
-								<InsufficientCoinNotice
-									currentBalance={insufficientCoinForm.currentBalance ?? walletBalance}
-									requiredAmount={insufficientCoinForm.requiredAmount ?? book.pricePerChapter}
-									shortfall={insufficientCoinForm.shortfall ?? book.pricePerChapter - walletBalance}
-									productName={insufficientCoinForm.productName ??
-										`${book.title} - Bab ${chapter.chapterNumber}`}
-								/>
-							</div>
-						{:else if formError && formType !== 'insufficient_coin'}
-							<div
-								class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-							>
-								{formError}
-							</div>
-						{/if}
-
-						{#if !data.isLoggedIn}
-							<div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-								<a href="/auth" class="btn btn-primary">Login untuk Membuka Bab</a>
-								<a href={`/buku/${book.slug}`} class="btn btn-outline">Kembali ke Daftar Bab</a>
-							</div>
-						{:else if !canUnlock}
-							<div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-								<a href="/coins/topup" class="btn btn-warning flex-1">Isi Saldo Coin</a>
-								<a href={`/buku/${book.slug}`} class="btn btn-outline flex-1"
-									>Kembali ke Daftar Bab</a
-								>
-							</div>
-						{:else}
-							<form
-								method="POST"
-								action="?/unlock"
-								class="mt-6 flex flex-col justify-center gap-3 sm:flex-row"
-							>
-								<button type="submit" class="btn btn-primary">
-									Buka Bab Ini - {book.pricePerChapter} Coin
-								</button>
-								<a href={`/buku/${book.slug}`} class="btn btn-outline">Kembali ke Daftar Bab</a>
-							</form>
-							<p class="mt-3 text-xs opacity-70">
-								Saldo setelah unlock: {walletBalance - book.pricePerChapter} coin.
-							</p>
-						{/if}
-					</div>
-				{:else if paragraphs.length > 0}
-					<div class={`reader-content mx-auto max-w-[42rem] ${readerFontClass}`}>
-						{#each paragraphs as paragraph, index (index)}
-							<p class="reader-paragraph">{paragraph}</p>
+	<footer class={`fixed inset-x-0 bottom-0 z-30 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-xl ${lineClass} ${theme === 'dark' ? 'bg-[#171717]/95' : 'bg-[#f8f6f1]/95'}`}>
+		<div class="relative mx-auto grid h-16 max-w-3xl grid-cols-3 px-4">
+			<a href={`/buku/${book.slug}`} class="flex flex-col items-center justify-center gap-0.5 text-xs"><span class="text-xl">☰</span><span>Daftar Bab</span></a>
+			<button type="button" class="flex flex-col items-center justify-center gap-0.5 text-xs" on:click={toggleBookmark} disabled={bookmarkBusy}><span class="text-xl">{chapterBookmarked ? '♥' : '♡'}</span><span>{chapterBookmarked ? 'Tersimpan' : 'Simpan'}</span></button>
+			<button type="button" class="flex flex-col items-center justify-center gap-0.5 text-xs" on:click={() => (settingsOpen = !settingsOpen)} aria-expanded={settingsOpen}><span class="text-xl">Aa</span><span>Pengaturan</span></button>
+			{#if settingsOpen}
+				<div class={`absolute bottom-20 right-4 w-64 rounded-2xl border p-4 shadow-2xl ${lineClass} ${theme === 'dark' ? 'bg-stone-900' : 'bg-white'}`}>
+					<p class="text-xs font-bold uppercase tracking-wide">Ukuran tulisan</p>
+					<div class="mt-2 grid grid-cols-3 gap-2">
+						{#each ['small', 'normal', 'large'] as size}
+							<button type="button" class={`rounded-lg border py-2 text-sm ${fontSize === size ? 'border-emerald-600 bg-emerald-600 text-white' : lineClass}`} on:click={() => setFontSize(size as ReaderFontSize)}>{size === 'small' ? 'Kecil' : size === 'large' ? 'Besar' : 'Normal'}</button>
 						{/each}
 					</div>
-				{:else}
-					<div
-						class={`rounded-[1.5rem] border border-dashed px-6 py-10 text-center ${
-							isDarkReader ? 'border-stone-700 bg-stone-950/40' : 'border-slate-300 bg-slate-50'
-						}`}
-					>
-						<p class="text-base font-semibold">Konten bab belum tersedia.</p>
-						<p class={`mt-2 text-sm ${mutedTextClass}`}>
-							Bab ini sudah published, tetapi kontennya masih kosong.
-						</p>
+					<p class="mt-4 text-xs font-bold uppercase tracking-wide">Tema</p>
+					<div class="mt-2 grid grid-cols-2 gap-2">
+						<button type="button" class={`rounded-lg border py-2 text-sm ${theme === 'light' ? 'border-emerald-600 bg-emerald-600 text-white' : lineClass}`} on:click={() => setTheme('light')}>Terang</button>
+						<button type="button" class={`rounded-lg border py-2 text-sm ${theme === 'dark' ? 'border-emerald-600 bg-emerald-600 text-white' : lineClass}`} on:click={() => setTheme('dark')}>Gelap</button>
 					</div>
-				{/if}
-			</div>
-		</article>
-
-		<footer class="grid gap-3 sm:grid-cols-2">
-			{#if previousChapter}
-				<a
-					href={`/buku/${book.slug}/bab/${previousChapter.chapterNumber}`}
-					class={`group rounded-[1.5rem] border p-5 transition hover:-translate-y-0.5 ${
-						isDarkReader
-							? 'border-stone-700 bg-stone-900/78 hover:border-emerald-500/60'
-							: 'border-slate-200 bg-white/85 hover:border-emerald-200 hover:bg-white'
-					}`}
-				>
-					<p class="text-xs font-semibold uppercase tracking-[0.22em] opacity-55">Sebelumnya</p>
-					<p class="mt-2 font-semibold">
-						Bab {previousChapter.chapterNumber}: {previousChapter.title}
-					</p>
-				</a>
-			{:else}
-				<div class={`rounded-[1.5rem] border border-dashed p-5 opacity-65 ${softCardClass}`}>
-					<p class="text-xs font-semibold uppercase tracking-[0.22em]">Sebelumnya</p>
-					<p class="mt-2 font-semibold">Ini bab pertama.</p>
 				</div>
 			{/if}
-
-			{#if nextChapter}
-				<a
-					href={`/buku/${book.slug}/bab/${nextChapter.chapterNumber}`}
-					class={`group rounded-[1.5rem] border p-5 text-left transition hover:-translate-y-0.5 sm:text-right ${
-						isDarkReader
-							? 'border-stone-700 bg-stone-900/78 hover:border-emerald-500/60'
-							: 'border-slate-200 bg-white/85 hover:border-emerald-200 hover:bg-white'
-					}`}
-				>
-					<p class="text-xs font-semibold uppercase tracking-[0.22em] opacity-55">Berikutnya</p>
-					<p class="mt-2 font-semibold">Bab {nextChapter.chapterNumber}: {nextChapter.title}</p>
-				</a>
-			{:else}
-				<div
-					class={`rounded-[1.5rem] border border-dashed p-5 opacity-65 sm:text-right ${softCardClass}`}
-				>
-					<p class="text-xs font-semibold uppercase tracking-[0.22em]">Berikutnya</p>
-					<p class="mt-2 font-semibold">Ini bab terakhir.</p>
-				</div>
-			{/if}
-		</footer>
-	</div>
+		</div>
+		{#if bookmarkError}<p class="pb-2 text-center text-xs text-red-500">{bookmarkError}</p>{/if}
+	</footer>
 </div>
 
 <style>
-	.reader-content {
-		font-family:
-			'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
-		letter-spacing: 0.01em;
-		word-spacing: 0.01em;
-	}
-
-	.reader-content p.reader-paragraph {
-		margin: 0;
-		text-wrap: pretty;
-		text-align: justify;
-		text-justify: inter-word;
-		hyphens: auto;
-		-webkit-hyphens: auto;
-	}
-
-	.reader-content p.reader-paragraph + p.reader-paragraph {
-		margin-top: 1.65rem;
-	}
-
-	@media (min-width: 768px) {
-		.reader-content p.reader-paragraph + p.reader-paragraph {
-			margin-top: 1.85rem;
-		}
-	}
-
-	.book-paper::before {
-		background:
-			linear-gradient(
-				90deg,
-				rgba(120, 75, 30, 0.08),
-				transparent 11%,
-				transparent 89%,
-				rgba(120, 75, 30, 0.06)
-			),
-			linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 38%);
-		border-radius: inherit;
-		content: '';
-		inset: 0;
-		pointer-events: none;
-		position: absolute;
-	}
-
-	.book-paper > * {
-		position: relative;
-	}
-
-	@media (prefers-reduced-motion: no-preference) {
-		.reader-enter {
-			animation: reader-page-enter 420ms ease-out both;
-		}
-	}
-
-	@keyframes reader-page-enter {
-		from {
-			opacity: 0;
-			transform: translateY(14px) scale(0.99);
-		}
-
-		to {
-			opacity: 1;
-			transform: translateY(0) scale(1);
-		}
-	}
+	.reader-copy p { margin: 0 0 1.35em; }
+	.reader-copy p:first-child::first-letter { float: left; margin: 0.08em 0.12em 0 0; font-size: 3.2em; font-weight: 700; line-height: 0.8; }
 </style>

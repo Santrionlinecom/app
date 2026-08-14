@@ -1,8 +1,24 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { normalizeBukuProse, toBukuParagraphs } from '../src/lib/utils/buku-reader-text.ts';
+import {
+	estimateBukuReadingMinutes,
+	normalizeBukuProse,
+	toBukuParagraphs
+} from '../src/lib/utils/buku-reader-text.ts';
 
 describe('buku reader text', () => {
+	it('estimates zero minutes for empty content', () => {
+		assert.equal(estimateBukuReadingMinutes(''), 0);
+	});
+
+	it('estimates at least one minute for non-empty content', () => {
+		assert.equal(estimateBukuReadingMinutes('Satu paragraf pendek.'), 1);
+	});
+
+	it('estimates reading time from normalized word count', () => {
+		assert.equal(estimateBukuReadingMinutes(Array.from({ length: 400 }, () => 'kata').join(' ')), 2);
+	});
+
 	it('splits Windows CRLF blank-line paragraphs', () => {
 		const source =
 			'"Jangan bawa laptop itu ke laut."\r\n\r\nSuara itu berat, serak oleh debu timah.\r\n\r\nAku terpaku di depan meja kayu jati.';

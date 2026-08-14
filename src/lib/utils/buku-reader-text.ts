@@ -128,3 +128,14 @@ const reflowDenseProse = (text: string): string[] => {
 
 export const plainBukuText = (value: string | null | undefined): string =>
 	normalizeBukuProse(value).replace(/\s+/g, ' ').trim();
+
+export const estimateBukuReadingMinutes = (
+	value: string | null | undefined,
+	wordsPerMinute = 200
+): number => {
+	const text = plainBukuText(value);
+	if (!text) return 0;
+
+	const words = text.split(/\s+/).filter(Boolean).length;
+	return Math.max(1, Math.ceil(words / Math.max(1, wordsPerMinute)));
+};

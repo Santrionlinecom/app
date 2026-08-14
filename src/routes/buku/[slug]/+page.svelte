@@ -122,12 +122,6 @@
 						>
 							{readingProgress ? 'Mulai dari Awal' : 'Mulai Membaca'}
 						</a>
-						<a
-							href={`/buku/${book.slug}/baca?chapter=${readingProgress?.chapterNumber ?? firstChapter.chapterNumber}`}
-							class="btn border-none bg-emerald-500 text-white hover:bg-emerald-400"
-						>
-							Reader PDF
-						</a>
 					{/if}
 					<a href="#daftar-bab" class="btn btn-outline border-white/20 text-white hover:border-white hover:bg-white/10">
 						Lihat Daftar Bab
