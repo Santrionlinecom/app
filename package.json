@@ -8,7 +8,7 @@
     "preview": "vite preview",
     "cf:whoami": "wrangler whoami",
     "cf:d1:list": "wrangler d1 list",
-    "cf:d1:migrate:remote": "wrangler d1 execute DB --remote --file=schema.sql",
+    "cf:d1:migrations:apply:remote": "wrangler d1 migrations apply DB --remote",
     "cf:r2:list": "wrangler r2 bucket list",
     "flags:sync": "node scripts/sync-language-flags.mjs",
     "asbab:import": "node scripts/asbab/import-asbab-json.mjs",

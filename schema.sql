@@ -368,7 +368,15 @@ CREATE TABLE IF NOT EXISTS licenses (
   device_limit INTEGER NOT NULL,
   created_at INTEGER NOT NULL,
   expires_at INTEGER NULL,
-  notes TEXT NULL
+  notes TEXT NULL,
+  product_id TEXT NULL REFERENCES products(id) ON DELETE SET NULL,
+  license_key_hash TEXT UNIQUE,
+  max_devices INTEGER,
+  features_json TEXT,
+  activated_at INTEGER,
+  updated_at INTEGER,
+  source_sale_id TEXT UNIQUE REFERENCES digital_product_sales(id) ON DELETE SET NULL,
+  package_slug TEXT
 );
 
 CREATE TABLE IF NOT EXISTS devices (
@@ -407,7 +415,9 @@ CREATE TABLE IF NOT EXISTS digital_products (
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
   featured INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  license_product_id TEXT REFERENCES products(id) ON DELETE SET NULL,
+  license_package TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_digital_products_slug ON digital_products(slug);
 CREATE INDEX IF NOT EXISTS idx_digital_products_status ON digital_products(status);
@@ -467,6 +477,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_purchase_key ON digi
 CREATE INDEX IF NOT EXISTS idx_digital_product_sales_buyer_user ON digital_product_sales(buyer_user_id, created_at DESC);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_paid_owner ON digital_product_sales(buyer_user_id, product_id) WHERE buyer_user_id IS NOT NULL AND status = 'paid';
 CREATE INDEX IF NOT EXISTS idx_digital_product_sales_status_created ON digital_product_sales(status, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_licenses_source_sale_id ON licenses(source_sale_id) WHERE source_sale_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_digital_products_license_product ON digital_products(license_product_id);
+
+CREATE TABLE IF NOT EXISTS digital_support_requests (
+  id TEXT PRIMARY KEY,
+  sale_id TEXT NOT NULL UNIQUE REFERENCES digital_product_sales(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending_contact' CHECK (status IN ('pending_contact','contacted','scheduled','completed','cancelled')),
+  requested_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_digital_support_requests_user_status ON digital_support_requests(user_id, status, updated_at DESC);
 
 -- Public kitab library managed from CMS Hub
 CREATE TABLE IF NOT EXISTS kitab_catalog (

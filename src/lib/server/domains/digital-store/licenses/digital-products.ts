@@ -281,3 +281,13 @@ export const listUserProductLicenses = async (db: D1Database, user: { id: string
 
 	return rows.results ?? [];
 };
+
+/** Atomically claims or refreshes one device slot in one D1 statement. */
+export const claimActivationSlot = async (db: D1Database, params: { licenseId: string; deviceHash: string; maxDevices: number; deviceName?: string | null; metadata?: unknown; now?: number }) => {
+	const now = params.now ?? Date.now();
+	const result = await db.prepare(`INSERT INTO license_activations (id, license_id, device_hash, device_name, status, activated_at, last_seen_at, deactivated_at, metadata_json)
+	 SELECT ?, ?, ?, ?, 'active', ?, ?, NULL, ? WHERE (SELECT COUNT(*) FROM license_activations WHERE license_id = ? AND status = 'active') < ? OR EXISTS (SELECT 1 FROM license_activations WHERE license_id = ? AND device_hash = ? AND status = 'active')
+	 ON CONFLICT(license_id, device_hash) DO UPDATE SET device_name = COALESCE(excluded.device_name, license_activations.device_name), status = 'active', last_seen_at = excluded.last_seen_at, deactivated_at = NULL, metadata_json = COALESCE(excluded.metadata_json, license_activations.metadata_json)
+	 WHERE license_activations.status = 'active' OR (SELECT COUNT(*) FROM license_activations WHERE license_id = ? AND status = 'active') < ?`).bind(crypto.randomUUID(), params.licenseId, params.deviceHash, params.deviceName?.trim().slice(0,191)||null, now, now, params.metadata ? JSON.stringify(params.metadata).slice(0,2000) : null, params.licenseId, params.maxDevices, params.licenseId, params.deviceHash, params.licenseId, params.maxDevices).run();
+	return Number(result.meta?.changes ?? 0) === 1;
+};

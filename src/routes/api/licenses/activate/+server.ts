@@ -3,8 +3,7 @@ import { getD1 } from '$lib/server/cloudflare';
 import { getRequestIp } from '$lib/server/logger';
 import { buildRateLimitHeaders, consumeApiRateLimit } from '$lib/server/rate-limit';
 import {
-	countActiveActivations,
-	getActivation,
+	claimActivationSlot,
 	getFeaturesForLicense,
 	getLicenseByKeyHash,
 	getMaxDevicesForLicense,
@@ -14,8 +13,7 @@ import {
 	isValidDeviceHash,
 	isValidProductSlug,
 	normalizeDeviceHash,
-	normalizeProductSlug,
-	upsertActivation
+	normalizeProductSlug
 } from '$lib/server/domains/digital-store/licenses/digital-products';
 import { licensePayload, parseLicenseApiBody } from '$lib/server/domains/digital-store/licenses/request';
 
@@ -87,22 +85,15 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json(licensePayload('expired', plan, expiresAt, features), { status: 403 });
 	}
 
-	const existingActivation = await getActivation(db, license.licenseId, deviceHash);
-	if (existingActivation?.status !== 'active') {
-		const activeDevices = await countActiveActivations(db, license.licenseId);
-		const maxDevices = getMaxDevicesForLicense(license);
-		if (activeDevices >= maxDevices) {
-			return json(licensePayload('device_limit_reached', plan, expiresAt, features), { status: 409 });
-		}
-	}
-
-	await upsertActivation(db, {
+	const activated = await claimActivationSlot(db, {
 		licenseId: license.licenseId,
 		deviceHash,
+		maxDevices: getMaxDevicesForLicense(license),
 		deviceName: body.deviceName,
 		metadata: { ip, appVersion: body.appVersion || null },
 		now
 	});
+	if (!activated) return json(licensePayload('device_limit_reached', plan, expiresAt, features), { status: 409 });
 
 	await db
 		.prepare('UPDATE licenses SET activated_at = COALESCE(activated_at, ?), updated_at = ? WHERE license_key = ?')

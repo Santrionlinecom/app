@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test, { afterEach } from 'node:test';
 import { Miniflare } from 'miniflare';
-import { claimPaidDigitalOrderLicense, deriveOrderLicenseKey } from './paid-entitlement.ts';
-import { getLicenseByKeyHash, hashLicenseKey } from './digital-products.ts';
+import { claimPaidDigitalOrderLicense, deriveOrderLicenseKey, refundPaidDigitalOrder } from './paid-entitlement.ts';
+import { claimActivationSlot, getLicenseByKeyHash, hashLicenseKey } from './digital-products.ts';
 
 const instances: Miniflare[] = [];
 const secret = 'synthetic-test-secret';
@@ -54,8 +54,8 @@ const createDb = async () => {
 	return db;
 };
 
-const addSale = async (db: Awaited<ReturnType<typeof createDb>>, status = 'paid', id = 'sale-1', reference = 'ORDER-1') => {
-	await db.prepare(`INSERT INTO digital_product_sales (id, product_id, buyer_user_id, amount, reference_code, status, access_token, created_at, updated_at) VALUES (?, 'store-promo', NULL, 69000, ?, ?, 'token-1', 1, 1)`).bind(id, reference, status).run();
+const addSale = async (db: Awaited<ReturnType<typeof createDb>>, status = 'paid', id = 'sale-1', reference = 'ORDER-1', owner: string | null = 'user-1') => {
+	await db.prepare(`INSERT INTO digital_product_sales (id, product_id, buyer_user_id, amount, reference_code, status, access_token, created_at, updated_at) VALUES (?, 'store-promo', ?, 69000, ?, ?, 'token-1', 1, 1)`).bind(id, owner, reference, status).run();
 };
 
 afterEach(async () => { await Promise.all(instances.splice(0).map((mf) => mf.dispose())); });
@@ -88,6 +88,34 @@ test('access token and account ownership prevent entitlement theft', async () =>
 	await assert.rejects(() => claimPaidDigitalOrderLicense({ db, referenceCode: 'ORDER-1', accessToken: 'token-1', userId: 'user-2', secret }), /dimiliki akun lain/i);
 });
 
+test('an unowned paid order is rejected and claim never establishes ownership', async () => {
+	const db = await createDb(); await addSale(db, 'paid', 'sale-1', 'ORDER-1', null);
+	await assert.rejects(() => claimPaidDigitalOrderLicense({ db, referenceCode: 'ORDER-1', accessToken: 'token-1', userId: 'user-1', secret }), /tidak memiliki pemilik/i);
+	assert.deepEqual(await db.prepare(`SELECT buyer_user_id owner FROM digital_product_sales WHERE id = 'sale-1'`).first(), { owner: null });
+	assert.equal((await db.prepare('SELECT COUNT(*) total FROM licenses').first<{ total: number }>())?.total, 0);
+});
+
+test('refund atomically revokes a sale license, deactivates devices, and replay is idempotent', async () => {
+	const db = await createDb(); await addSale(db);
+	const claimed = await claimPaidDigitalOrderLicense({ db, referenceCode: 'ORDER-1', accessToken: 'token-1', userId: 'user-1', secret });
+	await db.prepare(`INSERT INTO license_activations VALUES ('act-1', ?, 'device-one', 'Laptop', 'active', 1, 1, NULL, NULL)`).bind(claimed.licenseId).run();
+	assert.equal(await refundPaidDigitalOrder({ db, saleId: 'sale-1', now: 2000 }), 'refunded');
+	assert.equal(await refundPaidDigitalOrder({ db, saleId: 'sale-1', now: 3000 }), 'already_refunded');
+	assert.deepEqual(await db.prepare(`SELECT s.status saleStatus, l.status licenseStatus FROM digital_product_sales s JOIN licenses l ON l.source_sale_id = s.id WHERE s.id = 'sale-1'`).first(), { saleStatus: 'refunded', licenseStatus: 'revoked' });
+	assert.deepEqual(await db.prepare(`SELECT status, deactivated_at deactivatedAt FROM license_activations WHERE id = 'act-1'`).first(), { status: 'deactivated', deactivatedAt: 2000 });
+});
+
+test('claim versus refund concurrency can never leave an active license on a refunded sale', async () => {
+	const db = await createDb(); await addSale(db);
+	await Promise.allSettled([
+		claimPaidDigitalOrderLicense({ db, referenceCode: 'ORDER-1', accessToken: 'token-1', userId: 'user-1', secret }),
+		refundPaidDigitalOrder({ db, saleId: 'sale-1', now: 2000 })
+	]);
+	const row = await db.prepare(`SELECT s.status saleStatus, l.status licenseStatus FROM digital_product_sales s LEFT JOIN licenses l ON l.source_sale_id = s.id WHERE s.id = 'sale-1'`).first<{ saleStatus: string; licenseStatus: string | null }>();
+	assert.equal(row?.saleStatus, 'refunded');
+	assert.notEqual(row?.licenseStatus, 'active');
+});
+
 test('concurrent claims and duplicate source_sale_id cannot issue two licenses', async () => {
 	const db = await createDb(); await addSale(db);
 	const results = await Promise.allSettled(['user-1', 'user-2'].map((userId) => claimPaidDigitalOrderLicense({ db, referenceCode: 'ORDER-1', accessToken: 'token-1', userId, secret })));
@@ -118,4 +146,14 @@ test('migration applies to the current pre-0059 schema and maps all three packag
 	const bantuan = await db.prepare(`SELECT summary, description FROM digital_products WHERE slug = 'santriprint-bantuan'`).first<{ summary: string; description: string }>();
 	assert.match(`${bantuan?.summary} ${bantuan?.description}`, /instalasi|onboarding/i);
 	assert.doesNotMatch(`${bantuan?.summary} ${bantuan?.description}`, /pengembangan|donasi/i);
+});
+
+
+
+test('atomic D1 activation slot allows at most two simultaneous new devices', async () => {
+	const db = await createDb();
+	await db.prepare(`INSERT INTO licenses (license_key, plan, status, device_limit, created_at, updated_at) VALUES ('license-race', 'pro', 'active', 2, 1, 1)`).run();
+	const attempts = await Promise.all(['device-a', 'device-b', 'device-c'].map((deviceHash) => claimActivationSlot(db, { licenseId: 'license-race', deviceHash, maxDevices: 2, now: 1000 })));
+	assert.equal(attempts.filter(Boolean).length, 2);
+	assert.deepEqual(await db.prepare("SELECT COUNT(*) total FROM license_activations WHERE license_id = 'license-race' AND status = 'active'").first(), { total: 2 });
 });

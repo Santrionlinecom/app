@@ -10,9 +10,6 @@ import { getRequestIp } from '$lib/server/logger';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 import { claimPaidDigitalOrderLicense } from '$lib/server/domains/digital-store/licenses/paid-entitlement';
 
-const normalizeText = (value: FormDataEntryValue | null) =>
-	typeof value === 'string' ? value.trim() : '';
-
 const loadOrder = async (
 	db: NonNullable<App.Locals['db']>,
 	reference: string,
@@ -25,13 +22,14 @@ const loadOrder = async (
 	return order;
 };
 
-export const load: PageServerLoad = async ({ params, url, locals }) => {
+export const load: PageServerLoad = async ({ params, url, locals, cookies, setHeaders }) => {
 	if (!locals.db) {
 		throw error(500, 'Layanan data tidak tersedia');
 	}
 
 	await ensureDigitalCommerceSchema(locals.db);
-	const token = (url.searchParams.get('token') ?? '').trim();
+	setHeaders({ 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'private, no-store' });
+	const token = cookies.get('digital_order_access')?.trim() ?? '';
 	if (!token) {
 		throw error(404, 'Kode akses pesanan tidak valid');
 	}
@@ -39,22 +37,22 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const order = await loadOrder(locals.db, params.reference, token);
 
 	return {
-		token,
 		proofUpdated: url.searchParams.get('proof') === 'updated',
 		order
 	};
 };
 
 export const actions: Actions = {
-	claimLicense: async ({ request, params, locals, platform }) => {
+	claimLicense: async ({ params, locals, platform, cookies, setHeaders }) => {
 		if (!locals.user) return fail(401, { error: 'Silakan login untuk klaim lisensi.' });
 		if (!locals.db) return fail(500, { error: 'Layanan data tidak tersedia.' });
 		const secret = platform?.env?.LICENSE_KEY_HASH_SECRET?.trim();
 		if (!secret) return fail(503, { error: 'Layanan lisensi belum siap. Silakan hubungi admin.' });
 
 		await ensureDigitalCommerceSchema(locals.db);
-		const formData = await request.formData();
-		const token = normalizeText(formData.get('token'));
+		setHeaders({ 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'private, no-store' });
+		const token = cookies.get('digital_order_access')?.trim() ?? '';
+		if (!token) return fail(404, { error: 'Kode akses pesanan tidak valid.' });
 		try {
 			const claimed = await claimPaidDigitalOrderLicense({
 				db: locals.db,
@@ -68,14 +66,15 @@ export const actions: Actions = {
 			return fail(403, { error: err instanceof Error ? err.message : 'Lisensi gagal diklaim.' });
 		}
 	},
-	uploadProof: async ({ request, params, locals, platform }) => {
+	uploadProof: async ({ request, params, locals, platform, cookies, setHeaders }) => {
 		if (!locals.db) {
 			return fail(500, { error: 'Layanan data tidak tersedia.' });
 		}
 
 		await ensureDigitalCommerceSchema(locals.db);
+		setHeaders({ 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'private, no-store' });
 		const formData = await request.formData();
-		const token = normalizeText(formData.get('token'));
+		const token = cookies.get('digital_order_access')?.trim() ?? '';
 
 		if (!token) {
 			return fail(400, { error: 'Kode akses pesanan tidak valid.' });
@@ -113,9 +112,6 @@ export const actions: Actions = {
 			return fail(400, { error: err?.message || 'Gagal mengunggah bukti bayar.' });
 		}
 
-		throw redirect(
-			303,
-			`/digital-store/order/${order.referenceCode}?token=${encodeURIComponent(token)}&proof=updated`
-		);
+		throw redirect(303, `/digital-store/order/${order.referenceCode}?proof=updated`);
 	}
 };

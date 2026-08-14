@@ -60,7 +60,8 @@ export async function claimPaidDigitalOrderLicense(input: {
 	if (!entitlement.productId || !entitlement.productSlug || entitlement.productPlan !== 'pro') {
 		throw new Error('Paket ini belum terhubung ke produk lisensi aktif.');
 	}
-	if (entitlement.buyerUserId && entitlement.buyerUserId !== input.userId) {
+	if (!entitlement.buyerUserId) throw new Error('Pesanan berbayar tidak memiliki pemilik dan tidak dapat diklaim.');
+	if (entitlement.buyerUserId !== input.userId) {
 		throw new Error('Entitlement pesanan dimiliki akun lain.');
 	}
 
@@ -72,14 +73,6 @@ export async function claimPaidDigitalOrderLicense(input: {
 	const internalLicenseId = `lic_sale_${entitlement.saleId}`;
 
 	await input.db.batch([
-		input.db
-			.prepare(
-				`UPDATE digital_product_sales
-				 SET buyer_user_id = COALESCE(buyer_user_id, ?), updated_at = updated_at
-				 WHERE id = ? AND access_token = ? AND status = 'paid'
-				   AND (buyer_user_id IS NULL OR buyer_user_id = ?)`
-			)
-			.bind(input.userId, entitlement.saleId, input.accessToken, input.userId),
 		input.db
 			.prepare(
 				`INSERT OR IGNORE INTO licenses (
@@ -113,4 +106,18 @@ export async function claimPaidDigitalOrderLicense(input: {
 	if (!license || license.userId !== input.userId) throw new Error('Gagal membuat entitlement lisensi untuk pesanan.');
 
 	return { licenseKey, licenseId: license.licenseId, packageSlug: license.packageSlug ?? packageSlug, productSlug: entitlement.productSlug, maxDevices };
+}
+
+export async function refundPaidDigitalOrder(input: { db: D1Database; saleId: string; now?: number }) {
+	const now = input.now ?? Date.now();
+	const result = await input.db.batch([
+		input.db.prepare(`UPDATE digital_product_sales SET status = 'refunded', updated_at = ? WHERE id = ? AND status = 'paid'`).bind(now, input.saleId),
+		input.db.prepare(`UPDATE licenses SET status = 'revoked', updated_at = ? WHERE source_sale_id = ? AND status != 'revoked' AND EXISTS (SELECT 1 FROM digital_product_sales WHERE id = ? AND status = 'refunded')`).bind(now, input.saleId, input.saleId),
+		input.db.prepare(`UPDATE license_activations SET status = 'deactivated', deactivated_at = ?, last_seen_at = ? WHERE status = 'active' AND license_id IN (SELECT license_key FROM licenses WHERE source_sale_id = ? AND status = 'revoked')`).bind(now, now, input.saleId)
+	]);
+	if (Number(result[0]?.meta?.changes ?? 0) === 1) return 'refunded' as const;
+	const sale = await input.db.prepare('SELECT status FROM digital_product_sales WHERE id = ?').bind(input.saleId).first<{ status: string }>();
+	if (!sale) throw new Error('Pesanan tidak ditemukan.');
+	if (sale.status === 'refunded') return 'already_refunded' as const;
+	throw new Error('Hanya pesanan lunas yang dapat direfund.');
 }

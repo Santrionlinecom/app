@@ -6,6 +6,13 @@ ALTER TABLE digital_products ADD COLUMN license_product_id TEXT NULL REFERENCES 
 ALTER TABLE digital_products ADD COLUMN license_package TEXT NULL;
 ALTER TABLE licenses ADD COLUMN source_sale_id TEXT NULL REFERENCES digital_product_sales(id) ON DELETE SET NULL;
 ALTER TABLE licenses ADD COLUMN package_slug TEXT NULL;
+CREATE TABLE IF NOT EXISTS digital_support_requests (
+  id TEXT PRIMARY KEY, sale_id TEXT NOT NULL UNIQUE REFERENCES digital_product_sales(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending_contact' CHECK (status IN ('pending_contact','contacted','scheduled','completed','cancelled')),
+  requested_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_digital_support_requests_user_status ON digital_support_requests(user_id, status, updated_at DESC);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_licenses_source_sale_id
   ON licenses(source_sale_id) WHERE source_sale_id IS NOT NULL;
@@ -63,7 +70,6 @@ ON CONFLICT(id) DO UPDATE SET
   license_product_id = excluded.license_product_id, license_package = excluded.license_package,
   updated_at = excluded.updated_at;
 
-INSERT OR IGNORE INTO digital_product_payment_methods (product_id, payment_method_id, created_at)
-SELECT p.id, m.id, CAST(strftime('%s', 'now') AS INTEGER) * 1000
-FROM digital_products p CROSS JOIN digital_payment_methods m
-WHERE p.slug IN ('santriprint-promo', 'santriprint-pro', 'santriprint-bantuan') AND m.is_active = 1;
+-- Launch policy: SantriPrint is coin-only; detach every manual/provider method.
+DELETE FROM digital_product_payment_methods
+WHERE product_id IN (SELECT id FROM digital_products WHERE slug IN ('santriprint-promo', 'santriprint-pro', 'santriprint-bantuan'));

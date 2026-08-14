@@ -14,11 +14,11 @@ const resolveR2Key = (fileUrl: string) => {
 	return null;
 };
 
-export const GET: RequestHandler = async ({ params, url, locals, platform }) => {
+export const GET: RequestHandler = async ({ params, cookies, locals, platform }) => {
 	if (!locals.db) throw error(500, 'Layanan data tidak tersedia');
 
 	await ensureDigitalCommerceSchema(locals.db);
-	const token = (url.searchParams.get('token') ?? '').trim();
+	const token = cookies.get('digital_order_access')?.trim() ?? '';
 	if (!token) throw error(404, 'Kode akses pesanan tidak valid');
 
 	const order = await getDigitalOrderByReference(locals.db, params.reference, token);
@@ -36,6 +36,7 @@ export const GET: RequestHandler = async ({ params, url, locals, platform }) => 
 		'content-type': object.httpMetadata?.contentType || 'application/octet-stream',
 		'content-disposition': `attachment; filename="${filename.replace(/["\\]/g, '')}"`,
 		'cache-control': 'private, no-store',
+		'referrer-policy': 'no-referrer',
 		'x-content-type-options': 'nosniff'
 	});
 	return new Response(object.body as unknown as BodyInit, { headers });

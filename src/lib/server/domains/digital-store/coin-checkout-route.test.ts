@@ -7,6 +7,7 @@ const pagePath = new URL('../../../../routes/digital-store/[slug]/+page.svelte',
 const commercePath = new URL('./commerce.ts', import.meta.url);
 const orderRoutePath = new URL('../../../../routes/digital-store/order/[reference]/+page.server.ts', import.meta.url);
 const orderPagePath = new URL('../../../../routes/digital-store/order/[reference]/+page.svelte', import.meta.url);
+const downloadRoutePath = new URL('../../../../routes/digital-store/order/[reference]/download/+server.ts', import.meta.url);
 const walletPath = new URL('../buku/wallet.ts', import.meta.url);
 const schemaPath = new URL('../../../../../schema.sql', import.meta.url);
 
@@ -54,4 +55,25 @@ test('fresh and runtime wallet schemas both allow canonical purchase ledger entr
 	assert.match(wallet, /COIN_TRANSACTION_TYPES[^;]*'purchase'/s);
 	assert.match(wallet, /CHECK \(type IN \([^)]*'purchase'/s);
 	assert.match(schema, /CREATE TABLE IF NOT EXISTS coin_transactions[\s\S]*?CHECK \(type IN \([^)]*'purchase'/);
+});
+
+
+
+test('order bearer token stays in an HttpOnly cookie and sensitive responses suppress referrers', async () => {
+	const [checkout, orderRoute, orderPage, downloadRoute] = await Promise.all([readFile(routePath, 'utf8'), readFile(orderRoutePath, 'utf8'), readFile(orderPagePath, 'utf8'), readFile(downloadRoutePath, 'utf8')]);
+	assert.match(checkout, /cookies\.set\('digital_order_access'/);
+	assert.doesNotMatch(checkout, /\?token=/);
+	assert.match(orderRoute, /cookies\.get\('digital_order_access'\)/);
+	assert.match(downloadRoute, /cookies\.get\('digital_order_access'\)/);
+	assert.doesNotMatch(orderRoute, /searchParams\.get\('token'\)|formData\.get\('token'\)|\?token=/);
+	assert.doesNotMatch(downloadRoute, /searchParams\.get\('token'\)/);
+	assert.doesNotMatch(orderPage, /data\.token|name="token"|\?token=/);
+	assert.match(orderRoute, /Referrer-Policy[^\n]*no-referrer/i);
+	assert.match(downloadRoute, /referrer-policy[^\n]*no-referrer/i);
+});
+
+test('Bantuan order page exposes its support fulfillment status', async () => {
+	const [commerce, orderPage] = await Promise.all([readFile(commercePath, 'utf8'), readFile(orderPagePath, 'utf8')]);
+	assert.match(commerce, /supportStatus/);
+	assert.match(orderPage, /supportStatus/);
 });

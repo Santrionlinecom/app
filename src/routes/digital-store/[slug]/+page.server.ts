@@ -39,7 +39,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
-	createOrder: async ({ request, params, locals }) => {
+	createOrder: async ({ request, params, locals, cookies }) => {
 		if (!locals.user) {
 			return fail(401, {
 				type: 'auth_required',
@@ -113,10 +113,8 @@ export const actions: Actions = {
 				result: result.status
 			});
 
-			throw redirect(
-				303,
-				`/digital-store/order/${result.referenceCode}?token=${encodeURIComponent(result.accessToken)}`
-			);
+			cookies.set('digital_order_access', result.accessToken, { path: `/digital-store/order/${result.referenceCode}`, httpOnly: true, secure: true, sameSite: 'strict', maxAge: 60 * 60 * 24 * 30 });
+			throw redirect(303, `/digital-store/order/${result.referenceCode}`);
 		} catch (err: any) {
 			if (err?.status === 303) throw err;
 			console.error('digital_store_order_error', {

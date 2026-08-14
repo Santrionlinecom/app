@@ -145,11 +145,10 @@
 
 			<div class="mt-6 flex flex-wrap gap-3">
 				{#if data.order.status === 'paid'}
-					<a href={`/digital-store/order/${data.order.referenceCode}/download?token=${encodeURIComponent(data.token)}`} class="btn btn-primary">
+					<a href={`/digital-store/order/${data.order.referenceCode}/download`} class="btn btn-primary">
 						Unduh Installer SantriPrint
 					</a>
 					<form method="POST" action="?/claimLicense">
-						<input type="hidden" name="token" value={data.token} />
 						<button type="submit" class="btn btn-outline">Klaim Lisensi</button>
 					</form>
 				{/if}
@@ -160,6 +159,12 @@
 					<p class="text-xs font-semibold uppercase tracking-[0.2em]">Lisensi berhasil diklaim</p>
 					<code class="mt-2 block break-all text-base font-bold">{form.licenseKey}</code>
 					<p class="mt-2 text-sm">Simpan key ini untuk aktivasi SantriPrint. Paket: {form.packageSlug}.</p>
+				</div>
+			{/if}
+			{#if data.order.supportStatus}
+				<div class="mt-4 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sky-900">
+					<p class="text-xs font-semibold uppercase tracking-[0.2em]">Status Bantuan Instalasi</p>
+					<p class="mt-2 text-sm">{data.order.supportStatus === 'pending_contact' ? 'Tim kami akan menghubungi Anda untuk menjadwalkan bantuan.' : `Status layanan: ${data.order.supportStatus}`}</p>
 				</div>
 			{/if}
 		</article>
@@ -210,11 +215,10 @@
 				{#if data.order.paymentMethodType === 'manual' && data.order.status === 'pending'}
 					<form
 						method="POST"
-						action={`?/uploadProof&token=${encodeURIComponent(data.token)}`}
+						action="?/uploadProof"
 						enctype="multipart/form-data"
 						class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4"
 					>
-						<input type="hidden" name="token" value={data.token} />
 						<p class="text-xs uppercase tracking-[0.24em] text-slate-400">Upload Bukti Baru</p>
 						<input
 							name="proofFile"

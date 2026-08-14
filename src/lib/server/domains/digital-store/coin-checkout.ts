@@ -186,7 +186,12 @@ export async function checkoutDigitalProductWithCoins(
 				nowIso,
 				input.userId,
 				orderId
-			)
+			),
+		input.db.prepare(`INSERT OR IGNORE INTO digital_support_requests (id, sale_id, user_id, status, requested_at, updated_at)
+			SELECT ?, s.id, s.buyer_user_id, 'pending_contact', ?, ? FROM digital_product_sales s
+			JOIN digital_products p ON p.id = s.product_id
+			WHERE s.id = ? AND s.status = 'paid' AND p.license_package = 'bantuan'`)
+			.bind(`support:${orderId}`, nowMs, nowMs, orderId)
 	]);
 
 	if (Number(results[0]?.meta?.changes ?? 0) === 1) {

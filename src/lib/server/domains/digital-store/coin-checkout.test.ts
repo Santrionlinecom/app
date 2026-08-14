@@ -47,6 +47,9 @@ const createDb = async () => {
 			created_at INTEGER NOT NULL,
 			updated_at INTEGER NOT NULL
 		)`),
+		db.prepare(`CREATE TABLE digital_products (id TEXT PRIMARY KEY, license_package TEXT)`),
+		db.prepare(`CREATE TABLE digital_support_requests (id TEXT PRIMARY KEY, sale_id TEXT NOT NULL UNIQUE, user_id TEXT NOT NULL, status TEXT NOT NULL, requested_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`),
+		db.prepare("INSERT INTO digital_products VALUES ('product-1', 'pro')"),
 		db.prepare("INSERT INTO coin_wallets (user_id, balance) VALUES ('user-1', 1000)")
 	]);
 	return { mf, db };
@@ -126,4 +129,24 @@ test('a user cannot be charged twice for the same one-time product with differen
 	} finally {
 		await mf.dispose();
 	}
+});
+
+
+
+test('support request is created only for a paid Bantuan checkout', async () => {
+	const { mf, db } = await createDb();
+	try {
+		await db.prepare("UPDATE digital_products SET license_package = 'bantuan' WHERE id = 'product-1'").run();
+		const result = await checkoutDigitalProductWithCoins({ db, userId: 'user-1', productId: 'product-1', productTitle: 'SantriPrint Bantuan', coinAmount: 600, buyerName: 'Pembeli Uji', buyerContact: '08123456789', purchaseKey: 'checkout-bantuan-user-1', nowMs: 1_767_225_660_000 });
+		assert.equal(result.status, 'purchased');
+		assert.deepEqual(await db.prepare('SELECT sale_id AS saleId, user_id AS userId, status FROM digital_support_requests').first(), { saleId: result.orderId, userId: 'user-1', status: 'pending_contact' });
+	} finally { await mf.dispose(); }
+});
+
+test('ordinary Pro checkout never creates a support request', async () => {
+	const { mf, db } = await createDb();
+	try {
+		await checkoutDigitalProductWithCoins({ db, userId: 'user-1', productId: 'product-1', productTitle: 'SantriPrint Pro', coinAmount: 600, buyerName: 'Pembeli Uji', buyerContact: '08123456789', purchaseKey: 'checkout-pro-user-1', nowMs: 1_767_225_660_000 });
+		assert.deepEqual(await db.prepare('SELECT COUNT(*) total FROM digital_support_requests').first(), { total: 0 });
+	} finally { await mf.dispose(); }
 });

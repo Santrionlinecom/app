@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { refundPaidDigitalOrder } from './licenses/paid-entitlement';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -311,6 +312,13 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 			)`
 		)
 		.run();
+	await db.prepare(`CREATE TABLE IF NOT EXISTS digital_support_requests (
+		id TEXT PRIMARY KEY, sale_id TEXT NOT NULL UNIQUE REFERENCES digital_product_sales(id) ON DELETE CASCADE,
+		user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		status TEXT NOT NULL DEFAULT 'pending_contact' CHECK (status IN ('pending_contact','contacted','scheduled','completed','cancelled')),
+		requested_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
+	)`).run();
+	await db.prepare('CREATE INDEX IF NOT EXISTS idx_digital_support_requests_user_status ON digital_support_requests(user_id, status, updated_at DESC)').run();
 
 	try {
 		await db.prepare('ALTER TABLE digital_payment_methods ADD COLUMN asset_url TEXT').run();
@@ -1263,9 +1271,13 @@ export async function updateDigitalSaleStatus(
 		verifiedBy?: string | null;
 	}
 ) {
+	if (input.status === 'refunded') {
+		await refundPaidDigitalOrder({ db, saleId: input.id });
+		return;
+	}
 	const now = Date.now();
 	const shouldMarkPaid = input.status === 'paid';
-	const shouldMarkVerified = input.status === 'paid' || input.status === 'failed' || input.status === 'refunded';
+	const shouldMarkVerified = input.status === 'paid' || input.status === 'failed';
 
 	await db
 		.prepare(
@@ -1320,10 +1332,13 @@ export async function getDigitalOrderByReference(
 				s.admin_notes as adminNotes,
 				s.verified_at as verifiedAt,
 				s.created_at as createdAt,
-				s.paid_at as paidAt
+				s.paid_at as paidAt,
+				sr.status as supportStatus,
+				sr.updated_at as supportUpdatedAt
 			 FROM digital_product_sales s
 			 INNER JOIN digital_products p ON p.id = s.product_id
 			 LEFT JOIN digital_payment_methods m ON m.id = s.payment_method_id
+			 LEFT JOIN digital_support_requests sr ON sr.sale_id = s.id
 			 WHERE s.reference_code = ? AND s.access_token = ?
 			 LIMIT 1`
 		)
@@ -1356,5 +1371,7 @@ export async function getDigitalOrderByReference(
 			verifiedAt: number | null;
 			createdAt: number;
 			paidAt: number | null;
+			supportStatus: 'pending_contact' | 'contacted' | 'scheduled' | 'completed' | 'cancelled' | null;
+			supportUpdatedAt: number | null;
 		}>();
 }
