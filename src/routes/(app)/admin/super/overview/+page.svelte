@@ -74,7 +74,8 @@
 		coins: 'M12 3c4.97 0 9 2.24 9 5s-4.03 5-9 5-9-2.24-9-5 4.03-5 9-5zM3 8v4c0 2.76 4.03 5 9 5s9-2.24 9-5V8M3 12v4c0 2.76 4.03 5 9 5s9-2.24 9-5v-4',
 		wallet: 'M4 7.5A2.5 2.5 0 016.5 5H18a2 2 0 012 2v10.5A2.5 2.5 0 0117.5 20h-11A2.5 2.5 0 014 17.5v-10zM16 12h5v4h-5a2 2 0 010-4zM17.5 14h.01M7 8h7',
 		settings: 'M12 8a4 4 0 100 8 4 4 0 000-8zM4 20a8 8 0 0116 0M18.5 5.5l1.5 1.5M20 5.5L18.5 7',
-		shield: 'M12 3l7 3v5c0 4.5-2.9 8.4-7 10-4.1-1.6-7-5.5-7-10V6l7-3zM9 12l2 2 4-4'
+		shield: 'M12 3l7 3v5c0 4.5-2.9 8.4-7 10-4.1-1.6-7-5.5-7-10V6l7-3zM9 12l2 2 4-4',
+		heart: 'M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6.5 5.5 5.5 0 0121.5 12C19 16.5 12 21 12 21z'
 	};
 
 	const quickActions = [
@@ -82,6 +83,7 @@
 		{ label: 'Buku', href: '/admin/super/buku', icon: iconPaths.book, tone: 'from-rose-500 to-pink-500' },
 		{ label: 'Addon', href: '/admin/super/addons', icon: iconPaths.wallet, tone: 'from-indigo-500 to-violet-500' },
 		{ label: 'Topup Coin', href: '/admin/super/coin-topups', icon: iconPaths.coins, tone: 'from-amber-400 to-orange-500' },
+		{ label: 'Pilot Habit', href: '/admin/super/pilot', icon: iconPaths.heart, tone: 'from-rose-400 to-red-500' },
 		{ label: 'Akun', href: '/akun', icon: iconPaths.settings, tone: 'from-slate-600 to-slate-800' }
 	];
 
