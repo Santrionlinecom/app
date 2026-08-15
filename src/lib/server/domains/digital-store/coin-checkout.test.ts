@@ -47,9 +47,9 @@ const createDb = async () => {
 			created_at INTEGER NOT NULL,
 			updated_at INTEGER NOT NULL
 		)`),
-		db.prepare(`CREATE TABLE digital_products (id TEXT PRIMARY KEY, license_package TEXT)`),
+		db.prepare(`CREATE TABLE digital_products (id TEXT PRIMARY KEY, license_package TEXT, license_product_id TEXT)`),
 		db.prepare(`CREATE TABLE digital_support_requests (id TEXT PRIMARY KEY, sale_id TEXT NOT NULL UNIQUE, user_id TEXT NOT NULL, status TEXT NOT NULL, requested_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`),
-		db.prepare("INSERT INTO digital_products VALUES ('product-1', 'pro')"),
+		db.prepare("INSERT INTO digital_products VALUES ('product-1', 'pro', 'family-1')"),
 		db.prepare("INSERT INTO coin_wallets (user_id, balance) VALUES ('user-1', 1000)")
 	]);
 	return { mf, db };
@@ -132,6 +132,22 @@ test('a user cannot be charged twice for the same one-time product with differen
 });
 
 
+
+test('concurrent cross-SKU checkout charges only once per entitlement family', async () => {
+	const { mf, db } = await createDb();
+	try {
+		await db.prepare("INSERT INTO digital_products VALUES ('product-2', 'promo', 'family-1')").run();
+		const common = { db, userId: 'user-1', productTitle: 'SantriPrint', coinAmount: 600, buyerName: 'Uji', buyerContact: '0812', nowMs: 1_767_225_660_000 };
+		const results = await Promise.all([
+			checkoutDigitalProductWithCoins({ ...common, productId: 'product-1', purchaseKey: 'checkout-family-pro-user-1' }),
+			checkoutDigitalProductWithCoins({ ...common, productId: 'product-2', purchaseKey: 'checkout-family-promo-user-1' })
+		]);
+		assert.equal(results.filter((result) => result.status === 'purchased').length, 1);
+		assert.equal(results.filter((result) => result.status === 'already_purchased').length, 1);
+		assert.deepEqual(await db.prepare('SELECT COUNT(*) total FROM digital_product_sales').first(), { total: 1 });
+		assert.deepEqual(await db.prepare("SELECT balance FROM coin_wallets WHERE user_id = 'user-1'").first(), { balance: 400 });
+	} finally { await mf.dispose(); }
+});
 
 test('support request is created only for a paid Bantuan checkout', async () => {
 	const { mf, db } = await createDb();

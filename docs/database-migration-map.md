@@ -209,6 +209,16 @@ wrangler d1 migrations apply DB_NAME --local
 npm run db:check
 ```
 
+### SantriPrint 1.3.6 incremental release
+
+`schema.sql` is the canonical **fresh-database baseline**. The historical migration directory is not a supported fresh bootstrap chain. For an existing database already migrated through 0058, apply only the reviewed incremental file (after local/staging verification):
+
+```bash
+npm run cf:d1:migration:0059:remote
+```
+
+Do not use a full `wrangler d1 migrations apply` as a fresh-install command for this release.
+
 ### Remote Deployment
 ```bash
 # 1. Test migration locally first (MANDATORY)

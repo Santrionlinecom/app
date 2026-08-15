@@ -4,14 +4,22 @@ PRAGMA foreign_keys = ON;
 
 ALTER TABLE digital_products ADD COLUMN license_product_id TEXT NULL REFERENCES products(id) ON DELETE SET NULL;
 ALTER TABLE digital_products ADD COLUMN license_package TEXT NULL;
+ALTER TABLE digital_products ADD COLUMN checkout_policy TEXT NOT NULL DEFAULT 'assigned_methods' CHECK (checkout_policy IN ('coin_only','assigned_methods'));
 ALTER TABLE licenses ADD COLUMN source_sale_id TEXT NULL REFERENCES digital_product_sales(id) ON DELETE SET NULL;
 ALTER TABLE licenses ADD COLUMN package_slug TEXT NULL;
 CREATE TABLE IF NOT EXISTS digital_support_requests (
   id TEXT PRIMARY KEY, sale_id TEXT NOT NULL UNIQUE REFERENCES digital_product_sales(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   status TEXT NOT NULL DEFAULT 'pending_contact' CHECK (status IN ('pending_contact','contacted','scheduled','completed','cancelled')),
-  requested_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
+  requested_at INTEGER NOT NULL, updated_at INTEGER NOT NULL,
+  updated_by TEXT NULL REFERENCES users(id) ON DELETE SET NULL
 );
+CREATE TABLE IF NOT EXISTS digital_support_request_transitions (
+  id TEXT PRIMARY KEY, support_request_id TEXT NOT NULL REFERENCES digital_support_requests(id) ON DELETE CASCADE,
+  from_status TEXT NOT NULL, to_status TEXT NOT NULL, actor_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_support_transitions_request_time ON digital_support_request_transitions(support_request_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_digital_support_requests_user_status ON digital_support_requests(user_id, status, updated_at DESC);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_licenses_source_sale_id
@@ -34,7 +42,7 @@ ON CONFLICT(id) DO UPDATE SET
 
 INSERT INTO digital_products (
   id, title, slug, summary, description, price, cover_url, file_url, status, featured,
-  created_at, updated_at, license_product_id, license_package
+  created_at, updated_at, license_product_id, license_package, checkout_policy
 ) VALUES
 (
   'dprod_santriprint_promo', 'SantriPrint Promo', 'santriprint-promo',
@@ -43,7 +51,7 @@ INSERT INTO digital_products (
   69000, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
   'r2://digital-products/santriprint/SantriPrint_1.3.6_x64-setup.exe', 'published', 1,
   CAST(strftime('%s', 'now') AS INTEGER) * 1000, CAST(strftime('%s', 'now') AS INTEGER) * 1000,
-  'prod_santriprint_pro', 'promo'
+  'prod_santriprint_pro', 'promo', 'coin_only'
 ),
 (
   'dprod_santriprint_pro', 'SantriPrint Pro', 'santriprint-pro',
@@ -52,7 +60,7 @@ INSERT INTO digital_products (
   129000, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
   'r2://digital-products/santriprint/SantriPrint_1.3.6_x64-setup.exe', 'published', 1,
   CAST(strftime('%s', 'now') AS INTEGER) * 1000, CAST(strftime('%s', 'now') AS INTEGER) * 1000,
-  'prod_santriprint_pro', 'pro'
+  'prod_santriprint_pro', 'pro', 'coin_only'
 ),
 (
   'dprod_santriprint_bantuan', 'SantriPrint Bantuan', 'santriprint-bantuan',
@@ -61,13 +69,14 @@ INSERT INTO digital_products (
   199000, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
   'r2://digital-products/santriprint/SantriPrint_1.3.6_x64-setup.exe', 'published', 1,
   CAST(strftime('%s', 'now') AS INTEGER) * 1000, CAST(strftime('%s', 'now') AS INTEGER) * 1000,
-  'prod_santriprint_pro', 'bantuan'
+  'prod_santriprint_pro', 'bantuan', 'coin_only'
 )
 ON CONFLICT(id) DO UPDATE SET
   title = excluded.title, slug = excluded.slug, summary = excluded.summary,
   description = excluded.description, price = excluded.price, cover_url = excluded.cover_url,
   file_url = excluded.file_url, status = excluded.status, featured = excluded.featured,
   license_product_id = excluded.license_product_id, license_package = excluded.license_package,
+  checkout_policy = 'coin_only',
   updated_at = excluded.updated_at;
 
 -- Launch policy: SantriPrint is coin-only; detach every manual/provider method.

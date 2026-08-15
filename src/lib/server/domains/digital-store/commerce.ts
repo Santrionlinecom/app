@@ -165,6 +165,7 @@ type ProductRow = {
 	updated_at: number;
 	salesCount: number | null;
 	revenue: number | null;
+	checkout_policy: 'coin_only' | 'assigned_methods';
 };
 
 type PaymentMethodRow = {
@@ -252,7 +253,8 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 				status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
 				featured INTEGER NOT NULL DEFAULT 0,
 				created_at INTEGER NOT NULL,
-				updated_at INTEGER NOT NULL
+				updated_at INTEGER NOT NULL,
+				checkout_policy TEXT NOT NULL DEFAULT 'assigned_methods' CHECK (checkout_policy IN ('coin_only','assigned_methods'))
 			)`
 		)
 		.run();
@@ -316,10 +318,24 @@ export async function ensureDigitalCommerceSchema(db: D1Database) {
 		id TEXT PRIMARY KEY, sale_id TEXT NOT NULL UNIQUE REFERENCES digital_product_sales(id) ON DELETE CASCADE,
 		user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 		status TEXT NOT NULL DEFAULT 'pending_contact' CHECK (status IN ('pending_contact','contacted','scheduled','completed','cancelled')),
-		requested_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
+		requested_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, updated_by TEXT REFERENCES users(id) ON DELETE SET NULL
+	)`).run();
+	await db.prepare(`CREATE TABLE IF NOT EXISTS digital_support_request_transitions (
+		id TEXT PRIMARY KEY, support_request_id TEXT NOT NULL REFERENCES digital_support_requests(id) ON DELETE CASCADE,
+		from_status TEXT NOT NULL, to_status TEXT NOT NULL, actor_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT, created_at INTEGER NOT NULL
 	)`).run();
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_digital_support_requests_user_status ON digital_support_requests(user_id, status, updated_at DESC)').run();
 
+	try {
+		await db.prepare("ALTER TABLE digital_products ADD COLUMN checkout_policy TEXT NOT NULL DEFAULT 'assigned_methods' CHECK (checkout_policy IN ('coin_only','assigned_methods'))").run();
+	} catch (_) {
+		// ignore when column already exists
+	}
+	try {
+		await db.prepare('ALTER TABLE digital_support_requests ADD COLUMN updated_by TEXT REFERENCES users(id) ON DELETE SET NULL').run();
+	} catch (_) {
+		// ignore when column already exists
+	}
 	try {
 		await db.prepare('ALTER TABLE digital_payment_methods ADD COLUMN asset_url TEXT').run();
 	} catch (_) {
@@ -520,8 +536,10 @@ const listProductPaymentMethods = async (db: D1Database) => {
 const resolvePublicMethods = (
 	allMethods: DigitalPaymentMethod[],
 	methodsByProduct: Map<string, DigitalProductPaymentMethodSummary[]>,
-	productId: string
+	productId: string,
+	checkoutPolicy: 'coin_only' | 'assigned_methods'
 ) => {
+	if (checkoutPolicy === 'coin_only') return [];
 	const assigned = (methodsByProduct.get(productId) ?? []).filter((method) => method.isActive);
 	if (assigned.length > 0) return assigned;
 	return allMethods
@@ -555,6 +573,7 @@ export async function listDigitalProducts(db: D1Database): Promise<DigitalProduc
 				p.featured,
 				p.created_at,
 				p.updated_at,
+				p.checkout_policy,
 				COALESCE(SUM(CASE WHEN s.status = 'paid' THEN 1 ELSE 0 END), 0) as salesCount,
 				COALESCE(SUM(CASE WHEN s.status = 'paid' THEN s.amount ELSE 0 END), 0) as revenue
 			FROM digital_products p
@@ -595,6 +614,7 @@ export async function listPublishedDigitalProducts(
 				p.featured,
 				p.created_at,
 				p.updated_at,
+				p.checkout_policy,
 				0 as salesCount,
 				0 as revenue
 			FROM digital_products p
@@ -605,7 +625,7 @@ export async function listPublishedDigitalProducts(
 
 	return (results ?? []).map((row) => ({
 		...mapPublicProduct(row, methodsByProduct),
-		paymentMethods: resolvePublicMethods(allMethods, methodsByProduct, row.id)
+		paymentMethods: resolvePublicMethods(allMethods, methodsByProduct, row.id, row.checkout_policy)
 	}));
 }
 
@@ -631,6 +651,7 @@ export async function getPublishedDigitalProductBySlug(
 					p.featured,
 					p.created_at,
 					p.updated_at,
+				p.checkout_policy,
 					0 as salesCount,
 					0 as revenue
 				FROM digital_products p
@@ -645,7 +666,7 @@ export async function getPublishedDigitalProductBySlug(
 
 	return {
 		...mapPublicProduct(row, methodsByProduct),
-		paymentMethods: resolvePublicMethods(allMethods, methodsByProduct, row.id)
+		paymentMethods: resolvePublicMethods(allMethods, methodsByProduct, row.id, row.checkout_policy)
 	};
 }
 
@@ -1109,7 +1130,7 @@ export async function createManualDigitalOrder(
 ) {
 	const product = await db
 		.prepare(
-			`SELECT id, title, slug, price, status
+			`SELECT id, title, slug, price, status, checkout_policy as checkoutPolicy
 			 FROM digital_products
 			 WHERE id = ?`
 		)
@@ -1120,10 +1141,12 @@ export async function createManualDigitalOrder(
 			slug: string;
 			price: number | null;
 			status: DigitalProductStatus;
+			checkoutPolicy: 'coin_only' | 'assigned_methods';
 		}>();
 	if (!product || product.status !== 'published') {
 		throw new Error('Produk digital tidak tersedia untuk checkout.');
 	}
+	if (product.checkoutPolicy === 'coin_only') throw new Error('Produk ini hanya dapat dibeli dengan coin.');
 
 	const method = await db
 		.prepare(

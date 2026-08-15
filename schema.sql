@@ -358,49 +358,14 @@ CREATE TABLE IF NOT EXISTS jadwal_tarawih (
 CREATE INDEX IF NOT EXISTS idx_jadwal_tarawih_org ON jadwal_tarawih(organization_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_jadwal_tarawih_org_urut ON jadwal_tarawih(organization_id, urut);
 
--- Licensing (Santri Streamer desktop)
-CREATE TABLE IF NOT EXISTS licenses (
-  license_key TEXT PRIMARY KEY,
-  user_id TEXT NULL REFERENCES users(id) ON DELETE SET NULL,
-  user_email TEXT NULL,
-  plan TEXT NOT NULL CHECK (plan IN ('starter', 'pro', 'studio')),
-  status TEXT NOT NULL CHECK (status IN ('active', 'revoked', 'expired')),
-  device_limit INTEGER NOT NULL,
-  created_at INTEGER NOT NULL,
-  expires_at INTEGER NULL,
-  notes TEXT NULL,
-  product_id TEXT NULL REFERENCES products(id) ON DELETE SET NULL,
-  license_key_hash TEXT UNIQUE,
-  max_devices INTEGER,
-  features_json TEXT,
-  activated_at INTEGER,
-  updated_at INTEGER,
-  source_sale_id TEXT UNIQUE REFERENCES digital_product_sales(id) ON DELETE SET NULL,
-  package_slug TEXT
+-- Runtime license product catalog (parent of digital_products and licenses)
+CREATE TABLE IF NOT EXISTS products (
+  id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL,
+  plan TEXT NOT NULL CHECK (plan IN ('free','pro')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','inactive')),
+  default_max_devices INTEGER NOT NULL DEFAULT 1 CHECK (default_max_devices > 0),
+  features_json TEXT NOT NULL DEFAULT '[]', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
 );
-
-CREATE TABLE IF NOT EXISTS devices (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  license_key TEXT NOT NULL REFERENCES licenses(license_key) ON DELETE CASCADE,
-  device_id TEXT NOT NULL,
-  device_name TEXT NULL,
-  activated_at INTEGER NOT NULL,
-  last_seen_at INTEGER NOT NULL,
-  UNIQUE (license_key, device_id)
-);
-
-CREATE TABLE IF NOT EXISTS license_events (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  license_key TEXT NULL REFERENCES licenses(license_key) ON DELETE SET NULL,
-  event_type TEXT NOT NULL CHECK (event_type IN ('generate', 'verify', 'activate', 'deactivate', 'revoke', 'reset_devices', 'fail')),
-  created_at INTEGER NOT NULL,
-  meta TEXT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_devices_license_key ON devices(license_key);
-CREATE INDEX IF NOT EXISTS idx_devices_device_id ON devices(device_id);
-CREATE INDEX IF NOT EXISTS idx_licenses_user_email ON licenses(user_email);
-CREATE INDEX IF NOT EXISTS idx_license_events_key_time ON license_events(license_key, created_at DESC);
 
 -- Digital commerce for super admin CMS
 CREATE TABLE IF NOT EXISTS digital_products (
@@ -417,7 +382,8 @@ CREATE TABLE IF NOT EXISTS digital_products (
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
   license_product_id TEXT REFERENCES products(id) ON DELETE SET NULL,
-  license_package TEXT
+  license_package TEXT,
+  checkout_policy TEXT NOT NULL DEFAULT 'assigned_methods' CHECK (checkout_policy IN ('coin_only','assigned_methods'))
 );
 CREATE INDEX IF NOT EXISTS idx_digital_products_slug ON digital_products(slug);
 CREATE INDEX IF NOT EXISTS idx_digital_products_status ON digital_products(status);
@@ -477,6 +443,60 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_purchase_key ON digi
 CREATE INDEX IF NOT EXISTS idx_digital_product_sales_buyer_user ON digital_product_sales(buyer_user_id, created_at DESC);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_digital_product_sales_paid_owner ON digital_product_sales(buyer_user_id, product_id) WHERE buyer_user_id IS NOT NULL AND status = 'paid';
 CREATE INDEX IF NOT EXISTS idx_digital_product_sales_status_created ON digital_product_sales(status, created_at DESC);
+-- Licensing (Santri Streamer desktop)
+CREATE TABLE IF NOT EXISTS licenses (
+  license_key TEXT PRIMARY KEY,
+  user_id TEXT NULL REFERENCES users(id) ON DELETE SET NULL,
+  user_email TEXT NULL,
+  plan TEXT NOT NULL CHECK (plan IN ('starter', 'pro', 'studio')),
+  status TEXT NOT NULL CHECK (status IN ('active', 'revoked', 'expired')),
+  device_limit INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NULL,
+  notes TEXT NULL,
+  product_id TEXT NULL REFERENCES products(id) ON DELETE SET NULL,
+  license_key_hash TEXT UNIQUE,
+  max_devices INTEGER,
+  features_json TEXT,
+  activated_at INTEGER,
+  updated_at INTEGER,
+  source_sale_id TEXT UNIQUE REFERENCES digital_product_sales(id) ON DELETE SET NULL,
+  package_slug TEXT
+);
+
+CREATE TABLE IF NOT EXISTS devices (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  license_key TEXT NOT NULL REFERENCES licenses(license_key) ON DELETE CASCADE,
+  device_id TEXT NOT NULL,
+  device_name TEXT NULL,
+  activated_at INTEGER NOT NULL,
+  last_seen_at INTEGER NOT NULL,
+  UNIQUE (license_key, device_id)
+);
+
+CREATE TABLE IF NOT EXISTS license_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  license_key TEXT NULL REFERENCES licenses(license_key) ON DELETE SET NULL,
+  event_type TEXT NOT NULL CHECK (event_type IN ('generate', 'verify', 'activate', 'deactivate', 'revoke', 'reset_devices', 'fail')),
+  created_at INTEGER NOT NULL,
+  meta TEXT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_devices_license_key ON devices(license_key);
+CREATE INDEX IF NOT EXISTS idx_devices_device_id ON devices(device_id);
+CREATE INDEX IF NOT EXISTS idx_licenses_user_email ON licenses(user_email);
+CREATE INDEX IF NOT EXISTS idx_license_events_key_time ON license_events(license_key, created_at DESC);
+
+
+CREATE TABLE IF NOT EXISTS license_activations (
+  id TEXT PRIMARY KEY, license_id TEXT NOT NULL REFERENCES licenses(license_key) ON DELETE CASCADE,
+  device_hash TEXT NOT NULL, device_name TEXT, status TEXT NOT NULL CHECK (status IN ('active','deactivated')),
+  activated_at INTEGER NOT NULL, last_seen_at INTEGER NOT NULL, deactivated_at INTEGER, metadata_json TEXT,
+  UNIQUE (license_id, device_hash)
+);
+CREATE INDEX IF NOT EXISTS idx_license_activations_license_status ON license_activations(license_id,status);
+CREATE INDEX IF NOT EXISTS idx_license_activations_device_hash ON license_activations(device_hash);
+CREATE INDEX IF NOT EXISTS idx_license_activations_last_seen ON license_activations(last_seen_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_licenses_source_sale_id ON licenses(source_sale_id) WHERE source_sale_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_digital_products_license_product ON digital_products(license_product_id);
 
@@ -486,8 +506,14 @@ CREATE TABLE IF NOT EXISTS digital_support_requests (
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   status TEXT NOT NULL DEFAULT 'pending_contact' CHECK (status IN ('pending_contact','contacted','scheduled','completed','cancelled')),
   requested_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  updated_by TEXT REFERENCES users(id) ON DELETE SET NULL
 );
+CREATE TABLE IF NOT EXISTS digital_support_request_transitions (
+  id TEXT PRIMARY KEY, support_request_id TEXT NOT NULL REFERENCES digital_support_requests(id) ON DELETE CASCADE,
+  from_status TEXT NOT NULL, to_status TEXT NOT NULL, actor_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT, created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_support_transitions_request_time ON digital_support_request_transitions(support_request_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_digital_support_requests_user_status ON digital_support_requests(user_id, status, updated_at DESC);
 
 -- Public kitab library managed from CMS Hub

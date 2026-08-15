@@ -57,13 +57,17 @@ const readSaleByPurchaseKey = async (
 const readOwnedSale = async (db: D1Database, userId: string, productId: string) =>
 	db
 		.prepare(
-			`SELECT id, reference_code AS referenceCode, access_token AS accessToken
+			`SELECT digital_product_sales.id, digital_product_sales.reference_code AS referenceCode, digital_product_sales.access_token AS accessToken
 			 FROM digital_product_sales
-			 WHERE buyer_user_id = ? AND product_id = ? AND status = 'paid'
-			 ORDER BY created_at ASC
+			 JOIN digital_products owned_product ON owned_product.id = digital_product_sales.product_id
+			 JOIN digital_products requested_product ON requested_product.id = ?
+			 WHERE buyer_user_id = ? AND status = 'paid'
+			   AND ((requested_product.license_product_id IS NOT NULL AND owned_product.license_product_id = requested_product.license_product_id)
+			     OR (requested_product.license_product_id IS NULL AND digital_product_sales.product_id = requested_product.id))
+			 ORDER BY digital_product_sales.created_at ASC
 			 LIMIT 1`
 		)
-		.bind(userId, productId)
+		.bind(productId, userId)
 		.first<SaleIdentity>();
 
 export async function checkoutDigitalProductWithCoins(
@@ -132,8 +136,12 @@ export async function checkoutDigitalProductWithCoins(
 					SELECT 1 FROM digital_product_sales WHERE purchase_key = ?
 				  )
 				  AND NOT EXISTS (
-					SELECT 1 FROM digital_product_sales
-					WHERE buyer_user_id = ? AND product_id = ? AND status = 'paid'
+					SELECT 1 FROM digital_product_sales existing_sale
+					JOIN digital_products existing_product ON existing_product.id = existing_sale.product_id
+					JOIN digital_products requested_product ON requested_product.id = ?
+					WHERE existing_sale.buyer_user_id = ? AND existing_sale.status = 'paid'
+					  AND ((requested_product.license_product_id IS NOT NULL AND existing_product.license_product_id = requested_product.license_product_id)
+					    OR (requested_product.license_product_id IS NULL AND existing_sale.product_id = requested_product.id))
 				  )`
 			)
 			.bind(
@@ -152,8 +160,8 @@ export async function checkoutDigitalProductWithCoins(
 				input.userId,
 				coinAmount,
 				input.purchaseKey,
-				input.userId,
-				input.productId
+				input.productId,
+				input.userId
 			),
 		input.db
 			.prepare(
