@@ -56,6 +56,7 @@ declare global {
                 // Pastikan binding di wrangler.toml namanya "BUCKET"
                 // (Jika belum pakai R2, baris ini boleh dihapus atau biarkan saja)
                 BUCKET: R2Bucket;
+                DIGITAL_PRODUCTS_BUCKET?: R2Bucket;
                 MEDIA_BUCKET?: R2Bucket;
             }
             context: {

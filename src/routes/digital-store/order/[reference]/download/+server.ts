@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { ensureDigitalCommerceSchema, getDigitalOrderByReference } from '$lib/server/domains/digital-store/commerce';
-import { requireR2Bucket } from '$lib/server/cloudflare';
+import { requireDigitalProductsBucket } from '$lib/server/cloudflare';
 
 const resolveR2Key = (fileUrl: string) => {
 	if (fileUrl.startsWith('r2://')) return fileUrl.slice('r2://'.length).replace(/^\/+/, '');
@@ -28,7 +28,7 @@ export const GET: RequestHandler = async ({ params, cookies, locals, platform })
 
 	const key = resolveR2Key(order.productFileUrl);
 	if (!key) throw error(500, 'Lokasi file digital tidak valid.');
-	const object = await requireR2Bucket(platform).get(key);
+	const object = await requireDigitalProductsBucket(platform).get(key);
 	if (!object) throw error(404, 'File digital belum tersedia di penyimpanan.');
 
 	const filename = key.split('/').at(-1) || 'SantriPrint-installer.exe';

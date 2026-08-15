@@ -39,6 +39,12 @@ export const requireR2Bucket = (platform?: App.Platform | null): R2Bucket => {
 	return bucket;
 };
 
+export const requireDigitalProductsBucket = (platform?: App.Platform | null): R2Bucket => {
+	const bucket = platform?.env?.DIGITAL_PRODUCTS_BUCKET as R2Bucket | undefined;
+	if (!bucket) throw error(500, 'Penyimpanan produk digital privat belum tersedia.');
+	return bucket;
+};
+
 export const getR2PublicBaseUrl = (platform?: App.Platform | null) =>
 	normalizeBaseUrl(platform?.env?.R2_PUBLIC_BASE_URL) || FALLBACK_R2_PUBLIC_BASE_URL;
 
