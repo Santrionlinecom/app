@@ -77,3 +77,17 @@ test('Bantuan order page exposes its support fulfillment status', async () => {
 	assert.match(commerce, /supportStatus/);
 	assert.match(orderPage, /supportStatus/);
 });
+
+test('successful Coin checkout queues buyer email after fulfillment without affecting redirect', async () => {
+	const route = await readFile(routePath, 'utf8');
+	const checkoutIndex = route.indexOf('await checkoutDigitalProductWithCoins({');
+	const emailIndex = route.indexOf('queueDigitalPurchaseEmail({');
+	const redirectIndex = route.indexOf('throw redirect(303');
+	assert.ok(checkoutIndex > 0);
+	assert.ok(emailIndex > checkoutIndex, 'email must be downstream of authoritative paid checkout and fulfillment');
+	assert.ok(redirectIndex > emailIndex, 'provider work must not control the successful redirect');
+	assert.match(route, /userId: locals\.user\.id/);
+	assert.match(route, /platform\?\.context\?\.waitUntil/);
+	assert.match(route, /licensePackage: product\.licensePackage/);
+	assert.doesNotMatch(route.slice(emailIndex, redirectIndex), /buyerContact/);
+});

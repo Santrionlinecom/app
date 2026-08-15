@@ -99,6 +99,7 @@ export interface PublicDigitalProductListItem {
 	price: number;
 	coverUrl: string | null;
 	fileAvailable: boolean;
+	licensePackage: string | null;
 	featured: boolean;
 	updatedAt: number;
 	paymentMethods: DigitalProductPaymentMethodSummary[];
@@ -166,6 +167,7 @@ type ProductRow = {
 	salesCount: number | null;
 	revenue: number | null;
 	checkout_policy: 'coin_only' | 'assigned_methods';
+	license_package: string | null;
 };
 
 type PaymentMethodRow = {
@@ -233,6 +235,7 @@ const mapPublicProduct = (
 	price: normalizeMoney(row.price),
 	coverUrl: row.cover_url,
 	fileAvailable: Boolean(row.file_url),
+	licensePackage: row.license_package,
 	featured: normalizeFlag(row.featured),
 	updatedAt: row.updated_at,
 	paymentMethods: (methodsByProduct.get(row.id) ?? []).filter((method) => method.isActive)
@@ -615,6 +618,7 @@ export async function listPublishedDigitalProducts(
 				p.created_at,
 				p.updated_at,
 				p.checkout_policy,
+				p.license_package,
 				0 as salesCount,
 				0 as revenue
 			FROM digital_products p
@@ -651,7 +655,8 @@ export async function getPublishedDigitalProductBySlug(
 					p.featured,
 					p.created_at,
 					p.updated_at,
-				p.checkout_policy,
+					p.checkout_policy,
+					p.license_package,
 					0 as salesCount,
 					0 as revenue
 				FROM digital_products p

@@ -7,6 +7,7 @@ import {
 import { rupiahToCoin } from '$lib/server/domains/buku/coin-operations';
 import { getCoinBalance } from '$lib/server/domains/buku/wallet';
 import { checkoutDigitalProductWithCoins } from '$lib/server/domains/digital-store/coin-checkout';
+import { queueDigitalPurchaseEmail } from '$lib/server/notifications/digital-purchase-email';
 
 const normalizeText = (value: FormDataEntryValue | null) =>
 	typeof value === 'string' ? value.trim() : '';
@@ -39,7 +40,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
-	createOrder: async ({ request, params, locals, cookies }) => {
+	createOrder: async ({ request, params, locals, cookies, platform }) => {
 		if (!locals.user) {
 			return fail(401, {
 				type: 'auth_required',
@@ -112,6 +113,18 @@ export const actions: Actions = {
 				new_balance: result.balanceAfter,
 				result: result.status
 			});
+
+			queueDigitalPurchaseEmail({
+				db: locals.db,
+				fetchFn: fetch,
+				env: platform?.env ?? {},
+				orderId: result.orderId,
+				userId: locals.user.id,
+				productTitle: product.title,
+				referenceCode: result.referenceCode,
+				coinAmount: coinRequired,
+				licensePackage: product.licensePackage
+			}, platform?.context?.waitUntil);
 
 			cookies.set('digital_order_access', result.accessToken, { path: `/digital-store/order/${result.referenceCode}`, httpOnly: true, secure: true, sameSite: 'strict', maxAge: 60 * 60 * 24 * 30 });
 			throw redirect(303, `/digital-store/order/${result.referenceCode}`);

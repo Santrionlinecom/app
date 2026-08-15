@@ -47,6 +47,12 @@ declare global {
                 MIDTRANS_SERVER_KEY?: string;
                 MIDTRANS_CLIENT_KEY?: string;
                 MIDTRANS_IS_PRODUCTION?: string;
+                DIGITAL_PURCHASE_EMAIL_NOTIFICATIONS_ENABLED?: string;
+                RESEND_API_KEY?: string;
+                TRANSACTIONAL_EMAIL_FROM?: string;
+                PAYMENT_EMAIL_FROM?: string;
+                REGISTRATION_EMAIL_FROM?: string;
+                PUBLIC_BASE_URL?: string;
                 TURNSTILE_SITE_KEY?: string;
                 TURNSTILE_SECRET_KEY?: string;
                 R2_PUBLIC_BASE_URL?: string;
