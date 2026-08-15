@@ -109,3 +109,23 @@ test('provider failure is swallowed and leaves delivery failed for retry', async
 	assert.deepEqual(result, { status: 'failed', code: 'resend_http_503' });
 	assert.equal(getStatus(), 'failed');
 });
+
+test('chapter purchase email uses an idempotent chapter event and token-free reader URL', async () => {
+	const { db } = createDb();
+	const fetchFn = (async (_url: string | URL | Request, init?: RequestInit) => {
+		assert.equal(new Headers(init?.headers).get('Idempotency-Key'), 'email:book_chapter_purchase:unlock-1');
+		const body = JSON.parse(String(init?.body)) as { text: string; html: string };
+		assert.match(body.text, /Bab sudah terbuka/);
+		assert.match(body.text, /https:\/\/app\.santrionline\.com\/buku\/rumah-di-ujung-pulau\/bab\/12/);
+		assert.doesNotMatch(body.text + body.html, /\?token=|access[_ -]?token/i);
+		return new Response(JSON.stringify({ id: 'email.chapter.once' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+	}) as typeof fetch;
+	const result = await notifyDigitalPurchaseEmail({
+		...baseInput(db, fetchFn),
+		orderId: 'unlock-1',
+		purchaseKind: 'book_chapter',
+		contentPath: '/buku/rumah-di-ujung-pulau/bab/12',
+		licensePackage: null
+	});
+	assert.deepEqual(result, { status: 'sent', messageId: 'email.chapter.once' });
+});

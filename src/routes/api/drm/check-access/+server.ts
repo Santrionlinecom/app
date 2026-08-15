@@ -4,6 +4,7 @@ import { requireD1 } from '$lib/server/cloudflare';
 import { ensureBukuAccessSchema, unlockBukuChapter } from '$lib/server/domains/buku/access';
 import { ensureBukuLibrarySchema } from '$lib/server/domains/buku/library';
 import { ensureBukuWalletSchema, getCoinBalance } from '$lib/server/domains/buku/wallet';
+import { queueDigitalPurchaseEmail } from '$lib/server/notifications/digital-purchase-email';
 import {
 	ensureDrmSchema,
 	getDrmAccess,
@@ -98,6 +99,22 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 		accessType: 'coin',
 		coinSpent: coinPrice
 	});
+
+	if (result.status === 'unlocked') {
+		queueDigitalPurchaseEmail({
+			db,
+			fetchFn: fetch,
+			env: platform?.env ?? {},
+			orderId: result.unlockId,
+			userId,
+			productTitle: `${book.title} — Bab ${chapter.chapterNumber}: ${chapter.title}`,
+			referenceCode: result.unlockId,
+			coinAmount: coinPrice,
+			licensePackage: null,
+			purchaseKind: 'book_chapter',
+			contentPath: `/buku/${encodeURIComponent(book.slug)}/bab/${chapter.chapterNumber}`
+		}, platform?.context?.waitUntil);
+	}
 
 	return json({
 		success: true,
