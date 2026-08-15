@@ -74,14 +74,17 @@
 	<title>Pilot Habit — Monitoring</title>
 </svelte:head>
 
-<div class="space-y-6 text-so-ink">
-	<div class="flex flex-wrap items-center justify-between gap-3">
-		<div>
-			<a href="/admin/super/overview" class="inline-flex items-center gap-1 text-xs font-bold text-so-green hover:text-so-green-2">← Overview</a>
-			<h1 class="font-display mt-1 text-2xl font-bold text-so-green">Pilot Habit System — Monitoring</h1>
-			<p class="mt-1 text-sm text-so-muted">Pantau konsistensi 3 santri + orang tua selama 14 hari. Tanpa leaderboard — data privat untuk pembinaan.</p>
+<div class="space-y-6 text-so-ink">		<div class="flex flex-wrap items-center justify-between gap-3">
+			<div>
+				<a href="/admin/super/overview" class="inline-flex items-center gap-1 text-xs font-bold text-so-green hover:text-so-green-2">← Overview</a>
+				<h1 class="font-display mt-1 text-2xl font-bold text-so-green">Pilot Habit System — Monitoring</h1>
+				<p class="mt-1 text-sm text-so-muted">Pantau konsistensi 3 santri + orang tua selama 14 hari. Tanpa leaderboard — data privat untuk pembinaan.</p>
+			</div>
+			<a href="/admin/super/pilot/export.csv" class="inline-flex h-10 items-center gap-2 rounded-xl border border-so-border bg-white px-4 text-sm font-bold text-so-green shadow-sm transition hover:border-so-green">
+				<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" /></svg>
+				Ekspor CSV
+			</a>
 		</div>
-	</div>
 
 	{#if formError}
 		<div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 shadow-sm">
