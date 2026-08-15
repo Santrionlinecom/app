@@ -20,6 +20,8 @@ type DigitalPurchaseEmailInput = {
 	referenceCode: string;
 	coinAmount: number;
 	licensePackage: string | null;
+	purchaseKind?: 'digital_product' | 'book_chapter';
+	contentPath?: string;
 };
 
 type DeliveryState = { status: 'pending' | 'sending' | 'sent' | 'failed'; attempts: number; updatedAt: number };
@@ -44,7 +46,7 @@ export const getDigitalPurchaseEmailConfig = (env: object) => {
 	return { apiKey, from, baseUrl };
 };
 
-export const digitalPurchaseEmailDeliveryId = (orderId: string) => `email:digital_purchase:${orderId}`;
+export const digitalPurchaseEmailDeliveryId = (orderId: string, eventType = 'digital_purchase') => `email:${eventType}:${orderId}`;
 
 export const notifyDigitalPurchaseEmail = async (input: DigitalPurchaseEmailInput): Promise<DigitalPurchaseEmailResult> => {
 	const enabled = (input.env as DigitalPurchaseEmailEnv).DIGITAL_PURCHASE_EMAIL_NOTIFICATIONS_ENABLED?.trim().toLowerCase() === 'true';
@@ -58,12 +60,13 @@ export const notifyDigitalPurchaseEmail = async (input: DigitalPurchaseEmailInpu
 	if (!recipient || !isValidEmail(recipient)) return { status: 'skipped', reason: 'invalid_recipient' };
 
 	await ensurePaymentNotificationDeliveriesSchema(input.db);
-	const deliveryId = digitalPurchaseEmailDeliveryId(input.orderId);
+	const eventType = input.purchaseKind === 'book_chapter' ? 'book_chapter_purchase' : 'digital_purchase';
+	const deliveryId = digitalPurchaseEmailDeliveryId(input.orderId, eventType);
 	const now = Date.now();
 	const staleBefore = now - 15 * 60 * 1000;
 	await input.db.prepare(`INSERT OR IGNORE INTO payment_notification_deliveries
 		(id, order_id, channel, event_type, recipient_last4, status, attempts, created_at, updated_at)
-		VALUES (?, ?, 'email', 'digital_purchase', NULL, 'pending', 0, ?, ?)`).bind(deliveryId, input.orderId, now, now).run();
+		VALUES (?, ?, 'email', ?, NULL, 'pending', 0, ?, ?)`).bind(deliveryId, input.orderId, eventType, now, now).run();
 	const claim = await input.db.prepare(`UPDATE payment_notification_deliveries SET status = 'sending', attempts = attempts + 1, updated_at = ?
 		WHERE id = ? AND attempts < 3 AND (status IN ('pending','failed') OR (status = 'sending' AND updated_at < ?))`).bind(now, deliveryId, staleBefore).run();
 	if (Number(claim.meta?.changes ?? 0) !== 1) {
@@ -75,10 +78,14 @@ export const notifyDigitalPurchaseEmail = async (input: DigitalPurchaseEmailInpu
 	}
 
 	const buyerName = user.username?.trim() || recipient.split('@')[0] || 'Sahabat SantriOnline';
-	const orderUrl = `${config.baseUrl.replace(/\/$/, '')}/digital-store/order/${encodeURIComponent(input.referenceCode)}`;
+	const safeContentPath = input.contentPath?.startsWith('/') && !input.contentPath.includes('?') && !input.contentPath.includes('#') ? input.contentPath : null;
+	const orderUrl = input.purchaseKind === 'book_chapter' && safeContentPath
+		? `${config.baseUrl.replace(/\/$/, '')}${safeContentPath}`
+		: `${config.baseUrl.replace(/\/$/, '')}/digital-store/order/${encodeURIComponent(input.referenceCode)}`;
 	const supportNote = input.licensePackage === 'bantuan' ? ' Tim Bantuan akan menghubungi Anda untuk proses onboarding.' : '';
-	const text = `Assalamu'alaikum ${buyerName}, pesanan ${input.productTitle} berhasil. Referensi: ${input.referenceCode}. Jumlah: ${input.coinAmount} Coin. Status: paid. Buka halaman pesanan aman: ${orderUrl}. Lisensi dan unduhan tersedia di halaman pesanan setelah login.${supportNote}`;
-	const html = `<p>Assalamu'alaikum ${escapeHtml(buyerName)},</p><p>Pesanan <strong>${escapeHtml(input.productTitle)}</strong> berhasil.</p><ul><li>Referensi: <code>${escapeHtml(input.referenceCode)}</code></li><li>Jumlah: ${escapeHtml(String(input.coinAmount))} Coin</li><li>Status: paid</li></ul><p><a href="${escapeHtml(orderUrl)}">Buka halaman pesanan aman</a></p><p>Lisensi dan unduhan tersedia di halaman pesanan setelah login.</p>${input.licensePackage === 'bantuan' ? '<p>Tim Bantuan akan menghubungi Anda untuk proses onboarding.</p>' : ''}`;
+	const accessNote = input.purchaseKind === 'book_chapter' ? 'Bab sudah terbuka dan dapat dibaca setelah login.' : 'Lisensi dan unduhan tersedia di halaman pesanan setelah login.';
+	const text = `Assalamu'alaikum ${buyerName}, pembelian ${input.productTitle} berhasil. Referensi: ${input.referenceCode}. Jumlah: ${input.coinAmount} Coin. Status: paid. Buka akses aman: ${orderUrl}. ${accessNote}${supportNote}`;
+	const html = `<p>Assalamu'alaikum ${escapeHtml(buyerName)},</p><p>Pembelian <strong>${escapeHtml(input.productTitle)}</strong> berhasil.</p><ul><li>Referensi: <code>${escapeHtml(input.referenceCode)}</code></li><li>Jumlah: ${escapeHtml(String(input.coinAmount))} Coin</li><li>Status: paid</li></ul><p><a href="${escapeHtml(orderUrl)}">Buka akses aman</a></p><p>${escapeHtml(accessNote)}</p>${input.licensePackage === 'bantuan' ? '<p>Tim Bantuan akan menghubungi Anda untuk proses onboarding.</p>' : ''}`;
 
 	let messageId = '';
 	let errorCode = '';

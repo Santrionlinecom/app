@@ -19,6 +19,7 @@ import {
 	saveReadingProgress
 } from '$lib/server/domains/buku/progress';
 import { ensureBukuWalletSchema, getCoinBalance } from '$lib/server/domains/buku/wallet';
+import { queueDigitalPurchaseEmail } from '$lib/server/notifications/digital-purchase-email';
 
 export const load: PageServerLoad = async ({ params, locals, platform }) => {
 	if (!isValidBukuSlug(params.slug)) {
@@ -162,6 +163,19 @@ export const actions: Actions = {
 				coin_spent: book.pricePerChapter,
 				new_balance: unlockResult.balanceAfter
 			});
+			queueDigitalPurchaseEmail({
+				db,
+				fetchFn: fetch,
+				env: platform?.env ?? {},
+				orderId: unlockResult.unlockId,
+				userId: locals.user.id,
+				productTitle: `${book.title} — Bab ${chapter.chapterNumber}: ${chapter.title}`,
+				referenceCode: unlockResult.unlockId,
+				coinAmount: book.pricePerChapter,
+				licensePackage: null,
+				purchaseKind: 'book_chapter',
+				contentPath: url.pathname
+			}, platform?.context?.waitUntil);
 		}
 
 		throw redirect(303, url.pathname);
