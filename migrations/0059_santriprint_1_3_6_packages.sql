@@ -48,7 +48,7 @@ INSERT INTO digital_products (
   'dprod_santriprint_promo', 'SantriPrint Promo', 'santriprint-promo',
   'Lisensi SantriPrint 1.3.6 harga promo untuk 2 perangkat.',
   'Paket Promo SantriPrint 1.3.6 untuk membuat layout cetak foto, ekspor PDF, dan cetak langsung dari Windows. Harga sekali beli. Aktivasi maksimal 2 perangkat.',
-  69000, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
+  6900, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
   'r2://digital-products/santriprint/SantriPrint_1.3.6_x64-setup.exe', 'published', 1,
   CAST(strftime('%s', 'now') AS INTEGER) * 1000, CAST(strftime('%s', 'now') AS INTEGER) * 1000,
   'prod_santriprint_pro', 'promo', 'coin_only'
@@ -57,7 +57,7 @@ INSERT INTO digital_products (
   'dprod_santriprint_pro', 'SantriPrint Pro', 'santriprint-pro',
   'Lisensi SantriPrint 1.3.6 Pro untuk 2 perangkat.',
   'Paket Pro SantriPrint 1.3.6 untuk membuat layout cetak foto, ekspor PDF, dan cetak langsung dari Windows. Harga sekali beli. Aktivasi maksimal 2 perangkat.',
-  129000, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
+  12900, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
   'r2://digital-products/santriprint/SantriPrint_1.3.6_x64-setup.exe', 'published', 1,
   CAST(strftime('%s', 'now') AS INTEGER) * 1000, CAST(strftime('%s', 'now') AS INTEGER) * 1000,
   'prod_santriprint_pro', 'pro', 'coin_only'
@@ -66,7 +66,7 @@ INSERT INTO digital_products (
   'dprod_santriprint_bantuan', 'SantriPrint Bantuan', 'santriprint-bantuan',
   'Lisensi SantriPrint 1.3.6 dengan bantuan instalasi dan onboarding.',
   'Paket Bantuan SantriPrint 1.3.6 mencakup lisensi, bantuan instalasi, dan onboarding penggunaan. Membuat layout cetak foto, ekspor PDF, dan cetak langsung dari Windows. Harga sekali beli. Aktivasi maksimal 2 perangkat.',
-  199000, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
+  19900, 'https://files.santrionline.com/digital-products/santriprint/santriprint-pro-cover-1.3.6.png',
   'r2://digital-products/santriprint/SantriPrint_1.3.6_x64-setup.exe', 'published', 1,
   CAST(strftime('%s', 'now') AS INTEGER) * 1000, CAST(strftime('%s', 'now') AS INTEGER) * 1000,
   'prod_santriprint_pro', 'bantuan', 'coin_only'
