@@ -94,13 +94,16 @@ export const notifyDigitalPurchaseEmail = async (input: DigitalPurchaseEmailInpu
 			method: 'POST',
 			headers: { Authorization: `Bearer ${config.apiKey}`, 'Content-Type': 'application/json', 'Idempotency-Key': deliveryId },
 			body: JSON.stringify({ from: config.from, to: [recipient], subject: `Pesanan berhasil — ${input.productTitle}`, text, html }),
-			signal: AbortSignal.timeout(5_000)
+			signal: AbortSignal.timeout(15_000)
 		});
 		const payload = await response.json().catch(() => ({})) as { id?: unknown };
 		if (response.ok && typeof payload.id === 'string' && payload.id.trim()) messageId = payload.id.trim();
 		else errorCode = `resend_http_${response.status}`;
-	} catch {
-		errorCode = 'resend_request_failed';
+	} catch (err) {
+		const errorName = err instanceof Error ? err.name.toLowerCase() : '';
+		errorCode = errorName.includes('timeout') || errorName.includes('abort')
+			? 'resend_request_timeout'
+			: 'resend_request_failed';
 	}
 	const completedAt = Date.now();
 	if (messageId) {

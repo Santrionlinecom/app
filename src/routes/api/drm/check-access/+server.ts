@@ -113,7 +113,7 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 			licensePackage: null,
 			purchaseKind: 'book_chapter',
 			contentPath: `/buku/${encodeURIComponent(book.slug)}/bab/${chapter.chapterNumber}`
-		}, platform?.context?.waitUntil);
+		}, platform?.context ? (task) => platform.context.waitUntil(task) : undefined);
 	}
 
 	return json({

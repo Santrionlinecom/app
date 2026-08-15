@@ -175,7 +175,7 @@ export const actions: Actions = {
 				licensePackage: null,
 				purchaseKind: 'book_chapter',
 				contentPath: url.pathname
-			}, platform?.context?.waitUntil);
+			}, platform?.context ? (task) => platform.context.waitUntil(task) : undefined);
 		}
 
 		throw redirect(303, url.pathname);
