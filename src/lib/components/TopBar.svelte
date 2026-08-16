@@ -9,10 +9,50 @@
 	type SwitcherPageData = {
 		lembagaList?: LembagaAktif[];
 		org?: LembagaAktif | null;
-		user?: { id?: string | null } | null;
+		user?: {
+			id?: string | null;
+			username?: string | null;
+			email?: string | null;
+			role?: string | null;
+			avatarUrl?: string | null;
+		} | null;
+	};
+
+	const roleLabelMap: Record<string, string> = {
+		SUPER_ADMIN: 'Super Admin',
+		super_admin: 'Super Admin',
+		admin: 'Admin',
+		kepala_tpq: 'Kepala TPQ',
+		kepala_tahfidz: 'Kepala Tahfidz',
+		koordinator: 'Koordinator',
+		wali_kelas: 'Wali Kelas',
+		pengasuh: 'Pengasuh',
+		musyrif: 'Musyrif',
+		ustadz: 'Guru',
+		ustadzah: 'Guru',
+		santri: 'Santri',
+		alumni: 'Alumni',
+		wali: 'Wali',
+		jamaah: 'Jamaah',
+		operator: 'Operator',
+		bendahara: 'Bendahara'
 	};
 
 	$: switcherData = $page.data as SwitcherPageData;
+	$: currentUser = switcherData?.user ?? null;
+
+	// Identitas diambil dari sesi aktif. Sebelumnya nilai ini ditulis mati
+	// sebagai "MY / Admin / Superadmin" sehingga salah untuk setiap pengguna lain.
+	$: displayName = currentUser?.username || currentUser?.email || 'Pengguna';
+	$: roleLabel = roleLabelMap[currentUser?.role ?? ''] ?? 'Pengguna';
+	$: avatarUrl = currentUser?.avatarUrl?.trim() || '';
+	$: initials =
+		displayName
+			.split(/[\s@._-]+/)
+			.filter(Boolean)
+			.slice(0, 2)
+			.map((part: string) => part[0]?.toUpperCase())
+			.join('') || 'SO';
 </script>
 
 <header
@@ -40,7 +80,10 @@
 				currentUser={switcherData?.user ?? null}
 			/>
 			<label class="relative min-w-[240px] flex-1 sm:min-w-[320px] xl:w-[360px] xl:flex-none">
-				<span class="absolute left-3 top-1/2 -translate-y-1/2 text-so-muted">⌕</span>
+				<span class="sr-only">Cari</span>
+				<span class="absolute left-3 top-1/2 -translate-y-1/2 text-so-muted" aria-hidden="true"
+					>⌕</span
+				>
 				<input
 					class="so-focus h-11 w-full rounded-xl border border-so-border bg-white/80 pl-9 pr-4 text-sm shadow-sm"
 					placeholder="Cari santri, setoran, laporan..."
@@ -53,14 +96,25 @@
 			<div
 				class="flex items-center gap-3 rounded-xl border border-so-border bg-white px-3 py-2 shadow-sm"
 			>
-				<div
-					class="grid h-9 w-9 place-items-center rounded-full bg-so-green text-sm font-black text-white"
-				>
-					MY
-				</div>
+				{#if avatarUrl}
+					<img
+						src={avatarUrl}
+						alt=""
+						class="h-9 w-9 rounded-full object-cover"
+						width="36"
+						height="36"
+					/>
+				{:else}
+					<div
+						class="grid h-9 w-9 place-items-center rounded-full bg-so-green text-sm font-black text-white"
+						aria-hidden="true"
+					>
+						{initials}
+					</div>
+				{/if}
 				<div class="hidden sm:block">
-					<p class="text-sm font-bold text-so-ink">Admin</p>
-					<p class="text-xs text-so-muted">Superadmin</p>
+					<p class="max-w-[10rem] truncate text-sm font-bold text-so-ink">{displayName}</p>
+					<p class="text-xs text-so-muted">{roleLabel}</p>
 				</div>
 			</div>
 		</div>

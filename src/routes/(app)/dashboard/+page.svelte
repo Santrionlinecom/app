@@ -4,6 +4,9 @@
 	import { enhance } from '$app/forms';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import StudentProgressMap from '$lib/components/dashboard/StudentProgressMap.svelte';
+	import BarChart from '$lib/components/charts/BarChart.svelte';
+	import StatCard from '$lib/components/dashboard/StatCard.svelte';
+	import { reveal, autoAnimate } from '$lib/motion';
 	import { isTeachingRole, isMentoringRole } from '$lib/utils/role-helpers';
 	import {
 		Activity,
@@ -91,6 +94,15 @@
 		height: number;
 		tone: string;
 	};
+
+	// Peta gradien Tailwind lama ke warna solid yang dipakai SVG.
+	// Dipertahankan agar seluruh cabang logika chart yang sudah ada tetap berjalan.
+	const chartToneColors: Record<string, string> = {
+		'from-emerald-500 to-teal-400': '#10b981',
+		'from-rose-500 to-orange-400': '#f43f5e',
+		'from-amber-400 to-orange-400': '#f59e0b'
+	};
+	const toChartColor = (tone: string) => chartToneColors[tone] ?? 'var(--color-so-green, #1b4332)';
 	type ContextPill = { label: string; active?: boolean };
 
 	let role = '';
@@ -1451,12 +1463,12 @@
 </svelte:head>
 
 <div class="dashboard-command-shell mx-auto w-full max-w-[90rem] space-y-6 text-so-ink">
-	<section class="fade-in admin-card min-w-0 overflow-hidden" style="animation-delay: 40ms;">
-		<div class="min-w-0 p-5 sm:p-6">
+	<section class="hero-panel min-w-0 overflow-hidden" use:reveal={{ delay: 20, distance: 18 }}>
+		<div class="relative min-w-0 p-5 sm:p-6">
 			<div class="flex min-w-0 flex-wrap items-center gap-2">
 				{#each contextPills as pill}
 					<span
-						class={`inline-flex min-h-9 max-w-full items-center rounded-full border px-3 py-1.5 text-xs font-bold ${
+						class={`inline-flex min-h-9 max-w-full items-center rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${
 							pill.active
 								? 'border-so-green bg-so-green text-white shadow-sm'
 								: 'border-so-border bg-so-cream text-so-muted'
@@ -1476,10 +1488,11 @@
 			</p>
 			{#if statHighlights.length}
 				<div class="mt-5 grid min-w-0 gap-3 sm:grid-cols-3">
-					{#each statHighlights as item}
+					{#each statHighlights as item, i}
 						<a
 							href={item.href}
-							class="min-w-0 rounded-xl border border-so-border bg-so-cream/75 p-3 transition hover:border-so-green hover:bg-white"
+							class="highlight-chip min-w-0 rounded-xl border border-so-border bg-so-cream/75 p-3"
+							use:reveal={{ delay: 90 + i * 60, distance: 12 }}
 						>
 							<p class="break-words text-[11px] font-bold uppercase text-so-muted">{item.label}</p>
 							<p class="mt-1 truncate text-lg font-bold text-so-green">{item.value}</p>
@@ -1490,56 +1503,32 @@
 		</div>
 	</section>
 
-	<section
-		class="fade-in grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
-		style="animation-delay: 70ms;"
-	>
-		{#each dashboardStats as stat}
-			<a
+	<section class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+		{#each dashboardStats as stat, i}
+			<StatCard
+				label={stat.label}
+				display={stat.value}
+				value={null}
+				desc={stat.desc}
 				href={stat.href}
-				class="admin-card group relative min-h-[9.25rem] min-w-0 overflow-hidden p-4 transition hover:-translate-y-0.5 hover:border-so-green hover:shadow-soft"
-			>
-				<span class={`absolute inset-x-0 top-0 h-1 ${getTone(stat.tone).accent}`}></span>
-				<div class="flex min-w-0 items-start justify-between gap-3">
-					<span
-						class={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${getTone(stat.tone).icon}`}
-					>
-						<svelte:component this={stat.icon} size={21} strokeWidth={2.2} />
-					</span>
-					<span
-						class={`min-w-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${getTone(stat.tone).badge}`}
-					>
-						{stat.source}
-					</span>
-				</div>
-				<p class="mt-4 break-words text-xs font-bold uppercase text-so-muted">
-					{stat.label}
-				</p>
-				<p class="mt-1 break-words text-2xl font-bold leading-tight text-so-ink tabular-nums">
-					{stat.value}
-				</p>
-				<div class="mt-2 flex min-w-0 items-end justify-between gap-2">
-					<p class="min-w-0 break-words text-xs leading-5 text-so-muted">
-						{stat.desc}
-					</p>
-					<ArrowRight
-						size={16}
-						class="shrink-0 text-so-muted/45 transition group-hover:text-so-green"
-						strokeWidth={2.2}
-					/>
-				</div>
-			</a>
+				source={stat.source}
+				icon={stat.icon}
+				accentClass={getTone(stat.tone).accent}
+				iconClass={getTone(stat.tone).icon}
+				badgeClass={getTone(stat.tone).badge}
+				delay={60 + i * 70}
+			/>
 		{/each}
 	</section>
 
 	<section class="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-12">
 		<div
-			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-8"
-			style="animation-delay: 100ms;"
+			class="admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-8"
+			use:reveal={{ delay: 100, distance: 18 }}
 		>
 			<div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 				<div class="min-w-0">
-					<p class="text-xs font-bold uppercase text-so-green">Overview</p>
+					<p class="text-xs font-bold uppercase tracking-wide text-so-green">Overview</p>
 					<h2 class="font-display mt-1 break-words text-xl font-bold text-so-green">
 						{chartTitle}
 					</h2>
@@ -1559,25 +1548,16 @@
 					settingsHref={isAdmin ? '/akun' : null}
 				/>
 			{:else if chartBars.length}
-				<div
-					class="soft-grid mt-6 h-72 min-w-0 rounded-xl border border-so-border bg-so-cream p-3 sm:p-4"
-				>
-					<div class="flex h-full min-w-0 items-end gap-2 sm:gap-3">
-						{#each chartBars as entry}
-							<div class="flex min-w-0 flex-1 flex-col items-center justify-end">
-								<div
-									class={`w-full min-w-0 rounded-t-xl bg-gradient-to-t ${entry.tone} shadow-sm`}
-									style={`height: ${entry.height}%`}
-								></div>
-								<p class="mt-2 w-full truncate text-center text-[11px] font-semibold text-so-muted">
-									{entry.label}
-								</p>
-								<p class="w-full truncate text-center text-[11px] font-bold text-so-ink">
-									{entry.display}
-								</p>
-							</div>
-						{/each}
-					</div>
+				<div class="mt-6 min-w-0 rounded-xl border border-so-border bg-so-cream/60 p-3 sm:p-4">
+					<BarChart
+						data={chartBars.map((entry) => ({
+							label: entry.label,
+							value: entry.value,
+							display: entry.display,
+							color: toChartColor(entry.tone)
+						}))}
+						valueLabel={chartTitle}
+					/>
 				</div>
 			{:else}
 				<div
@@ -1595,8 +1575,8 @@
 		</div>
 
 		<div
-			class="fade-in admin-card min-w-0 overflow-hidden xl:col-span-4"
-			style="animation-delay: 130ms;"
+			class="admin-card min-w-0 overflow-hidden xl:col-span-4"
+			use:reveal={{ delay: 140, distance: 18 }}
 		>
 			<div class="border-b border-so-border bg-so-cream/55 p-4 sm:p-5">
 				<p class="text-xs font-bold uppercase text-so-green">Status Panel</p>
@@ -1647,8 +1627,8 @@
 
 	<section class="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-12">
 		<div
-			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-4"
-			style="animation-delay: 160ms;"
+			class="admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-4"
+			use:reveal={{ delay: 160, distance: 18 }}
 		>
 			<div class="flex min-w-0 items-start justify-between gap-3">
 				<div class="min-w-0">
@@ -1694,8 +1674,8 @@
 		</div>
 
 		<div
-			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-8"
-			style="animation-delay: 190ms;"
+			class="admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-8"
+			use:reveal={{ delay: 190, distance: 18 }}
 		>
 			<div class="flex min-w-0 items-start justify-between gap-3">
 				<div class="min-w-0">
@@ -1733,8 +1713,8 @@
 
 	{#if orgType === 'tpq' && tpqDashboard}
 		<section
-			class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
-			style="animation-delay: 100ms;"
+			class="admin-card min-w-0 overflow-hidden p-5 sm:p-6"
+			use:reveal={{ delay: 100, distance: 18 }}
 		>
 			<div class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 				<div class="min-w-0">
@@ -1865,8 +1845,8 @@
 	{#if isCommunityOrg}
 		<section class="grid min-w-0 grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-3">
 			<div
-				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-2"
-				style="animation-delay: 120ms;"
+				class="admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-2"
+				use:reveal={{ delay: 120, distance: 18 }}
 			>
 				<div class="flex min-w-0 items-center justify-between gap-3">
 					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
@@ -1916,8 +1896,8 @@
 			</div>
 
 			<div
-				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
-				style="animation-delay: 200ms;"
+				class="admin-card min-w-0 overflow-hidden p-5 sm:p-6"
+				use:reveal={{ delay: 200, distance: 18 }}
 			>
 				<div class="flex min-w-0 items-center justify-between gap-3">
 					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
@@ -2270,8 +2250,8 @@
 	{:else if isEducationalOrg && isStudent}
 		<section class="grid min-w-0 grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-3">
 			<div
-				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-2"
-				style="animation-delay: 120ms;"
+				class="admin-card min-w-0 overflow-hidden p-5 sm:p-6 xl:col-span-2"
+				use:reveal={{ delay: 120, distance: 18 }}
 			>
 				<div class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
@@ -2284,23 +2264,17 @@
 					</span>
 				</div>
 				{#if seriesBars.length}
-					<div
-						class="soft-grid mt-6 flex h-44 min-w-0 items-end gap-2 rounded-xl border border-so-border bg-so-cream p-4 sm:gap-3"
-					>
-						{#each seriesBars as entry}
-							<div class="min-w-0 flex-1 text-center">
-								<div
-									class="mx-auto w-full rounded-2xl bg-gradient-to-t from-teal-600 via-cyan-500 to-emerald-400"
-									style={`height: ${entry.height}%`}
-								></div>
-								<p class="mt-2 truncate text-xs text-slate-500">
-									{entry.label}
-								</p>
-								<p class="text-xs font-semibold text-slate-700">
-									{entry.value}
-								</p>
-							</div>
-						{/each}
+					<div class="mt-6 min-w-0 rounded-xl border border-so-border bg-so-cream/60 p-3 sm:p-4">
+						<BarChart
+							data={seriesBars.map((entry) => ({
+								label: entry.label,
+								value: entry.value,
+								display: formatNumber(entry.value),
+								color: '#0d9488'
+							}))}
+							height={220}
+							valueLabel="Setoran disetujui"
+						/>
 					</div>
 					<p class="mt-4 text-xs text-so-muted">Data berdasarkan setoran yang disetujui.</p>
 				{:else}
@@ -2316,8 +2290,8 @@
 			</div>
 
 			<div
-				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
-				style="animation-delay: 200ms;"
+				class="admin-card min-w-0 overflow-hidden p-5 sm:p-6"
+				use:reveal={{ delay: 200, distance: 18 }}
 			>
 				<div class="flex min-w-0 items-center justify-between gap-3">
 					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
@@ -2367,8 +2341,8 @@
 	{:else if isEducationalOrg && isStaff}
 		<section class="grid min-w-0 grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-2">
 			<div
-				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
-				style="animation-delay: 120ms;"
+				class="admin-card min-w-0 overflow-hidden p-5 sm:p-6"
+				use:reveal={{ delay: 120, distance: 18 }}
 			>
 				<div class="flex min-w-0 items-center justify-between gap-3">
 					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
@@ -2427,8 +2401,8 @@
 			</div>
 
 			<div
-				class="fade-in admin-card min-w-0 overflow-hidden p-5 sm:p-6"
-				style="animation-delay: 200ms;"
+				class="admin-card min-w-0 overflow-hidden p-5 sm:p-6"
+				use:reveal={{ delay: 200, distance: 18 }}
 			>
 				<div class="flex min-w-0 items-center justify-between gap-3">
 					<h3 class="font-display min-w-0 break-words text-xl font-bold text-so-green">
@@ -2505,6 +2479,56 @@
 		background: rgb(255 255 255 / 0.88);
 		box-shadow: var(--shadow-card, 0 12px 34px rgb(27 67 50 / 0.08));
 		backdrop-filter: blur(18px);
+	}
+
+	/* Panel sambutan: gradien halus + aksen cahaya, dirender sekali tanpa animasi
+	   berkelanjutan sehingga tidak membebani GPU saat halaman diam. */
+	.hero-panel {
+		position: relative;
+		border: 1px solid rgb(232 228 220 / 0.95);
+		border-radius: var(--radius-so-lg, 20px);
+		background:
+			radial-gradient(120% 140% at 88% -20%, rgb(201 168 76 / 0.16), transparent 55%),
+			linear-gradient(140deg, rgb(255 255 255 / 0.96), rgb(250 248 243 / 0.9));
+		box-shadow: var(--shadow-card, 0 12px 34px rgb(27 67 50 / 0.08));
+		backdrop-filter: blur(18px);
+	}
+
+	.hero-panel::before {
+		content: '';
+		position: absolute;
+		inset-inline: 0;
+		top: 0;
+		height: 3px;
+		border-radius: var(--radius-so-lg, 20px) var(--radius-so-lg, 20px) 0 0;
+		background: linear-gradient(
+			90deg,
+			var(--color-so-green, #1b4332),
+			var(--color-so-gold, #c9a84c),
+			transparent
+		);
+	}
+
+	.highlight-chip {
+		transition:
+			transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+			border-color 0.2s ease,
+			background-color 0.2s ease;
+	}
+
+	.highlight-chip:hover {
+		transform: translateY(-2px);
+		border-color: var(--color-so-green, #1b4332);
+		background-color: #ffffff;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.highlight-chip {
+			transition: none;
+		}
+		.highlight-chip:hover {
+			transform: none;
+		}
 	}
 
 	:global(.dashboard-command-shell .soft-grid) {
