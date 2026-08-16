@@ -52,7 +52,15 @@ $: scrollingDown = $scrollDirection.scrollingDown;
 $: hideChromeFromRoute = Boolean(($page.data as PageDataWithChrome | undefined)?.hideChrome);
 // Auto-hide header/footer when user is logged in
 $: hidePageChrome = hideChrome || hideChromeFromRoute || Boolean(data?.user);
-$: hideMobileBottomNavigation = pathname === '/register' || pathname.startsWith('/register/') || isPromosiPage;
+// Halaman autentikasi adalah alur terfokus: navigasi bawah mengambang
+// hanya menutupi form dan mengalihkan perhatian dari tugas masuk/daftar.
+$: isAuthPage =
+	pathname === '/auth' ||
+	pathname === '/login' ||
+	pathname === '/reset-password' ||
+	pathname === '/register' ||
+	pathname.startsWith('/register/');
+$: hideMobileBottomNavigation = isAuthPage || isPromosiPage;
 $: shouldHideMobileChrome =
 	!hidePageChrome &&
 	isMobileViewport &&

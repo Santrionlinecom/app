@@ -1,70 +1,171 @@
 <script lang="ts">
+	import { reveal } from '$lib/motion';
+
 	export let form;
 </script>
 
-<div class="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
-	<div class="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6">
-		<div class="flex justify-center items-center gap-2 text-green-700 font-bold text-2xl mb-2">
-			<img src="/logo-santri.png" alt="Santri Online" class="h-12 w-auto" loading="lazy" />
+<svelte:head>
+	<title>Reset Password | SantriOnline</title>
+</svelte:head>
+
+<div class="auth-page flex min-h-screen flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
+	<div class="mx-auto mb-6 w-full max-w-md text-center" use:reveal={{ delay: 0, distance: 14 }}>
+		<div class="mb-3 flex items-center justify-center">
+			<img src="/logo-santri.png" alt="SantriOnline" class="h-12 w-auto" loading="lazy" />
 		</div>
-		<h2 class="text-3xl font-extrabold text-slate-900">Reset Password</h2>
-		<p class="mt-2 text-sm text-slate-600">
+		<h2 class="font-display text-3xl font-bold tracking-tight text-so-green">Reset Password</h2>
+		<p class="mt-2 text-sm text-so-muted">
 			Masukkan email yang terdaftar untuk menerima tautan reset password.
 		</p>
 	</div>
 
-	<div class="sm:mx-auto sm:w-full sm:max-w-md">
-		<div class="bg-white py-8 px-4 shadow sm:rounded-xl sm:px-10 border border-slate-100">
+	<div class="mx-auto w-full max-w-md" use:reveal={{ delay: 80, distance: 16 }}>
+		<div class="auth-card px-4 py-8 sm:px-10">
 			{#if form?.message}
+				<!-- Ikon disesuaikan dengan jenis pesan. Sebelumnya pesan sukses
+				     ikut memakai ikon galat sehingga membingungkan. -->
 				<div
 					role="alert"
-					class={`alert ${form?.success ? 'alert-success' : 'alert-error'} mb-6 text-sm py-3 rounded-lg shadow-sm`}
+					class={`mb-6 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm font-medium ${
+						form?.success
+							? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+							: 'border-rose-200 bg-rose-50 text-rose-700'
+					}`}
 				>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
-						class="stroke-current shrink-0 h-6 w-6"
+						class="mt-0.5 h-5 w-5 shrink-0 stroke-current"
 						fill="none"
 						viewBox="0 0 24 24"
+						aria-hidden="true"
 					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-						/>
+						{#if form?.success}
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						{:else}
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						{/if}
 					</svg>
 					<span>{form.message}</span>
 				</div>
 			{/if}
 
 			<form method="POST" class="space-y-5">
-				<div class="form-control w-full">
-					<label class="label" for="email">
-						<span class="label-text text-slate-700 font-medium">Email</span>
-					</label>
+				<div class="w-full">
+					<label class="mb-1.5 block text-sm font-semibold text-so-ink" for="email">Email</label>
 					<input
 						id="email"
 						name="email"
 						type="email"
+						autocomplete="email"
 						placeholder="nama@email.com"
 						required
-						class="input input-bordered w-full bg-slate-50 focus:bg-white focus:border-blue-500 h-12 rounded-lg"
+						class="auth-input"
 					/>
 				</div>
 
-				<div>
-					<button
-						type="submit"
-						class="btn btn-primary w-full bg-green-700 border-none hover:bg-green-800 normal-case text-lg font-bold h-12 rounded-xl shadow-md hover:shadow-lg transition-all"
-					>
-						Kirim Tautan Reset
-					</button>
-				</div>
+				<button type="submit" class="auth-submit">Kirim Tautan Reset</button>
 			</form>
 
-			<div class="mt-6 text-sm text-center">
-				<a href="/auth" class="text-blue-600 hover:text-blue-500 hover:underline">Kembali ke login</a>
+			<div class="mt-6 text-center text-sm">
+				<a
+					href="/auth"
+					class="font-semibold text-so-green transition-colors hover:text-so-green-2 hover:underline"
+				>
+					Kembali ke halaman masuk
+				</a>
 			</div>
 		</div>
 	</div>
 </div>
+
+<style>
+	.auth-page {
+		background:
+			radial-gradient(80% 60% at 50% -10%, rgb(201 168 76 / 0.12), transparent 60%),
+			linear-gradient(180deg, #faf8f3, #f3f1ea);
+	}
+
+	.auth-card {
+		border: 1px solid var(--color-so-border, #e8e4dc);
+		border-radius: var(--radius-so-lg, 20px);
+		background: #ffffff;
+		box-shadow: var(--shadow-card, 0 12px 34px rgb(27 67 50 / 0.08));
+	}
+
+	:global(.auth-card .auth-input) {
+		display: block;
+		width: 100%;
+		height: 3rem;
+		padding: 0 0.875rem;
+		border: 1px solid var(--color-so-border, #e8e4dc);
+		border-radius: 0.75rem;
+		background-color: rgb(250 248 243 / 0.6);
+		color: var(--color-so-ink, #1a1a1a);
+		font-size: 0.95rem;
+		transition:
+			border-color 0.18s ease,
+			box-shadow 0.18s ease,
+			background-color 0.18s ease;
+	}
+
+	:global(.auth-card .auth-input::placeholder) {
+		color: #9aa0a6;
+	}
+
+	:global(.auth-card .auth-input:focus) {
+		outline: none;
+		background-color: #ffffff;
+		border-color: var(--color-so-gold, #c9a84c);
+		box-shadow: 0 0 0 4px rgb(201 168 76 / 0.18);
+	}
+
+	:global(.auth-card .auth-submit) {
+		display: flex;
+		width: 100%;
+		min-height: 3rem;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid transparent;
+		border-radius: 0.75rem;
+		background: var(--color-so-green, #1b4332);
+		color: #ffffff;
+		font-size: 1rem;
+		font-weight: 700;
+		box-shadow: 0 10px 24px rgb(27 67 50 / 0.22);
+		transition:
+			transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+			background-color 0.18s ease,
+			box-shadow 0.18s ease;
+	}
+
+	:global(.auth-card .auth-submit:hover) {
+		transform: translateY(-1px);
+		background: var(--color-so-green-2, #2d6a4f);
+		box-shadow: 0 14px 30px rgb(27 67 50 / 0.28);
+	}
+
+	:global(.auth-card .auth-submit:focus-visible) {
+		outline: 2px solid var(--color-so-gold, #c9a84c);
+		outline-offset: 3px;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(.auth-card .auth-input),
+		:global(.auth-card .auth-submit) {
+			transition: none;
+		}
+		:global(.auth-card .auth-submit:hover) {
+			transform: none;
+		}
+	}
+</style>
