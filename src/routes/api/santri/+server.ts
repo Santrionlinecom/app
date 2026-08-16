@@ -29,8 +29,10 @@ const normalizePagination = (page = 1, limit = 10) => {
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = ensureAuth(locals);
-	// Permission 'student.read' lama di-rename jadi student.read.all/.class/.own saat
-	// refactor RBAC (c181262); role pengurus masjid/musholla memakai member.read*.
+	// 'student.read' masih terdaftar sebagai tipe Permission, tetapi tidak
+	// dimiliki peran mana pun sejak refactor RBAC memecahnya menjadi
+	// .all/.class/.own — memakainya berarti menolak semua orang.
+	// Pengurus masjid/musholla memakai member.read*.
 	requireAnyPermission(locals, [
 		'student.read.all',
 		'student.read.class',

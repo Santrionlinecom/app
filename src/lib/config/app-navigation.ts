@@ -107,12 +107,19 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			group: 'pembinaan'
 		},
 		{
+			// Pendataan santri TPQ tanpa akun login: cukup nama, NIS, kelas, dan
+			// data wali. Terpisah dari kelola-santri yang membuat akun login dan
+			// dipakai bersama untuk jamaah masjid.
 			label: 'Data Santri',
-			href: '/dashboard/kelola-santri',
+			href: '/dashboard/santri-tpq',
 			icon: ICONS.users,
 			allowedTypes: ['tpq'],
 			group: 'akademik',
-			permission: 'student.read',
+			anyPermission: [
+				'student.read.all',
+				'student.read.class',
+				'student.read.own'
+			],
 			allowedRoles: [
 				'admin',
 				'kepala_tpq',
@@ -147,7 +154,13 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			icon: ICONS.file,
 			allowedTypes: ['tpq'],
 			group: 'akademik',
-			anyPermission: ['hafalan.read', 'hafalan.input', 'hafalan.review']
+			anyPermission: [
+				'hafalan.read.all',
+				'hafalan.read.class',
+				'hafalan.read.own',
+				'hafalan.input',
+				'hafalan.review'
+			]
 		},
 		{
 			label: 'Ujian',
@@ -155,7 +168,11 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			icon: ICONS.star,
 			allowedTypes: ['tpq'],
 			group: 'akademik',
-			permission: 'ujian.read',
+			anyPermission: [
+				'ujian.read.all',
+				'ujian.read.class',
+				'ujian.read.own'
+			],
 			allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'wali_kelas', 'ustadz', 'ustadzah']
 		},
 		{
@@ -164,7 +181,11 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			icon: ICONS.file,
 			allowedTypes: ['tpq'],
 			group: 'akademik',
-			permission: 'raport.read',
+			anyPermission: [
+				'raport.read.all',
+				'raport.read.class',
+				'raport.read.own'
+			],
 			allowedRoles: [
 				'admin',
 				'kepala_tpq',
@@ -181,7 +202,11 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			icon: ICONS.star,
 			allowedTypes: ['tpq'],
 			group: 'akademik',
-			permission: 'raport.read',
+			anyPermission: [
+				'raport.read.all',
+				'raport.read.class',
+				'raport.read.own'
+			],
 			allowedRoles: ['admin', 'kepala_tpq', 'koordinator', 'ustadz', 'ustadzah', 'santri']
 		},
 		{
@@ -190,7 +215,13 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			icon: ICONS.book,
 			allowedTypes: ['tpq'],
 			group: 'akademik',
-			anyPermission: ['hafalan.read', 'hafalan.input', 'hafalan.review']
+			anyPermission: [
+				'hafalan.read.all',
+				'hafalan.read.class',
+				'hafalan.read.own',
+				'hafalan.input',
+				'hafalan.review'
+			]
 		},
 		{
 			label: 'Kelola Role',
