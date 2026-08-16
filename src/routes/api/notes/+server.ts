@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { json, error, isHttpError, isRedirect } from '@sveltejs/kit';
 import { generateId } from 'lucia';
 import type { RequestHandler } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
@@ -76,6 +76,12 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 		return json({ notes: results ?? [] });
 	} catch (err) {
+		// Galat yang sudah punya status HTTP (400 validasi, 401/403 akses)
+		// diteruskan apa adanya. Tanpa penjaga ini, "start dan end harus diisi"
+		// tampil ke pengguna sebagai "Kode 500 / Halaman belum siap".
+		if (isHttpError(err)) {
+			return json({ error: err.body?.message ?? 'Permintaan tidak valid' }, { status: err.status });
+		}
 		console.error('GET /api/notes error', err);
 		return json(
 			{ error: 'Layanan catatan kalender belum siap. Hubungi super admin.' },
@@ -150,13 +156,19 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			}
 		});
 	} catch (err: any) {
+		// assertLoggedIn() melempar redirect; endpoint API perlu 401.
+		if (isRedirect(err)) {
+			return json({ error: 'Sesi berakhir. Silakan masuk kembali.' }, { status: 401 });
+		}
+		if (isHttpError(err)) {
+			return json({ error: err.body?.message ?? 'Permintaan tidak valid' }, { status: err.status });
+		}
 		console.error('POST /api/notes error', err);
-		const msg =
-			typeof err?.message === 'string' && err.message.includes('datatype mismatch')
-				? 'Layanan catatan kalender belum siap. Hubungi super admin.'
-				: typeof err?.message === 'string'
-					? err.message
-					: 'Gagal menyimpan catatan';
-		return json({ error: msg }, { status: 500 });
+		// Pesan galat mentah tidak dikembalikan ke pengguna: isinya bisa
+		// membocorkan detail skema database.
+		return json(
+			{ error: 'Layanan catatan kalender belum siap. Hubungi super admin.' },
+			{ status: 500 }
+		);
 	}
 };

@@ -1,4 +1,4 @@
-import { json, error } from '@sveltejs/kit';
+import { json, error, isHttpError, isRedirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { D1Database } from '@cloudflare/workers-types';
 import { getOrgScope } from '$lib/server/organizations';
@@ -96,11 +96,21 @@ export const PUT: RequestHandler = async ({ locals, params, request }) => {
 
 		return json({ note: { ...note, title, content, eventDate, updatedAt: now } });
 	} catch (err: any) {
-		const msg = typeof err?.message === 'string' && err.message.includes('calendar_notes')
-			? 'Layanan catatan kalender belum siap. Hubungi super admin.'
-			: err?.message || 'Gagal memperbarui catatan';
+		// assertLoggedIn() melempar redirect, bukan HttpError. Untuk endpoint
+		// API, pengalihan tidak berguna — klien butuh 401 yang bisa ditangani.
+		if (isRedirect(err)) {
+			return json({ error: 'Sesi berakhir. Silakan masuk kembali.' }, { status: 401 });
+		}
+		// 404 (catatan tidak ada) dan 403 (bukan pemilik) harus sampai ke
+		// pengguna dengan status aslinya, bukan berubah menjadi 500.
+		if (isHttpError(err)) {
+			return json({ error: err.body?.message ?? 'Permintaan tidak valid' }, { status: err.status });
+		}
 		console.error('PUT /api/notes/[id] error', err);
-		return json({ error: msg }, { status: 500 });
+		return json(
+			{ error: 'Layanan catatan kalender belum siap. Hubungi super admin.' },
+			{ status: 500 }
+		);
 	}
 };
 
@@ -128,10 +138,16 @@ export const DELETE: RequestHandler = async ({ locals, params }) => {
 
 		return json({ ok: true });
 	} catch (err: any) {
-		const msg = typeof err?.message === 'string' && err.message.includes('calendar_notes')
-			? 'Layanan catatan kalender belum siap. Hubungi super admin.'
-			: err?.message || 'Gagal menghapus catatan';
+		if (isRedirect(err)) {
+			return json({ error: 'Sesi berakhir. Silakan masuk kembali.' }, { status: 401 });
+		}
+		if (isHttpError(err)) {
+			return json({ error: err.body?.message ?? 'Permintaan tidak valid' }, { status: err.status });
+		}
 		console.error('DELETE /api/notes/[id] error', err);
-		return json({ error: msg }, { status: 500 });
+		return json(
+			{ error: 'Layanan catatan kalender belum siap. Hubungi super admin.' },
+			{ status: 500 }
+		);
 	}
 };
