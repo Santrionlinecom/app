@@ -156,7 +156,8 @@ const ensureTpqAcademicSchema = async (db: D1Database) => {
 			`CREATE TABLE IF NOT EXISTS tpq_setoran (
 				id TEXT PRIMARY KEY,
 				institution_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-				santri_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+				santri_id TEXT REFERENCES santri(id) ON DELETE CASCADE,
+				santri_user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
 				ustadz_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 				halaqoh_id TEXT REFERENCES tpq_halaqoh(id) ON DELETE SET NULL,
 				date TEXT NOT NULL,
@@ -170,7 +171,11 @@ const ensureTpqAcademicSchema = async (db: D1Database) => {
 				reviewed_by TEXT REFERENCES users(id) ON DELETE SET NULL,
 				reviewed_at INTEGER,
 				created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000),
-				CHECK (ayat_from <= ayat_to)
+				CHECK (ayat_from <= ayat_to),
+				-- Santri berasal dari pendataan TPQ (santri_id) ATAU akun lama
+				-- (santri_user_id). Tepat satu wajib terisi supaya tidak ada
+				-- setoran tanpa santri, dan tidak ada yang terhitung ganda.
+				CHECK ((santri_id IS NOT NULL) + (santri_user_id IS NOT NULL) = 1)
 			)`
 		)
 		.run();
@@ -180,6 +185,11 @@ const ensureTpqAcademicSchema = async (db: D1Database) => {
 	await db
 		.prepare(
 			'CREATE INDEX IF NOT EXISTS idx_tpq_setoran_institution_santri_date ON tpq_setoran(institution_id, santri_user_id, date)'
+		)
+		.run();
+	await db
+		.prepare(
+			'CREATE INDEX IF NOT EXISTS idx_tpq_setoran_institution_santri_id_date ON tpq_setoran(institution_id, santri_id, date)'
 		)
 		.run();
 	await db

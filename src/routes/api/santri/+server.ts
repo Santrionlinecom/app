@@ -7,7 +7,7 @@ import type { RequestHandler } from './$types';
 import { logActivity } from '$lib/server/activity-logs';
 import { assertCanAddSantri } from '$lib/server/addons';
 import { isSuperAdminRole } from '$lib/server/auth/requireSuperAdmin';
-import { requirePermission } from '$lib/rbac/helpers';
+import { requireAnyPermission, requirePermission } from '$lib/rbac/helpers';
 import { isTeachingRole } from '$lib/utils/role-helpers';
 
 const allowedRoles = ['santri', 'ustadz', 'ustadzah', 'admin'] as const;
@@ -29,7 +29,15 @@ const normalizePagination = (page = 1, limit = 10) => {
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const user = ensureAuth(locals);
-	requirePermission(locals, 'student.read');
+	// Permission 'student.read' lama di-rename jadi student.read.all/.class/.own saat
+	// refactor RBAC (c181262); role pengurus masjid/musholla memakai member.read*.
+	requireAnyPermission(locals, [
+		'student.read.all',
+		'student.read.class',
+		'student.read.own',
+		'member.read',
+		'member.read.all'
+	]);
 	const db = locals.db!;
 	if (!db) throw error(500, 'Layanan data tidak tersedia');
 	const page = Number(url.searchParams.get('page') ?? '1');

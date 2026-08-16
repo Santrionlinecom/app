@@ -1,6 +1,11 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { ensureSantriUstadzSchema } from '$lib/server/domains/tpq/santri-ustadz';
+import {
+	buildSantriOptions,
+	resolveSetoranSantri,
+	type SantriOption
+} from '$lib/server/domains/tpq/setoran-santri';
 import { SURAH_DATA } from '$lib/surah-data';
 import {
 	assertSafeScopedId,
@@ -150,6 +155,36 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 				).bind(institutionId, user.id)
 		).all<SantriRow>();
 
+		// Santri hasil pendataan TPQ (tanpa akun login). Inilah jalur normal
+		// untuk anak usia 5-12 tahun; sebelumnya mereka tidak pernah muncul di
+		// daftar sehingga setorannya mustahil dicatat.
+		const { results: santriDataRaw } = await db
+			.prepare(
+				`SELECT id, nama, kelas
+				 FROM santri
+				 WHERE lembaga_id = ?
+				   AND COALESCE(is_aktif, 1) = 1
+				 ORDER BY nama COLLATE NOCASE ASC
+				 LIMIT 1000`
+			)
+			.bind(institutionId)
+			.all<{ id: string; nama: string; kelas: string | null }>();
+
+		const santriOptions = buildSantriOptions(
+			(santriDataRaw ?? []).map((row: { id: string; nama: string; kelas: string | null }) => ({
+				id: row.id,
+				nama: row.nama,
+				sumber: 'santri' as const,
+				kelas: row.kelas ?? null
+			})),
+			(santriRaw ?? []).map((row: SantriRow) => ({
+				id: row.id,
+				nama: row.username || row.email || row.id,
+				sumber: 'users' as const,
+				kelas: null
+			}))
+		);
+
 		const recentConditions = ['s.institution_id = ?', 's.date = ?'];
 		const recentParams: Array<string | number> = [institutionId, selectedDate];
 		if (!canManageSetoranScope) {
@@ -214,7 +249,13 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			selectedDate,
 			canChooseUstadz: canManageSetoranScope,
 			teachers: (teachersRaw ?? []) as TeacherRow[],
-			santri: (santriRaw ?? []) as SantriRow[],
+			// Bentuk lama (id/username/email) dipertahankan agar markup pemilih
+			// santri tidak perlu diubah; nama gabungan dipetakan ke `username`.
+			santri: santriOptions.map((s: SantriOption) => ({
+				id: s.id,
+				username: s.kelas ? `${s.nama} (${s.kelas})` : s.nama,
+				email: null
+			})) as SantriRow[],
 			halaqoh: (halaqohRaw ?? []) as HalaqohRow[],
 			recentSetoran: (recentRaw ?? []) as SetoranRow[],
 			todaySummary: {
@@ -309,37 +350,61 @@ export const actions: Actions = {
 			}
 		}
 
-		const santriInScope =
-			canManageSetoranScope
-				? await db
-						.prepare(
-							`SELECT id
-							 FROM users
-							 WHERE id = ?
-							   AND org_id = ?
-							   AND (org_status IS NULL OR org_status = 'active')
-							   AND role IN ('santri', 'alumni')
-							 LIMIT 1`
-						)
-						.bind(santriUserId, institutionId)
-						.first<{ id: string }>()
-				: await db
-						.prepare(
-							`SELECT su.santri_id as id
-							 FROM santri_ustadz su
-							 JOIN users u ON u.id = su.santri_id
-							 WHERE su.santri_id = ?
-							   AND su.ustadz_id = ?
-							   AND su.org_id = ?
-							   AND (u.org_status IS NULL OR u.org_status = 'active')
-							 LIMIT 1`
-						)
-						.bind(santriUserId, user.id, institutionId)
-						.first<{ id: string }>();
+		// Daftar santri yang sah untuk pengajar ini: hasil pendataan TPQ
+		// (tabel santri) digabung santri berakun lama (users). Keduanya sudah
+		// tersaring lembaga aktif, sehingga id di luar daftar berarti percobaan
+		// mencatat setoran untuk santri lembaga lain.
+		const { results: santriDataScope } = await db
+			.prepare(
+				`SELECT id, nama, kelas
+				 FROM santri
+				 WHERE lembaga_id = ?
+				   AND COALESCE(is_aktif, 1) = 1
+				 LIMIT 1000`
+			)
+			.bind(institutionId)
+			.all<{ id: string; nama: string; kelas: string | null }>();
 
-		if (!santriInScope) {
-			return fail(403, { createError: 'Santri tidak berada dalam scope pengajaran Anda.' });
+		const { results: santriUserScope } = await (canManageSetoranScope
+			? db.prepare(
+					`SELECT id, username, email
+					 FROM users
+					 WHERE org_id = ?
+					   AND (org_status IS NULL OR org_status = 'active')
+					   AND role IN ('santri', 'alumni')
+					 LIMIT 1000`
+				).bind(institutionId)
+			: db.prepare(
+					`SELECT u.id, u.username, u.email
+					 FROM santri_ustadz su
+					 JOIN users u ON u.id = su.santri_id
+					 WHERE su.org_id = ?
+					   AND su.ustadz_id = ?
+					   AND (u.org_status IS NULL OR u.org_status = 'active')
+					 LIMIT 1000`
+				).bind(institutionId, user.id)
+		).all<SantriRow>();
+
+		const scopeOptions = buildSantriOptions(
+			(santriDataScope ?? []).map((row: { id: string; nama: string; kelas: string | null }) => ({
+				id: row.id,
+				nama: row.nama,
+				sumber: 'santri' as const,
+				kelas: row.kelas ?? null
+			})),
+			(santriUserScope ?? []).map((row: SantriRow) => ({
+				id: row.id,
+				nama: row.username || row.email || row.id,
+				sumber: 'users' as const,
+				kelas: null
+			}))
+		);
+
+		const santriResolved = resolveSetoranSantri(santriUserId, scopeOptions);
+		if (!santriResolved.ok) {
+			return fail(403, { createError: santriResolved.error });
 		}
+		const { santriId: targetSantriId, santriUserId: targetSantriUserId } = santriResolved.value;
 
 		let finalUstadzUserId = canManageSetoranScope ? requestedUstadzUserId || user.id : user.id;
 
@@ -395,7 +460,10 @@ export const actions: Actions = {
 				`SELECT id
 				 FROM tpq_setoran
 				 WHERE institution_id = ?
-				   AND santri_user_id = ?
+				   AND (
+				     (santri_id IS NOT NULL AND santri_id = ?)
+				     OR (santri_user_id IS NOT NULL AND santri_user_id = ?)
+				   )
 				   AND date = ?
 				   AND type = ?
 				   AND surah = ?
@@ -404,7 +472,16 @@ export const actions: Actions = {
 				   AND status = 'submitted'
 				 LIMIT 1`
 			)
-			.bind(institutionId, santriUserId, date, type, String(surahNumber), ayatFrom, ayatTo)
+			.bind(
+				institutionId,
+				targetSantriId,
+				targetSantriUserId,
+				date,
+				type,
+				String(surahNumber),
+				ayatFrom,
+				ayatTo
+			)
 			.first<{ id: string }>();
 
 		if (duplicateSubmitted) {
@@ -418,6 +495,7 @@ export const actions: Actions = {
 				`INSERT INTO tpq_setoran (
 					id,
 					institution_id,
+					santri_id,
 					santri_user_id,
 					ustadz_user_id,
 					halaqoh_id,
@@ -430,12 +508,13 @@ export const actions: Actions = {
 					notes,
 					status,
 					created_at
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'submitted', ?)`
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'submitted', ?)`
 			)
 			.bind(
 				crypto.randomUUID(),
 				institutionId,
-				santriUserId,
+				targetSantriId,
+				targetSantriUserId,
 				finalUstadzUserId,
 				halaqohId,
 				date,
