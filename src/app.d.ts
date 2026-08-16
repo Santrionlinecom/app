@@ -20,6 +20,10 @@ declare global {
             session: import('lucia').Session | null;
             isSuperAdmin: boolean;
             orgType: import('$lib/types/rbac').OrgType | null;
+            /** Semua lembaga yang dipegang pengguna (satu orang boleh banyak lembaga). */
+            memberships: import('$lib/server/active-org').MembershipLike[];
+            /** Lembaga yang sedang dibuka; null bila belum terhubung ke lembaga mana pun. */
+            activeOrg: import('$lib/server/active-org').MembershipLike | null;
             can: (permission: import('$lib/types/rbac').Permission) => boolean;
             // Saya beri tanda tanya (?) jaga-jaga jika di hooks belum di-set
             db?: D1Database; 

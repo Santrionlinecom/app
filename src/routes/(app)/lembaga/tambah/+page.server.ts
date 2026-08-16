@@ -1,6 +1,10 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { generateId } from 'lucia';
 import { assertCanAddLembaga, getLembagaCapacity } from '$lib/server/addons';
+import { grantMembership } from '$lib/server/active-org';
+import { seedHafalanDefault } from '$lib/server/domains/tpq/db-hafalan';
+import { SEED_HAFALAN_DEFAULT } from '$lib/server/domains/tpq/seed-hafalan-default';
+import { isEducationalOrgType } from '$lib/server/utils';
 import { ensureUniqueSlug, slugify, type OrgType } from '$lib/server/organizations';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -97,6 +101,7 @@ export const actions: Actions = {
 		const orgType = type as OrgType;
 		const slug = await ensureUniqueSlug(locals.db, orgType, baseSlug);
 		const now = Date.now();
+		const orgId = nanoid();
 
 		await locals.db
 			.prepare(
@@ -113,8 +118,34 @@ export const actions: Actions = {
 				)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			)
-			.bind(nanoid(), name, orgType, slug, address || null, locals.user.id, 'active', 1, now)
+			.bind(orgId, name, orgType, slug, address || null, locals.user.id, 'active', 1, now)
 			.run();
+
+		// Pembuat lembaga wajib langsung menjadi anggota berperan admin.
+		// Tanpa baris ini lembaga berdiri tanpa pengurus dan pembuatnya sendiri
+		// ditolak 403 di dashboard — penyebab 7 lembaga kosong di produksi.
+		await grantMembership(locals.db, {
+			id: nanoid(),
+			userId: locals.user.id,
+			orgId,
+			orgType,
+			role: 'admin'
+		});
+
+		// Akun yang belum terhubung ke lembaga mana pun disetel ke lembaga baru
+		// ini agar kode lama yang masih membaca users.org_id tetap bekerja.
+		if (!locals.user.orgId) {
+			await locals.db
+				.prepare(`UPDATE users SET role = ?, org_id = ?, org_status = ? WHERE id = ?`)
+				.bind('admin', orgId, 'active', locals.user.id)
+				.run();
+		}
+
+		// Lembaga pendidikan diberi target hafalan bawaan supaya dashboard tidak
+		// tampak kosong dan pengurus tidak mengira fiturnya tidak berfungsi.
+		if (isEducationalOrgType(orgType)) {
+			await seedHafalanDefault(locals.db, orgId, SEED_HAFALAN_DEFAULT);
+		}
 
 		throw redirect(303, '/lembaga');
 	}

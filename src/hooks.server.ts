@@ -13,6 +13,11 @@ import {
 } from '$lib/server/auth/super-admin-security';
 import { hasPermission } from '$lib/rbac/permissions';
 import {
+	ACTIVE_ORG_COOKIE,
+	loadMemberships,
+	resolveActiveOrg
+} from '$lib/server/active-org';
+import {
 	applySuperAdminImpersonation,
 	clearImpersonatedOrgId,
 	getImpersonatedOrgId
@@ -65,6 +70,8 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		event.locals.session = null;
 		event.locals.isSuperAdmin = false;
 		event.locals.orgType = null;
+		event.locals.memberships = [];
+		event.locals.activeOrg = null;
 		event.locals.can = () => false;
 		return resolve(event);
 	}
@@ -78,6 +85,8 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		event.locals.session = null;
 		event.locals.isSuperAdmin = false;
 		event.locals.orgType = null;
+		event.locals.memberships = [];
+		event.locals.activeOrg = null;
 		event.locals.can = () => false;
 		return resolve(event);
 	}
@@ -121,13 +130,37 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	event.locals.session = session;
 	event.locals.isSuperAdmin = isSuperAdminUser(resolvedUser);
 	event.locals.orgType = null;
+	event.locals.memberships = [];
+	event.locals.activeOrg = null;
 
-	if (resolvedUser?.orgId) {
-		const org = await db
-			.prepare('SELECT type FROM organizations WHERE id = ?')
-			.bind(resolvedUser.orgId)
-			.first<{ type: OrgType }>();
-		event.locals.orgType = org?.type ?? null;
+	// Satu akun boleh memegang banyak lembaga (mis. takmir yang mengurus TPQ,
+	// musholla, dan masjid di kampungnya). Lembaga aktif ditentukan sekali di
+	// sini, lalu `user.orgId` disetel mengikutinya sehingga seluruh pemanggilan
+	// assertOrgMember di rute-rute ikut sadar multi-lembaga.
+	if (resolvedUser) {
+		const memberships = await loadMemberships(db, resolvedUser.id);
+		const activeOrg = resolveActiveOrg({
+			memberships,
+			requestedOrgId: event.cookies.get(ACTIVE_ORG_COOKIE),
+			fallbackOrgId: resolvedUser.orgId ?? null
+		});
+
+		event.locals.memberships = memberships;
+		event.locals.activeOrg = activeOrg;
+
+		if (activeOrg) {
+			event.locals.orgType = activeOrg.org_type;
+			resolvedUser.orgId = activeOrg.org_id;
+			resolvedUser.role = activeOrg.role;
+		} else if (resolvedUser.orgId) {
+			// Akun lama yang belum punya baris keanggotaan: pertahankan perilaku
+			// sebelumnya agar tidak kehilangan akses sebelum backfill selesai.
+			const org = await db
+				.prepare('SELECT type FROM organizations WHERE id = ?')
+				.bind(resolvedUser.orgId)
+				.first<{ type: OrgType }>();
+			event.locals.orgType = org?.type ?? null;
+		}
 	}
 
 	event.locals.can = (permission: Permission) => {

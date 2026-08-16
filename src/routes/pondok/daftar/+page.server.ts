@@ -8,6 +8,7 @@ import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import { getInstitutionActionBlock, getInstitutionComingSoonLoad } from '$lib/server/institution-guards';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
+import { grantMembership } from '$lib/server/active-org';
 
 export const load: PageServerLoad = async () => {
 	getInstitutionComingSoonLoad('pondok');
@@ -83,6 +84,16 @@ export const actions: Actions = {
 				.prepare('UPDATE users SET role = ?, org_id = ?, org_status = ? WHERE id = ?')
 				.bind('admin', orgId, 'active', locals.user.id)
 				.run();
+
+			// Catat keanggotaan agar lembaga ini muncul di pemilih lembaga dan
+			// tetap bisa dibuka meski pengguna memegang lembaga lain.
+			await grantMembership(db, {
+				id: generateId(15),
+				userId: locals.user.id,
+				orgId,
+				orgType: 'pondok',
+				role: 'admin'
+			});
 		} else {
 			const userId = generateId(15);
 			const hashed = await new Scrypt().hash(adminPassword as string);
@@ -93,6 +104,14 @@ export const actions: Actions = {
 				)
 				.bind(userId, (adminName as string).trim(), (adminEmail as string).trim(), hashed, 'admin', orgId, 'active', Date.now())
 				.run();
+
+			await grantMembership(db, {
+				id: generateId(15),
+				userId,
+				orgId,
+				orgType: 'pondok',
+				role: 'admin'
+			});
 
 			await logActivity(db, {
 				userId,

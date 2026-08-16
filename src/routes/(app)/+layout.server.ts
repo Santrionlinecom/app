@@ -33,21 +33,28 @@ const listManagedLembaga = async (db: App.Locals['db'], userId?: string | null) 
 	if (!db || !userId) return [];
 
 	try {
+		// Sumber utama: keanggotaan. Satu orang bisa memegang banyak lembaga, dan
+		// ia bisa diberi wewenang di lembaga yang pendaftar aslinya orang lain —
+		// sehingga `akun_admin_id` saja tidak cukup. Union dengan kolom lama tetap
+		// dipertahankan supaya akun yang belum punya baris keanggotaan tidak
+		// kehilangan daftar lembaganya sebelum backfill selesai.
 		const { results } = await db
 			.prepare(
-				`SELECT
-					id,
-					name,
-					type,
-					slug,
-					status,
-					logo_url as logoUrl,
-					is_aktif as isAktif
-				 FROM organizations
-				 WHERE akun_admin_id = ?
-				 ORDER BY COALESCE(is_aktif, 0) DESC, name COLLATE NOCASE ASC`
+				`SELECT DISTINCT
+					o.id,
+					o.name,
+					o.type,
+					o.slug,
+					o.status,
+					o.logo_url as logoUrl,
+					o.is_aktif as isAktif
+				 FROM organizations o
+				 LEFT JOIN organization_memberships m
+					ON m.org_id = o.id AND m.user_id = ? AND m.is_active = 1
+				 WHERE m.user_id IS NOT NULL OR o.akun_admin_id = ?
+				 ORDER BY COALESCE(o.is_aktif, 0) DESC, o.name COLLATE NOCASE ASC`
 			)
-			.bind(userId)
+			.bind(userId, userId)
 			.all<LembagaSwitcherItem>();
 
 		return (results ?? []).map((item) => ({

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import { Building2, Check, ChevronsUpDown, Search, X } from 'lucide-svelte';
 	import { lembagaAktif, type LembagaAktif } from '$lib/stores/lembagaAktif';
 
@@ -57,9 +58,30 @@
 		open = !open;
 	};
 
-	const selectLembaga = (lembaga: LembagaAktif) => {
+	const selectLembaga = async (lembaga: LembagaAktif) => {
+		const sebelumnya = active;
 		lembagaAktif.set(lembaga);
 		close();
+
+		// Simpan pilihan di server. Tanpa ini, server tetap melayani lembaga lama
+		// dan tampilan berbeda dengan data yang sebenarnya dibuka.
+		try {
+			const res = await fetch('/api/lembaga-aktif', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ orgId: lembaga.id })
+			});
+
+			if (!res.ok) {
+				// Kembalikan tampilan bila server menolak, agar tidak menyesatkan.
+				if (sebelumnya) lembagaAktif.set(sebelumnya);
+				return;
+			}
+
+			await invalidateAll();
+		} catch {
+			if (sebelumnya) lembagaAktif.set(sebelumnya);
+		}
 	};
 
 	onMount(() => {

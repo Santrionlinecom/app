@@ -137,7 +137,7 @@ export const listAddonsForLembaga = async (db: D1Database, lembagaId: string) =>
 };
 
 export const FREE_SANTRI_LIMIT = 30;
-export const FREE_LEMBAGA_LIMIT = 1;
+export const FREE_LEMBAGA_LIMIT = 2;
 
 export const getActiveAddon = async (
 	db: D1Database,
@@ -219,6 +219,27 @@ export const getSantriCapacity = async (db: D1Database, lembagaId: string) => {
 	};
 };
 
+/**
+ * Menghitung kapasitas lembaga dari angka pemakaian.
+ *
+ * Dipisah dari akses basis data agar aturan jatah gratis bisa diuji langsung.
+ * Dua lembaga pertama gratis — satu takmir kampung lazim mengurus TPQ dan
+ * musholla sekaligus, jadi lembaga kedua bukan pemakaian berlebih.
+ */
+export const evaluateLembagaCapacity = ({
+	used,
+	unlimited
+}: {
+	used: number;
+	unlimited: boolean;
+}) => ({
+	unlimited,
+	limit: unlimited ? null : FREE_LEMBAGA_LIMIT,
+	used,
+	remaining: unlimited ? null : Math.max(FREE_LEMBAGA_LIMIT - used, 0),
+	canAdd: unlimited || used < FREE_LEMBAGA_LIMIT
+});
+
 export const getLembagaCapacity = async (db: D1Database, userId: string) => {
 	const used = await countManagedLembagaForUser(db, userId);
 	// lembaga_tambahan is account-level in product copy, but stored per-lembaga.
@@ -241,13 +262,7 @@ export const getLembagaCapacity = async (db: D1Database, userId: string) => {
 		unlockRow && isAddonActiveRow(unlockRow.status, unlockRow.berlakuHingga)
 	);
 
-	return {
-		unlimited,
-		limit: unlimited ? null : FREE_LEMBAGA_LIMIT,
-		used,
-		remaining: unlimited ? null : Math.max(FREE_LEMBAGA_LIMIT - used, 0),
-		canAdd: unlimited || used < FREE_LEMBAGA_LIMIT
-	};
+	return evaluateLembagaCapacity({ used, unlimited });
 };
 
 export const assertCanAddSantri = async (db: D1Database, lembagaId: string) => {
@@ -266,7 +281,7 @@ export const assertCanAddLembaga = async (db: D1Database, userId: string) => {
 		...capacity,
 		error: capacity.canAdd
 			? null
-			: 'Batas 1 lembaga gratis tercapai. Aktifkan addon Lembaga Tambahan di /addon sebelum menambah lembaga baru.'
+			: `Batas ${FREE_LEMBAGA_LIMIT} lembaga gratis tercapai. Aktifkan addon Lembaga Tambahan di /addon sebelum menambah lembaga baru.`
 	};
 };
 

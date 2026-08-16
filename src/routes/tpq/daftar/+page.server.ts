@@ -10,6 +10,7 @@ import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/
 import { seedHafalanDefault } from '$lib/server/domains/tpq/db-hafalan';
 import { SEED_HAFALAN_DEFAULT } from '$lib/server/domains/tpq/seed-hafalan-default';
 import { queueRegistrationEmail } from '$lib/server/notifications/registration-email';
+import { grantMembership } from '$lib/server/active-org';
 
 export const load: PageServerLoad = async () => {
 	return {};
@@ -79,6 +80,16 @@ export const actions: Actions = {
 				.prepare('UPDATE users SET role = ?, org_id = ?, org_status = ? WHERE id = ?')
 				.bind('admin', orgId, 'active', locals.user.id)
 				.run();
+
+			// Catat keanggotaan agar lembaga ini muncul di pemilih lembaga dan
+			// tetap bisa dibuka meski pengguna memegang lembaga lain.
+			await grantMembership(db, {
+				id: generateId(15),
+				userId: locals.user.id,
+				orgId,
+				orgType: 'tpq',
+				role: 'admin'
+			});
 		} else {
 			const userId = generateId(15);
 			const hashed = await new Scrypt().hash(adminPassword as string);
@@ -89,6 +100,14 @@ export const actions: Actions = {
 				)
 				.bind(userId, (adminName as string).trim(), (adminEmail as string).trim(), hashed, 'admin', orgId, 'active', Date.now())
 				.run();
+
+			await grantMembership(db, {
+				id: generateId(15),
+				userId,
+				orgId,
+				orgType: 'tpq',
+				role: 'admin'
+			});
 
 			await logActivity(db, {
 				userId,
