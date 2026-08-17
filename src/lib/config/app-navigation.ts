@@ -574,6 +574,34 @@ export const GLOBAL_APP_NAVIGATION: AppNavigationItem[] = [
 		group: 'buku'
 	},
 	{
+		label: 'Kursus',
+		href: '/kursus',
+		icon: ICONS.learn,
+		description: 'Kelas online SantriOnline',
+		group: 'pembinaan'
+	},
+	{
+		label: 'Digital Store',
+		href: '/digital-store',
+		icon: ICONS.star,
+		description: 'Produk digital & aplikasi desktop',
+		group: 'buku'
+	},
+	{
+		label: 'Kitab Digital',
+		href: '/kitab',
+		icon: ICONS.file,
+		description: 'Pustaka kitab & Al-Quran digital',
+		group: 'buku'
+	},
+	{
+		label: 'Desain',
+		href: '/desain',
+		icon: ICONS.file,
+		description: 'Template desain siap cetak',
+		group: 'buku'
+	},
+	{
 		label: 'Studio Penulis',
 		href: '/buku/studio',
 		icon: ICONS.learn,
@@ -612,6 +640,30 @@ export const SUPER_ADMIN_NAVIGATION: AppNavigationItem[] = [
 		group: 'sistem'
 	},
 	{ label: 'Moderasi Buku', href: '/admin/super/buku', icon: ICONS.book, group: 'buku' },
+	{
+		label: 'Kursus',
+		href: '/kursus',
+		icon: ICONS.learn,
+		group: 'pembinaan'
+	},
+	{
+		label: 'Digital Store',
+		href: '/digital-store',
+		icon: ICONS.star,
+		group: 'buku'
+	},
+	{
+		label: 'Kitab Digital',
+		href: '/kitab',
+		icon: ICONS.file,
+		group: 'buku'
+	},
+	{
+		label: 'Desain',
+		href: '/desain',
+		icon: ICONS.file,
+		group: 'buku'
+	},
 	{
 		label: 'Royalti',
 		href: '/admin/super/buku/royalties',
