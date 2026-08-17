@@ -5,6 +5,7 @@ import {
 	getBukuChapterAccess,
 	unlockBukuChapter
 } from '$lib/server/domains/buku/access';
+import { queueCoinTransactionEmail } from '$lib/server/notifications/coin-transaction-email';
 import {
 	ensureBukuLibrarySchema,
 	getAdjacentPublishedBukuChapters,
@@ -162,6 +163,23 @@ export const actions: Actions = {
 				coin_spent: book.pricePerChapter,
 				new_balance: unlockResult.balanceAfter
 			});
+
+			// Hanya bab yang baru dibuka. 'already_unlocked' berarti koin tidak
+			// terpotong lagi, jadi tidak boleh mengirim pemberitahuan kedua.
+			queueCoinTransactionEmail(
+				{
+					db,
+					fetchFn: fetch,
+					env: platform?.env ?? {},
+					userId: locals.user.id,
+					transactionId: unlockResult.unlockId,
+					jenis: 'unlock_chapter',
+					koin: book.pricePerChapter,
+					saldoAkhir: unlockResult.balanceAfter,
+					keterangan: `${book.title} — Bab ${chapter.chapterNumber}: ${chapter.title}`
+				},
+				platform?.context?.waitUntil
+			);
 		}
 
 		throw redirect(303, url.pathname);

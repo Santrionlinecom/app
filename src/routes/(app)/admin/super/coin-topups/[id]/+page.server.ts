@@ -5,6 +5,7 @@ import {
 	approveManualCoinTopup,
 	rejectManualCoinTopup
 } from '$lib/server/services/payment-gateway/payments/manual-coin-topup-approval';
+import { queueCoinTransactionEmail } from '$lib/server/notifications/coin-transaction-email';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { db } = requireSuperAdmin(locals);
@@ -58,8 +59,12 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 };
 
 export const actions: Actions = {
-	approve: async ({ locals, params }) => {
+	approve: async ({ locals, params, platform }) => {
 		const { db, user } = requireSuperAdmin(locals);
+		const topup = await db
+			.prepare('SELECT user_id AS userId, coin_amount AS coinAmount FROM coin_topup_requests WHERE id = ?')
+			.bind(params.id)
+			.first<{ userId: string; coinAmount: number }>();
 		const result = await approveManualCoinTopup({
 			db,
 			orderId: params.id,
@@ -76,6 +81,25 @@ export const actions: Actions = {
 		}
 		if (result.status === 'already_processed') {
 			return fail(400, { message: 'Request sudah diproses sebelumnya' });
+		}
+
+		// Hanya persetujuan yang benar-benar memindahkan koin. Status lain sudah
+		// ditolak di atas, jadi di titik ini saldo pasti bertambah.
+		if (topup?.userId) {
+			queueCoinTransactionEmail(
+				{
+					db,
+					fetchFn: fetch,
+					env: platform?.env ?? {},
+					userId: topup.userId,
+					transactionId: `manual-coin-topup:${params.id}`,
+					jenis: 'topup',
+					koin: topup.coinAmount,
+					saldoAkhir: result.balanceAfter,
+					keterangan: 'Topup koin via transfer manual'
+				},
+				platform?.context?.waitUntil
+			);
 		}
 
 		throw redirect(303, '/admin/super/coin-topups?success=approved');

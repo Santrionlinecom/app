@@ -7,6 +7,7 @@ import {
 import { rupiahToCoin } from '$lib/server/domains/buku/coin-operations';
 import { getCoinBalance } from '$lib/server/domains/buku/wallet';
 import { checkoutDigitalProductWithCoins } from '$lib/server/domains/digital-store/coin-checkout';
+import { queueCoinTransactionEmail } from '$lib/server/notifications/coin-transaction-email';
 
 const normalizeText = (value: FormDataEntryValue | null) =>
 	typeof value === 'string' ? value.trim() : '';
@@ -39,7 +40,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
-	createOrder: async ({ request, params, locals }) => {
+	createOrder: async ({ request, params, locals, platform }) => {
 		if (!locals.user) {
 			return fail(401, {
 				type: 'auth_required',
@@ -112,6 +113,26 @@ export const actions: Actions = {
 				new_balance: result.balanceAfter,
 				result: result.status
 			});
+
+			// Hanya pembelian yang benar-benar baru. status 'already_purchased'
+			// berarti pengguna memuat ulang halaman konfirmasi, koin tidak
+			// terpotong lagi, jadi tidak boleh mengirim struk kedua.
+			if (result.status === 'purchased') {
+				queueCoinTransactionEmail(
+					{
+						db: locals.db,
+						fetchFn: fetch,
+						env: platform?.env ?? {},
+						userId: locals.user.id,
+						transactionId: result.orderId,
+						jenis: 'purchase',
+						koin: coinRequired,
+						saldoAkhir: result.balanceAfter,
+						keterangan: `Pembelian ${product.title}`
+					},
+					platform?.context?.waitUntil
+				);
+			}
 
 			throw redirect(
 				303,
