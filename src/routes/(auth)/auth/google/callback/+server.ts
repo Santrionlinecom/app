@@ -14,6 +14,7 @@ import {
 	evaluateSuperAdminOAuth,
 	parseSuperAdminEmailAllowlist
 } from '$lib/server/auth/super-admin-security';
+import { queueRegistrationEmail } from '$lib/server/notifications/registration-email';
 
 type GoogleProfile = {
 	sub: string;
@@ -322,6 +323,23 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 				metadata: { method: 'google', orgId: memberContext?.orgId ?? null, role: finalRole },
 				waitUntil: platform?.context?.waitUntil
 			});
+		}
+
+		if (isNewUser) {
+			// Hanya akun yang baru dibuat. Login ulang Super Admin / anggota lama
+			// tidak boleh dapat email sambutan kedua.
+			queueRegistrationEmail(
+				{
+					db,
+					fetchFn: fetch,
+					env: platform?.env ?? {},
+					userId,
+					name: googleUser.name || email.split('@')[0],
+					email,
+					role: finalRole
+				},
+				platform?.context?.waitUntil
+			);
 		}
 
 		const session = await lucia.createSession(userId, {});
