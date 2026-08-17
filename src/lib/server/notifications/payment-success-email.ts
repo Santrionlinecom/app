@@ -178,11 +178,17 @@ export const notifyPaymentSuccessEmail = async ({
 			}),
 			signal: AbortSignal.timeout(5_000)
 		});
-		const payload = (await response.json().catch(() => ({}))) as { id?: unknown };
+		const payload = (await response.json().catch(() => ({}))) as {
+			id?: unknown;
+			name?: unknown;
+		};
 		if (response.ok && typeof payload.id === 'string' && payload.id.trim()) {
 			providerMessageId = payload.id.trim();
 		} else {
-			errorCode = `resend_http_${response.status}`;
+			// Sama seperti email pendaftaran: satu status HTTP dipakai Resend
+			// untuk beberapa sebab berbeda, jadi nama galatnya ikut dicatat.
+			const nama = typeof payload.name === 'string' ? payload.name.trim() : '';
+			errorCode = nama ? `resend_${nama}` : `resend_http_${response.status}`;
 		}
 	} catch {
 		errorCode = 'resend_request_failed';

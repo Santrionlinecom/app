@@ -61,11 +61,19 @@ export const ensureRegistrationEmailSchema = async (db: D1Database) => {
 			provider_message_id TEXT,
 			attempts INTEGER NOT NULL DEFAULT 0,
 			last_error_code TEXT,
+			last_error_message TEXT,
 			created_at INTEGER NOT NULL,
 			updated_at INTEGER NOT NULL,
 			sent_at INTEGER
 		)`
 	).run();
+	// CREATE TABLE IF NOT EXISTS tidak menambah kolom pada tabel yang sudah
+	// ada, jadi kolom baru ditambahkan terpisah. D1 melempar galat bila kolom
+	// sudah ada — itu wajar dan diabaikan.
+	await db
+		.prepare('ALTER TABLE registration_email_deliveries ADD COLUMN last_error_message TEXT')
+		.run()
+		.catch(() => undefined);
 	await db.prepare(
 		`CREATE INDEX IF NOT EXISTS idx_registration_email_deliveries_status_updated
 		 ON registration_email_deliveries(status, updated_at)`
@@ -148,6 +156,7 @@ export const notifyRegistrationEmail = async ({
 
 	let providerMessageId = '';
 	let errorCode = '';
+	let errorMessage = '';
 	try {
 		const response = await fetchFn('https://api.resend.com/emails', {
 			method: 'POST',
@@ -165,11 +174,21 @@ export const notifyRegistrationEmail = async ({
 			}),
 			signal: AbortSignal.timeout(5_000)
 		});
-		const payload = (await response.json().catch(() => ({}))) as { id?: unknown };
+		const payload = (await response.json().catch(() => ({}))) as {
+			id?: unknown;
+			name?: unknown;
+			message?: unknown;
+		};
 		if (response.ok && typeof payload.id === 'string' && payload.id.trim()) {
 			providerMessageId = payload.id.trim();
 		} else {
-			errorCode = `resend_http_${response.status}`;
+			// Resend memakai satu status untuk beberapa sebab berbeda — 403 bisa
+			// berarti kunci tidak valid, domain belum diverifikasi, atau akun
+			// masih mode uji. Tanpa nama galatnya, ketiganya tampak sama dan
+			// tidak bisa diperbaiki tanpa menebak.
+			const nama = typeof payload.name === 'string' ? payload.name.trim() : '';
+			errorCode = nama ? `resend_${nama}` : `resend_http_${response.status}`;
+			errorMessage = typeof payload.message === 'string' ? payload.message.trim() : '';
 		}
 	} catch {
 		errorCode = 'resend_request_failed';
@@ -188,8 +207,8 @@ export const notifyRegistrationEmail = async ({
 
 	await db.prepare(
 		`UPDATE registration_email_deliveries
-		 SET status = 'failed', last_error_code = ?, updated_at = ?
+		 SET status = 'failed', last_error_code = ?, last_error_message = ?, updated_at = ?
 		 WHERE user_id = ? AND status = 'sending'`
-	).bind(errorCode, completedAt, userId).run();
+	).bind(errorCode, errorMessage.slice(0, 500) || null, completedAt, userId).run();
 	return { status: 'failed', code: errorCode };
 };
