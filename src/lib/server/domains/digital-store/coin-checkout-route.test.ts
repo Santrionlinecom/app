@@ -2,11 +2,11 @@ import { strict as assert } from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
-const routePath = new URL('../../../../routes/digital-store/[slug]/+page.server.ts', import.meta.url);
-const pagePath = new URL('../../../../routes/digital-store/[slug]/+page.svelte', import.meta.url);
+const routePath = new URL('../../../../routes/(app)/digital-store/[slug]/+page.server.ts', import.meta.url);
+const pagePath = new URL('../../../../routes/(app)/digital-store/[slug]/+page.svelte', import.meta.url);
 const commercePath = new URL('./commerce.ts', import.meta.url);
-const orderRoutePath = new URL('../../../../routes/digital-store/order/[reference]/+page.server.ts', import.meta.url);
-const orderPagePath = new URL('../../../../routes/digital-store/order/[reference]/+page.svelte', import.meta.url);
+const orderRoutePath = new URL('../../../../routes/(app)/digital-store/order/[reference]/+page.server.ts', import.meta.url);
+const orderPagePath = new URL('../../../../routes/(app)/digital-store/order/[reference]/+page.svelte', import.meta.url);
 const walletPath = new URL('../buku/wallet.ts', import.meta.url);
 const schemaPath = new URL('../../../../../schema.sql', import.meta.url);
 
