@@ -27,6 +27,19 @@ test('kursus muncul di menu Belajar', () => {
 	assert.match(layout, /href: '\/kursus'/, 'menu kursus wajib ada di navigasi');
 });
 
+test('Kelola Kursus ada di navigasi superadmin', () => {
+	const nav = readFileSync(join(akar, 'src/lib/config/app-navigation.ts'), 'utf-8');
+
+	// Harus berada di dalam SUPER_ADMIN_NAVIGATION, bukan navigasi umum:
+	// penyaringan peran ikut dari daftar tempatnya berada.
+	const bagianSuperAdmin = nav.slice(nav.indexOf('SUPER_ADMIN_NAVIGATION'));
+	assert.match(
+		bagianSuperAdmin,
+		/href: '\/admin\/kursus'/,
+		'menu Kelola Kursus wajib ada agar superadmin tidak perlu mengetik URL'
+	);
+});
+
 test('rute kursus menyalakan penanda menu aktif', () => {
 	assert.match(
 		layout,

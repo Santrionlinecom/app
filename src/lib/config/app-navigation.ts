@@ -677,6 +677,7 @@ export const SUPER_ADMIN_NAVIGATION: AppNavigationItem[] = [
 		group: 'buku'
 	},
 	{ label: 'CMS', href: '/admin/posts', icon: ICONS.file, group: 'sistem' },
+	{ label: 'Kelola Kursus', href: '/admin/kursus', icon: ICONS.book, group: 'sistem' },
 	{ label: 'Licenses', href: '/admin/licenses', icon: ICONS.shield, group: 'sistem' },
 	{
 		label: 'Akun',
