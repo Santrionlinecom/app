@@ -150,6 +150,14 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		url.pathname.startsWith('/habit/') ||
 		url.pathname === '/belajar' ||
 		url.pathname.startsWith('/belajar/') ||
+		url.pathname === '/kursus' ||
+		url.pathname.startsWith('/kursus/') ||
+		url.pathname === '/digital-store' ||
+		url.pathname.startsWith('/digital-store/') ||
+		url.pathname === '/kitab' ||
+		url.pathname.startsWith('/kitab/') ||
+		url.pathname === '/desain' ||
+		url.pathname.startsWith('/desain/') ||
 		url.pathname === '/beranda' ||
 		url.pathname.startsWith('/beranda/') ||
 		url.pathname === '/sosial' ||
