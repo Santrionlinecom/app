@@ -56,11 +56,23 @@ export const actions: Actions = {
 
 			let user: { id: string; email: string; password_hash: unknown; role: string | null } | null = null;
 			try {
-				// 2. Cari user di database
-				user = await db
-					.prepare('SELECT id, email, password_hash, role FROM users WHERE email = ?')
-					.bind(email)
-					.first<{ id: string; email: string; password_hash: unknown; role: string | null }>();
+								// 2. Cari user di database (prioritaskan super_admin jika user punya multiple role)
+								user = await db
+									.prepare(`
+										SELECT id, email, password_hash, role 
+										FROM users 
+										WHERE email = ? 
+										ORDER BY 
+											CASE role
+												WHEN 'super_admin' THEN 1
+												WHEN 'SUPER_ADMIN' THEN 1
+												WHEN 'admin' THEN 2
+												ELSE 3
+											END
+										LIMIT 1
+									`)
+									.bind(email)
+									.first<{ id: string; email: string; password_hash: unknown; role: string | null }>();
 
 				if (!user) {
 					return fail(400, { message: 'Email atau Password salah.' });

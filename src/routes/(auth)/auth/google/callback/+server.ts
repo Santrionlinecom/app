@@ -174,10 +174,22 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 		whereFields.push('email = ?');
 		whereValues.push(email);
 
-		const existingUser = await db
-			.prepare(`SELECT ${selectFields.join(', ')} FROM users WHERE ${whereFields.join(' OR ')} LIMIT 1`)
-			.bind(...whereValues)
-			.first<UserRow>();
+			const existingUser = await db
+				.prepare(`
+					SELECT ${selectFields.join(', ')} 
+					FROM users 
+					WHERE ${whereFields.join(' OR ')} 
+					ORDER BY 
+						CASE role
+							WHEN 'super_admin' THEN 1
+							WHEN 'SUPER_ADMIN' THEN 1
+							WHEN 'admin' THEN 2
+							ELSE 3
+						END
+					LIMIT 1
+				`)
+				.bind(...whereValues)
+				.first<UserRow>();
 		const superAdminPolicy = evaluateSuperAdminOAuth({
 			email,
 			emailVerified: googleUser.email_verified === true,
