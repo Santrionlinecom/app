@@ -68,10 +68,43 @@ test('CI menjalankan test, bukan hanya check dan build', async () => {
 	assert.match(ci, /run:\s*npm test/, 'CI wajib menjalankan npm test');
 });
 
+/**
+ * Versi Node di CI harus cukup baru untuk fitur yang dipakai kode.
+ * `library-moderation.test.ts` mengimpor `node:sqlite` yang baru ada di
+ * Node 22+; di Node 20 test itu gagal dengan ERR_UNKNOWN_BUILTIN_MODULE.
+ */
+test('CI memakai Node yang mendukung node:sqlite', async () => {
+	const { readFileSync } = await import('node:fs');
+	const ci = readFileSync(join(akar, '.github/workflows/ci.yml'), 'utf-8');
+	const cocok = ci.match(/node-version:\s*(\d+)/);
+	assert.ok(cocok, 'ci.yml wajib menyebut node-version');
+	assert.ok(
+		Number(cocok[1]) >= 22,
+		`node:sqlite butuh Node 22+, ci.yml memakai ${cocok[1]}`
+	);
+});
+
 test('npm test mencakup tests/ dan src/', async () => {
+	// Diuji lewat perilaku nyata skrip, bukan lewat isi string perintah:
+	// glob '**' hanya jalan di Node 21+, sedangkan CI memakai Node 20, jadi
+	// penelusuran berkas dipindahkan ke scripts/jalankan-test.mjs.
 	const { readFileSync } = await import('node:fs');
 	const pkg = JSON.parse(readFileSync(join(akar, 'package.json'), 'utf-8'));
-	const perintah = pkg.scripts?.test ?? '';
-	assert.match(perintah, /tests\//, 'wajib mencakup berkas test di tests/');
-	assert.match(perintah, /src/, 'wajib mencakup berkas test di src/');
+	assert.match(
+		pkg.scripts?.test ?? '',
+		/jalankan-test\.mjs/,
+		'npm test wajib memakai skrip penelusur'
+	);
+
+	const skrip = readFileSync(join(akar, 'scripts/jalankan-test.mjs'), 'utf-8');
+	assert.match(skrip, /'tests'/, 'skrip wajib menelusuri tests/');
+	assert.match(skrip, /'src'/, 'skrip wajib menelusuri src/');
+	assert.match(skrip, /\.test\.ts/, 'skrip wajib menyaring berkas *.test.ts');
+
+	// Tidak boleh kembali memakai glob '**' yang gagal senyap di Node 20.
+	assert.equal(
+		/\*\*/.test(pkg.scripts?.test ?? ''),
+		false,
+		"glob '**' tidak didukung Node 20 di CI"
+	);
 });
