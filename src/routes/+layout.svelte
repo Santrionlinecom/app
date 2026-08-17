@@ -127,6 +127,7 @@ const isLearningMenuActive = (path: string) =>
 	path === '/tpq' ||
 	path.startsWith('/tpq/') ||
 	path.startsWith('/kitab') ||
+	path.startsWith('/kursus') ||
 	path.startsWith('/fitur') ||
 	isTokohMenuActive(path) ||
 	isDynastyMenuActive(path) ||
@@ -278,6 +279,11 @@ const bookPublicMenuItems: HeaderMenuItem[] = [
 		label: 'Buku Digital',
 		href: '/buku',
 		note: 'Katalog karya santri dan penulis muslim'
+	},
+	{
+		label: 'Kursus',
+		href: '/kursus',
+		note: 'Materi bertahap, ada yang gratis dan berbayar koin'
 	}
 ];
 
