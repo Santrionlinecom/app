@@ -3,7 +3,17 @@ import type { RequestHandler } from './$types';
 import { getGoogleOAuthClient } from '$lib/server/lucia';
 import { generateCodeVerifier, generateState } from 'arctic';
 
-export const GET: RequestHandler = async ({ cookies, url }) => {
+export const GET: RequestHandler = async ({ cookies, url, locals }) => {
+	const redirectTo = url.searchParams.get('redirect');
+	const safeRedirect = redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : null;
+
+	// Sesi sudah aktif: tidak perlu perjalanan ke accounts.google.com sama
+	// sekali. Tanpa penjaga ini pengguna yang sudah masuk akan melihat layar
+	// izin Google lagi dan menunggu beberapa detik tanpa alasan.
+	if (locals.user) {
+		throw redirect(302, safeRedirect ?? '/dashboard');
+	}
+
 	const google = getGoogleOAuthClient(url.origin);
 	if (!google) throw error(503, 'Google OAuth belum dikonfigurasi.');
 
@@ -11,8 +21,6 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 	const orgType = url.searchParams.get('orgType');
 	const orgSlug = url.searchParams.get('orgSlug');
 	const role = url.searchParams.get('role');
-	const redirectTo = url.searchParams.get('redirect');
-	const safeRedirect = redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : null;
 	if ((mode === 'member' && orgType && orgSlug) || safeRedirect) {
 		const context = JSON.stringify({ mode, orgType, orgSlug, role, redirect: safeRedirect });
 		cookies.set('google_oauth_context', context, {
