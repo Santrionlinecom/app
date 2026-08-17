@@ -276,15 +276,33 @@
 		font-weight: 600;
 		color: rgb(15 23 42);
 	}
-	:global(.dark) .materi :global(p),
-	:global(.dark) .materi :global(ul),
-	:global(.dark) .materi :global(ol) {
-		color: rgb(203 213 225);
-	}
-	:global(.dark) .materi :global(blockquote) {
-		color: rgb(148 163 184);
-	}
-	:global(.dark) .materi :global(strong) {
-		color: rgb(255 255 255);
+	/*
+	 * Mode gelap: teks materi dibuat putih penuh, bukan abu-abu.
+	 *
+	 * Materi kursus dibaca panjang dan sering di layar HP dengan cahaya
+	 * sekitar terang, sehingga abu-abu terasa pudar dan melelahkan.
+	 *
+	 * Memakai @media prefers-color-scheme, bukan selektor .dark: proyek ini
+	 * memakai Tailwind v3 tanpa darkMode:'class', sehingga seluruh utilitas
+	 * dark: menempel pada media query dan tidak ada kelas .dark di DOM.
+	 */
+	@media (prefers-color-scheme: dark) {
+		.materi :global(p),
+		.materi :global(ul),
+		.materi :global(ol),
+		.materi :global(li),
+		.materi :global(h1),
+		.materi :global(h2),
+		.materi :global(h3),
+		.materi :global(h4),
+		.materi :global(td),
+		.materi :global(th),
+		.materi :global(blockquote),
+		.materi :global(strong) {
+			color: rgb(255 255 255);
+		}
+		.materi :global(a) {
+			color: rgb(110 231 183);
+		}
 	}
 </style>
