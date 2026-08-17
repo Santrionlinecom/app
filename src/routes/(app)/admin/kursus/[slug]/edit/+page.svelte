@@ -5,6 +5,9 @@
 
 	let { data, form } = $props();
 
+	/** Kursus ilmu agama: harga terkunci nol, tidak bisa diubah. */
+	const kursusAgama = $derived(Boolean(data.kursusAgama));
+
 	/** Materi yang sedang dibuka di editor. */
 	let aktif = $state(0);
 
@@ -124,9 +127,16 @@
 					type="number"
 					min="0"
 					value={data.kursus.harga_koin}
-					class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+					disabled={kursusAgama}
+					class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:disabled:bg-slate-900"
 				/>
-				<span class="mt-1 block text-xs text-slate-500">0 berarti gratis</span>
+				{#if kursusAgama}
+					<span class="mt-1 block text-xs font-medium text-emerald-700 dark:text-emerald-400">
+						Ilmu agama wajib gratis di SantriOnline.
+					</span>
+				{:else}
+					<span class="mt-1 block text-xs text-slate-500">0 berarti gratis</span>
+				{/if}
 			</label>
 
 			<label>

@@ -208,7 +208,7 @@ Setelah satu jam memegang HP, tanyakan: apakah saya merasa lebih baik, atau just
 
 Jawaban jujurnya biasanya sudah cukup jadi petunjuk.', 3, 15, 1786941792248, 1786941792248);
 
-INSERT OR REPLACE INTO kursus (id, slug, judul, ringkasan, deskripsi, harga_koin, level, kategori, sampul_url, durasi_menit, status, urutan, created_at, updated_at) VALUES ('kursus-fondasi-aqidah', 'fondasi-aqidah-aswaja', 'Fondasi Aqidah Ahlus Sunnah wal Jama''ah', 'Mengenal Allah, Rasul, dan pokok keyakinan Aswaja secara bertahap dan mudah dipahami.', 'Mengenal Allah, Rasul, dan pokok keyakinan Aswaja secara bertahap dan mudah dipahami.', 150, 'menengah', 'Aqidah', NULL, 120, 'published', 3, 1786941792248, 1786941792248);
+INSERT OR REPLACE INTO kursus (id, slug, judul, ringkasan, deskripsi, harga_koin, level, kategori, sampul_url, durasi_menit, status, urutan, created_at, updated_at) VALUES ('kursus-fondasi-aqidah', 'fondasi-aqidah-aswaja', 'Fondasi Aqidah Ahlus Sunnah wal Jama''ah', 'Mengenal Allah, Rasul, dan pokok keyakinan Aswaja secara bertahap dan mudah dipahami.', 'Mengenal Allah, Rasul, dan pokok keyakinan Aswaja secara bertahap dan mudah dipahami.', 0, 'menengah', 'Aqidah', NULL, 120, 'published', 3, 1786941792248, 1786941792248);
 INSERT OR REPLACE INTO kursus_materi (id, kursus_id, judul, isi, urutan, durasi_menit, created_at, updated_at) VALUES ('kursus-fondasi-aqidah-m1', 'kursus-fondasi-aqidah', 'Kenapa aqidah didahulukan', 'Sebelum belajar cara shalat, seseorang perlu tahu **kepada siapa** ia shalat.
 
 Inilah sebabnya para ulama mendahulukan aqidah. Amal tanpa keyakinan yang benar seperti bangunan tanpa pondasi — terlihat berdiri, tetapi tidak tahan goncangan.

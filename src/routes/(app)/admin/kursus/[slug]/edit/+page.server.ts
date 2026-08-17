@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 
 import { canManageCms } from '$lib/server/auth/cms-access';
 import { bersihkanHtml } from '$lib/server/domains/kursus/format-materi';
+import { periksaHargaKursus, wajibGratis } from '$lib/server/domains/kursus/kebijakan-harga';
 
 import type { Actions, PageServerLoad } from './$types';
 
@@ -57,7 +58,13 @@ export const load: PageServerLoad = async ({ locals, params, platform }) => {
 		.all<BarisMateri>()
 		.catch(() => ({ results: [] as BarisMateri[] }));
 
-	return { kursus, materi: materi.results ?? [] };
+	return {
+		kursus,
+		materi: materi.results ?? [],
+		// Dipakai halaman untuk mengunci kolom harga sejak awal, bukan hanya
+		// menolak setelah tersimpan.
+		kursusAgama: wajibGratis(kursus.kategori)
+	};
 };
 
 export const actions: Actions = {
@@ -75,10 +82,11 @@ export const actions: Actions = {
 		const level = String(form.get('level') ?? 'dasar').trim();
 		const status = String(form.get('status') ?? 'draft').trim();
 
-		// Harga dinormalkan di sini juga, bukan hanya di sisi klien: form bisa
-		// dikirim langsung tanpa lewat halaman.
+		// Kebijakan tetap: kursus ilmu agama wajib gratis. Ditegakkan di server
+		// agar tidak bisa dilewati lewat kiriman form langsung.
 		const hargaMentah = Number(form.get('harga_koin') ?? 0);
-		const harga = Number.isFinite(hargaMentah) && hargaMentah > 0 ? Math.floor(hargaMentah) : 0;
+		const putusan = periksaHargaKursus(kategori, hargaMentah);
+		const harga = putusan.harga;
 
 		const durasiMentah = Number(form.get('durasi_menit') ?? 0);
 		const durasi = Number.isFinite(durasiMentah) && durasiMentah > 0 ? Math.floor(durasiMentah) : 0;
@@ -98,7 +106,12 @@ export const actions: Actions = {
 			.bind(judul, ringkasan || null, kategori || null, level, status, harga, durasi, Date.now(), params.slug)
 			.run();
 
-		return { berhasil: true, pesan: 'Keterangan kursus tersimpan' };
+		return {
+			berhasil: true,
+			pesan: putusan.dipaksaGratis
+				? `Keterangan tersimpan. ${putusan.alasan}`
+				: 'Keterangan kursus tersimpan'
+		};
 	},
 
 	/** Menyimpan satu materi. Isi dari editor selalu HTML. */
