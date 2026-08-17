@@ -641,32 +641,67 @@
 										</svg>
 										<span>Topup coin</span>
 									</a>
-									{#if isSuperAdmin}
-										<a
-											href="/admin/super/overview"
-											class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
-											role="menuitem"
-											on:click={closeOverlays}
-										>
-											<svg class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-												<path d={iconPaths.shield} stroke-linecap="round" stroke-linejoin="round" />
-											</svg>
-											<span>Panel super admin</span>
-										</a>
-									{/if}
-									{#if isImpersonating}
-										<a
-											href="/admin/super/impersonate/stop"
-											class="flex items-center gap-3 px-4 py-2.5 text-sm text-amber-800 transition hover:bg-amber-50"
-											role="menuitem"
-											on:click={closeOverlays}
-										>
-											<svg class="h-4 w-4 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-												<path d={iconPaths.shield} stroke-linecap="round" stroke-linejoin="round" />
-											</svg>
-											<span>Keluar mode admin lembaga</span>
-										</a>
-									{/if}
+																		{#if isSuperAdmin}
+																			<div class="mt-1.5 border-t border-slate-100 pt-1.5">
+																				<p class="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+																					Pindah peran
+																				</p>
+																				<a
+																					href={isImpersonating ? '/admin/super/impersonate/stop' : '/admin/super/overview'}
+																					class="flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-slate-50 {isImpersonating ? 'text-slate-700' : 'bg-emerald-50/70 font-semibold text-emerald-800'}"
+																					role="menuitem"
+																					on:click={closeOverlays}
+																				>
+																					<svg class="h-4 w-4 {isImpersonating ? 'text-slate-500' : 'text-emerald-700'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+																						<path d={iconPaths.shield} stroke-linecap="round" stroke-linejoin="round" />
+																					</svg>
+																					<span class="min-w-0 flex-1 truncate">Super Admin</span>
+																					{#if !isImpersonating}
+																						<span class="text-[10px] font-bold uppercase text-emerald-700">Aktif</span>
+																					{/if}
+																				</a>
+																				{#each (data?.lembagaList ?? []) as lembaga (lembaga.id)}
+																					<a
+																						href={`/admin/super/impersonate?orgId=${encodeURIComponent(lembaga.id)}`}
+																						class="flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-slate-50 {isImpersonating && data?.user?.impersonatedOrgId === lembaga.id ? 'bg-emerald-50/70 font-semibold text-emerald-800' : 'text-slate-700'}"
+																						role="menuitem"
+																						on:click={closeOverlays}
+																					>
+																						<svg class="h-4 w-4 {isImpersonating && data?.user?.impersonatedOrgId === lembaga.id ? 'text-emerald-700' : 'text-slate-500'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+																							<path d={iconPaths.building} stroke-linecap="round" stroke-linejoin="round" />
+																						</svg>
+																						<span class="min-w-0 flex-1 truncate">Admin · {lembaga.name}</span>
+																						{#if isImpersonating && data?.user?.impersonatedOrgId === lembaga.id}
+																							<span class="text-[10px] font-bold uppercase text-emerald-700">Aktif</span>
+																						{/if}
+																					</a>
+																				{/each}
+																			</div>
+																			<a
+																				href="/admin/super/overview"
+																				class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
+																				role="menuitem"
+																				on:click={closeOverlays}
+																			>
+																				<svg class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+																					<path d={iconPaths.shield} stroke-linecap="round" stroke-linejoin="round" />
+																				</svg>
+																				<span>Panel super admin</span>
+																			</a>
+																		{/if}
+																		{#if isImpersonating}
+																			<a
+																				href="/admin/super/impersonate/stop"
+																				class="flex items-center gap-3 px-4 py-2.5 text-sm text-amber-800 transition hover:bg-amber-50"
+																				role="menuitem"
+																				on:click={closeOverlays}
+																			>
+																				<svg class="h-4 w-4 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+																					<path d={iconPaths.shield} stroke-linecap="round" stroke-linejoin="round" />
+																				</svg>
+																				<span>Keluar mode admin lembaga</span>
+																			</a>
+																		{/if}
 								</div>
 
 								<div class="border-t border-slate-100 py-1.5">
