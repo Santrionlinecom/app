@@ -199,7 +199,12 @@
 				>
 					<h2 class="text-xl font-semibold text-slate-900 dark:text-white">{m.judul}</h2>
 					<div class="materi mt-4">
-						{@html keHtml(String(m.isi ?? ''))}
+						{#if m.format === 'html'}
+							<!-- Sudah HTML hasil suntingan superadmin; sudah dibersihkan di server. -->
+							{@html String(m.isi ?? '')}
+						{:else}
+							{@html keHtml(String(m.isi ?? ''))}
+						{/if}
 					</div>
 
 					<div

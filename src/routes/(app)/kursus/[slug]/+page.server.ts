@@ -1,5 +1,7 @@
 import { error } from '@sveltejs/kit';
 
+import { siapkanUntukTampil } from '$lib/server/domains/kursus/format-materi';
+
 import type { PageServerLoad } from './$types';
 
 type BarisKursus = {
@@ -20,6 +22,7 @@ type BarisMateri = {
 	urutan: number;
 	durasi_menit: number;
 	isi?: string;
+	format?: string | null;
 };
 
 /**
@@ -60,16 +63,24 @@ export const load: PageServerLoad = async ({ locals, params, platform }) => {
 	// yang sudah terdaftar.
 	const materi = await db
 		.prepare(
-			`SELECT id, judul, urutan, durasi_menit${boleh ? ', isi' : ''}
+			`SELECT id, judul, urutan, durasi_menit${boleh ? ', isi, format' : ''}
 			 FROM kursus_materi WHERE kursus_id = ? ORDER BY urutan`
 		)
 		.bind(kursus.id)
 		.all<BarisMateri>()
 		.catch(() => ({ results: [] as BarisMateri[] }));
 
+	// Materi bisa berformat markdown (seed awal) atau HTML (hasil suntingan
+	// superadmin). Format ditentukan di server agar klien tidak perlu menebak.
+	const daftarMateri = (materi.results ?? []).map((m) => {
+		if (!boleh || typeof m.isi !== 'string') return { ...m, isi: '', format: 'markdown' };
+		const siap = siapkanUntukTampil(m.isi, m.format ?? null);
+		return { ...m, isi: siap.html, format: siap.format };
+	});
+
 	return {
 		kursus,
-		materi: materi.results ?? [],
+		materi: daftarMateri,
 		boleh,
 		masuk: Boolean(userId)
 	};

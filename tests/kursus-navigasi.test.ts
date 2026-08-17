@@ -13,10 +13,10 @@ const layout = readFileSync(join(akar, 'src/routes/+layout.svelte'), 'utf-8');
 
 test('halaman kursus tersedia', () => {
 	for (const berkas of [
-		'src/routes/kursus/+page.server.ts',
-		'src/routes/kursus/+page.svelte',
-		'src/routes/kursus/[slug]/+page.server.ts',
-		'src/routes/kursus/[slug]/+page.svelte',
+		'src/routes/(app)/kursus/+page.server.ts',
+		'src/routes/(app)/kursus/+page.svelte',
+		'src/routes/(app)/kursus/[slug]/+page.server.ts',
+		'src/routes/(app)/kursus/[slug]/+page.svelte',
 		'src/routes/api/kursus/daftar/+server.ts'
 	]) {
 		assert.equal(existsSync(join(akar, berkas)), true, `${berkas} tidak ada`);
@@ -60,10 +60,13 @@ test('modul pendaftaran memakai deductCoins, bukan menulis dompet langsung', () 
 });
 
 test('materi kursus berbayar tidak ikut terkirim sebelum mendaftar', () => {
-	const server = readFileSync(join(akar, 'src/routes/kursus/[slug]/+page.server.ts'), 'utf-8');
+	const server = readFileSync(
+		join(akar, 'src/routes/(app)/kursus/[slug]/+page.server.ts'),
+		'utf-8'
+	);
 	assert.match(
 		server,
-		/boleh \? ', isi' : ''/,
+		/boleh \? ', isi, format' : ''/,
 		'kolom isi hanya boleh diambil untuk yang sudah terdaftar'
 	);
 });
