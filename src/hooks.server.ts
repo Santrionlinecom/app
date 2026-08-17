@@ -139,13 +139,23 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	// assertOrgMember di rute-rute ikut sadar multi-lembaga.
 	if (resolvedUser) {
 		const memberships = await loadMemberships(db, resolvedUser.id);
-		const activeOrg = resolveActiveOrg({
-			memberships,
-			requestedOrgId: event.cookies.get(ACTIVE_ORG_COOKIE),
-			fallbackOrgId: resolvedUser.orgId ?? null
-		});
-
 		event.locals.memberships = memberships;
+
+		// Super Admin tidak boleh diturunkan perannya oleh keanggotaan lembaga.
+		// Sebelumnya blok ini menimpa `role` SUPER_ADMIN menjadi peran lembaga
+		// (mis. 'admin' musholla) pada SETIAP request, sehingga panel super
+		// admin selalu 403/500 walau login ulang berkali-kali. Konteks lembaga
+		// untuk Super Admin hanya boleh aktif lewat mode impersonate yang
+		// memang menyimpan originalRole.
+		const superAdmin = isSuperAdminUser(resolvedUser);
+		const activeOrg = superAdmin
+			? null
+			: resolveActiveOrg({
+					memberships,
+					requestedOrgId: event.cookies.get(ACTIVE_ORG_COOKIE),
+					fallbackOrgId: resolvedUser.orgId ?? null
+				});
+
 		event.locals.activeOrg = activeOrg;
 
 		if (activeOrg) {
@@ -153,8 +163,9 @@ const authHandle: Handle = async ({ event, resolve }) => {
 			resolvedUser.orgId = activeOrg.org_id;
 			resolvedUser.role = activeOrg.role;
 		} else if (resolvedUser.orgId) {
-			// Akun lama yang belum punya baris keanggotaan: pertahankan perilaku
-			// sebelumnya agar tidak kehilangan akses sebelum backfill selesai.
+			// Akun lama tanpa baris keanggotaan, atau Super Admin yang sedang
+			// mode impersonate (orgId disetel oleh impersonation): cukup baca
+			// tipe lembaganya tanpa menyentuh role.
 			const org = await db
 				.prepare('SELECT type FROM organizations WHERE id = ?')
 				.bind(resolvedUser.orgId)
