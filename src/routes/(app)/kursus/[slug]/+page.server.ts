@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 
 import { siapkanUntukTampil } from '$lib/server/domains/kursus/format-materi';
+import { isSuperAdminUser } from '$lib/auth/session-user';
 
 import type { PageServerLoad } from './$types';
 
@@ -48,9 +49,10 @@ export const load: PageServerLoad = async ({ locals, params, platform }) => {
 	if (!kursus) throw error(404, 'Kursus tidak ditemukan');
 
 	const userId = locals.user?.id;
-	let boleh = false;
+	const isSuper = isSuperAdminUser(locals.user);
+	let boleh = isSuper;
 
-	if (userId) {
+	if (userId && !boleh) {
 		const daftar = await db
 			.prepare('SELECT id FROM kursus_pendaftaran WHERE user_id = ? AND kursus_id = ? LIMIT 1')
 			.bind(userId, kursus.id)
@@ -82,6 +84,7 @@ export const load: PageServerLoad = async ({ locals, params, platform }) => {
 		kursus,
 		materi: daftarMateri,
 		boleh,
-		masuk: Boolean(userId)
+		masuk: Boolean(userId),
+		bolehEdit: isSuper
 	};
 };

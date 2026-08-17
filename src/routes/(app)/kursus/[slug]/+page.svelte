@@ -1,11 +1,68 @@
 <script lang="ts">
-	import { ArrowLeft, Clock, Coins, Lock, BookOpen } from 'lucide-svelte';
+	import { ArrowLeft, Clock, Coins, Lock, BookOpen, Pencil, Check, X, Loader2 } from 'lucide-svelte';
 
 	let { data } = $props();
 
 	let aktif = $state(0);
 	let sedangDaftar = $state(false);
 	let pesan = $state<{ teks: string; galat: boolean } | null>(null);
+
+	// ----- Mode edit langsung (khusus Super Admin) -----
+	let modeEdit = $state(false);
+	let sedangSimpan = $state(false);
+	let refJudul = $state<HTMLElement | null>(null);
+	let refRingkasan = $state<HTMLElement | null>(null);
+	let refJudulMateri = $state<HTMLElement | null>(null);
+	let refIsiMateri = $state<HTMLElement | null>(null);
+
+	function mulaiEdit() {
+		modeEdit = true;
+		pesan = null;
+	}
+
+	function batalEdit() {
+		modeEdit = false;
+		// Muat ulang supaya suntingan yang belum disimpan dibuang.
+		window.location.reload();
+	}
+
+	async function simpanEdit() {
+		sedangSimpan = true;
+		pesan = null;
+		const m = data.materi[aktif];
+		try {
+			const res = await fetch('/api/kursus/inline-edit', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					kursusId: data.kursus.id,
+					judul: refJudul?.innerText?.trim(),
+					ringkasan: refRingkasan?.innerText?.trim(),
+					materi: m
+						? [
+								{
+									id: m.id,
+									judul: refJudulMateri?.innerText?.trim(),
+									isi: refIsiMateri?.innerHTML
+								}
+							]
+						: []
+				})
+			});
+			const hasil = await res.json();
+			if (hasil.ok) {
+				pesan = { teks: 'Perubahan tersimpan.', galat: false };
+				modeEdit = false;
+				setTimeout(() => window.location.reload(), 600);
+				return;
+			}
+			pesan = { teks: hasil.pesan ?? 'Gagal menyimpan.', galat: true };
+		} catch {
+			pesan = { teks: 'Gagal menghubungi server. Coba lagi.', galat: true };
+		} finally {
+			sedangSimpan = false;
+		}
+	}
 
 	/**
 	 * Materi ditulis dalam markdown sederhana. Diubah ke HTML tanpa pustaka
@@ -94,12 +151,29 @@
 	</a>
 
 	<header class="mb-8">
-		<h1 class="text-2xl font-bold leading-tight text-slate-900 sm:text-3xl dark:text-white">
+		{#if data.bolehEdit && modeEdit}
+			<div class="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+				✏️ Mode edit aktif — klik teks judul, ringkasan, atau isi materi lalu ketik langsung. Tekan <strong>Simpan</strong> jika sudah.
+			</div>
+		{/if}
+		<h1
+			bind:this={refJudul}
+			contenteditable={modeEdit}
+			class="text-2xl font-bold leading-tight text-slate-900 sm:text-3xl dark:text-white {modeEdit
+				? 'rounded-md px-1 outline-dashed outline-2 outline-amber-400 focus:outline-amber-600'
+				: ''}"
+		>
 			{data.kursus.judul}
 		</h1>
-		{#if data.kursus.ringkasan}
-			<p class="mt-3 leading-relaxed text-slate-600 dark:text-slate-400">
-				{data.kursus.ringkasan}
+		{#if data.kursus.ringkasan || modeEdit}
+			<p
+				bind:this={refRingkasan}
+				contenteditable={modeEdit}
+				class="mt-3 leading-relaxed text-slate-600 dark:text-slate-400 {modeEdit
+					? 'rounded-md px-1 outline-dashed outline-2 outline-amber-400 focus:outline-amber-600'
+					: ''}"
+			>
+				{data.kursus.ringkasan ?? ''}
 			</p>
 		{/if}
 		<div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
@@ -197,8 +271,22 @@
 				<article
 					class="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900"
 				>
-					<h2 class="text-xl font-semibold text-slate-900 dark:text-white">{m.judul}</h2>
-					<div class="materi mt-4">
+					<h2
+						bind:this={refJudulMateri}
+						contenteditable={modeEdit}
+						class="text-xl font-semibold text-slate-900 dark:text-white {modeEdit
+							? 'rounded-md px-1 outline-dashed outline-2 outline-amber-400 focus:outline-amber-600'
+							: ''}"
+					>
+						{m.judul}
+					</h2>
+					<div
+						bind:this={refIsiMateri}
+						contenteditable={modeEdit}
+						class="materi mt-4 {modeEdit
+							? 'min-h-[120px] rounded-md p-2 outline-dashed outline-2 outline-amber-400 focus:outline-amber-600'
+							: ''}"
+					>
 						{#if m.format === 'html'}
 							<!-- Sudah HTML hasil suntingan superadmin; sudah dibersihkan di server. -->
 							{@html String(m.isi ?? '')}
@@ -242,6 +330,46 @@
 		</div>
 	</div>
 </div>
+
+{#if data.bolehEdit}
+	<!-- Kontrol edit langsung: hanya dirender untuk Super Admin -->
+	<div class="fixed bottom-6 right-6 z-50 flex items-center gap-2">
+		{#if modeEdit}
+			<button
+				type="button"
+				onclick={batalEdit}
+				disabled={sedangSimpan}
+				class="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-lg transition hover:bg-slate-100 disabled:opacity-60"
+			>
+				<X class="h-4 w-4" />
+				Batal
+			</button>
+			<button
+				type="button"
+				onclick={simpanEdit}
+				disabled={sedangSimpan}
+				class="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-700 disabled:opacity-60"
+			>
+				{#if sedangSimpan}
+					<Loader2 class="h-4 w-4 animate-spin" />
+					Menyimpan...
+				{:else}
+					<Check class="h-4 w-4" />
+					Simpan
+				{/if}
+			</button>
+		{:else}
+			<button
+				type="button"
+				onclick={mulaiEdit}
+				class="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-slate-700 dark:bg-white dark:text-slate-900"
+			>
+				<Pencil class="h-4 w-4" />
+				Edit Halaman
+			</button>
+		{/if}
+	</div>
+{/if}
 
 <style>
 	.materi :global(p) {
