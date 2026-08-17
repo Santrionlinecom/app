@@ -559,6 +559,15 @@ export const GLOBAL_APP_NAVIGATION: AppNavigationItem[] = [
 		group: 'lembaga'
 	},
 	{
+		label: 'License Produk',
+		href: '/admin/licenses/generate',
+		icon: ICONS.shield,
+		description: 'Bonus 1x license Pro per produk',
+		permission: 'org.manage',
+		allowedRoles: ['admin'],
+		group: 'lembaga'
+	},
+	{
 		label: 'Baca Buku',
 		href: '/buku',
 		icon: ICONS.book,

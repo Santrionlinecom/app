@@ -1,7 +1,14 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
-import { requireSuperAdmin } from '$lib/server/auth/requireSuperAdmin';
+import { requireLicenseAdmin } from '$lib/server/auth/requireLicenseAdmin';
 import { hashLicenseKey, parseFeatures } from '$lib/server/domains/digital-store/licenses/digital-products';
+import {
+	ensureLicenseGrantSchema,
+	hasUsedFreeGrant,
+	listGrantedLicenseIds,
+	listUsedGrantSlugs,
+	recordFreeGrant
+} from '$lib/server/domains/digital-store/licenses/quota';
 
 const KEY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -172,24 +179,37 @@ const listDigitalLicenses = async (db: App.Locals['db'], productFilter: string, 
 };
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-	const { db } = requireSuperAdmin(locals);
+	const { db, user, isSuper } = requireLicenseAdmin(locals);
+	await ensureLicenseGrantSchema(db);
 	const productFilter = normalizeFilter(url.searchParams.get('product'));
 	const productOptions = await listLicenseProducts(db);
+	const usedGrantSlugs = isSuper ? [] : await listUsedGrantSlugs(db, user.id);
+
+	// Admin lembaga hanya melihat lisensi hasil bonus miliknya sendiri;
+	// Super Admin melihat semuanya.
+	let licenses = await listDigitalLicenses(
+		db,
+		productFilter,
+		productOptions.map((option) => option.slug)
+	);
+	if (!isSuper) {
+		const ownIds = new Set(await listGrantedLicenseIds(db, user.id));
+		licenses = licenses.filter((item) => ownIds.has(item.licenseId));
+	}
 
 	return {
 		productFilter,
 		productOptions,
-		licenses: await listDigitalLicenses(
-			db,
-			productFilter,
-			productOptions.map((option) => option.slug)
-		)
+		licenses,
+		isSuper,
+		usedGrantSlugs
 	};
 };
 
 export const actions: Actions = {
 	generate: async ({ locals, platform, request }) => {
-		const { db } = requireSuperAdmin(locals);
+		const { db, user, isSuper } = requireLicenseAdmin(locals);
+		await ensureLicenseGrantSchema(db);
 		const secret = platform?.env?.LICENSE_KEY_HASH_SECRET?.trim();
 		if (!secret) {
 			return fail(500, {
@@ -202,6 +222,16 @@ export const actions: Actions = {
 		if (!productSlug) {
 			return fail(400, {
 				error: 'Produk tidak valid.',
+				selectedProductSlug: productSlug
+			});
+		}
+
+		// Kuota bonus: admin lembaga hanya 1x generate gratis per produk.
+		// Super Admin unlimited.
+		if (!isSuper && (await hasUsedFreeGrant(db, user.id, productSlug))) {
+			return fail(403, {
+				error:
+					'Bonus 1x license Pro gratis untuk produk ini sudah terpakai. Untuk generate tambahan silakan beli melalui Digital Store atau hubungi Super Admin.',
 				selectedProductSlug: productSlug
 			});
 		}
@@ -282,6 +312,16 @@ export const actions: Actions = {
 					)
 					.run();
 
+				// Catat pemakaian bonus untuk admin lembaga (bukan Super Admin)
+				// agar generate ke-2 produk yang sama tertolak otomatis.
+				if (!isSuper) {
+					await recordFreeGrant(db, {
+						userId: user.id,
+						productSlug,
+						licenseId: internalLicenseId
+					});
+				}
+
 				return {
 					success: true,
 					licenseKey,
@@ -291,7 +331,8 @@ export const actions: Actions = {
 					plan: product.plan,
 					maxDevices,
 					expiresAt,
-					features: option.features
+					features: option.features,
+					bonusUsed: !isSuper
 				};
 			} catch (err) {
 				const message = err instanceof Error ? err.message : '';

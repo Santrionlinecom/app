@@ -25,6 +25,8 @@
 		productFilter: 'all' | 'cleaner' | 'studio' | 'print' | 'ocr' | 'subtitle';
 		productOptions: ProductOption[];
 		licenses: DigitalLicenseItem[];
+		isSuper: boolean;
+		usedGrantSlugs: string[];
 	};
 
 	type GenerateForm =
@@ -89,6 +91,7 @@
 
 	$: selectedProduct =
 		data.productOptions.find((product) => product.slug === selectedProductSlug) ?? data.productOptions[0];
+	$: bonusUsedForSelected = !data.isSuper && data.usedGrantSlugs.includes(selectedProduct?.slug ?? '');
 </script>
 
 <svelte:head>
@@ -105,6 +108,15 @@
 					Buat license baru untuk produk desktop SantriOnline (SantriPrint, SantriOCR, Cleaner, Studio, Subtitle).
 					Key plaintext hanya ditampilkan sekali.
 				</p>
+				{#if data.isSuper}
+					<span class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+						🛡️ Super Admin · Generate unlimited
+					</span>
+				{:else}
+					<span class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-400/25 px-3 py-1 text-xs font-semibold">
+						🎁 Bonus pendaftaran: 1x license Pro gratis per produk
+					</span>
+				{/if}
 			</div>
 			<div class="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
 				<a class="btn btn-sm w-full border-white/40 bg-white/10 text-white hover:bg-white/20 md:w-auto" href="/admin/licenses/manage">
@@ -157,7 +169,21 @@
 					</div>
 				</div>
 
-				<button class="btn btn-success w-full sm:w-auto" type="submit">Generate License</button>
+				{#if bonusUsedForSelected}
+					<div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+						<p class="font-semibold">Bonus untuk produk ini sudah terpakai.</p>
+						<p class="mt-1">
+							Generate tambahan berbayar — silakan beli melalui
+							<a href="/digital-store" class="font-semibold underline">Digital Store</a>
+							atau hubungi Super Admin.
+						</p>
+					</div>
+					<button class="btn btn-disabled w-full sm:w-auto" type="button" disabled>Bonus Terpakai</button>
+				{:else}
+					<button class="btn btn-success w-full sm:w-auto" type="submit">
+						{data.isSuper ? 'Generate License' : 'Generate License (Bonus Gratis)'}
+					</button>
+				{/if}
 			</form>
 
 			{#if form?.error}
