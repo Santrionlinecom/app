@@ -25,6 +25,7 @@
     "tauri": "tauri"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260817.1",
     "@lucide/svelte": "^0.482.0",
     "@sveltejs/adapter-cloudflare": "^7.2.4",
     "@sveltejs/kit": "^2.49.4",
