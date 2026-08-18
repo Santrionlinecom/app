@@ -505,6 +505,46 @@ export function getDrmPdfKey(bookId: string, chapterId?: string | null) {
 	return chapter ? `books/${bookId}/chapters/${chapter}.pdf` : `books/${bookId}/full.pdf`;
 }
 
+export async function getDrmChapterContent(db: D1Database, bookId: string, chapterId: string | null) {
+	const chapter = normalizeChapterId(chapterId);
+	if (!chapter) return null;
+
+	const row = await db
+		.prepare(
+			`SELECT id, chapter_number, title, content, status
+			 FROM buku_chapters
+			 WHERE book_id = ? AND id = ? AND status = 'published'
+			 LIMIT 1`
+		)
+		.bind(bookId, chapter)
+		.first<any>();
+
+	if (!row) return null;
+	return {
+		chapterNumber: Number(row.chapter_number || 0),
+		title: row.title || '',
+		content: row.content || ''
+	};
+}
+
+export async function listDrmChapterContents(db: D1Database, bookId: string) {
+	const { results } = await db
+		.prepare(
+			`SELECT id, chapter_number, title, content, status
+			 FROM buku_chapters
+			 WHERE book_id = ? AND status = 'published'
+			 ORDER BY chapter_number ASC`
+		)
+		.bind(bookId)
+		.all<any>();
+
+	return (results ?? []).map((row: any) => ({
+		chapterNumber: Number(row.chapter_number || 0),
+		title: row.title || '',
+		content: row.content || ''
+	}));
+}
+
 export function getRequestIp(request: Request) {
 	return (
 		request.headers.get('cf-connecting-ip') ||

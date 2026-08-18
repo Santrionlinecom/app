@@ -3,12 +3,15 @@ import type { RequestHandler } from './$types';
 import { requireD1, requireR2Bucket } from '$lib/server/cloudflare';
 import { ensureBukuAccessSchema } from '$lib/server/domains/buku/access';
 import { ensureBukuLibrarySchema } from '$lib/server/domains/buku/library';
+import { buildChapterPdf, buildFullBookPdf } from '$lib/server/domains/buku/drm-pdf';
 import {
 	DRM_MAX_DEVICES,
 	ensureDrmSchema,
 	getDrmAccess,
+	getDrmChapterContent,
 	getDrmPdfKey,
 	getRequestIp,
+	listDrmChapterContents,
 	logDrmAccess,
 	normalizeChapterId,
 	registerOrTouchDevice
@@ -74,8 +77,26 @@ export const GET: RequestHandler = async ({ request, url, platform, locals }) =>
 
 	const pdfKey = getDrmPdfKey(bookId, chapterId);
 	const pdfObject = await bucket.get(pdfKey);
-	if (!pdfObject) {
-		throw error(404, 'File bacaan belum tersedia.');
+
+	let pdfBytes: Uint8Array;
+	if (pdfObject) {
+		pdfBytes = new Uint8Array(await pdfObject.arrayBuffer());
+	} else {
+		// Fallback: PDF belum pernah diunggah ke R2 — generate dinamis dari konten D1.
+		const bookTitle = access.book?.title ?? 'Buku Digital';
+		if (chapterId) {
+			const chapter = await getDrmChapterContent(db, bookId, chapterId);
+			if (!chapter) {
+				throw error(404, 'File bacaan belum tersedia.');
+			}
+			pdfBytes = await buildChapterPdf(bookTitle, chapter);
+		} else {
+			const chapters = await listDrmChapterContents(db, bookId);
+			if (chapters.length === 0) {
+				throw error(404, 'File bacaan belum tersedia.');
+			}
+			pdfBytes = await buildFullBookPdf(bookTitle, chapters);
+		}
 	}
 
 	await logDrmAccess(db, {
@@ -86,7 +107,7 @@ export const GET: RequestHandler = async ({ request, url, platform, locals }) =>
 		action: 'read'
 	});
 
-	const pdfBuffer = await pdfObject.arrayBuffer();
+	const pdfBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
 
 	return new Response(pdfBuffer, {
 		headers: {
