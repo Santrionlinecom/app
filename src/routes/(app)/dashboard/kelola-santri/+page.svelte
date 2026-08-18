@@ -22,7 +22,7 @@
 	$: scope = data?.scope ?? null;
 	$: isAdminView = scope?.isAdmin ?? false;
 	$: memberRole = scope?.memberRole ?? 'santri';
-	$: memberLabel = 'Santri';
+	$: memberLabel = memberRole === 'jamaah' ? 'Jamaah' : memberRole === 'santri' ? 'Santri' : 'Anggota';
 
 	let santri: MemberRow[] = Array.isArray(data.santri)
 		? structuredClone(data.santri as MemberRow[])
@@ -47,6 +47,9 @@
 	$: if (!isAdminView && memberRole) {
 		form = { ...form, role: memberRole };
 	}
+	$: if (isAdminView && memberRole === 'jamaah' && form.role === 'santri') {
+		form = { ...form, role: 'jamaah' };
+	}
 	$: canExport = !isAdminView || !!scope?.memberRole;
 
 	$: filteredSantri = santri.filter((s: MemberRow) => {
@@ -61,6 +64,7 @@
 	const deriveStats = (list: MemberRow[]) => ({
 		total: list.length,
 		santri: list.filter((s: MemberRow) => s.role === 'santri').length,
+		jamaah: list.filter((s: MemberRow) => s.role === 'jamaah').length,
 		ustadz: list.filter((s: MemberRow) => isTeachingRole(s.role)).length,
 		admin: list.filter((s: MemberRow) => s.role === 'admin').length,
 		pending: list.filter((s: MemberRow) => (s.orgStatus || 'active') === 'pending').length
@@ -71,7 +75,7 @@
 	$: if (data?.stats) remoteStats = data.stats;
 
 	const resetForm = () => {
-		form = { username: '', email: '', password: '', role: 'santri' };
+		form = { username: '', email: '', password: '', role: memberRole === 'jamaah' ? 'jamaah' : 'santri' };
 	};
 
 	const refresh = async () => {
@@ -96,14 +100,14 @@
 				body: JSON.stringify(form)
 			});
 			const result = await res.json();
-			if (!res.ok) throw new Error(result?.message || 'Gagal menambah santri');
+			if (!res.ok) throw new Error(result?.message || `Gagal menambah ${memberLabel.toLowerCase()}`);
 
-			formMessage = 'Santri berhasil ditambah';
+			formMessage = `${memberLabel} berhasil ditambah`;
 			resetForm();
 			await refresh();
 			setTimeout(() => formMessage = '', 3000);
 		} catch (err: any) {
-			formError = err?.message ?? 'Gagal menambah santri';
+			formError = err?.message ?? `Gagal menambah ${memberLabel.toLowerCase()}`;
 		} finally {
 			loading = false;
 		}
@@ -124,13 +128,13 @@
 	};
 
 	const removeSantri = async (id: string) => {
-		if (!confirm('Hapus santri ini?')) return;
+		if (!confirm(`Hapus ${memberLabel.toLowerCase()} ini?`)) return;
 		try {
 			const res = await fetch(`/api/santri/${id}`, { method: 'DELETE' });
-			if (!res.ok) throw new Error('Gagal menghapus santri');
+			if (!res.ok) throw new Error(`Gagal menghapus ${memberLabel.toLowerCase()}`);
 			await refresh();
 		} catch (err) {
-			alert(err instanceof Error ? err.message : 'Gagal menghapus santri');
+			alert(err instanceof Error ? err.message : `Gagal menghapus ${memberLabel.toLowerCase()}`);
 		}
 	};
 
@@ -139,12 +143,13 @@
 			admin: 'badge-error',
 			ustadz: 'badge-info',
 			ustadzah: 'badge-info',
-			santri: 'badge-success'
+			santri: 'badge-success',
+			jamaah: 'badge-primary'
 		};
 		return classes[role as keyof typeof classes] || 'badge-ghost';
 	};
 
-	const canDownloadPdf = (role: string) => role === 'santri';
+	const canDownloadPdf = (role: string) => role === 'santri' || role === 'jamaah';
 
 	const downloadPdf = async (id: string, name?: string | null) => {
 		if (downloadingPdfId) return;
@@ -174,7 +179,7 @@
 </script>
 
 <svelte:head>
-	<title>Kelola Santri - Dashboard</title>
+	<title>Kelola {memberLabel} - Dashboard</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -183,7 +188,7 @@
 		<div class="flex items-center justify-between">
 			<div>
 				<p class="text-xs uppercase tracking-[0.25em] text-white/80">Admin Panel</p>
-				<h1 class="mt-2 text-3xl font-bold">Kelola {isAdminView ? 'Santri' : memberLabel}</h1>
+				<h1 class="mt-2 text-3xl font-bold">Kelola {memberLabel}</h1>
 				<p class="mt-1 text-sm text-white/90">Manajemen akun anggota sesuai lembaga</p>
 			</div>
 			<div class="hidden md:block text-6xl opacity-20">👥</div>
@@ -198,8 +203,8 @@
 				<div class="text-sm text-slate-600">Total Pengguna</div>
 			</div>
 			<div class="rounded-xl border bg-white p-4 shadow-sm">
-				<div class="text-2xl font-bold text-green-600">{stats.santri}</div>
-				<div class="text-sm text-slate-600">Santri</div>
+				<div class="text-2xl font-bold text-green-600">{memberRole === 'jamaah' ? stats.jamaah : stats.santri}</div>
+				<div class="text-sm text-slate-600">{memberLabel}</div>
 			</div>
 			<div class="rounded-xl border bg-white p-4 shadow-sm">
 				<div class="text-2xl font-bold text-cyan-600">{stats.ustadz}</div>
@@ -221,7 +226,7 @@
 				<div class="text-sm text-slate-600">Total Anggota</div>
 			</div>
 			<div class="rounded-xl border bg-white p-4 shadow-sm">
-				<div class="text-2xl font-bold text-green-600">{stats.santri}</div>
+				<div class="text-2xl font-bold text-green-600">{memberRole === 'jamaah' ? stats.jamaah : stats.santri}</div>
 				<div class="text-sm text-slate-600">{memberLabel}</div>
 			</div>
 			<div class="rounded-xl border bg-white p-4 shadow-sm">
@@ -245,7 +250,7 @@
 					<select class="select select-bordered w-full md:w-auto" bind:value={filterRole}>
 						<option value="all">Semua Role</option>
 						{#if isAdminView}
-							<option value="santri">Santri</option>
+							<option value={memberRole === 'jamaah' ? 'jamaah' : 'santri'}>{memberLabel}</option>
 							<option value="ustadz">Ustadz</option>
 							<option value="admin">Admin</option>
 						{:else}
@@ -290,7 +295,7 @@
 										{#if searchQuery || filterRole !== 'all'}
 											Tidak ada hasil yang cocok
 										{:else}
-											Belum ada data santri
+											Belum ada data {memberLabel.toLowerCase()}
 										{/if}
 									</td>
 								</tr>
@@ -377,7 +382,7 @@
 							id="name" 
 							class="input input-bordered" 
 							bind:value={form.username} 
-							placeholder="Nama santri"
+							placeholder="Nama {memberLabel.toLowerCase()}"
 							required
 						/>
 					</div>
@@ -417,7 +422,7 @@
 						</label>
 						<select id="role" class="select select-bordered" bind:value={form.role} disabled={!isAdminView}>
 							{#if isAdminView}
-								<option value="santri">🎓 Santri</option>
+								<option value={memberRole === 'jamaah' ? 'jamaah' : 'santri'}>🎓 {memberLabel}</option>
 								<option value="ustadz">👩‍🏫 Ustadz</option>
 								<option value="admin">⚙️ Admin</option>
 							{:else}
