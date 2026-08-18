@@ -50,3 +50,8 @@ DESIGN.md
 .tmp/
 nul
 pnpm-lock.yaml
+
+# IDE / tooling lokal
+.idea/
+.gradle/
+.junie/
