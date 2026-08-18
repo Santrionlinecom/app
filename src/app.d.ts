@@ -53,6 +53,11 @@ declare global {
                 MIDTRANS_IS_PRODUCTION?: string;
                 TURNSTILE_SITE_KEY?: string;
                 TURNSTILE_SECRET_KEY?: string;
+                // Web Push (PWA). VAPID_PRIVATE_KEY hanya ada sebagai Pages secret.
+                PUSH_NOTIFICATIONS_ENABLED?: string;
+                VAPID_PUBLIC_KEY?: string;
+                VAPID_PRIVATE_KEY?: string;
+                VAPID_SUBJECT?: string;
                 R2_PUBLIC_BASE_URL?: string;
                 R2_PUBLIC_URL?: string;
                 MAX_PHOTO_SIZE_BYTES?: string;

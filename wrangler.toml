@@ -15,6 +15,11 @@ GOOGLE_CLIENT_ID = "511759368556-iu4bj02gusic1e0tqindpi5lriis9lkv.apps.googleuse
 WHATSAPP_PAYMENT_NOTIFICATIONS_ENABLED = "false"
 PAYMENT_EMAIL_NOTIFICATIONS_ENABLED = "true"
 REGISTRATION_EMAIL_NOTIFICATIONS_ENABLED = "true"
+# Web Push (PWA). Kunci publik memang dikirim ke browser, aman di repo.
+# Kunci privat ada di Pages secret VAPID_PRIVATE_KEY, jangan pernah di sini.
+PUSH_NOTIFICATIONS_ENABLED = "true"
+VAPID_PUBLIC_KEY = "BIbJGvBsPY_ya4SUsWNZsgdEr7GQQrXzwIUwywBjP1Vxeu8cOKxWDFY2-aocFBe3bgtzaY0jPQpuZLvqBf2DSgc"
+VAPID_SUBJECT = "mailto:websantrionline@gmail.com"
 
 # --- Sentry ---
 # Set these in Cloudflare Pages Dashboard > Settings > Variables and Secrets:

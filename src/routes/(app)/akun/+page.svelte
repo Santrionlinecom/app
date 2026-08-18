@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import PushNotificationToggle from '$lib/components/PushNotificationToggle.svelte';
 	import {
 		ArrowRight,
 		BadgeCheck,
@@ -327,6 +328,8 @@
 				</div>
 			</div>
 		</section>
+
+		<PushNotificationToggle />
 
 		<nav bind:this={accountSectionNav} class="account-section-nav" aria-label="Navigasi pengaturan akun">
 			<div class="account-nav-scroll">
