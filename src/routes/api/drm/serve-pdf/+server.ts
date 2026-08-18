@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { requireD1, requireR2Bucket } from '$lib/server/cloudflare';
 import { ensureBukuAccessSchema } from '$lib/server/domains/buku/access';
 import { ensureBukuLibrarySchema } from '$lib/server/domains/buku/library';
-import { buildChapterPdf, buildFullBookPdf } from '$lib/server/domains/buku/drm-pdf';
+import { decideDrmPdfFallback } from '$lib/server/domains/buku/drm-pdf';
 import {
 	DRM_MAX_DEVICES,
 	ensureDrmSchema,
@@ -83,20 +83,37 @@ export const GET: RequestHandler = async ({ request, url, platform, locals }) =>
 		pdfBytes = new Uint8Array(await pdfObject.arrayBuffer());
 	} else {
 		// Fallback: PDF belum pernah diunggah ke R2 — generate dinamis dari konten D1.
+		// Teks Arab tidak di-generate (WinAnsi merusak huruf); minta unggah R2 manual.
 		const bookTitle = access.book?.title ?? 'Buku Digital';
+		let chapters: Awaited<ReturnType<typeof listDrmChapterContents>>;
 		if (chapterId) {
 			const chapter = await getDrmChapterContent(db, bookId, chapterId);
 			if (!chapter) {
 				throw error(404, 'File bacaan belum tersedia.');
 			}
-			pdfBytes = await buildChapterPdf(bookTitle, chapter);
+			chapters = [chapter];
 		} else {
-			const chapters = await listDrmChapterContents(db, bookId);
+			chapters = await listDrmChapterContents(db, bookId);
 			if (chapters.length === 0) {
 				throw error(404, 'File bacaan belum tersedia.');
 			}
-			pdfBytes = await buildFullBookPdf(bookTitle, chapters);
 		}
+
+		const decision = await decideDrmPdfFallback({ bookId, bookTitle, chapters });
+		if (!decision.ok) {
+			console.warn('[drm] PDF fallback skipped for Arabic content', {
+				bookId: decision.logBookId,
+				r2Key: pdfKey
+			});
+			return new Response(JSON.stringify(decision.body), {
+				status: 503,
+				headers: {
+					'Content-Type': 'application/json; charset=utf-8',
+					'Cache-Control': 'no-store, no-cache, must-revalidate, private'
+				}
+			});
+		}
+		pdfBytes = decision.pdf;
 	}
 
 	await logDrmAccess(db, {

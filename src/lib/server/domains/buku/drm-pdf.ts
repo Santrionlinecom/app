@@ -183,3 +183,53 @@ export async function buildFullBookPdf(bookTitle: string, chapters: PdfChapter[]
 
 	return pdf.save();
 }
+
+const ARABIC_SCRIPT_RE =
+	/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+export function containsArabicScript(text: string): boolean {
+	return ARABIC_SCRIPT_RE.test(text);
+}
+
+export type DrmPdfFallbackOk = {
+	ok: true;
+	pdf: Uint8Array;
+};
+
+export type DrmPdfFallbackPreparing = {
+	ok: false;
+	status: 503;
+	body: { status: 'preparing'; message: string };
+	logBookId: string;
+};
+
+export type DrmPdfFallbackDecision = DrmPdfFallbackOk | DrmPdfFallbackPreparing;
+
+export async function decideDrmPdfFallback(input: {
+	bookId: string;
+	bookTitle: string;
+	chapters: PdfChapter[];
+}): Promise<DrmPdfFallbackDecision> {
+	const combined = input.chapters
+		.map((chapter) => `${chapter.title}\n${chapter.content}`)
+		.join('\n');
+
+	if (containsArabicScript(combined)) {
+		return {
+			ok: false,
+			status: 503,
+			body: {
+				status: 'preparing',
+				message: 'PDF sedang disiapkan, silakan coba lagi nanti'
+			},
+			logBookId: input.bookId
+		};
+	}
+
+	const pdf =
+		input.chapters.length === 1
+			? await buildChapterPdf(input.bookTitle, input.chapters[0])
+			: await buildFullBookPdf(input.bookTitle, input.chapters);
+
+	return { ok: true, pdf };
+}
