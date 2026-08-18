@@ -429,7 +429,7 @@
 		</div>
 	{/if}
 
-	<main class="min-w-0 pb-24 lg:pb-8">
+	<main class="min-w-0 pb-24 md:pb-8">
 		<header
 			data-app-shell-header
 			class="sticky top-0 z-30 border-b border-so-border/70 bg-so-cream/88 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8"
@@ -760,7 +760,7 @@
 
 	<!-- Mobile bottom nav -->
 	<nav
-		class="fixed inset-x-0 bottom-0 z-40 max-w-full overflow-hidden border-t border-so-border/80 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] backdrop-blur-sm lg:hidden safe-area-bottom"
+		class="fixed inset-x-0 bottom-0 z-40 max-w-full overflow-hidden border-t border-so-border/80 bg-white/95 shadow-[0_-6px_24px_rgba(15,118,110,0.12)] backdrop-blur-sm md:hidden safe-area-bottom"
 	>
 		<div class="flex w-full min-w-0 items-center justify-around gap-1 px-2 py-2 pb-safe sm:gap-2">
 			{#each mobileQuickItems as item (item.href)}
