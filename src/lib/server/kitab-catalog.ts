@@ -23,6 +23,9 @@ type KitabRow = {
 	page_count: number | null;
 	status: string | null;
 	featured: number | boolean | string | null;
+	parsed_r2_key: string | null;
+	parsed_at: string | null;
+	rag_status: string | null;
 	created_at: number;
 	updated_at: number;
 };
@@ -43,6 +46,9 @@ export type KitabListItem = {
 	pageCount: number | null;
 	status: KitabStatus;
 	featured: boolean;
+	parsedR2Key: string | null;
+	parsedAt: string | null;
+	ragStatus: string | null;
 	createdAt: number;
 	updatedAt: number;
 };
@@ -80,6 +86,9 @@ const mapKitab = (row: KitabRow): KitabListItem => ({
 	pageCount: row.page_count,
 	status: normalizeKitabStatus(row.status),
 	featured: row.featured === true || row.featured === 1 || row.featured === '1',
+	parsedR2Key: row.parsed_r2_key ?? null,
+	parsedAt: row.parsed_at ?? null,
+	ragStatus: row.rag_status ?? null,
 	createdAt: row.created_at,
 	updatedAt: row.updated_at
 });
@@ -123,6 +132,15 @@ export async function ensureKitabCatalogSchema(db: D1Database) {
 	const columns = new Set((results ?? []).map((column) => column.name));
 	if (!columns.has('category')) {
 		await db.prepare('ALTER TABLE kitab_catalog ADD COLUMN category TEXT').run();
+	}
+	if (!columns.has('parsed_r2_key')) {
+		await db.prepare('ALTER TABLE kitab_catalog ADD COLUMN parsed_r2_key TEXT').run();
+	}
+	if (!columns.has('parsed_at')) {
+		await db.prepare('ALTER TABLE kitab_catalog ADD COLUMN parsed_at TEXT').run();
+	}
+	if (!columns.has('rag_status')) {
+		await db.prepare('ALTER TABLE kitab_catalog ADD COLUMN rag_status TEXT').run();
 	}
 
 	await db.prepare('CREATE INDEX IF NOT EXISTS idx_kitab_catalog_slug ON kitab_catalog(slug)').run();
