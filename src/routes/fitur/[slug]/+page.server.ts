@@ -165,7 +165,7 @@ const FEATURE_DETAILS: Record<string, FeatureDetail> = {
 		],
 		access: [
 			{ label: 'Kalender Kegiatan', desc: 'Pasang agenda Kamis Kliwon, Jumat Legi, dan khataman bulanan.', href: '/kalender' },
-			{ label: 'Halaqoh Santri', desc: 'Kelola kelompok khataman dan pendamping.', href: '/dashboard/halaqoh' },
+			{ label: 'Halaqoh Santri', desc: 'Kelola kelompok khataman dan pendamping.', href: '/tpq/akademik/setoran' },
 			{ label: 'Pencapaian Hafalan', desc: 'Pantau progres hafalan yang relevan dengan agenda rutin.', href: '/dashboard/pencapaian-hafalan' }
 		],
 		learningIntegration: [

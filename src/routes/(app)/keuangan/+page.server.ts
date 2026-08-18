@@ -3,6 +3,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { assertLoggedIn, assertOrgMember, assertOrgRoleAllowed } from '$lib/server/auth/rbac';
 import { getOrganizationById } from '$lib/server/organizations';
 import { requirePermission } from '$lib/rbac/helpers';
+import { isFinanceOrgType } from '$lib/server/utils';
 import * as XLSX from 'xlsx';
 
 const isMissingTableError = (err: unknown) =>
@@ -100,8 +101,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const role = user.role ?? '';
 	requirePermission(locals, 'finance.read');
 	assertOrgRoleAllowed(org.type, role);
-	if (org.type !== 'masjid' && org.type !== 'musholla') {
-		throw error(400, 'Fitur keuangan hanya untuk masjid atau musholla');
+	if (!isFinanceOrgType(org.type)) {
+		throw error(400, 'Fitur keuangan hanya untuk masjid, musholla, atau pondok');
 	}
 
 	const kasSummary = { masuk: 0, keluar: 0, saldo: 0 };
@@ -171,8 +172,8 @@ export const actions: Actions = {
 			return fail(404, { error: 'Lembaga tidak ditemukan' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		if (org.type !== 'masjid' && org.type !== 'musholla') {
-			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
+		if (!isFinanceOrgType(org.type)) {
+			return fail(400, { error: 'Fitur keuangan hanya untuk masjid, musholla, atau pondok' });
 		}
 
 		const data = await request.formData();
@@ -287,8 +288,8 @@ export const actions: Actions = {
 			return fail(404, { error: 'Lembaga tidak ditemukan' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		if (org.type !== 'masjid' && org.type !== 'musholla') {
-			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
+		if (!isFinanceOrgType(org.type)) {
+			return fail(400, { error: 'Fitur keuangan hanya untuk masjid, musholla, atau pondok' });
 		}
 
 		const data = await request.formData();
@@ -348,8 +349,8 @@ export const actions: Actions = {
 			return fail(404, { error: 'Lembaga tidak ditemukan' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		if (org.type !== 'masjid' && org.type !== 'musholla') {
-			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
+		if (!isFinanceOrgType(org.type)) {
+			return fail(400, { error: 'Fitur keuangan hanya untuk masjid, musholla, atau pondok' });
 		}
 
 		const data = await request.formData();
@@ -409,8 +410,8 @@ export const actions: Actions = {
 			return fail(404, { error: 'Lembaga tidak ditemukan' });
 		}
 		assertOrgRoleAllowed(org.type, role);
-		if (org.type !== 'masjid' && org.type !== 'musholla') {
-			return fail(400, { error: 'Fitur keuangan hanya untuk masjid atau musholla' });
+		if (!isFinanceOrgType(org.type)) {
+			return fail(400, { error: 'Fitur keuangan hanya untuk masjid, musholla, atau pondok' });
 		}
 
 		const data = await request.formData();

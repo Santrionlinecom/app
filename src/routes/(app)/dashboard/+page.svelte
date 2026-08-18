@@ -117,7 +117,7 @@
 	let displayName = 'Pengguna';
 	let orgName = 'Lembaga';
 	let orgType: string | null = null;
-	let ummahHref = '/fitur-belum-tersedia?fitur=Qurban';
+	let ummahHref = '/keuangan';
 	let dashboardTitle = 'Dashboard Lembaga';
 	let dashboardModeLabel = 'Institution Mode';
 
@@ -351,9 +351,7 @@
 		displayName = data?.currentUser?.username || data?.currentUser?.email || 'Pengguna';
 		orgName = data?.org?.name || 'Lembaga';
 		orgType = data?.org?.type ?? null;
-		ummahHref = data?.org?.slug
-			? `/org/${encodeURIComponent(data.org.slug)}/ummah`
-			: '/fitur-belum-tersedia?fitur=Qurban';
+		ummahHref = data?.org?.slug ? `/org/${encodeURIComponent(data.org.slug)}/ummah` : '/keuangan';
 		roleLabel = getRoleLabel(role);
 		orgTypeLabel = getOrgTypeLabel(orgType);
 		dashboardTitle = isSuperAdmin
@@ -418,7 +416,7 @@
 						{
 							label: 'Pengumuman',
 							desc: 'Informasi untuk jamaah masjid.',
-							href: '/fitur-belum-tersedia?fitur=Pengumuman Masjid',
+							href: '/beranda',
 							tone: 'from-violet-50 to-indigo-100 text-indigo-900'
 						},
 						{
@@ -457,7 +455,7 @@
 							{
 								label: 'Pengumuman',
 								desc: 'Informasi untuk warga sekitar.',
-								href: '/fitur-belum-tersedia?fitur=Pengumuman Musholla',
+								href: '/beranda',
 								tone: 'from-violet-50 to-indigo-100 text-indigo-900'
 							},
 							{
@@ -478,7 +476,7 @@
 								{
 									label: 'Asrama/Kamar',
 									desc: 'Data kamar dan penempatan santri.',
-									href: '/fitur-belum-tersedia?fitur=Asrama/Kamar',
+									href: '/dashboard/asrama',
 									tone: 'from-amber-50 to-orange-100 text-amber-900'
 								},
 								{
@@ -495,8 +493,8 @@
 								},
 								{
 									label: 'Keuangan',
-									desc: 'Keuangan pondok sedang disiapkan.',
-									href: '/fitur-belum-tersedia?fitur=Keuangan Pondok',
+									desc: 'Catat kas masuk dan keluar pondok.',
+									href: '/keuangan',
 									tone: 'from-rose-50 to-pink-100 text-rose-900'
 								},
 								{
@@ -517,13 +515,13 @@
 									{
 										label: 'Halaqoh',
 										desc: 'Kelola kelompok hafalan.',
-										href: '/dashboard/halaqoh',
+										href: '/tpq/akademik/setoran',
 										tone: 'from-amber-50 to-orange-100 text-amber-900'
 									},
 									{
 										label: 'Setoran Hafalan',
-										desc: 'Alur setoran khusus rumah tahfidz.',
-										href: '/fitur-belum-tersedia?fitur=Setoran Hafalan Rumah Tahfidz',
+										desc: 'Catat setoran hafalan santri rumah tahfidz.',
+										href: '/tpq/akademik/setoran',
 										tone: 'from-sky-50 to-cyan-100 text-sky-900'
 									},
 									{

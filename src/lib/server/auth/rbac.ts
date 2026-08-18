@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import { isCommunityOrgType, isEducationalOrgType, normalizeOrgType } from '$lib/server/utils';
+import { isCommunityOrgType, isEducationalOrgType, isFinanceOrgType, normalizeOrgType } from '$lib/server/utils';
 import {
 	ALLOWED_ROLES_BY_TYPE,
 	hasPermission,
@@ -83,6 +83,7 @@ const COMMUNITY_FEATURES = new Set<FeatureKey>([
 	'jadwal_kegiatan',
 	'kalender'
 ]);
+const FINANCE_FEATURES = new Set<FeatureKey>(['kas_masjid']);
 const FEATURE_PERMISSIONS: Record<FeatureKey, Permission> = {
 	hafalan: 'hafalan.read',
 	setoran: 'hafalan.input',
@@ -179,6 +180,9 @@ export const canAccessFeature = (
 		return hasPermission(normalized as any, permission);
 	}
 	if (isCommunityOrgType(orgType) && COMMUNITY_FEATURES.has(feature)) {
+		return hasPermission(normalized as any, permission);
+	}
+	if (isFinanceOrgType(orgType) && FINANCE_FEATURES.has(feature)) {
 		return hasPermission(normalized as any, permission);
 	}
 	return false;

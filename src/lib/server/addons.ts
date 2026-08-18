@@ -419,7 +419,7 @@ export const manageHrefForAddon = (
 		case 'modul_musholla':
 			return orgSlug ? `/org/${orgSlug}/ummah` : '/keuangan';
 		case 'modul_tahfidz':
-			return '/dashboard/halaqoh';
+			return '/tpq/akademik/setoran';
 		case 'lembaga_tambahan':
 			return '/lembaga/tambah';
 		default:

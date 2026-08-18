@@ -10,6 +10,7 @@ import { ensureHafalanTable } from '$lib/server/domains/tpq/hafalan';
 import { getOrganizationById } from '$lib/server/organizations';
 import { submitSurahForUser } from '$lib/server/progress';
 import { SURAH_DATA } from '$lib/surah-data';
+import { isAcademicSetoranOrgType } from '$lib/server/utils';
 
 export const TPQ_SETORAN_TYPES = ['hafalan', 'murojaah'] as const;
 export const TPQ_SETORAN_QUALITIES = ['lancar', 'cukup', 'belum'] as const;
@@ -100,14 +101,14 @@ export const requireTpqAcademicContext = async (locals: App.Locals) => {
 	if (!org) {
 		throw error(404, 'Lembaga tidak ditemukan');
 	}
-	if (org.type !== 'tpq') {
+	if (!isAcademicSetoranOrgType(org.type)) {
 		throw error(
 			403,
-			`Workflow akademik ini hanya untuk TPQ. Lembaga aktif sekarang: ${org.type || 'tidak dikenal'}.`
+			`Workflow setoran ini hanya untuk TPQ atau rumah tahfidz. Lembaga aktif sekarang: ${org.type || 'tidak dikenal'}.`
 		);
 	}
 	if (org.status !== 'active') {
-		throw error(403, 'Lembaga TPQ belum aktif.');
+		throw error(403, 'Lembaga belum aktif.');
 	}
 	if ((user.orgStatus ?? 'active') !== 'active') {
 		throw error(403, 'Akun lembaga belum aktif.');

@@ -70,9 +70,6 @@ const ICONS = {
 	learn: 'M4 19.5V5a2 2 0 012-2h9l5 5v11.5M14 3v6h6M8 13h8M8 17h5'
 };
 
-const fallbackHref = (feature: string) =>
-	`/fitur-belum-tersedia?fitur=${encodeURIComponent(feature)}`;
-
 /** Canonical app home after login. Public marketing home remains `/`. */
 export const APP_HOME_HREF = '/dashboard';
 
@@ -276,7 +273,7 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 		},
 		{
 			label: 'Asrama/Kamar',
-			href: fallbackHref('Asrama/Kamar'),
+			href: '/dashboard/asrama',
 			icon: ICONS.building,
 			allowedTypes: ['pondok'],
 			group: 'operasional',
@@ -298,7 +295,7 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 		},
 		{
 			label: 'Keuangan',
-			href: fallbackHref('Keuangan Pondok'),
+			href: '/keuangan',
 			icon: ICONS.wallet,
 			allowedTypes: ['pondok'],
 			group: 'operasional',
@@ -383,7 +380,7 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 		},
 		{
 			label: 'Qurban',
-			href: fallbackHref('Qurban'),
+			href: '/org/ummah',
 			icon: ICONS.star,
 			allowedTypes: ['masjid'],
 			group: 'operasional',
@@ -392,7 +389,7 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 		},
 		{
 			label: 'Pengumuman',
-			href: fallbackHref('Pengumuman Masjid'),
+			href: APP_SOCIAL_HREF,
 			icon: ICONS.megaphone,
 			allowedTypes: ['masjid'],
 			group: 'komunitas',
@@ -460,7 +457,7 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 		},
 		{
 			label: 'Qurban',
-			href: fallbackHref('Qurban'),
+			href: '/org/ummah',
 			icon: ICONS.star,
 			allowedTypes: ['musholla'],
 			group: 'operasional',
@@ -469,7 +466,7 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 		},
 		{
 			label: 'Pengumuman',
-			href: fallbackHref('Pengumuman Musholla'),
+			href: APP_SOCIAL_HREF,
 			icon: ICONS.megaphone,
 			allowedTypes: ['musholla'],
 			group: 'komunitas'
@@ -502,7 +499,7 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 		},
 		{
 			label: 'Halaqoh',
-			href: '/dashboard/halaqoh',
+			href: '/tpq/akademik/setoran',
 			icon: ICONS.building,
 			allowedTypes: ['rumah-tahfidz'],
 			group: 'akademik',
@@ -510,7 +507,7 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 		},
 		{
 			label: 'Setoran Hafalan',
-			href: fallbackHref('Setoran Hafalan Rumah Tahfidz'),
+			href: '/tpq/akademik/setoran',
 			icon: ICONS.check,
 			allowedTypes: ['rumah-tahfidz'],
 			group: 'akademik'

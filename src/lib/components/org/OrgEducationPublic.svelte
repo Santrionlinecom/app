@@ -41,7 +41,7 @@
 		modules: [
 			{ icon: 'SAN', title: 'Kelola Santri', desc: 'Tambah, verifikasi, dan kelola santri.', href: '/dashboard/kelola-santri' },
 			{ icon: 'DIN', title: 'Materi Diniyah', desc: 'Jadwal materi harian dan kitab rujukan.', href: '/dashboard/diniyah' },
-			{ icon: 'HAL', title: 'Halaqoh Hafalan', desc: 'Kelompok setoran dan pembinaan hafalan.', href: '/dashboard/halaqoh' },
+			{ icon: 'HAL', title: 'Halaqoh Hafalan', desc: 'Kelompok setoran dan pembinaan hafalan.', href: '/tpq/akademik/setoran' },
 			{ icon: 'SET', title: 'Setoran Harian', desc: 'Pantau setoran dan progres hafalan.', href: '/tpq/akademik/setoran' }
 		],
 		steps: [
@@ -72,7 +72,7 @@
 			modules: [
 				{ icon: 'SAN', title: 'Kelola Santri', desc: 'Struktur santri, ustadz, dan status keanggotaan.', href: '/dashboard/kelola-santri' },
 				{ icon: 'DIN', title: 'Materi Diniyah', desc: 'Kurikulum harian Aqidah, Fiqih, Hadits, dan lainnya.', href: '/dashboard/diniyah' },
-				{ icon: 'HAL', title: 'Halaqoh Tahfidz', desc: 'Kelompok setoran dan pembinaan hafalan.', href: '/dashboard/halaqoh' },
+				{ icon: 'HAL', title: 'Halaqoh Tahfidz', desc: 'Kelompok setoran dan pembinaan hafalan.', href: '/tpq/akademik/setoran' },
 				{ icon: 'UJI', title: 'Ujian Tahfidz', desc: 'Evaluasi hafalan dan kualitas bacaan.', href: '/dashboard/ujian-tahfidz' }
 			],
 			steps: [
@@ -128,7 +128,7 @@
 				{ icon: 'UJI', title: 'Evaluasi Tahfidz', desc: 'Ujian rutin untuk menjaga kualitas hafalan.' }
 			],
 			modules: [
-				{ icon: 'HAL', title: 'Halaqoh Tahfidz', desc: 'Pembagian halaqoh dan setoran harian.', href: '/dashboard/halaqoh' },
+				{ icon: 'HAL', title: 'Halaqoh Tahfidz', desc: 'Pembagian halaqoh dan setoran harian.', href: '/tpq/akademik/setoran' },
 				{ icon: 'SET', title: 'Setoran Harian', desc: 'Input setoran dan koreksi bacaan.', href: '/tpq/akademik/setoran' },
 				{ icon: 'CAP', title: 'Pencapaian Hafalan', desc: 'Grafik progres hafalan santri.', href: '/dashboard/pencapaian-hafalan' },
 				{ icon: 'UJI', title: 'Ujian Tahfidz', desc: 'Rekap hasil ujian dan kualitas hafalan.', href: '/dashboard/ujian-tahfidz' }

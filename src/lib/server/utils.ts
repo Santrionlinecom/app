@@ -11,6 +11,18 @@ export const isEducationalOrgType = (value?: string | null) => {
 	return normalized === 'pondok' || normalized === 'tpq' || normalized === 'rumah-tahfidz';
 };
 
+/** Setoran/review/riwayat akademik: TPQ dan rumah tahfidz. */
+export const isAcademicSetoranOrgType = (value?: string | null) => {
+	const normalized = normalizeOrgType(value);
+	return normalized === 'tpq' || normalized === 'rumah-tahfidz';
+};
+
+/** Kas lembaga: masjid, musholla, dan pondok. */
+export const isFinanceOrgType = (value?: string | null) => {
+	const normalized = normalizeOrgType(value);
+	return normalized === 'masjid' || normalized === 'musholla' || normalized === 'pondok';
+};
+
 export const isCommunityOrgType = (value?: string | null) => {
 	const normalized = normalizeOrgType(value);
 	return normalized === 'masjid' || normalized === 'musholla';

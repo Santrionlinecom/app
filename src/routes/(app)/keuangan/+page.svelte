@@ -69,7 +69,8 @@
 		};
 	};
 
-	const orgLabel = data.org?.type === 'musholla' ? 'Musholla' : 'Masjid';
+	const orgLabel =
+		data.org?.type === 'musholla' ? 'Musholla' : data.org?.type === 'pondok' ? 'Pondok' : 'Masjid';
 </script>
 
 <svelte:head>

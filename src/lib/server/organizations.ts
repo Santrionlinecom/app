@@ -317,6 +317,9 @@ export const deleteOrganizationAsSuperAdmin = async (
 	// tpq academic
 	await safeRun(db, 'DELETE FROM tpq_setoran WHERE institution_id = ?', orgId);
 	await safeRun(db, 'DELETE FROM tpq_halaqoh WHERE institution_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM pondok_asrama_santri WHERE organization_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM pondok_asrama WHERE organization_id = ?', orgId);
+	await safeRun(db, 'DELETE FROM tahfidz_ujian WHERE organization_id = ?', orgId);
 	// learn org-scoped (keep global NULL)
 	await safeRun(db, 'DELETE FROM learn_badge WHERE lembaga_id = ?', orgId);
 	await safeRun(db, 'DELETE FROM learn_modul WHERE lembaga_id = ?', orgId);
