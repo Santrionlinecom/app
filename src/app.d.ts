@@ -46,6 +46,7 @@ declare global {
                 STREAMER_LICENSE_SIGNING_SECRET?: string;
                 GROQ_API_KEY?: string;
                 NEWS_FETCH_SECRET?: string;
+                KITAB_INGEST_SECRET?: string;
                 NEWS_FETCHER_URL?: string;
                 SHORTLINK_SECRET?: string;
                 MIDTRANS_SERVER_KEY?: string;
