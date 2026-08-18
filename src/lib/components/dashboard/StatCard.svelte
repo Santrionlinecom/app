@@ -5,7 +5,7 @@
 	secara inline di dalam halaman dashboard.
 -->
 <script lang="ts">
-	import { ArrowRight } from 'lucide-svelte';
+	import { ArrowRight } from '@lucide/svelte';
 	import { countUp, spotlight, reveal } from '$lib/motion';
 
 	let {

@@ -29,7 +29,7 @@
 		Users,
 		Wallet,
 		Zap
-	} from 'lucide-svelte';
+	} from '@lucide/svelte';
 
 	export let data: PageData;
 

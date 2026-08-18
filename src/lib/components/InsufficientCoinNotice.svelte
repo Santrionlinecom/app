@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AlertCircle, Coins } from 'lucide-svelte';
+	import { AlertCircle, Coins } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 
 	export let currentBalance: number = 0;

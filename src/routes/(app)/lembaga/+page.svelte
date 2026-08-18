@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { ArrowRight, BadgeCheck, Building2, MapPin, Plus, Sparkles } from 'lucide-svelte';
+	import { ArrowRight, BadgeCheck, Building2, MapPin, Plus, Sparkles } from '@lucide/svelte';
 	import { lembagaAktif, type LembagaAktif } from '$lib/stores/lembagaAktif';
 	import type { PageData } from './$types';
 

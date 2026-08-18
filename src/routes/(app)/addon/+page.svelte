@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { deserialize } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { BadgeCheck, Clock3, ExternalLink, Loader2, MessageCircle, Settings, XCircle } from 'lucide-svelte';
+	import { BadgeCheck, Clock3, ExternalLink, Loader2, MessageCircle, Settings, XCircle } from '@lucide/svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;

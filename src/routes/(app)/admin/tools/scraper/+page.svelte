@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { DatabaseZap, Download, FileSpreadsheet, Loader2, ShieldCheck } from 'lucide-svelte';
+	import { DatabaseZap, Download, FileSpreadsheet, Loader2, ShieldCheck } from '@lucide/svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;

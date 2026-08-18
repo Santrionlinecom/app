@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
-	import { Building2, Check, ChevronsUpDown, Search, X } from 'lucide-svelte';
+	import { Building2, Check, ChevronsUpDown, Search, X } from '@lucide/svelte';
 	import { lembagaAktif, type LembagaAktif } from '$lib/stores/lembagaAktif';
 
 	export let lembagaList: LembagaAktif[] = [];

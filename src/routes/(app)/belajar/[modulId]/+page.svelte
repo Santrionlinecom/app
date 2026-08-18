@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { ArrowLeft, CheckCircle2, Loader2, Trophy } from 'lucide-svelte';
+	import { ArrowLeft, CheckCircle2, Loader2, Trophy } from '@lucide/svelte';
 	import SoalQuiz from '$lib/components/belajar/SoalQuiz.svelte';
 	import type { PageData } from './$types';
 

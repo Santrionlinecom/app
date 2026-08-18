@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Coins } from 'lucide-svelte';
+	import { Coins } from '@lucide/svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Pencil, Eye, BookOpen, Users } from 'lucide-svelte';
+	import { Pencil, Eye, BookOpen, Users } from '@lucide/svelte';
 
 	let { data } = $props();
 

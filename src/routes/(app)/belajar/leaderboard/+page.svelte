@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeft, Flame, Medal, Trophy } from 'lucide-svelte';
+	import { ArrowLeft, Flame, Medal, Trophy } from '@lucide/svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
