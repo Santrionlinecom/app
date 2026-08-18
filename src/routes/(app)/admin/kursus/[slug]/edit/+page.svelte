@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import RichTextEditor from '$lib/components/RichTextEditor.svelte';
-	import { ArrowLeft, Eye, Save, Loader2 } from 'lucide-svelte';
+	import { ArrowLeft, Eye, Save, Loader2 } from '@lucide/svelte';
 
 	let { data, form } = $props();
 

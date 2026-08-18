@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeft, PlusCircle } from 'lucide-svelte';
+	import { ArrowLeft, PlusCircle } from '@lucide/svelte';
 	import type { ActionData, PageData } from './$types';
 
 	export let data: PageData;

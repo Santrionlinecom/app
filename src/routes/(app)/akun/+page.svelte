@@ -16,7 +16,7 @@
 		Smartphone,
 		UserRound,
 		X
-	} from 'lucide-svelte';
+	} from '@lucide/svelte';
 	import KoordinatInput from '$lib/components/admin/KoordinatInput.svelte';
 	import type { ActionData, PageData } from './$types';
 

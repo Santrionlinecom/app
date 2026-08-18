@@ -11,7 +11,7 @@
 		Newspaper,
 		RefreshCw,
 		ShoppingBag
-	} from 'lucide-svelte';
+	} from '@lucide/svelte';
 	import {
 		KITAB_CATEGORY_OPTIONS,
 		getKitabCategoryLabel,

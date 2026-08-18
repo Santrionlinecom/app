@@ -8,15 +8,17 @@ const source = readFileSync(
 );
 
 test('registration hub exposes every active registration journey', () => {
-	assert.match(source, /href="\/tpq\/daftar"/);
+	assert.match(source, /ENABLED_INSTITUTIONS/);
+	assert.match(source, /institution.registerRoute/);
 	assert.match(source, /href="\/register\/ustadz"/);
 	assert.match(source, /href="\/auth"/);
 	assert.match(source, /Pilih jalur pendaftaran/);
 });
 
-test('registration hub does not render fake links for unavailable institutions', () => {
+test('registration hub does not advertise unavailable institutions', () => {
 	assert.doesNotMatch(source, /href=["']#["']/);
-	assert.match(source, /Segera hadir/);
+	assert.doesNotMatch(source, /segera hadir|coming soon/i);
+	assert.match(source, /ENABLED_INSTITUTIONS/);
 });
 
 test('registration hub explains member invitations and account email', () => {

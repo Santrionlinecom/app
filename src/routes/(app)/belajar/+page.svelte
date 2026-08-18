@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowRight, Medal } from 'lucide-svelte';
+	import { ArrowRight, Medal } from '@lucide/svelte';
 	import ModulCard from '$lib/components/belajar/ModulCard.svelte';
 	import ProgressXP from '$lib/components/belajar/ProgressXP.svelte';
 	import type { PageData } from './$types';

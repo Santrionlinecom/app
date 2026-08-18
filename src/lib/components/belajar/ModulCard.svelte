@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { LockKeyhole } from 'lucide-svelte';
+	import { LockKeyhole } from '@lucide/svelte';
 
 	export let modul: {
 		id: string;

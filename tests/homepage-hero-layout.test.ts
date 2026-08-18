@@ -12,10 +12,10 @@ test('homepage hero avoids DaisyUI hero collision and owns a responsive full-ble
 		readFile(layoutPath, 'utf8')
 	]);
 
-	assert.match(page, /<section class="so-hero\b/);
+	assert.match(page, /<main class="min-h-screen overflow-x-hidden bg-\[#f6f7f3\]/);
 	assert.doesNotMatch(page, /<section class="hero\b/);
-	assert.match(page, /\.so-hero\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;/);
-	assert.match(page, /@media \(max-width: 640px\)[\s\S]*?\.so-hero\s*\{[\s\S]*?display:\s*block;/);
+	assert.match(page, /text-4xl font-extrabold/);
+	assert.match(page, /lg:text-6xl/);
 	assert.match(layout, /usesStandalonePageContainer = pathname === '\/' \|\| isBookMenuActive\(pathname\)/);
 });
 

@@ -993,6 +993,11 @@ $: mobileTopMenus = [
 			},
 			...institutionRegisterMenuItems,
 			{
+				label: 'Daftar sebagai Ustadz',
+				href: '/register/ustadz',
+				note: 'Buat akun pengajar mandiri atau bergabung dengan lembaga.'
+			},
+			{
 				label: 'Daftar sebagai Santri/Jamaah',
 				href: '/register',
 				note: 'Cari lembaga aktif, lalu daftar lewat halaman lembaga.'
@@ -1432,6 +1437,10 @@ $: if (pathname !== previousPathname) {
 															<span class="mt-1 text-xs leading-5 text-slate-500">{item.note}</span>
 														</a>
 													{/each}
+													<a href="/register/ustadz" class="desktop-dropdown-item bg-white/90">
+														<span class="font-semibold text-slate-900">Daftar sebagai Ustadz</span>
+														<span class="mt-1 text-xs leading-5 text-slate-500">Buat akun pengajar mandiri atau bergabung dengan lembaga.</span>
+													</a>
 												</div>
 											</div>
 
@@ -1525,6 +1534,9 @@ $: if (pathname !== previousPathname) {
 												{item.label}
 											</a>
 										{/each}
+										<a href="/register/ustadz" class="rounded-2xl border border-white/80 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm">
+											Daftar sebagai Ustadz
+										</a>
 									</div>
 								</div>
 

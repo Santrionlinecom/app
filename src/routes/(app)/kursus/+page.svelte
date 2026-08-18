@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { BookOpen, Clock, Coins, Check, Loader2 } from 'lucide-svelte';
+	import { BookOpen, Clock, Coins, Check, Loader2 } from '@lucide/svelte';
 
 	let { data } = $props();
 

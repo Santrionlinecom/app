@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { deserialize } from '$app/forms';
 	import { page } from '$app/stores';
-	import { Coins, Loader2 } from 'lucide-svelte';
+	import { Coins, Loader2 } from '@lucide/svelte';
 	import InsufficientCoinNotice from '$lib/components/InsufficientCoinNotice.svelte';
 	import type { ActionData, PageData } from './$types';
 

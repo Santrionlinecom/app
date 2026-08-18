@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { UserPlus, Trash2, Users, Loader2 } from 'lucide-svelte';
+	import { UserPlus, Trash2, Users, Loader2 } from '@lucide/svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;

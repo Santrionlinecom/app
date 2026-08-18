@@ -1,5 +1,5 @@
 <script lang="ts">
-	import OrgListView from '$lib/components/org/OrgListView.svelte';
+	import OrgPublicLandingView from '$lib/components/org/OrgPublicLandingView.svelte';
 	export let data;
 </script>
 
@@ -7,4 +7,4 @@
 	<title>Daftar Rumah Tahfidz</title>
 </svelte:head>
 
-<OrgListView title={data.title} subtitle={data.subtitle} typePath={data.typePath} orgs={data.orgs} />
+<OrgPublicLandingView title={data.title} subtitle={data.subtitle} typePath={data.typePath} orgs={data.orgs} />
