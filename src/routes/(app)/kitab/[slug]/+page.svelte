@@ -138,6 +138,14 @@
 					<p class="mt-4 break-words text-base leading-relaxed text-white/75 md:text-lg md:leading-8">{curatedItem.summary}</p>
 
 					<div class="mt-6 flex flex-wrap gap-3">
+						{#if data.adaVersiBaca}
+							<a
+								href={`/kitab/${curatedItem.slug}/baca`}
+								class="btn border-none bg-emerald-400 text-slate-900 hover:bg-emerald-300"
+							>
+								📖 Baca + Tanya AI
+							</a>
+						{/if}
 						{#if firstModule}
 							<a
 								href={moduleHref(curatedItem.slug, firstModule.id)}
@@ -455,6 +463,14 @@
 					</p>
 
 					<div class="mt-6 flex flex-wrap gap-3">
+						{#if data.adaVersiBaca}
+							<a
+								href={`/kitab/${item.slug}/baca`}
+								class="btn border-none bg-emerald-400 text-slate-900 hover:bg-emerald-300"
+							>
+								📖 Baca + Tanya AI
+							</a>
+						{/if}
 						{#if readerUrl}
 							<a href="#reader-sumber" class="btn border-none bg-white text-slate-900 hover:bg-emerald-50">
 								Baca di Halaman Ini
