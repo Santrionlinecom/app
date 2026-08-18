@@ -14,6 +14,7 @@
 
 	let status: Status = 'memeriksa';
 	let pesan = '';
+	let hasilUji = '';
 	let publicKey = '';
 
 	const urlBase64ToUint8Array = (base64: string) => {
@@ -84,6 +85,21 @@
 		}
 	};
 
+	const ujiCoba = async () => {
+		pesan = '';
+		hasilUji = 'Mengirim…';
+		try {
+			const respons = await fetch('/api/push/test', { method: 'POST' });
+			const data = (await respons.json()) as { terkirim: number; gagal: number };
+			hasilUji =
+				data.terkirim > 0
+					? `Terkirim ke ${data.terkirim} perangkat. Cek notifikasi HP-mu.`
+					: 'Belum ada yang terkirim. Coba matikan lalu nyalakan lagi pengingatnya.';
+		} catch {
+			hasilUji = 'Gagal mengirim uji coba.';
+		}
+	};
+
 	const matikan = async () => {
 		status = 'proses';
 		try {
@@ -112,13 +128,25 @@
 			<p class="mt-1 text-xs text-emerald-700">
 				Kamu akan diingatkan supaya setoran dan hafalan tidak terlewat.
 			</p>
-			<button
-				type="button"
-				on:click={matikan}
-				class="mt-3 text-xs font-semibold text-emerald-700 underline hover:text-emerald-900"
-			>
-				Matikan pengingat
-			</button>
+			<div class="mt-3 flex flex-wrap items-center gap-3">
+				<button
+					type="button"
+					on:click={ujiCoba}
+					class="rounded-lg border border-emerald-600 px-3 py-1.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100"
+				>
+					Kirim uji coba
+				</button>
+				<button
+					type="button"
+					on:click={matikan}
+					class="text-xs font-semibold text-emerald-700 underline hover:text-emerald-900"
+				>
+					Matikan pengingat
+				</button>
+			</div>
+			{#if hasilUji}
+				<p class="mt-2 text-xs text-emerald-800">{hasilUji}</p>
+			{/if}
 		{:else if status === 'ditolak'}
 			<p class="text-sm font-semibold text-slate-700">Pengingat diblokir browser</p>
 			<p class="mt-1 text-xs text-slate-600">
