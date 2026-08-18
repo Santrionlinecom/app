@@ -173,6 +173,12 @@ const initializeKitabReferenceSchema = async (db: D1Database) => {
 			)`
 		)
 		.run();
+
+	const corpora = await db.prepare(`PRAGMA table_info('kitab_corpora')`).all<{ name: string }>();
+	const corporaColumns = new Set((corpora.results ?? []).map((column) => column.name));
+	if (!corporaColumns.has('last_error')) {
+		await db.prepare('ALTER TABLE kitab_corpora ADD COLUMN last_error TEXT').run();
+	}
 	await db
 		.prepare(
 			`INSERT OR IGNORE INTO kitab_corpora (
