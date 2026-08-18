@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, type Cookies } from '@sveltejs/kit';
 import type { D1Database } from '@cloudflare/workers-types';
 import type { OrgRole, OrgType } from '$lib/types/rbac';
 
@@ -69,6 +69,29 @@ export const assertActiveOrg = (input: ResolveActiveOrgInput): MembershipLike =>
 
 /** Nama cookie penyimpan pilihan lembaga aktif. */
 export const ACTIVE_ORG_COOKIE = 'so_lembaga_aktif';
+
+/** Atribut yang dipakai saat SET dan DELETE harus sama, atau browser menahan cookie. */
+export const activeOrgCookieAttributes = {
+	path: '/',
+	httpOnly: true,
+	sameSite: 'lax' as const,
+	// Cookie produksi selalu HTTPS. Atribut SET/DELETE harus identik,
+	// termasuk cookie lama yang disetel dengan secure: true.
+	secure: true
+};
+
+export const setActiveOrgCookie = (cookies: Cookies, orgId: string) => {
+	cookies.set(ACTIVE_ORG_COOKIE, orgId, {
+		...activeOrgCookieAttributes,
+		maxAge: 60 * 60 * 24 * 365
+	});
+};
+
+export const clearActiveOrgCookie = (cookies: Cookies) => {
+	cookies.delete(ACTIVE_ORG_COOKIE, { ...activeOrgCookieAttributes });
+	// Cadangan untuk cookie lama yang hanya disetel dengan path.
+	cookies.delete(ACTIVE_ORG_COOKIE, { path: '/' });
+};
 
 type MembershipRow = {
 	org_id: string;

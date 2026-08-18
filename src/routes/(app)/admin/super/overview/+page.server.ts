@@ -91,6 +91,48 @@ const parseCurrency = (value: FormDataEntryValue | null) => {
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { db } = requireSuperAdmin(locals);
+	try {
+		return await loadOverview(db, url);
+	} catch (err) {
+		console.error('[super-overview] load failed', err);
+		return emptyOverview((url.searchParams.get('q') ?? '').trim());
+	}
+};
+
+const emptyOverview = (searchQuery: string) => ({
+	hideChrome: true,
+	stats: {
+		totalInstitutions: 0,
+		totalUsers: 0,
+		totalTransactions: 0
+	},
+	liveStats: {
+		loginsToday: 0,
+		registrationsToday: 0,
+		trafficSources: [] as Array<{ action: string; total: number; lastSeen: number | null }>,
+		recentActivities: [] as Array<{
+			id: string;
+			userId: string | null;
+			userEmail: string | null;
+			action: string;
+			metadata: string | null;
+			ipAddress: string | null;
+			createdAt: number;
+			username: string | null;
+			email: string | null;
+			role: string | null;
+		}>
+	},
+	institutions: [],
+	institutionSummary: [],
+	availableUsers: [],
+	searchQuery,
+	searchResults: [],
+	notifications: [],
+	notificationCounts: { total: 0, urgent: 0, warning: 0, info: 0 }
+});
+
+const loadOverview = async (db: NonNullable<App.Locals['db']>, url: URL) => {
 	const [totalInstitutions, totalUsers, transactionCounts] = await Promise.all([
 		countTable(db, 'organizations'),
 		countTable(db, 'users'),

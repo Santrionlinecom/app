@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { ACTIVE_ORG_COOKIE, loadMemberships } from '$lib/server/active-org';
+import { clearActiveOrgCookie, loadMemberships, setActiveOrgCookie } from '$lib/server/active-org';
 import type { RequestHandler } from './$types';
 
 /**
@@ -39,13 +39,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 		return json({ error: 'Anda tidak punya akses ke lembaga tersebut.' }, { status: 403 });
 	}
 
-	cookies.set(ACTIVE_ORG_COOKIE, target.org_id, {
-		path: '/',
-		httpOnly: true,
-		sameSite: 'lax',
-		secure: true,
-		maxAge: 60 * 60 * 24 * 365
-	});
+	setActiveOrgCookie(cookies, target.org_id);
 
 	return json({
 		ok: true,
@@ -64,6 +58,6 @@ export const DELETE: RequestHandler = async ({ locals, cookies }) => {
 		return json({ error: 'Silakan login terlebih dahulu.' }, { status: 401 });
 	}
 
-	cookies.delete(ACTIVE_ORG_COOKIE, { path: '/' });
+	clearActiveOrgCookie(cookies);
 	return json({ ok: true });
 };

@@ -24,6 +24,7 @@ export const setImpersonatedOrgId = (cookies: Cookies, orgId: string) => {
 };
 
 export const clearImpersonatedOrgId = (cookies: Cookies) => {
+	cookies.delete(SUPER_ADMIN_IMPERSONATION_COOKIE, { ...cookieAttributes });
 	cookies.delete(SUPER_ADMIN_IMPERSONATION_COOKIE, { path: '/' });
 };
 

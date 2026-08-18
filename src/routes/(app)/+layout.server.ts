@@ -68,7 +68,8 @@ const listManagedLembaga = async (db: App.Locals['db'], userId?: string | null) 
 		}));
 	} catch (err) {
 		if (isMissingMultiLembagaColumn(err)) return [];
-		throw err;
+		console.error('[layout] daftar lembaga gagal', err);
+		return [];
 	}
 };
 

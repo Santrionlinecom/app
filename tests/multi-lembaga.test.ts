@@ -186,8 +186,7 @@ const switcherEndpoint = readFileSync(
 );
 
 test('endpoint pilih lembaga menyimpan pilihan ke cookie', () => {
-	assert.match(switcherEndpoint, /ACTIVE_ORG_COOKIE/, 'pilihan wajib ditulis ke cookie');
-	assert.match(switcherEndpoint, /cookies\.set/, 'endpoint wajib menyetel cookie');
+	assert.match(switcherEndpoint, /setActiveOrgCookie/, 'pilihan wajib ditulis lewat helper cookie');
 });
 
 test('KEAMANAN: endpoint memvalidasi lembaga terhadap keanggotaan', () => {
@@ -200,8 +199,10 @@ test('KEAMANAN: endpoint memvalidasi lembaga terhadap keanggotaan', () => {
 });
 
 test('KEAMANAN: cookie lembaga aktif tidak bisa dibaca skrip browser', () => {
-	assert.match(switcherEndpoint, /httpOnly:\s*true/, 'cookie wajib httpOnly');
-	assert.match(switcherEndpoint, /sameSite:/, 'cookie wajib menyetel sameSite');
+	const cookieHelper = readFileSync(join(process.cwd(), 'src/lib/server/active-org.ts'), 'utf-8');
+	assert.match(cookieHelper, /httpOnly:\s*true/, 'cookie wajib httpOnly');
+	assert.match(cookieHelper, /sameSite:/, 'cookie wajib menyetel sameSite');
+	assert.match(cookieHelper, /clearActiveOrgCookie/, 'hapus cookie wajib memakai atribut yang sama');
 });
 
 test('endpoint menolak permintaan tanpa sesi login', () => {

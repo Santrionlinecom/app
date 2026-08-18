@@ -49,3 +49,10 @@ test('app error CTA sends only Super Admin users to the system overview', async 
 	assert.doesNotMatch(source, /role\.includes\('SUPER'\) \|\| appMenu/);
 	assert.match(source, /isSuperAdmin \? '\/admin\/super\/overview' : '\/dashboard'/);
 });
+
+test('super admin layout does not loop-redirect on leftover lembaga cookie', async () => {
+	const source = await readProjectFile('src/routes/(app)/admin/super/+layout.server.ts');
+	assert.match(source, /clearActiveOrgCookie/);
+	assert.match(source, /so_reset/);
+	assert.doesNotMatch(source, /hasStaleActiveOrg/);
+});
