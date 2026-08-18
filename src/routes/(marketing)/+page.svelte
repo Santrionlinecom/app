@@ -344,7 +344,7 @@
 		<div class="mx-auto max-w-7xl rounded-[2rem] border border-so-border bg-white p-5 shadow-sm md:p-8">
 			<div class="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
 				<div>
-					<p class="text-xs font-black uppercase tracking-[0.22em] text-so-gold">Akses Cepat</p>
+					<p class="text-xs font-black uppercase tracking-[0.22em] text-so-accent-ink">Akses Cepat</p>
 					<h2 class="mt-3 text-3xl font-black tracking-[-0.05em] text-so-green md:text-4xl">Masuk ke bagian yang paling sering dipakai.</h2>
 					<p class="mt-4 text-sm font-semibold leading-7 text-so-muted">Halaman depan dibuat lebih jelas sebagai pintu pembinaan, dashboard lembaga, kitab, addon, dan konten publik.</p>
 				</div>

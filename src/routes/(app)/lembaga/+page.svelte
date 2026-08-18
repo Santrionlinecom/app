@@ -128,7 +128,7 @@
 								</div>
 							</div>
 						</div>
-						<Building2 class="mt-1 shrink-0 text-so-gold" size={22} strokeWidth={2} />
+						<Building2 class="mt-1 shrink-0 text-so-accent-ink" size={22} strokeWidth={2} />
 					</div>
 
 					<div class="mt-5 flex flex-wrap gap-2">
