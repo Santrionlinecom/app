@@ -288,7 +288,7 @@
 						</div>
 					{/if}
 					<div class="min-w-0">
-						<p class="text-sm font-bold text-so-gold">Akun SantriOnline</p>
+						<p class="text-sm font-bold text-so-accent-ink">Akun SantriOnline</p>
 						<h2 class="mt-1 break-words text-2xl font-black text-so-green md:text-3xl">
 							{displayName}
 						</h2>
@@ -358,7 +358,7 @@
 			<section class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<div>
-						<p class="text-sm font-bold text-so-gold">Multi-Lembaga</p>
+						<p class="text-sm font-bold text-so-accent-ink">Multi-Lembaga</p>
 						<h2 class="mt-1 text-xl font-black text-so-green">Lembaga Yang Dikelola</h2>
 						<p class="mt-2 text-sm leading-6 text-so-muted">
 							Daftar ini mengikuti arsitektur baru: satu akun admin dapat memegang beberapa lembaga.
@@ -419,7 +419,7 @@
 			</section>
 
 			<section class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
-				<p class="text-sm font-bold text-so-gold">Addon</p>
+				<p class="text-sm font-bold text-so-accent-ink">Addon</p>
 				<h2 class="mt-1 text-xl font-black text-so-green">Status Fitur Berbayar</h2>
 				<p class="mt-2 text-sm leading-6 text-so-muted">
 					Ringkasan addon aktif untuk lembaga utama akun ini.
@@ -457,7 +457,7 @@
 			<section id="tautan" class="account-anchor grid gap-6 xl:grid-cols-2">
 				{#if bioLink}
 					<div class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
-						<p class="text-sm font-bold text-so-gold">Link Publik</p>
+						<p class="text-sm font-bold text-so-accent-ink">Link Publik</p>
 						<h2 class="mt-1 text-xl font-black text-so-green">Bio Profil</h2>
 						<p class="mt-2 text-sm leading-6 text-so-muted">
 							Bagikan profil publik untuk memperkenalkan identitas akun.
@@ -490,7 +490,7 @@
 
 				{#if shareLink}
 					<div class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
-						<p class="text-sm font-bold text-so-gold">Link Pendaftaran</p>
+						<p class="text-sm font-bold text-so-accent-ink">Link Pendaftaran</p>
 						<h2 class="mt-1 text-xl font-black text-so-green">Daftar {formatType(org?.type)}</h2>
 						<p class="mt-2 text-sm leading-6 text-so-muted">
 							Gunakan link ini untuk pendaftaran {memberLabel} ke lembaga utama.
@@ -530,7 +530,7 @@
 				<div class="flex items-start gap-3">
 					<span class="settings-icon"><MapPin size={20} /></span>
 					<div>
-						<p class="text-sm font-bold text-so-gold">Lokasi Lembaga</p>
+						<p class="text-sm font-bold text-so-accent-ink">Lokasi Lembaga</p>
 						<h2 class="mt-1 text-xl font-black text-so-green">Lokasi di Peta</h2>
 						<p class="mt-1 text-sm leading-6 text-so-muted">
 							Lengkapi kota, provinsi, dan koordinat agar lembaga tampil di Peta Sebaran Lembaga.
@@ -720,7 +720,7 @@
 					<div class="flex items-start gap-3">
 						<span class="settings-icon"><BadgeCheck size={20} /></span>
 						<div>
-							<p class="text-xs font-black uppercase tracking-[0.16em] text-so-gold">High Security</p>
+							<p class="text-xs font-black uppercase tracking-[0.16em] text-so-accent-ink">High Security</p>
 							<h2 id="super-admin-security-title" class="mt-1 text-lg font-black text-so-green">Super Admin terlindungi</h2>
 							<p class="mt-2 text-sm leading-6 text-so-muted">
 								Login password lokal dinonaktifkan. Gunakan akun Google resmi yang terverifikasi.
@@ -770,7 +770,7 @@
 
 		{#if orgMedia.length > 0}
 			<section class="rounded-so-lg border border-so-border bg-white p-5 shadow-card md:p-6">
-				<p class="text-sm font-bold text-so-gold">Media Lembaga</p>
+				<p class="text-sm font-bold text-so-accent-ink">Media Lembaga</p>
 				<h2 class="mt-1 text-xl font-black text-so-green">Foto Publik</h2>
 				<div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 					{#each orgMedia as item}

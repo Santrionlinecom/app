@@ -20,24 +20,27 @@ const config: Config = {
 				arabic: ['Amiri', 'Scheherazade New', ...fontFamily.serif]
 			},
 			colors: {
-				'so-green': '#1B4332',
-				'so-green-2': '#2D6A4F',
-				'so-green-3': '#0F2F24',
-				'so-gold': '#C9A84C',
-				'so-gold-2': '#E8C97A',
-				'so-cream': '#FAF8F3',
+				// Palet 2026-08 — samakan dengan santrionline.com (src/routes/layout.css).
+				// so-gold hanya untuk teks di latar gelap; di latar terang pakai so-accent-ink.
+				'so-green': '#123F34',
+				'so-green-2': '#1B5546',
+				'so-green-3': '#0C2C25',
+				'so-gold': '#FCD34D',
+				'so-gold-2': '#FDE68A',
+				'so-accent-ink': '#065F46',
+				'so-cream': '#F6F7F3',
 				'so-surface': '#FFFFFF',
-				'so-border': '#E8E4DC',
-				'so-muted': '#6B7280',
-				'so-ink': '#1A1A1A'
+				'so-border': '#E2E5DD',
+				'so-muted': '#475569',
+				'so-ink': '#0F172A'
 			},
 			borderRadius: {
-				so: '12px',
-				'so-lg': '20px'
+				so: '0.75rem',
+				'so-lg': '1.5rem'
 			},
 			boxShadow: {
-				soft: '0 18px 60px rgb(27 67 50 / 0.10)',
-				card: '0 12px 34px rgb(27 67 50 / 0.08)'
+				soft: '0 18px 60px rgb(18 63 52 / 0.10)',
+				card: '0 12px 34px rgb(18 63 52 / 0.08)'
 			},
 			spacing: {
 				13: '3.25rem'
