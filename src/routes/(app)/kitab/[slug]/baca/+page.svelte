@@ -64,14 +64,14 @@
 		<div class="mt-2 flex flex-wrap items-center gap-2 text-sm opacity-70">
 			<span class="badge badge-success badge-sm">📖 Versi Baca</span>
 			{#if data.pages}<span>{data.pages} halaman</span>{/if}
-			<span class="badge badge-info badge-sm">🤖 Bisa Tanya AI</span>
+			<span class="badge badge-info badge-sm">👳🏻‍♂️ Bisa Tanya AI</span>
 		</div>
 	</header>
 
 	<!-- Panel Tanya AI -->
 	<section class="card mb-8 border border-base-300 bg-base-200/60">
 		<div class="card-body p-4 md:p-6">
-			<h2 class="card-title text-base">🤖 Tanya isi kitab ini</h2>
+			<h2 class="card-title text-base">👳🏻‍♂️ Tanya isi kitab ini</h2>
 			{#if data.bisaTanya}
 				<form
 					class="flex flex-col gap-2 sm:flex-row"

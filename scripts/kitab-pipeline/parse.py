@@ -33,11 +33,22 @@ POLL_INTERVAL_S = 10
 TIMEOUT_S = 15 * 60
 
 
-def api_key() -> str:
-    key = os.environ.get("LLAMA_CLOUD_API_KEY", "").strip()
-    if not key:
+def api_keys() -> list[str]:
+    keys = []
+    for name in ("LLAMA_CLOUD_API_KEY", "LLAMA_CLOUD_API_KEY_BACKUP"):
+        key = os.environ.get(name, "").strip()
+        if key and key not in keys:
+            keys.append(key)
+    if not keys:
         sys.exit("ERROR: LLAMA_CLOUD_API_KEY kosong. Jalankan: source ~/.config/llamacloud.env")
-    return key
+    return keys
+
+
+class CreditExhausted(Exception):
+    def __init__(self, url: str, body: str) -> None:
+        super().__init__(f"HTTP 402 dari {url}\n{body}")
+        self.url = url
+        self.body = body
 
 
 def http(req: urllib.request.Request, timeout: int = 120) -> dict:
@@ -46,6 +57,8 @@ def http(req: urllib.request.Request, timeout: int = 120) -> dict:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", "replace")[:500]
+        if exc.code == 402:
+            raise CreditExhausted(req.full_url, body) from exc
         sys.exit(f"ERROR: HTTP {exc.code} dari {req.full_url}\n{body}")
 
 
@@ -128,13 +141,29 @@ def main() -> None:
     if not slug or any(c for c in slug if not (c.isalnum() or c == "-")):
         sys.exit("ERROR: slug hanya boleh a-z, 0-9, dan tanda hubung")
 
-    key = api_key()
+    keys = api_keys()
     out_dir = Path(__file__).parent / "out"
     out_dir.mkdir(exist_ok=True)
 
-    job_id = upload(pdf_path, key)
-    wait(job_id, key)
-    result = fetch_markdown(job_id, key)
+    last_error: Exception | None = None
+    job_id = ""
+    for index, key in enumerate(keys, start=1):
+        try:
+            if index > 1:
+                print(f"[parse] kuota key #{index - 1} habis, coba key cadangan #{index}")
+            job_id = upload(pdf_path, key)
+            wait(job_id, key)
+            result = fetch_markdown(job_id, key)
+            break
+        except CreditExhausted as exc:
+            last_error = exc
+            print(f"[parse] key #{index} kena HTTP 402 (kredit habis)")
+    else:
+        sys.exit(
+            "ERROR: semua API key LlamaCloud kehabisan kredit. "
+            "Tunggu reset kuota bulanan atau pasang LLAMA_CLOUD_API_KEY_BACKUP."
+            + (f"\n{last_error}" if last_error else "")
+        )
     markdown = result.get("markdown", "")
     if not markdown.strip():
         sys.exit("ERROR: hasil markdown kosong")
