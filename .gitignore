@@ -55,3 +55,7 @@ pnpm-lock.yaml
 .idea/
 .gradle/
 .junie/
+
+# Artefak pipeline kitab (parse lokal, jangan di-commit)
+scripts/kitab-pipeline/__pycache__/
+scripts/kitab-pipeline/out/
