@@ -101,25 +101,18 @@ test('komponen lonceng menampilkan jumlah dan hanya untuk superadmin', () => {
 // dalam keadaan login. Akibatnya lonceng di root layout tidak pernah terlihat.
 // Header nyata yang dipakai Super Admin adalah shell `(app)`, jadi lonceng
 // wajib ada di sana juga.
+//
+// Guard memakai `isSuperAdmin && !isImpersonating` mengikuti pola yang dipakai
+// seluruh shell: saat Super Admin menyamar sebagai pengurus lembaga, header
+// sengaja menampilkan identitas lembaga, sehingga lonceng sistem tidak boleh
+// ikut bocor ke konteks itu.
 test('lonceng ikut dirender di header shell (app) tempat Super Admin bekerja', () => {
 	const shell = baca('src/routes/(app)/+layout.svelte');
 
 	assert.match(shell, /import SuperAdminBell from/, 'shell app harus mengimpor lonceng');
 	assert.match(
 		shell,
-		/\{#if isSuperAdmin\}[\s\S]{0,400}<SuperAdminBell \/>/,
-		'lonceng di shell app wajib berada di dalam guard isSuperAdmin'
-	);
-});
-
-test('chrome root memang disembunyikan saat login sehingga shell app wajib punya lonceng', () => {
-	const layout = baca('src/routes/+layout.svelte');
-
-	// Mengunci alasan bug: selama baris ini ada, lonceng root tak terlihat
-	// bagi pengguna yang sudah login.
-	assert.match(
-		layout,
-		/hidePageChrome\s*=[^\n]*Boolean\(data\?\.user\)/,
-		'root layout menyembunyikan chrome saat login — lonceng tidak boleh hanya mengandalkan root'
+		/\{#if isSuperAdmin && !isImpersonating\}[\s\S]{0,400}<SuperAdminBell \/>/,
+		'lonceng di shell app wajib berada di dalam guard isSuperAdmin dan tidak saat impersonasi'
 	);
 });

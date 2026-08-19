@@ -502,8 +502,11 @@
 
 					<!-- Lonceng notifikasi Super Admin.
 					     Chrome root layout disembunyikan saat pengguna login, jadi lonceng
-					     wajib hadir di shell app ini agar Super Admin benar-benar melihatnya. -->
-					{#if isSuperAdmin}
+					     wajib hadir di shell app ini agar Super Admin benar-benar melihatnya.
+					     Saat menyamar sebagai pengurus lembaga, header memang menampilkan
+					     identitas lembaga — lonceng sistem ikut disembunyikan agar konteksnya
+					     tidak tercampur, sama seperti label peran lain di shell ini. -->
+					{#if isSuperAdmin && !isImpersonating}
 						<div class="shrink-0">
 							<SuperAdminBell />
 						</div>
