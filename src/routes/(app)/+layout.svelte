@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
+	import CommandPalette from '$lib/components/CommandPalette.svelte';
 	import LembagaSwitcher from '$lib/components/LembagaSwitcher.svelte';
 	import {
 		APP_HOME_HREF,
@@ -69,6 +70,7 @@
 	let sidebarOpen = false;
 	let desktopSidebarCollapsed = false;
 	let profileMenuOpen = false;
+	let paletteOpen = false;
 	let openGroups: Record<string, boolean> = {};
 
 	$: role = data?.user?.role ?? '';
@@ -460,7 +462,7 @@
 
 				<div class="flex flex-wrap items-center gap-2 sm:gap-3">
 					<div class="relative min-w-0 flex-1 sm:min-w-[240px] xl:w-[320px] xl:flex-none">
-						<span class="absolute left-3 top-1/2 -translate-y-1/2 text-so-muted">
+						<span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-so-muted">
 							<svg
 								class="h-4 w-4"
 								viewBox="0 0 24 24"
@@ -473,12 +475,20 @@
 								<path d={iconPaths.search} />
 							</svg>
 						</span>
-						<input
-							class="so-focus h-11 w-full rounded-xl border border-so-border bg-white/90 pl-9 pr-4 text-sm shadow-sm"
-							placeholder="Cari menu, lembaga, atau aktivitas..."
-							aria-label="Pencarian cepat dashboard"
-							readonly
-						/>
+						<button
+							type="button"
+							class="so-focus flex h-11 w-full items-center rounded-xl border border-so-border bg-white/90 pl-9 pr-4 text-left text-sm text-so-muted shadow-sm transition hover:border-so-primary/40"
+							aria-label="Cari fitur"
+							aria-keyshortcuts="Control+K"
+							on:click={() => (paletteOpen = true)}
+						>
+							<span class="truncate">Cari fitur...</span>
+							<kbd
+								class="ml-auto hidden shrink-0 rounded border border-so-border px-1.5 py-0.5 text-[11px] text-so-muted sm:block"
+							>
+								Ctrl K
+							</kbd>
+						</button>
 					</div>
 
 					<div class="min-w-0 max-w-[min(48vw,16rem)] sm:max-w-[18rem]">
@@ -785,6 +795,8 @@
 		</div>
 	</nav>
 </div>
+
+<CommandPalette items={menuItems} bind:open={paletteOpen} />
 
 <style>
 	.safe-area-bottom {
