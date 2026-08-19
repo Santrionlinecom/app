@@ -71,6 +71,7 @@ export type FeatureKey =
 	| 'setoran'
 	| 'ujian'
 	| 'raport'
+	| 'belajar'
 	| 'kas_masjid'
 	| 'zakat_infaq'
 	| 'jadwal_kegiatan'
@@ -84,11 +85,26 @@ const COMMUNITY_FEATURES = new Set<FeatureKey>([
 	'kalender'
 ]);
 const FINANCE_FEATURES = new Set<FeatureKey>(['kas_masjid']);
+
+/**
+ * Kurikulum pembinaan di Ruang Belajar (aqidah, adab, fikih praktis, sirah,
+ * skill, Bahasa Arab) berlaku untuk seluruh member, bukan hanya lembaga
+ * pendidikan. Jamaah masjid dan musholla juga perlu jalur aqidah dan adab.
+ *
+ * Sengaja dipisah dari 'hafalan': setoran hafalan tetap khusus lembaga
+ * pendidikan, sedangkan belajar terbuka untuk semua tipe lembaga.
+ */
+const UNIVERSAL_FEATURES = new Set<FeatureKey>(['belajar']);
+
 const FEATURE_PERMISSIONS: Record<FeatureKey, Permission> = {
 	hafalan: 'hafalan.read',
 	setoran: 'hafalan.input',
 	ujian: 'ujian.read',
 	raport: 'raport.read',
+	// Membaca kurikulum pembinaan tidak menuntut hak pengurus. Dipakai
+	// 'announcement.read' karena itu izin baca paling dasar yang dimiliki
+	// seluruh peran anggota, termasuk santri, jamaah, wali, dan alumni.
+	belajar: 'announcement.read',
 	kas_masjid: 'finance.read',
 	zakat_infaq: 'zakat.manage',
 	jadwal_kegiatan: 'schedule.read',
@@ -176,6 +192,11 @@ export const canAccessFeature = (
 	const normalized = normalizeRole(role);
 	if (!normalized || normalized === 'SUPER_ADMIN') return false;
 	const permission = FEATURE_PERMISSIONS[feature];
+	// Fitur universal berlaku di semua tipe lembaga, jadi diperiksa lebih dulu
+	// sebelum penyaringan per kategori lembaga.
+	if (UNIVERSAL_FEATURES.has(feature)) {
+		return hasPermission(normalized as any, permission);
+	}
 	if (isEducationalOrgType(orgType) && ACADEMIC_FEATURES.has(feature)) {
 		return hasPermission(normalized as any, permission);
 	}

@@ -38,6 +38,8 @@ export type LearnModule = {
 	pathTitle: string;
 	pathPurpose: string;
 	pathOrder: number;
+	/** Slug kitab rujukan jalur ini, bila sudah ditautkan. */
+	pathKitabSlug: string | null;
 	judul: string;
 	deskripsi: string | null;
 	kategori: LearnCategory;
@@ -127,13 +129,32 @@ type LearnContext = {
 	lembagaId: string | null;
 };
 
+// Ruang Belajar terbuka untuk seluruh anggota lembaga, bukan hanya pengurus
+// pendidikan. Jamaah masjid/musholla, wali santri, dan takmir juga berhak
+// mengikuti jalur aqidah, adab, fikih praktis, sirah, skill, dan Bahasa Arab.
 const ALLOWED_ROLES = new Set([
 	'admin',
+	'kepala_tpq',
+	'kepala_tahfidz',
 	'koordinator',
+	'wali_kelas',
+	'pengasuh',
+	'musyrif',
 	'ustadz',
 	'ustadzah',
 	'santri',
+	'wali',
 	'alumni',
+	'jamaah',
+	'ketua_takmir',
+	'takmir',
+	'tamir',
+	'imam',
+	'khotib',
+	'muadzin',
+	'bendahara',
+	'sekretaris',
+	'operator',
 	'SUPER_ADMIN'
 ]);
 
@@ -335,6 +356,7 @@ const mapModule = (row: LearnModuleRow): LearnModule => ({
 	pathTitle: row.pathTitle ?? DEFAULT_LEARN_PATH.title,
 	pathPurpose: row.pathPurpose ?? DEFAULT_LEARN_PATH.purpose,
 	pathOrder: readInt(row.pathOrder, DEFAULT_LEARN_PATH.sortOrder),
+	pathKitabSlug: row.pathKitabSlug ?? null,
 	judul: row.judul,
 	deskripsi: row.deskripsi ?? null,
 	kategori: row.kategori,
@@ -438,7 +460,14 @@ const withLocks = (modules: LearnModule[]) => applyTrackLocks(modules);
 
 const isMissingLearnPathMetadataError = (err: unknown) => {
 	const message = `${(err as Error)?.message ?? err}`.toLowerCase();
-	return message.includes('no such column: m.path_key') || message.includes('no such table: learn_paths');
+	return (
+		message.includes('no such column: m.path_key') ||
+		message.includes('no such table: learn_paths') ||
+		// Kolom kitab_slug ditambahkan pada migrasi 0070. Database yang belum
+		// dimigrasikan harus tetap bisa menampilkan modul, hanya tanpa tautan
+		// kitab rujukan.
+		message.includes('no such column: lp.kitab_slug')
+	);
 };
 
 const runSqlStatements = async (db: D1Database, sql: string) => {
@@ -470,7 +499,10 @@ export const requireSantriLearnContext = async (locals: App.Locals): Promise<Lea
 	if (lembagaId) {
 		const org = await getOrganizationById(db, lembagaId);
 		if (!org) throw error(404, 'Lembaga tidak ditemukan');
-		assertFeature(org.type, user.role, 'hafalan');
+		// Memakai fitur 'belajar', bukan 'hafalan': kurikulum pembinaan terbuka
+		// untuk semua tipe lembaga, sedangkan setoran hafalan tetap khusus
+		// lembaga pendidikan.
+		assertFeature(org.type, user.role, 'belajar');
 	}
 
 	return { db, user, lembagaId };
@@ -488,6 +520,7 @@ export const listLearnModules = async (
 			COALESCE(lp.title, '${DEFAULT_LEARN_PATH.title}') AS pathTitle,
 			COALESCE(lp.purpose, '${DEFAULT_LEARN_PATH.purpose}') AS pathPurpose,
 			COALESCE(lp.sort_order, ${DEFAULT_LEARN_PATH.sortOrder}) AS pathOrder,
+			lp.kitab_slug AS pathKitabSlug,
 			m.judul,
 			m.deskripsi,
 			m.kategori,
@@ -524,6 +557,7 @@ export const listLearnModules = async (
 				'${DEFAULT_LEARN_PATH.title}' AS pathTitle,
 				'${DEFAULT_LEARN_PATH.purpose}' AS pathPurpose,
 				${DEFAULT_LEARN_PATH.sortOrder} AS pathOrder,
+				NULL AS pathKitabSlug,
 				m.judul,
 				m.deskripsi,
 				m.kategori,
@@ -619,6 +653,7 @@ export const getLearnModule = async (
 			COALESCE(lp.title, '${DEFAULT_LEARN_PATH.title}') AS pathTitle,
 			COALESCE(lp.purpose, '${DEFAULT_LEARN_PATH.purpose}') AS pathPurpose,
 			COALESCE(lp.sort_order, ${DEFAULT_LEARN_PATH.sortOrder}) AS pathOrder,
+			lp.kitab_slug AS pathKitabSlug,
 			m.judul,
 			m.deskripsi,
 			m.kategori,
@@ -655,6 +690,7 @@ export const getLearnModule = async (
 				'${DEFAULT_LEARN_PATH.title}' AS pathTitle,
 				'${DEFAULT_LEARN_PATH.purpose}' AS pathPurpose,
 				${DEFAULT_LEARN_PATH.sortOrder} AS pathOrder,
+				NULL AS pathKitabSlug,
 				m.judul,
 				m.deskripsi,
 				m.kategori,

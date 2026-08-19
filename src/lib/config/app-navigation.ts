@@ -97,11 +97,12 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			description: '3 misi harian pilot'
 		},
 		{
-			label: 'Belajar',
+			label: 'Ruang Belajar',
 			href: '/belajar',
 			icon: ICONS.learn,
 			allowedTypes: ['tpq'],
-			group: 'pembinaan'
+			group: 'pembinaan',
+			description: 'Kurikulum pembinaan bertahap'
 		},
 		{
 			// Pendataan santri TPQ tanpa akun login: cukup nama, NIS, kelas, dan
@@ -264,6 +265,14 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			mobilePrimary: true
 		},
 		{
+			label: 'Ruang Belajar',
+			href: '/belajar',
+			icon: ICONS.learn,
+			allowedTypes: ['pondok'],
+			group: 'pembinaan',
+			description: 'Kurikulum pembinaan bertahap'
+		},
+		{
 			label: 'Data Santri',
 			href: '/dashboard/kelola-santri',
 			icon: ICONS.users,
@@ -326,6 +335,14 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			allowedTypes: ['masjid'],
 			group: 'utama',
 			mobilePrimary: true
+		},
+		{
+			label: 'Ruang Belajar',
+			href: '/belajar',
+			icon: ICONS.learn,
+			allowedTypes: ['masjid'],
+			group: 'pembinaan',
+			description: 'Kurikulum pembinaan bertahap'
 		},
 		{
 			label: 'Data Jamaah',
@@ -415,6 +432,14 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			mobilePrimary: true
 		},
 		{
+			label: 'Ruang Belajar',
+			href: '/belajar',
+			icon: ICONS.learn,
+			allowedTypes: ['musholla'],
+			group: 'pembinaan',
+			description: 'Kurikulum pembinaan bertahap'
+		},
+		{
 			label: 'Data Jamaah',
 			href: '/dashboard/kelola-santri',
 			icon: ICONS.users,
@@ -488,6 +513,14 @@ export const APP_NAVIGATION_BY_TYPE: Record<InstitutionKey, AppNavigationItem[]>
 			allowedTypes: ['rumah-tahfidz'],
 			group: 'utama',
 			mobilePrimary: true
+		},
+		{
+			label: 'Ruang Belajar',
+			href: '/belajar',
+			icon: ICONS.learn,
+			allowedTypes: ['rumah-tahfidz'],
+			group: 'pembinaan',
+			description: 'Kurikulum pembinaan bertahap'
 		},
 		{
 			label: 'Data Santri',

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowRight, Medal } from '@lucide/svelte';
+	import { ArrowRight, BookOpen, Medal } from '@lucide/svelte';
 	import ModulCard from '$lib/components/belajar/ModulCard.svelte';
 	import ProgressXP from '$lib/components/belajar/ProgressXP.svelte';
 	import type { PageData } from './$types';
@@ -15,6 +15,7 @@
 		path_title: string;
 		path_purpose: string;
 		path_order: number;
+		path_kitab_slug: string | null;
 		urutan: number;
 		total_soal: number;
 		soal_selesai: number;
@@ -30,6 +31,7 @@
 		title: string;
 		purpose: string;
 		order: number;
+		kitabSlug: string | null;
 		modules: ApiModule[];
 		completedModules: number;
 		totalQuestions: number;
@@ -56,6 +58,7 @@
 			path_title: module.pathTitle,
 			path_purpose: module.pathPurpose,
 			path_order: module.pathOrder,
+			path_kitab_slug: module.pathKitabSlug ?? null,
 			urutan: module.urutan,
 			total_soal: module.totalSoal,
 			soal_selesai: module.soalSelesai,
@@ -83,6 +86,7 @@
 				title: module.path_title || 'Bahasa Arab & Nahwu',
 				purpose: module.path_purpose || 'Fondasi belajar bertahap untuk santri.',
 				order: Number(module.path_order ?? 999),
+				kitabSlug: module.path_kitab_slug ?? null,
 				modules: []
 			};
 			group.modules.push(module);
@@ -202,6 +206,17 @@
 									{group.title}
 								</h3>
 								<p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{group.purpose}</p>
+
+								{#if group.kitabSlug}
+									<a
+										href={`/kitab/${group.kitabSlug}`}
+										class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-[#C9A84C]/40 bg-[#FAF8F3] px-3 py-1.5 text-xs font-bold text-[#1B4332] transition hover:border-[#C9A84C]"
+									>
+										<BookOpen class="h-3.5 w-3.5 text-[#C9A84C]" />
+										Baca kitab rujukan
+										<ArrowRight class="h-3.5 w-3.5" />
+									</a>
+								{/if}
 							</div>
 							<div class="shrink-0 rounded-xl bg-[#FAF8F3] px-4 py-3 text-sm font-bold text-[#1B4332]">
 								{group.completedModules}/{group.modules.length} modul
