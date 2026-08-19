@@ -566,16 +566,23 @@ export const filterRelevantMatches = <T extends RawVectorMatch>(
 			match.score >= minimumScore
 			);
 
-export const cariJawaban = async (platform: App.Platform, pertanyaan: string) => {
+export const cariJawaban = async (
+	platform: App.Platform,
+	pertanyaan: string,
+	options: { kitabSlug?: string | null } = {}
+) => {
 	const { ai, index } = assertBindings(platform);
 	const db = platform.env.DB;
 	if (!db) throw new Error('Layanan data tidak tersedia');
 	await ensureKitabReferenceSchema(db);
 	await reconcileIndexingKitabRows(platform, { ensureSchema: false });
 	const queryVector = await generateEmbedding(ai, pertanyaan);
+	const kitabSlug = options.kitabSlug?.trim() || null;
 
 	const queryRes = await index.query(queryVector, {
-		topK: 8,
+		// Ambil lebih banyak kandidat saat difilter per kitab, karena top-8 global
+		// sering didominasi jilid lain dari seri yang sama.
+		topK: kitabSlug ? 16 : 8,
 		returnValues: false,
 		returnMetadata: 'none'
 	} as any);
@@ -587,6 +594,10 @@ export const cariJawaban = async (platform: App.Platform, pertanyaan: string) =>
 	const evidenceById = new Map<string, KitabMetadata>();
 	if (candidateIds.length) {
 		const placeholders = candidateIds.map(() => '?').join(',');
+		const slugClause = kitabSlug ? ' AND r.kitab_slug = ?' : '';
+		const binds = kitabSlug
+			? [EMBEDDING_MODEL, kitabSlug, ...candidateIds]
+			: [EMBEDDING_MODEL, ...candidateIds];
 		const { results } = await db
 			.prepare(
 				`SELECT r.id, r.judul, r.halaman, r.jilid, r.isi_teks, r.kitab_slug, r.source_type, r.source_ref,
@@ -596,9 +607,9 @@ export const cariJawaban = async (platform: App.Platform, pertanyaan: string) =>
 				 JOIN kitab_corpora c ON c.kitab_slug = r.kitab_slug
 					AND c.status = 'indexed'
 					AND (c.index_revision = r.index_revision OR (r.index_revision IS NULL AND c.index_revision = 'legacy'))
-				 WHERE r.status = 'indexed' AND r.embedding_model = ? AND r.id IN (${placeholders})`
+				 WHERE r.status = 'indexed' AND r.embedding_model = ?${slugClause} AND r.id IN (${placeholders})`
 			)
-			.bind(EMBEDDING_MODEL, ...candidateIds)
+			.bind(...binds)
 			.all<Record<string, unknown>>();
 		for (const row of results ?? []) {
 			evidenceById.set(String(row.id), {

@@ -21,6 +21,7 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 
 	const body = await request.json().catch(() => ({}));
 	const pertanyaan = typeof body.pertanyaan === 'string' ? body.pertanyaan.trim() : '';
+	const kitabSlug = typeof body.kitabSlug === 'string' ? body.kitabSlug.trim() : '';
 
 	if (!pertanyaan) {
 		throw error(400, 'Pertanyaan tidak boleh kosong');
@@ -54,7 +55,9 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
 			}
 		}
 
-		const result = await cariJawaban(platform as App.Platform, pertanyaan);
+		const result = await cariJawaban(platform as App.Platform, pertanyaan, {
+			kitabSlug: kitabSlug || null
+		});
 		logActivity(db, 'KITAB_TANYA_QUERY', {
 			userId: locals.user.id,
 			userEmail: locals.user.email,

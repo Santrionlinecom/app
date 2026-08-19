@@ -105,7 +105,10 @@ export const POST: RequestHandler = async ({ platform, request, getClientAddress
 				.all();
 			joinRows = results ?? [];
 		}
-		const hasil = await cariJawaban(platform as App.Platform, pertanyaan);
+		const kitabSlug = typeof body.kitabSlug === 'string' ? body.kitabSlug.trim() : '';
+		const hasil = await cariJawaban(platform as App.Platform, pertanyaan, {
+			kitabSlug: kitabSlug || null
+		});
 		return json({
 			ok: true,
 			embeddingModel: EMBEDDING_MODEL,
