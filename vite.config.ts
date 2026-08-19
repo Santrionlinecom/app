@@ -1,16 +1,32 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { sentrySvelteKit } from '@sentry/sveltekit';
 
-const includePrerendered = process.env.PWA_INCLUDE_PRERENDERED === 'true';
-const pwaGlobPatterns = [
-	'client/**/*.{js,css,ico,png,svg,webp,woff2,ttf,webmanifest}'
-];
-if (includePrerendered) {
-	pwaGlobPatterns.push('prerendered/**/*.{html,json}');
-}
-
+/**
+ * Catatan service worker.
+ *
+ * Proyek ini pernah memakai SvelteKitPWA (Workbox) BERSAMAAN dengan service
+ * worker bawaan SvelteKit di src/service-worker.ts. Keduanya ikut ter-build,
+ * tetapi hanya satu yang benar-benar dipakai:
+ *
+ *   - SvelteKit mendaftarkan src/service-worker.ts secara otomatis, dan
+ *     berkas itulah yang aktif di produksi (menangani Web Push).
+ *   - Workbox menghasilkan sw.js + workbox-*.js (±51 KB) beserta
+ *     registerSW.js yang TIDAK PERNAH dimuat, sehingga seluruh aturan
+ *     runtimeCaching-nya tidak pernah berjalan.
+ *
+ * Selain sia-sia, aturan Workbox itu berbahaya bila sempat aktif: ia menyimpan
+ * balasan /api/* selama 30 hari dan halaman HTML selama 7 hari. Aplikasi ini
+ * memakai sesi login dan satu perangkat sering dipakai bergantian, sehingga
+ * data akun sebelumnya bisa tersaji ke akun berikutnya.
+ *
+ * Workbox dilepas. Caching aset kini ditangani src/service-worker.ts dengan
+ * kebijakan eksplisit di src/lib/service-worker-policy.ts, yang menolak
+ * seluruh balasan API dan halaman ber-sesi.
+ *
+ * Manifest PWA tetap dilayani dari static/manifest.json seperti yang dirujuk
+ * src/app.html.
+ */
 export default defineConfig(async () => ({
 	plugins: [
 		await sentrySvelteKit({
@@ -21,124 +37,6 @@ export default defineConfig(async () => ({
 			adapter: 'cloudflare',
 			autoUploadSourceMaps: Boolean(process.env.SENTRY_AUTH_TOKEN)
 		}),
-		sveltekit(),
-		SvelteKitPWA({
-			registerType: 'autoUpdate',
-			includeAssets: [
-				'favicon.ico',
-				'robots.txt',
-				'icons/icon-48.png',
-				'icons/icon-192.png',
-				'icons/icon-512.png',
-				'icons/apple-touch-icon.png'
-			],
-			manifest: {
-				name: 'Santri Online',
-				short_name: 'SantriOnline',
-				description: 'Platform Digital Terintegrasi untuk Santri - Setor Hafalan, History Belajar Kitab, dan Ibadah Harian',
-				theme_color: '#15803d',
-				background_color: '#ffffff',
-				display: 'standalone',
-				orientation: 'portrait',
-				start_url: '/',
-				scope: '/',
-				categories: ['education', 'productivity', 'lifestyle'],
-				icons: [
-					{
-						src: '/icons/icon-48.png',
-						sizes: '48x48',
-						type: 'image/png',
-						purpose: 'any'
-					},
-					{
-						src: '/icons/icon-192.png',
-						sizes: '192x192',
-						type: 'image/png',
-						purpose: 'any maskable'
-					},
-					{
-						src: '/icons/icon-512.png',
-						sizes: '512x512',
-						type: 'image/png',
-						purpose: 'any maskable'
-					}
-				]
-			},
-			workbox: {
-				// Optional: set PWA_INCLUDE_PRERENDERED=true to include prerendered pages.
-				modifyURLPrefix: {},
-				globPatterns: pwaGlobPatterns,
-				
-				// Strategi Caching (Penyimpanan Offline)
-				runtimeCaching: [
-					// 1. Simpan Halaman HTML (Dashboard, Menu)
-					// Strategi: NetworkFirst (Cari sinyal dulu, kalau mati baru buka cache)
-					{
-						urlPattern: ({ request }) => request.destination === 'document',
-						handler: 'NetworkFirst',
-						options: {
-							cacheName: 'santri-pages',
-							expiration: {
-								maxEntries: 50,
-								maxAgeSeconds: 60 * 60 * 24 * 7 // Simpan 1 minggu
-							},
-							networkTimeoutSeconds: 3 // Kalau 3 detik gak ada sinyal, anggap offline
-						}
-					},
-					// 2. Simpan Data API (Amalan, Wirid, Hafalan) - INI PENTING BUAT OFFLINE
-					{
-						urlPattern: ({ url }) => url.pathname.startsWith('/api/') || url.pathname.startsWith('/amalan'),
-						handler: 'NetworkFirst',
-						options: {
-							cacheName: 'santri-api-data',
-							expiration: {
-								maxEntries: 100,
-								maxAgeSeconds: 60 * 60 * 24 * 30 // Simpan 1 bulan biar wirid aman
-							},
-							cacheableResponse: {
-								statuses: [0, 200]
-							}
-						}
-					},
-					// 3. Simpan Aset (CSS, JS, Worker) - Biar aplikasi ngebut
-					{
-						urlPattern: ({ request }) => ['style', 'script', 'worker'].includes(request.destination),
-						handler: 'StaleWhileRevalidate', // Pakai cache lama sambil update cache baru di background
-						options: {
-							cacheName: 'santri-assets',
-							expiration: {
-								maxEntries: 100,
-								maxAgeSeconds: 60 * 60 * 24 * 30
-							}
-						}
-					},
-					// 4. Simpan Gambar - Biar hemat kuota
-					{
-						urlPattern: ({ request }) => request.destination === 'image',
-						handler: 'CacheFirst', // Utamakan cache, jarang update gambar
-						options: {
-							cacheName: 'santri-images',
-							expiration: {
-								maxEntries: 60,
-								maxAgeSeconds: 60 * 60 * 24 * 30
-							}
-						}
-					},
-					// 5. Simpan Mushaf per Juz (on-demand)
-					{
-						urlPattern: ({ url }) => url.pathname.startsWith('/quran/'),
-						handler: 'NetworkFirst',
-						options: {
-							cacheName: 'santri-quran-juz-v2',
-							networkTimeoutSeconds: 4,
-							expiration: {
-								maxEntries: 40,
-								maxAgeSeconds: 60 * 60 * 24 * 365
-							}
-						}
-					},
-				]
-			}
-		})
+		sveltekit()
 	]
 }));
