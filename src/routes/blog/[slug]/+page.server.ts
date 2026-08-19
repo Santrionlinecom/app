@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { D1Database } from '@cloudflare/workers-types';
 import { getPostBySlug } from '$lib/server/cms';
+import { sisipkanTautanInternal } from '$lib/server/seo/internal-links';
 import type { PageServerLoad } from './$types';
 
 const stripHtml = (value: string) =>
@@ -25,7 +26,13 @@ export const load: PageServerLoad = async ({ params, platform, url }) => {
     post.title;
 
   return {
-    post,
+    post: {
+      ...post,
+      // Tautan disisipkan saat render, bukan disimpan ke basis data: seluruh
+      // arsip lama ikut mendapat backlink tanpa satu pun UPDATE berisiko, dan
+      // isi asli artikel tetap utuh bila peta tautan kelak berubah.
+      content: sisipkanTautanInternal(post.content)
+    },
     seo: {
       title: post.title,
       description,
@@ -38,7 +45,13 @@ export const load: PageServerLoad = async ({ params, platform, url }) => {
       siteName: 'Santri Online',
       publisherName: 'Santri Online',
       publisherLogoUrl: `${origin}/icons/icon-192.png`,
-      keywords: post.seo_keyword
+      keywords: post.seo_keyword,
+      // GEO: artikel berbahasa Indonesia untuk pembaca Indonesia. Tanpa ini
+      // mesin pencari harus menebak bahasa dan wilayah sasarannya.
+      locale: 'id_ID',
+      language: 'id-ID',
+      region: 'ID',
+      articleSection: post.kategori ?? 'dakwah'
     },
     relatedPosts: (
       (

@@ -82,8 +82,18 @@
 			'@id': absoluteUrl(data.url || data.canonicalUrl || '')
 		},
 		keywords: data.focus_keyword || data.seo_keyword || data.keywords || '',
-		inLanguage: 'id-ID',
-		articleSection: 'Dakwah Islam'
+		inLanguage: data.language || 'id-ID',
+		articleSection: data.articleSection || data.kategori || 'Dakwah Islam',
+		// GEO: menyatakan sasaran pembaca, bukan lokasi server.
+		contentLocation: {
+			'@type': 'Place',
+			name: 'Indonesia',
+			address: {
+				'@type': 'PostalAddress',
+				addressCountry: 'ID'
+			}
+		},
+		isAccessibleForFree: true
 	};
 
 	$: breadcrumbSchema = {

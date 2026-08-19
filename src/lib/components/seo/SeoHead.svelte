@@ -9,6 +9,12 @@
 	export let publishedAt = '';
 	export let modifiedAt = '';
 	export let noindex = false;
+	/** Bahasa isi halaman (BCP-47). Dipakai hreflang dan meta content-language. */
+	export let language = 'id-ID';
+	/** Wilayah sasaran ISO-3166. Sinyal GEO untuk mesin pencari. */
+	export let region = 'ID';
+	/** Rubrik artikel; mengisi article:section agar tidak selalu generik. */
+	export let articleSection = 'Dakwah Islam';
 
 	const siteName = 'SantriOnline';
 	const baseUrl = 'https://app.santrionline.com';
@@ -34,6 +40,13 @@
 	<meta name="robots" content={noindex ? 'noindex,nofollow' : 'index,follow'} />
 	<link rel="canonical" href={canonicalUrl} />
 
+	<!-- GEO: bahasa dan wilayah sasaran dinyatakan tegas, tidak ditebak mesin. -->
+	<meta name="language" content={language} />
+	<meta name="geo.region" content={region} />
+	<meta name="geo.placename" content="Indonesia" />
+	<link rel="alternate" hreflang={language} href={canonicalUrl} />
+	<link rel="alternate" hreflang="x-default" href={canonicalUrl} />
+
 	<meta property="og:type" content={type} />
 	<meta property="og:site_name" content={siteName} />
 	<meta property="og:title" content={fullTitle} />
@@ -55,7 +68,7 @@
 			<meta property="article:modified_time" content={modifiedAt} />
 		{/if}
 		<meta property="article:author" content="SantriOnline" />
-		<meta property="article:section" content="Dakwah Islam" />
+		<meta property="article:section" content={articleSection} />
 	{/if}
 
 	<meta name="theme-color" content="#1D9E75" />

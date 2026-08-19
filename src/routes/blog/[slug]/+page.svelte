@@ -24,7 +24,9 @@
     image: data.seo.imageUrl,
     datePublished: data.seo.datePublished,
     dateModified: data.seo.dateModified,
-    keywords: data.seo.keywords
+    keywords: data.seo.keywords,
+    language: data.seo.language,
+    articleSection: data.seo.articleSection
   };
 </script>
 
@@ -37,6 +39,9 @@
   publishedAt={data.seo.datePublished}
   modifiedAt={data.seo.dateModified}
   keywords={data.seo.keywords ?? ''}
+  language={data.seo.language}
+  region={data.seo.region}
+  articleSection={data.seo.articleSection}
 />
 
 <SchemaOrg type="article" data={articleSchemaData} />

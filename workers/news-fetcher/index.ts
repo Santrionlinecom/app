@@ -484,6 +484,11 @@ Struktur isi wajib:
 - pelajaran/adab/refleksi Aswaja 2-3 paragraf
 - penutup singkat
 
+Aturan tautan (penting untuk SEO):
+- Sisipkan 1 tautan ke situs utama <a href="https://santrionline.com">SantriOnline</a> secara wajar di paragraf pelajaran atau penutup, memakai kalimat yang mengalir — bukan iklan yang dipaksakan.
+- Jangan menaut ke situs lain di dalam isi. Sumber asli sudah dicantumkan otomatis di bawah artikel.
+- Jangan pernah menaut kata yang sedang dibahas sebagai istilah asing atau kutipan.
+
 Balas hanya JSON valid tanpa markdown:
 {
   "judul": "judul berita menarik dalam bahasa Indonesia, 50-80 karakter",
