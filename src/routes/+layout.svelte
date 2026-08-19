@@ -19,6 +19,7 @@ import X from '@lucide/svelte/icons/x';
 	import languageFlagOverrides from '$lib/data/language-flag-overrides.json';
 	import { scrollDirection } from '$lib/stores/scrollDirection';
 import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
+import SuperAdminBell from '$lib/components/SuperAdminBell.svelte';
 import { islamicDynasties } from '$lib/data/dinasti';
 import { FEATURES } from '$lib/features';
 import { INSTITUTIONS, type InstitutionKey } from '$lib/config/institutions';
@@ -1207,6 +1208,9 @@ $: if (pathname !== previousPathname) {
 						</a>
 
 						<div class="flex shrink-0 items-center gap-1.5 sm:gap-2">
+							{#if isSuperAdmin}
+								<SuperAdminBell />
+							{/if}
 							<a
 								href={mobilePrimaryAction.href}
 								class="inline-flex h-10 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-so-green shadow-sm sm:h-11 sm:px-4"
@@ -1387,6 +1391,9 @@ $: if (pathname !== previousPathname) {
 						</div>
 						<div id="google_translate_element" class="translate-slot hidden"></div>
 						{#if data.user}
+							{#if isSuperAdmin}
+								<SuperAdminBell />
+							{/if}
 							<a href="/coins/topup" class="btn btn-sm btn-primary">Topup Coin</a>
 							<div class="group relative">
 								<a href="/akun" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Akun</a>
