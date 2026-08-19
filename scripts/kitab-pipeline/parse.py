@@ -30,12 +30,16 @@ API_BASE = "https://api.cloud.llamaindex.ai/api/v1/parsing"
 PARSE_MODE = "parse_page_with_agent"
 MODEL = "anthropic-sonnet-4.5"
 POLL_INTERVAL_S = 10
-TIMEOUT_S = 15 * 60
+TIMEOUT_S = 30 * 60
 
 
 def api_keys() -> list[str]:
     keys = []
-    for name in ("LLAMA_CLOUD_API_KEY", "LLAMA_CLOUD_API_KEY_BACKUP"):
+    for name in (
+        "LLAMA_CLOUD_API_KEY",
+        "LLAMA_CLOUD_API_KEY_BACKUP",
+        "LLAMA_CLOUD_API_KEY_BACKUP_2",
+    ):
         key = os.environ.get(name, "").strip()
         if key and key not in keys:
             keys.append(key)
