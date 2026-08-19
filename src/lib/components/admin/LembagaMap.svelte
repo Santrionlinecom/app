@@ -199,7 +199,7 @@
 </script>
 
 <div
-	class="relative min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-inner"
+	class="lembaga-map-shell relative isolate z-0 min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-inner"
 	style="height: min(70vh, 560px); min-height: 420px;"
 >
 	<div
@@ -210,7 +210,7 @@
 	></div>
 
 	{#if loading}
-		<div class="absolute inset-0 z-[500] grid place-items-center bg-white/90 backdrop-blur-[1px]">
+		<div class="absolute inset-0 z-[3] grid place-items-center bg-white/90 backdrop-blur-[1px]">
 			<div class="text-center">
 				<div
 					class="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent"
@@ -219,7 +219,7 @@
 			</div>
 		</div>
 	{:else if mapError}
-		<div class="absolute inset-0 z-[500] grid place-items-center bg-rose-50 p-6 text-center">
+		<div class="absolute inset-0 z-[3] grid place-items-center bg-rose-50 p-6 text-center">
 			<div>
 				<p class="text-sm font-bold text-rose-800">Peta belum dapat dimuat</p>
 				<p class="mt-1 text-xs leading-5 text-rose-700">
@@ -229,7 +229,7 @@
 		</div>
 	{:else if markerCount === 0}
 		<div
-			class="absolute inset-x-4 bottom-4 z-[500] rounded-2xl border border-amber-200 bg-white/95 p-4 shadow-lg backdrop-blur sm:left-4 sm:right-auto sm:max-w-sm"
+			class="absolute inset-x-4 bottom-4 z-[3] rounded-2xl border border-amber-200 bg-white/95 p-4 shadow-lg backdrop-blur sm:left-4 sm:right-auto sm:max-w-sm"
 		>
 			<p class="text-sm font-bold text-slate-900">Belum ada titik lembaga</p>
 			<p class="mt-1 text-xs leading-5 text-slate-600">
@@ -240,14 +240,14 @@
 
 	{#if !loading && !mapError}
 		<div
-			class="pointer-events-none absolute left-3 top-3 z-[500] rounded-xl border border-white/70 bg-white/95 px-3 py-2 shadow-md backdrop-blur"
+			class="pointer-events-none absolute left-3 top-3 z-[3] rounded-xl border border-white/70 bg-white/95 px-3 py-2 shadow-md backdrop-blur"
 		>
 			<p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Titik tampil</p>
 			<p class="mt-0.5 text-lg font-bold tabular-nums text-slate-900">{markerCount}</p>
 		</div>
 
 		<div
-			class="pointer-events-none absolute bottom-3 right-3 z-[500] rounded-xl border border-white/70 bg-white/95 px-3 py-2.5 shadow-md backdrop-blur"
+			class="pointer-events-none absolute bottom-3 right-3 z-[3] rounded-xl border border-white/70 bg-white/95 px-3 py-2.5 shadow-md backdrop-blur"
 		>
 			<p class="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Status</p>
 			<ul class="space-y-1.5 text-xs font-medium text-slate-700">
@@ -269,6 +269,22 @@
 </div>
 
 <style>
+	/*
+	 * Leaflet memberi z-index besar pada pane (400) dan control container (1000).
+	 * Tanpa stacking context sendiri, angka itu diadu langsung dengan header (z-50)
+	 * dan sidebar mobile (z-[55]) sehingga peta terlihat "melayang" menutupi menu.
+	 * `isolate` pada shell mengurung seluruh lapisan Leaflet, dan nilai di bawah
+	 * ini menjaga urutan internal peta tetap benar.
+	 */
+	.lembaga-map-shell :global(.leaflet-pane) {
+		z-index: 1;
+	}
+
+	.lembaga-map-shell :global(.leaflet-top),
+	.lembaga-map-shell :global(.leaflet-bottom) {
+		z-index: 2;
+	}
+
 	:global(.lembaga-map-tooltip) {
 		border: none !important;
 		border-radius: 0.5rem !important;

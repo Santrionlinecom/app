@@ -140,7 +140,7 @@
 	});
 </script>
 
-<div class="relative mt-6 h-72 min-w-0 overflow-hidden rounded-2xl border border-so-border bg-so-cream shadow-inner sm:h-80">
+<div class="student-progress-map-shell relative isolate z-0 mt-6 h-72 min-w-0 overflow-hidden rounded-2xl border border-so-border bg-so-cream shadow-inner sm:h-80">
 	<div bind:this={mapElement} class="h-full w-full" aria-label="Peta sebaran progress santri berdasarkan lokasi lembaga"></div>
 
 	{#if loading}
@@ -169,3 +169,18 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	/*
+	 * Kurung z-index Leaflet (pane 400, control container 1000) di dalam shell
+	 * agar peta tidak menembus header (z-50) atau sidebar mobile (z-[55]).
+	 */
+	.student-progress-map-shell :global(.leaflet-pane) {
+		z-index: 1;
+	}
+
+	.student-progress-map-shell :global(.leaflet-top),
+	.student-progress-map-shell :global(.leaflet-bottom) {
+		z-index: 2;
+	}
+</style>

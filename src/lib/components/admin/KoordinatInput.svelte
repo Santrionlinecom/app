@@ -202,5 +202,24 @@
 		</div>
 	{/if}
 
-	<div class:hidden={!hasCoordinates} bind:this={mapElement} class="h-[200px] w-full overflow-hidden rounded-xl border border-slate-200"></div>
+	<div
+		class:hidden={!hasCoordinates}
+		bind:this={mapElement}
+		class="koordinat-map-shell relative isolate z-0 h-[200px] w-full overflow-hidden rounded-xl border border-slate-200"
+	></div>
 </div>
+
+<style>
+	/*
+	 * Kurung z-index Leaflet (pane 400, control container 1000) agar peta pemilih
+	 * koordinat tidak menembus header (z-50) atau sidebar mobile (z-[55]).
+	 */
+	.koordinat-map-shell :global(.leaflet-pane) {
+		z-index: 1;
+	}
+
+	.koordinat-map-shell :global(.leaflet-top),
+	.koordinat-map-shell :global(.leaflet-bottom) {
+		z-index: 2;
+	}
+</style>
