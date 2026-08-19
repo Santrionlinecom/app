@@ -554,7 +554,9 @@ type RawVectorMatch = {
 export const filterRelevantMatches = <T extends RawVectorMatch>(
 	matches: T[],
 	indexedIds: Set<string>,
-	minimumScore = 0.35
+	// embeddinggemma-300m memberi skor cosine rendah untuk query lintas bahasa
+	// (Indonesia + Arab); 0.35 terbukti membuang kandidat relevan (skor 0.29-0.34).
+	minimumScore = 0.25
 ) =>
 	matches.filter(
 		(match) =>

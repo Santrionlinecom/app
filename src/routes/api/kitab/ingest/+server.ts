@@ -1,11 +1,14 @@
 import { json, error } from '@sveltejs/kit';
 
 import {
+	cariJawaban,
 	ensureKitabReferenceSchema,
+	generateEmbedding,
 	insertDokumenBatch,
 	markKitabCorpusFailed,
 	reconcileIndexingKitabRows,
 	reserveKitabCorpus,
+	EMBEDDING_MODEL,
 	type KitabChunkInput
 } from '$lib/server/rag';
 import { normalizeKitabSlug } from '$lib/kitab';
@@ -17,7 +20,7 @@ const MAX_CHUNKS_PER_BATCH = 15;
 const MAX_TEXT_CHARS = 2000;
 const RATE_LIMIT = { scope: 'kitab:ingest', limit: 60, windowMs: 10 * 60 * 1000 };
 
-type IngestAction = 'init' | 'batch' | 'finalize';
+type IngestAction = 'init' | 'batch' | 'finalize' | 'debug-query';
 
 type IngestBody = {
 	action?: IngestAction;
@@ -26,6 +29,7 @@ type IngestBody = {
 	judul?: string;
 	indexRevision?: string;
 	expectedChunks?: number;
+	pertanyaan?: string;
 	chunks?: Array<{ text?: string; metadata?: Record<string, unknown>; id?: string | null }>;
 };
 
@@ -75,6 +79,43 @@ export const POST: RequestHandler = async ({ platform, request, getClientAddress
 	}
 
 	const action = body.action;
+
+	if (action === 'debug-query') {
+		const pertanyaan = (body.pertanyaan ?? '').trim();
+		if (!pertanyaan) throw error(400, 'pertanyaan wajib diisi');
+		const ai = platform?.env?.AI;
+		const index = platform?.env?.VECTORIZE_INDEX;
+		if (!ai || !index) throw error(500, 'Binding AI/Vectorize tidak tersedia');
+		const vector = await generateEmbedding(ai, pertanyaan);
+		const res = await index.query(vector, { topK: 8, returnValues: false, returnMetadata: 'none' } as any);
+		const raw = (res.matches ?? []).map((m: any) => ({ id: m.id, score: m.score }));
+		const ids = raw.map((m: { id: string }) => m.id).filter(Boolean);
+		let joinRows: unknown[] = [];
+		if (ids.length) {
+			const placeholders = ids.map(() => '?').join(',');
+			const { results } = await db
+				.prepare(
+					`SELECT r.id, r.kitab_slug, r.status, r.embedding_model, r.index_revision,
+						c.status AS corpus_status, c.index_revision AS corpus_revision
+					 FROM kitab_referensi r
+					 LEFT JOIN kitab_corpora c ON c.kitab_slug = r.kitab_slug
+					 WHERE r.id IN (${placeholders})`
+				)
+				.bind(...ids)
+				.all();
+			joinRows = results ?? [];
+		}
+		const hasil = await cariJawaban(platform as App.Platform, pertanyaan);
+		return json({
+			ok: true,
+			embeddingModel: EMBEDDING_MODEL,
+			rawMatches: raw,
+			joinRows,
+			jawaban: hasil.jawaban,
+			referensiCount: hasil.referensi.length
+		});
+	}
+
 	const kitabSlug = normalizeKitabSlug(body.kitabSlug ?? '');
 	const corpusKey = (body.corpusKey ?? '').trim();
 	const indexRevision = (body.indexRevision ?? '').trim();
