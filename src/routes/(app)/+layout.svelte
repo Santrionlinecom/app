@@ -3,6 +3,7 @@
 	import { isImpersonatingUser, isSuperAdminUser } from '$lib/auth/session-user';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
 	import LembagaSwitcher from '$lib/components/LembagaSwitcher.svelte';
+	import SuperAdminBell from '$lib/components/SuperAdminBell.svelte';
 	import {
 		APP_HOME_HREF,
 		APP_NAV_GROUP_META,
@@ -498,6 +499,15 @@
 							currentUser={data?.user ?? null}
 						/>
 					</div>
+
+					<!-- Lonceng notifikasi Super Admin.
+					     Chrome root layout disembunyikan saat pengguna login, jadi lonceng
+					     wajib hadir di shell app ini agar Super Admin benar-benar melihatnya. -->
+					{#if isSuperAdmin}
+						<div class="shrink-0">
+							<SuperAdminBell />
+						</div>
+					{/if}
 
 					<!-- Google/YouTube style profile button -->
 					<div class="relative shrink-0">
