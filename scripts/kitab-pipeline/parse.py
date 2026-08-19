@@ -39,6 +39,7 @@ def api_keys() -> list[str]:
         "LLAMA_CLOUD_API_KEY",
         "LLAMA_CLOUD_API_KEY_BACKUP",
         "LLAMA_CLOUD_API_KEY_BACKUP_2",
+        "LLAMA_CLOUD_API_KEY_BACKUP_3",
     ):
         key = os.environ.get(name, "").strip()
         if key and key not in keys:

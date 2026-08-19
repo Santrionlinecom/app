@@ -12,7 +12,7 @@ Output:
 Aturan (selaras batas server):
 - pecah per heading '#'/'##'; sub-pecah per paragraf bila > MAX_CHARS (1.800)
 - buang sampah: header halaman berulang, footer URL, nomor halaman yatim
-- chunk valid 100–2.000 karakter; total maksimum 135 (MAX_TEXT_CHUNKS server)
+- chunk valid 100–2.000 karakter; total maksimum 500 (batas expectedChunks endpoint ingest)
 """
 
 import json
@@ -23,7 +23,7 @@ from pathlib import Path
 MAX_CHARS = 1800
 MIN_CHARS = 100
 HARD_MAX_CHARS = 2000
-MAX_CHUNKS = 135
+MAX_CHUNKS = 500
 CORPUS_SUFFIX = "llamaparse-v1"
 
 NOISE_PATTERNS = [
