@@ -13,7 +13,23 @@
 | Belum diterapkan sama sekali | 1 (`0069_pondok_asrama_tahfidz_ujian.sql`) |
 | Nomor kembar (warisan) | 6 |
 
-## Masalah Utama: Buku Catatan Tidak Sinkron
+## Masalah Utama: Buku Catatan Tidak Sinkron — ✅ SELESAI 2026-08-21
+
+> **Pembaruan 2026-08-21:** Catatan sudah diselaraskan. 22 nama berkas
+> (16 bermigrasi skema + 6 seed/update tanpa penanda) disisipkan ke
+> `d1_migrations` produksi lewat `INSERT OR IGNORE` — tanpa menjalankan
+> isinya, karena isinya terbukti sudah diterapkan (diverifikasi per berkas:
+> pemeriksaan skema untuk migrasi berpenanda, pemeriksaan baris data untuk
+> seed `0054`/`0063`/`0064`/`0066`/`0068_seed`/`0071`).
+>
+> Hasil verifikasi: `d1_migrations` berisi 75 entri;
+> `wrangler d1 migrations list DB --remote` kini hanya menampilkan
+> `0069_pondok_asrama_tahfidz_ujian.sql` — satu-satunya yang memang belum
+> diterapkan. `migrations apply` sudah AMAN dijalankan, tapi ingat: ia akan
+> menerapkan `0069`. Jalankan hanya bila fitur pondok-asrama memang mau
+> diaktifkan.
+
+Catatan sejarah di bawah ini dipertahankan sebagai pelajaran.
 
 Tabel `d1_migrations` berhenti mencatat di `0057`. Namun pemeriksaan skema
 membuktikan tabel dari `0049`, `0053`, `0062`, `0068` dan lainnya **sudah ada**
