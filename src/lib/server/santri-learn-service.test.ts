@@ -17,7 +17,8 @@ const createDb = async () => {
 			title TEXT NOT NULL,
 			purpose TEXT NOT NULL,
 			sort_order INTEGER NOT NULL DEFAULT 0,
-			is_active INTEGER NOT NULL DEFAULT 1
+			is_active INTEGER NOT NULL DEFAULT 1,
+			kitab_slug TEXT
 		)`),
 		db.prepare(`CREATE TABLE learn_modul (
 			id TEXT PRIMARY KEY,
