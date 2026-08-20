@@ -27,7 +27,13 @@
 		fikih_praktis: 'F',
 		sirah: 'S',
 		skill_masa_depan: 'Sk',
-		arabic_nahwu: 'ع'
+		arabic_nahwu: 'ع',
+		quran_tahsin: 'ق',
+		hadits: 'ح',
+		arabic_kitab_1: '1',
+		arabic_kitab_2: '2',
+		arabic_kitab_3: '3',
+		arabic_kitab_4: '4'
 	};
 
 	$: progress = Math.min(100, Math.max(0, Number(modul.progress_persen ?? 0)));
