@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import SeoHead from '$lib/components/seo/SeoHead.svelte';
-	import SchemaOrg from '$lib/components/seo/SchemaOrg.svelte';
 	import { ENABLED_INSTITUTIONS, type InstitutionKey } from '$lib/config/institutions';
 	import {
 		ArrowRight,
@@ -184,8 +183,7 @@
 	keywords="santri online, aplikasi santri, manajemen TPQ, pondok pesantren digital, rumah tahfidz, aplikasi lembaga Islam"
 	canonical="https://app.santrionline.com/"
 />
-<SchemaOrg type="organization" />
-<SchemaOrg type="website" />
+<!-- SchemaOrg website+organization sudah dipasang di +layout.svelte akar. -->
 
 <main class="min-h-screen overflow-x-hidden bg-[#f6f7f3] text-slate-900">
 	<section class="relative border-b border-emerald-950/10 bg-[#123f34] px-4 pb-8 pt-4 text-white sm:px-6 sm:pb-10 sm:pt-10 lg:px-8 lg:pb-14 lg:pt-14">
