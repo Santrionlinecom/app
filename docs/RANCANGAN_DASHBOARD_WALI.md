@@ -1,10 +1,42 @@
-# Rancangan: Dashboard Wali Santri
+# Rancangan: Dashboard Wali Santri + Perjalanan Santri + Rapor-Sertifikat
 
-> Status: **rancangan, belum diimplementasikan**
-> Ditulis 2026-08-20 setelah audit kode `app.santrionline`
+> Status: **rancangan v2, belum diimplementasikan**
+> v1: 2026-08-20 (dashboard wali). v2: 2026-08-21 — ditambah arahan Mas Yogik:
+> afiliasi lembaga per santri, santri mandiri tanpa wali, dan sertifikat-rapor
+> akhir dari lembaga dengan slug publik.
 > Menutup Pilar 5 SantriOnline (Komunitas & Pendampingan)
 
 ---
+
+## 0. Gambaran Besar (v2)
+
+Tiga rangkaian yang saling menyambung menjadi satu **perjalanan santri**:
+
+```
+santri memilih lembaga ──► belajar & habit tercatat ──► lembaga menerbitkan
+   (afiliasi rapi)           di bawah lembaga itu         rapor-sertifikat
+        │                                                      │
+        ├── punya wali  → wali memantau lewat /wali            └── slug publik:
+        └── tanpa wali  → mandiri, memantau dirinya sendiri        /s/[slug]
+```
+
+Prinsip: **wali itu pelengkap, bukan syarat.** Santri dewasa/mandiri tetap
+mendapat seluruh perjalanan — hanya kartu pemantaunya yang berbeda.
+
+## 0.1 Bahan v2 yang Sudah Ada di Produksi (diverifikasi 2026-08-21)
+
+| Kebutuhan | Yang sudah ada | Status |
+|---|---|---|
+| Afiliasi santri↔lembaga | `organization_memberships` (`0043`): user_id, org_id, role, is_active, joined_at | ✅ produksi — **dipakai, bukan bikin tabel baru** |
+| Slug lembaga | `organizations.slug` | ✅ produksi, 15 lembaga |
+| Tabel sertifikat | `certificates` (santri_id, ustadz_id, title, duration_days, total_hifz_ayat, …) + `src/lib/server/certificates.ts` + rute `/sertifikat` | ✅ produksi, **0 baris** — sudah ada rangka, belum pernah dipakai |
+| Data kitab selesai | `learn_progress`, `learn_modul.path_key` → `learn_paths.kitab_slug` | ✅ produksi |
+| Data hafalan | `hafalan_progress`, `tpq_setoran` | ✅ produksi |
+| Data habit | `habit_checkins`, `habit_streaks` | ✅ produksi |
+
+Yang benar-benar baru tinggal: relasi wali↔anak, alur santri memilih lembaga,
+perluasan `certificates` menjadi rapor (kolom org + slug + isi rapor), dan
+halaman-halamannya.
 
 ## 1. Masalah yang Diselesaikan
 
@@ -92,6 +124,8 @@ saran percakapan konkret untuk orang tua.
 
 ## 4. Skema Data (migrasi `0072`)
 
+### 4.1 Relasi wali ↔ santri (dari v1, tetap)
+
 ```sql
 -- Relasi wali ↔ santri berbasis akun.
 CREATE TABLE IF NOT EXISTS wali_santri (
@@ -126,7 +160,88 @@ CREATE INDEX IF NOT EXISTS idx_wali_santri_santri ON wali_santri(santri_user_id,
 CREATE INDEX IF NOT EXISTS idx_wali_undangan_santri ON wali_undangan(santri_user_id);
 ```
 
-Semua idempoten (`IF NOT EXISTS`), aman dijalankan dua kali.
+### 4.2 Afiliasi santri ↔ lembaga — TANPA tabel baru
+
+Dipakai `organization_memberships` yang sudah ada (role `santri`). Yang perlu
+ditambah hanya **alur UI** dan satu kolom penanda afiliasi utama:
+
+```sql
+-- Santri boleh anggota beberapa lembaga (TPQ + rumah tahfidz), tapi satu
+-- yang menjadi induk pendidikannya — untuk rapor dan tampilan "aku santri di…".
+ALTER TABLE organization_memberships ADD COLUMN is_primary INTEGER NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS idx_memberships_primary
+  ON organization_memberships(user_id, is_primary) WHERE is_primary = 1;
+```
+
+Aturan: maksimal satu `is_primary=1` per user (dijaga di lapisan service,
+SQLite tidak bisa menegakkannya lintas baris dengan sederhana).
+
+Alur bergabung memakai pola yang SAMA dengan undangan wali: lembaga
+menerbitkan kode santri (atau menyetujui permintaan), supaya tidak ada orang
+asing mengaku-ngaku santri sebuah pondok. Yang memilih tetap santri; yang
+mengesahkan lembaga.
+
+### 4.3 Rapor-sertifikat — perluasan tabel `certificates` yang sudah ada
+
+Tabel `certificates` sudah ada di produksi (0 baris, belum pernah dipakai)
+tapi rangkanya kurang untuk rapor lembaga: tidak ada `org_id`, tidak ada slug
+publik, dan isinya baru angka hafalan. Diperluas, bukan diganti:
+
+```sql
+ALTER TABLE certificates ADD COLUMN org_id TEXT REFERENCES organizations(id) ON DELETE SET NULL;
+ALTER TABLE certificates ADD COLUMN jenis TEXT NOT NULL DEFAULT 'sertifikat'
+  -- 'sertifikat' = selembar kelulusan; 'rapor' = pencapaian berkala
+  CHECK (jenis IN ('sertifikat','rapor'));
+ALTER TABLE certificates ADD COLUMN periode_mulai TEXT;   -- YYYY-MM-DD, awal terhitung
+ALTER TABLE certificates ADD COLUMN periode_selesai TEXT; -- YYYY-MM-DD
+ALTER TABLE certificates ADD COLUMN slug TEXT UNIQUE;     -- untuk /s/[slug]
+ALTER TABLE certificates ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE certificates ADD COLUMN payload TEXT;         -- JSON isi rapor (snapshot)
+
+CREATE INDEX IF NOT EXISTS idx_certificates_org ON certificates(org_id, issued_at DESC);
+```
+
+**`payload` adalah snapshot, bukan kueri ulang.** Saat lembaga menerbitkan
+rapor, sistem menghitung dari `learn_progress`, `hafalan_progress`,
+`tpq_setoran`, `habit_streaks` lalu MEMBEKUKAN hasilnya sebagai JSON:
+
+```json
+{
+  "lama_pendidikan": { "mulai": "2025-01-10", "selesai": "2026-06-30", "hari": 536 },
+  "kitab_selesai": [
+    { "kitab_slug": "safinatun-najah-makna-perkata", "judul": "Safinatun Najah", "level_tuntas": 8, "dari_level": 8 },
+    { "kitab_slug": "terjemah-aqidatul-awam", "judul": "Aqidatul Awam", "level_tuntas": 6, "dari_level": 6 }
+  ],
+  "hafalan": [
+    { "kategori": "Juz 30", "tuntas": 37, "dari": 37 },
+    { "kategori": "Doa Harian", "tuntas": 25, "dari": 30 }
+  ],
+  "habit": {
+    "periode_hari": 180,
+    "shalat_5_waktu": { "persen": 87 },
+    "ngaji_harian": { "persen": 92, "streak_terbaik": 41 }
+  },
+  "catatan_lembaga": "Alhamdulillah, Zaid istiqamah …"
+}
+```
+
+Alasan snapshot: rapor adalah dokumen — angkanya tidak boleh berubah setelah
+diterbitkan hanya karena data hidup terus bergerak, dan halaman publiknya
+tidak boleh menjalankan kueri berat ke tabel-tabel hidup.
+
+Slug sertifikat: `[slug-lembaga]-[nama-pendek]-[acak4]`, contoh
+`tpq-alhidayah-zaid-7f3k`. Acak 4 karakter supaya tidak bisa ditebak-urut.
+
+### 4.4 Halaman publik `/s/[slug]`
+
+- Hanya tampil bila `is_public = 1` — **keputusan santri/wali, bukan lembaga**.
+  Bawaan privat.
+- Yang privat dibalas 404 (bukan 403), supaya keberadaannya tidak bocor.
+- Isinya dari `payload` beku + nama lembaga + tanggal terbit. Tanpa data
+  kontak, tanpa tanggal lahir.
+- Ini pengganti ijazah yang bisa dibagikan: grup keluarga, lamaran mengajar,
+  pendaftaran jenjang berikutnya. Sekaligus pintu masuk organik: setiap rapor
+  yang dibagikan membawa nama lembaga + SantriOnline.
 
 ## 5. Rute
 
@@ -136,9 +251,29 @@ Semua idempoten (`IF NOT EXISTS`), aman dijalankan dua kali.
 | `/wali/[santriId]` | Dashboard satu anak |
 | `/wali/hubungkan` | Formulir memasukkan kode undangan |
 | `/api/wali/konfirmasi` | POST konfirmasi mingguan → `habit_guardian_weekly` |
-| `/lembaga/wali-undangan` | Sisi admin: terbitkan & cabut kode |
+| `/lembaga/wali-undangan` | Sisi admin: terbitkan & cabut kode wali |
+| `/akun/lembagaku` | **Santri memilih/melihat lembaga induknya**, masukkan kode gabung |
+| `/lembaga/santri-undangan` | Sisi admin: kode gabung santri + sahkan permintaan |
+| `/lembaga/rapor` | Sisi admin: susun & terbitkan rapor/sertifikat per santri |
+| `/sertifikat` | Sisi santri: daftar rapornya (rute SUDAH ADA, disambungkan) |
+| `/s/[slug]` | **Halaman publik** rapor-sertifikat (privat = 404) |
 
-Semua di bawah `src/routes/(app)/`, memakai shell yang sudah ada.
+Semua kecuali `/s/[slug]` di bawah `src/routes/(app)/`, memakai shell yang ada.
+
+### Dashboard santri mandiri (tanpa wali)
+
+Santri tanpa relasi `wali_santri` TIDAK kehilangan apa pun:
+
+- `/habit` dan `/belajar` yang sudah ada tetap dashboard pribadinya;
+- kartu "Perjalananku di [lembaga]" ditambahkan ke `/dashboard` — lama
+  menempuh, kitab tuntas, hafalan, streak — data yang sama yang dilihat wali,
+  dilihat sendiri;
+- konfirmasi mingguan wali tidak tampil; diganti refleksi pribadi ringan
+  (opsional, tanpa paksaan);
+- rapor-sertifikat akhir tetap terbit dari lembaganya, sama persis.
+
+Dengan begitu "tanpa wali" bukan kondisi cacat data, melainkan jalur yang
+memang dirancang.
 
 ## 6. Isi Dashboard Anak
 
@@ -188,17 +323,19 @@ per tampilan dan tidak ada risiko kalimat yang tidak diinginkan.
 5. Pencabutan relasi berlaku seketika (`status = 'dicabut'`), tidak dihapus,
    agar jejaknya tetap terbaca saat audit.
 
-## 8. Urutan Pengerjaan
+## 8. Urutan Pengerjaan (v2)
 
 | Tahap | Isi | Perkiraan |
 |---|---|---|
-| A | Migrasi `0072` + fungsi server `wali/service.ts` + tes | 1 sesi |
-| B | `/wali/hubungkan` + penerbitan kode sisi admin | 1 sesi |
-| C | `/wali/[santriId]` — habit, belajar, hafalan | 1–2 sesi |
+| A | Migrasi `0072` (wali_santri + wali_undangan + is_primary + perluasan certificates) + `wali/service.ts` + tes | 1 sesi |
+| B | `/wali/hubungkan` + `/akun/lembagaku` + kode undangan sisi admin (wali & santri — satu pola, dua pintu) | 1–2 sesi |
+| C | `/wali/[santriId]` — habit, belajar, hafalan + kartu "Perjalananku" untuk santri mandiri | 1–2 sesi |
 | D | Konfirmasi mingguan + bahan obrolan | 1 sesi |
+| E | Rapor-sertifikat: penyusun snapshot + `/lembaga/rapor` + `/s/[slug]` publik + sambungkan `/sertifikat` lama | 2 sesi |
 
 Tahap A dan B lebih dulu: tanpa relasi yang aman, halaman secantik apa pun
-tidak boleh ditayangkan.
+tidak boleh ditayangkan. Tahap E terakhir karena bergantung pada data yang
+mengalir dari A–D — dan rapor pertama baru bermakna setelah ada isi.
 
 ## 9. Yang Sengaja Ditunda
 
