@@ -19,11 +19,12 @@
 		'@context': 'https://schema.org',
 		'@type': 'WebSite',
 		name: 'SantriOnline',
-		alternateName: ['Santri Online', 'SantriOnline.com'],
+		alternateName: ['Santri Online', 'SantriOnline.com', 'Santri Online Indonesia'],
 		url: baseUrl,
 		description:
 			'Platform ekosistem pesantren digital Indonesia untuk buku, kitab, hafalan, dan belajar Islam online.',
 		inLanguage: 'id-ID',
+		publisher: { '@id': 'https://santrionline.com/#organization' },
 		potentialAction: {
 			'@type': 'SearchAction',
 			target: {
@@ -37,8 +38,10 @@
 	$: orgSchema = {
 		'@context': 'https://schema.org',
 		'@type': 'Organization',
+		'@id': 'https://santrionline.com/#organization',
 		name: 'SantriOnline',
-		url: baseUrl,
+		alternateName: ['Santri Online', 'Santri Online Indonesia'],
+		url: 'https://santrionline.com/',
 		logo: {
 			'@type': 'ImageObject',
 			url: `${baseUrl}/logo.png`,
@@ -46,10 +49,14 @@
 			height: 512
 		},
 		sameAs: [
+			'https://santrionline.com/',
+			'https://app.santrionline.com/',
+			'https://masyogik.santrionline.com/',
 			'https://www.tiktok.com/@santrionline.com',
 			'https://www.instagram.com/idsantrionline',
 			'https://www.youtube.com/@websantri'
 		],
+		address: { '@type': 'PostalAddress', addressLocality: 'Batu', addressRegion: 'Jawa Timur', addressCountry: 'ID' },
 		contactPoint: {
 			'@type': 'ContactPoint',
 			contactType: 'customer support',

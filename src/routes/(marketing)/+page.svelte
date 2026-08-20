@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import SeoHead from '$lib/components/seo/SeoHead.svelte';
+	import SchemaOrg from '$lib/components/seo/SchemaOrg.svelte';
 	import { ENABLED_INSTITUTIONS, type InstitutionKey } from '$lib/config/institutions';
 	import {
 		ArrowRight,
@@ -176,13 +178,14 @@
 	}
 </script>
 
-<svelte:head>
-	<title>SantriOnline App | Platform Manajemen Lembaga Islam</title>
-	<meta
-		name="description"
-		content="SantriOnline membantu TPQ, pondok pesantren, rumah tahfidz, masjid, dan musholla mengelola santri, jamaah, kas, agenda, hafalan, dan administrasi harian."
-	/>
-</svelte:head>
+<SeoHead
+	title="SantriOnline App | Platform Manajemen Lembaga Islam"
+	description="SantriOnline membantu TPQ, pondok pesantren, rumah tahfidz, masjid, dan musholla mengelola santri, jamaah, kas, agenda, hafalan, dan administrasi harian."
+	keywords="santri online, aplikasi santri, manajemen TPQ, pondok pesantren digital, rumah tahfidz, aplikasi lembaga Islam"
+	canonical="https://app.santrionline.com/"
+/>
+<SchemaOrg type="organization" />
+<SchemaOrg type="website" />
 
 <main class="min-h-screen overflow-x-hidden bg-[#f6f7f3] text-slate-900">
 	<section class="relative border-b border-emerald-950/10 bg-[#123f34] px-4 pb-8 pt-4 text-white sm:px-6 sm:pb-10 sm:pt-10 lg:px-8 lg:pb-14 lg:pt-14">
@@ -363,6 +366,22 @@
 			</div>
 		</div>
 	</section>
+
+	<!-- Ekosistem Santri Online: tautan silang antar properti brand. -->
+	<footer class="border-t border-emerald-950/10 bg-[#f6f7f3] px-4 py-8 text-sm text-slate-600 sm:px-6 lg:px-8">
+		<div class="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+			<p>
+				Bagian dari ekosistem
+				<a class="font-semibold text-emerald-800 hover:underline" href="https://santrionline.com/" rel="noopener">Santri Online</a>
+				— pembinaan santri &amp; lembaga Islam Indonesia.
+			</p>
+			<nav class="flex flex-wrap gap-x-4 gap-y-2 font-semibold" aria-label="Ekosistem SantriOnline">
+				<a class="hover:text-emerald-800" href="https://santrionline.com/literasi/apa-itu-santri-online" rel="noopener">Apa Itu Santri Online?</a>
+				<a class="hover:text-emerald-800" href="/blog">Artikel</a>
+				<a class="hover:text-emerald-800" href="/tentang">Tentang</a>
+			</nav>
+		</div>
+	</footer>
 </main>
 
 <style>
