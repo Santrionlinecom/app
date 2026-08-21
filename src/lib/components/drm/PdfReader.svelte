@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 
 	export let bookId: string;
 	export let chapterId = '';
@@ -15,16 +15,19 @@
 	const PDFJS_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
 	const PDFJS_WORKER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-	let canvas: HTMLCanvasElement | null = null;
 	let canvasWrap: HTMLDivElement | null = null;
+	let canvases: (HTMLCanvasElement | null)[] = [];
+	let pageNumbers: number[] = [];
 	let currentPage = Math.max(1, Number(initialPage || 1));
 	let pageTotal = Number(totalPages || 0);
 	let isLoading = true;
-	let isRendering = false;
 	let errorMessage = '';
 	let pdfDoc: any = null;
 	let deviceFingerprint = '';
 	let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+	let progressTimer: ReturnType<typeof setTimeout> | undefined;
+	let pageObserver: IntersectionObserver | null = null;
+	let renderQueue = Promise.resolve();
 
 	$: progressPercent = pageTotal > 0 ? Math.min(100, (currentPage / pageTotal) * 100) : 0;
 
@@ -82,47 +85,50 @@
 		return Math.abs(hash).toString(16);
 	}
 
-	async function renderPage(pageNumber: number) {
-		if (!pdfDoc || !canvas || isRendering) return;
-		isRendering = true;
-		errorMessage = '';
+	async function renderPageToCanvas(pageNumber: number) {
+		const canvas = canvases[pageNumber - 1];
+		if (!pdfDoc || !canvas) return;
 
-		try {
-			const pdfPage = await pdfDoc.getPage(pageNumber);
-			const baseViewport = pdfPage.getViewport({ scale: 1 });
-			const availableWidth = Math.max(300, (canvasWrap?.clientWidth || window.innerWidth) - 32);
-			const scale = Math.min(2.1, Math.max(0.85, availableWidth / baseViewport.width));
-			const viewport = pdfPage.getViewport({ scale });
-			const ctx = canvas.getContext('2d');
+		const pdfPage = await pdfDoc.getPage(pageNumber);
+		const baseViewport = pdfPage.getViewport({ scale: 1 });
+		const availableWidth = Math.max(300, (canvasWrap?.clientWidth || window.innerWidth) - 32);
+		const scale = Math.min(2.1, Math.max(0.85, availableWidth / baseViewport.width));
+		const viewport = pdfPage.getViewport({ scale });
+		const ctx = canvas.getContext('2d');
 
-			if (!ctx) return;
-			canvas.width = Math.floor(viewport.width);
-			canvas.height = Math.floor(viewport.height);
+		if (!ctx) return;
+		canvas.width = Math.floor(viewport.width);
+		canvas.height = Math.floor(viewport.height);
 
-			await pdfPage.render({ canvasContext: ctx, viewport }).promise;
-			drawWatermark(ctx, canvas.width, canvas.height);
+		await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+		drawWatermark(ctx, canvas.width, canvas.height);
+	}
 
-			currentPage = pageNumber;
-			pageTotal = Number(pdfDoc.numPages || pageTotal || 0);
-			await updateProgress();
-		} catch (err) {
-			console.error('PDF render error:', err);
-			errorMessage = 'Halaman gagal dimuat. Coba buka ulang bacaan ini.';
-		} finally {
-			isRendering = false;
-		}
+	function renderAllPages() {
+		renderQueue = renderQueue.then(async () => {
+			errorMessage = '';
+			try {
+				for (let pageNumber = 1; pageNumber <= pageTotal; pageNumber += 1) {
+					await renderPageToCanvas(pageNumber);
+				}
+			} catch (err) {
+				console.error('PDF render error:', err);
+				errorMessage = 'Halaman gagal dimuat. Coba buka ulang bacaan ini.';
+			}
+		});
+		return renderQueue;
 	}
 
 	function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: number) {
 		const label = `SantriOnline - ${userName || 'Pembaca'}`;
 		ctx.save();
-		ctx.globalAlpha = 0.12;
+		ctx.globalAlpha = 0.06;
 		ctx.fillStyle = '#0f766e';
-		ctx.font = '700 26px Arial, sans-serif';
+		ctx.font = '700 24px Arial, sans-serif';
 		ctx.textAlign = 'center';
 
-		for (let y = 100; y < height + 120; y += 180) {
-			for (let x = 80; x < width + 220; x += 300) {
+		for (let y = 140; y < height + 160; y += 300) {
+			for (let x = 120; x < width + 260; x += 460) {
 				ctx.save();
 				ctx.translate(x, y);
 				ctx.rotate((-28 * Math.PI) / 180);
@@ -131,6 +137,13 @@
 			}
 		}
 		ctx.restore();
+	}
+
+	function queueProgressUpdate() {
+		clearTimeout(progressTimer);
+		progressTimer = setTimeout(() => {
+			void updateProgress();
+		}, 1200);
 	}
 
 	async function updateProgress() {
@@ -147,6 +160,35 @@
 			});
 		} catch (err) {
 			console.error('Reading progress error:', err);
+		}
+	}
+
+	function observePages() {
+		pageObserver?.disconnect();
+		if (!('IntersectionObserver' in window)) return;
+
+		pageObserver = new IntersectionObserver(
+			(entries) => {
+				let bestRatio = 0;
+				let bestPage = 0;
+				for (const entry of entries) {
+					if (!entry.isIntersecting) continue;
+					const page = Number((entry.target as HTMLElement).dataset.page || 0);
+					if (entry.intersectionRatio > bestRatio && page > 0) {
+						bestRatio = entry.intersectionRatio;
+						bestPage = page;
+					}
+				}
+				if (bestPage > 0 && bestPage !== currentPage) {
+					currentPage = bestPage;
+					queueProgressUpdate();
+				}
+			},
+			{ root: canvasWrap, threshold: [0.25, 0.5, 0.75] }
+		);
+
+		for (const canvas of canvases) {
+			if (canvas) pageObserver.observe(canvas);
 		}
 	}
 
@@ -169,21 +211,23 @@
 				withCredentials: true
 			}).promise;
 			pageTotal = Number(pdfDoc.numPages || 0);
-			await renderPage(Math.min(Math.max(1, currentPage), pageTotal || 1));
+			pageNumbers = Array.from({ length: pageTotal }, (_, index) => index + 1);
+			isLoading = false;
+
+			await tick();
+			await renderAllPages();
+			observePages();
+
+			const startPage = Math.min(Math.max(1, Number(initialPage || 1)), pageTotal || 1);
+			if (startPage > 1) {
+				canvases[startPage - 1]?.scrollIntoView({ block: 'start' });
+				currentPage = startPage;
+			}
 		} catch (err) {
 			console.error('PDF load error:', err);
 			errorMessage = 'Bacaan belum bisa dibuka. Pastikan akses dan perangkat masih valid.';
-		} finally {
 			isLoading = false;
 		}
-	}
-
-	function nextPage() {
-		if (currentPage < pageTotal) void renderPage(currentPage + 1);
-	}
-
-	function prevPage() {
-		if (currentPage > 1) void renderPage(currentPage - 1);
 	}
 
 	function blockCopy(event: Event) {
@@ -201,8 +245,8 @@
 		if (!pdfDoc) return;
 		clearTimeout(resizeTimer);
 		resizeTimer = setTimeout(() => {
-			void renderPage(currentPage);
-		}, 180);
+			void renderAllPages();
+		}, 200);
 	}
 
 	onMount(() => {
@@ -215,6 +259,8 @@
 		document.removeEventListener('keydown', blockKeys);
 		window.removeEventListener('resize', handleResize);
 		clearTimeout(resizeTimer);
+		clearTimeout(progressTimer);
+		pageObserver?.disconnect();
 	});
 </script>
 
@@ -233,13 +279,7 @@
 		</div>
 	{:else}
 		<div class="reader-toolbar">
-			<button type="button" on:click={prevPage} disabled={currentPage <= 1 || isRendering}>
-				Sebelumnya
-			</button>
-			<span>{currentPage} / {pageTotal}</span>
-			<button type="button" on:click={nextPage} disabled={currentPage >= pageTotal || isRendering}>
-				Berikutnya
-			</button>
+			<span>Halaman {currentPage} / {pageTotal}</span>
 		</div>
 
 		<div class="progress-bar" aria-hidden="true">
@@ -253,7 +293,9 @@
 			on:copy|preventDefault
 			on:dragstart|preventDefault
 		>
-			<canvas bind:this={canvas}></canvas>
+			{#each pageNumbers as pageNumber (pageNumber)}
+				<canvas data-page={pageNumber} bind:this={canvases[pageNumber - 1]}></canvas>
+			{/each}
 		</div>
 	{/if}
 </div>
@@ -271,9 +313,9 @@
 	}
 
 	.reader-toolbar {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+		display: flex;
 		align-items: center;
+		justify-content: center;
 		gap: 10px;
 		padding: 10px;
 		background: #0f172a;
@@ -282,7 +324,6 @@
 		font-weight: 700;
 	}
 
-	.reader-toolbar button,
 	.reader-state button {
 		min-height: 42px;
 		border: 0;
@@ -293,23 +334,6 @@
 		font-size: 13px;
 		font-weight: 800;
 		cursor: pointer;
-	}
-
-	.reader-toolbar button {
-		padding: 0 14px;
-	}
-
-	.reader-toolbar button:first-child {
-		justify-self: start;
-	}
-
-	.reader-toolbar button:last-child {
-		justify-self: end;
-	}
-
-	.reader-toolbar button:disabled {
-		opacity: 0.45;
-		cursor: not-allowed;
 	}
 
 	.progress-bar {
@@ -325,7 +349,9 @@
 
 	.canvas-wrap {
 		display: flex;
-		justify-content: center;
+		flex-direction: column;
+		align-items: center;
+		gap: 14px;
 		overflow: auto;
 		max-height: min(82vh, 920px);
 		padding: 14px;
@@ -389,20 +415,10 @@
 			border-radius: 12px;
 		}
 
-		.reader-toolbar {
-			grid-template-columns: 1fr;
-			justify-items: stretch;
-			text-align: center;
-		}
-
-		.reader-toolbar button:first-child,
-		.reader-toolbar button:last-child {
-			justify-self: stretch;
-		}
-
 		.canvas-wrap {
 			max-height: 76vh;
 			padding: 8px;
+			gap: 10px;
 		}
 	}
 </style>
