@@ -94,7 +94,19 @@
 				<li>• <strong>Minimal data</strong> — kami tidak mengumpulkan NIK, nomor KK, foto KTP/KK, tanggal lahir, atau alamat rumah perorangan.</li>
 				<li>• <strong>Persetujuan tercatat</strong> — saat mendaftar, Anda menyetujui kebijakan ini secara eksplisit, dan waktu serta versi persetujuan itu kami simpan.</li>
 				<li>• <strong>Seperlunya</strong> — data dipakai untuk menjalankan layanan yang Anda minta, bukan diperjualbelikan.</li>
+				<li>• <strong>Bisa dihapus sendiri</strong> — Anda dapat menghapus akun kapan saja lewat <a href="/akun" class="font-semibold text-emerald-700 hover:underline">halaman Akun</a>, tanpa perlu meminta lewat kontak.</li>
 			</ul>
+
+			<div class="mt-4 rounded-xl border border-emerald-100 bg-white p-4">
+				<h3 class="font-semibold text-slate-900">Jika terjadi kebocoran data</h3>
+				<p class="mt-2 text-sm leading-6 text-slate-700">
+					Kami memiliki prosedur tanggap kebocoran tertulis. Bila terjadi kegagalan
+					pelindungan data pribadi, kami akan <strong>memberitahu pengguna terdampak
+					dan pengurus lembaga terkait paling lambat 3×24 jam</strong> sejak kejadian
+					diketahui, menjelaskan data apa yang terpengaruh, dan langkah yang sudah
+					kami ambil.
+				</p>
+			</div>
 
 			<p class="mt-4 rounded-xl bg-white/70 p-3 text-xs leading-6 text-slate-600">
 				Rujukan resmi UU PDP dapat dibaca di

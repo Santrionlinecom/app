@@ -12,6 +12,7 @@ import { seedHafalanDefault } from '$lib/server/domains/tpq/db-hafalan';
 import { SEED_HAFALAN_DEFAULT } from '$lib/server/domains/tpq/seed-hafalan-default';
 import { buildR2PublicUrl, requireR2Bucket } from '$lib/server/cloudflare';
 import { isSuperAdminUser } from '$lib/auth/session-user';
+import { hapusAkunMandiri } from '$lib/server/legal/hapus-akun';
 import { env as privateEnv } from '$env/dynamic/private';
 import {
 	isPasswordLoginAllowedForIdentity,
@@ -436,6 +437,37 @@ export const actions: Actions = {
 			.run();
 
 		return { success: true, message: 'Password diperbarui', type: 'password' };
+	},
+
+	// Penghapusan akun mandiri — hak subjek data (UU 27/2022).
+	// Logikanya di $lib/server/legal/hapus-akun.ts; di sini hanya gerbang
+	// autentikasi, pencabutan cookie sesi, dan pengalihan keluar.
+	hapusAkun: async ({ request, locals, cookies }) => {
+		if (!locals.user) return fail(401, { message: 'Unauthenticated', type: 'hapus' });
+
+		const form = await request.formData();
+		const konfirmasiEmail = form.get('konfirmasi_email');
+
+		if (typeof konfirmasiEmail !== 'string') {
+			return fail(400, {
+				message: 'Ketik ulang email akun Anda untuk konfirmasi.',
+				type: 'hapus'
+			});
+		}
+
+		const hasil = await hapusAkunMandiri(locals.db!, {
+			userId: locals.user.id,
+			konfirmasiEmail
+		});
+
+		if (!hasil.ok) {
+			return fail(400, { message: hasil.pesan, type: 'hapus' });
+		}
+
+		// Sesi di database sudah dicabut di dalam service; cookie di browser
+		// dibersihkan di sini agar pengguna tidak melihat sisa halaman login.
+		cookies.delete('auth_session', { path: '/' });
+		redirect(303, '/?akun=dihapus');
 	},
 
 	updateOrgLocation: async ({ request, locals }) => {

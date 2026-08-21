@@ -50,6 +50,40 @@ test('memberi tautan ke sumber resmi UU PDP', () => {
 	assert.match(halaman, /peraturan\.bpk\.go\.id/);
 });
 
+test('menjanjikan jalur hapus akun mandiri', () => {
+	// Klaim ini harus punya wujud nyata: halaman /akun memang punya
+	// action hapusAkun. Menjanjikan hak yang tidak ada = menyesatkan.
+	assert.match(halaman.replace(/\s+/g, ' '), /menghapus akun kapan saja/i);
+
+	const halamanAkun = readFileSync(
+		fileURLToPath(new URL('../(app)/akun/+page.server.ts', import.meta.url)),
+		'utf8'
+	);
+	assert.match(
+		halamanAkun,
+		/hapusAkun:\s*async/,
+		'kebijakan menjanjikan hapus akun mandiri, tetapi action-nya tidak ada'
+	);
+});
+
+test('menyatakan tenggat pemberitahuan kebocoran', () => {
+	const rata = halaman.replace(/\s+/g, ' ');
+	assert.match(rata, /kebocoran/i);
+	assert.match(rata, /3×24 jam|3x24 jam/i);
+});
+
+test('prosedur tanggap kebocoran benar-benar terdokumentasi', () => {
+	// Janji di halaman publik harus punya dokumen pendukung, bukan
+	// sekadar kalimat yang enak dibaca.
+	const prosedur = readFileSync(
+		fileURLToPath(new URL('../../../docs/prosedur-tanggap-kebocoran.md', import.meta.url)),
+		'utf8'
+	);
+	assert.ok(prosedur.length > 1000, 'dokumen prosedur tampak kosong');
+	assert.match(prosedur, /3×24 jam/, 'tenggat di dokumen harus sama dengan yang dijanjikan publik');
+	assert.match(prosedur, /27 Tahun 2022/);
+});
+
 test('halaman syarat & ketentuan tetap ada dan bisa ditaut', () => {
 	assert.ok(syarat.length > 500, 'halaman /syarat tampak kosong');
 });

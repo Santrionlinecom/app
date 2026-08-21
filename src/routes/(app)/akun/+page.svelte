@@ -23,6 +23,10 @@
 	export let data: PageData;
 	export let form: ActionData;
 
+	// Konfirmasi hapus akun. Tombol baru aktif kalau email diketik ulang
+	// dengan benar — penjaga di sisi tampilan; gerbang sebenarnya di server.
+	let konfirmasiHapus = '';
+
 	type FormState = {
 		success?: boolean;
 		message?: string;
@@ -781,6 +785,79 @@
 				</div>
 			</section>
 		{/if}
+
+		<!--
+			Hak subjek data (UU 27/2022): pengguna dapat menghapus akunnya
+			sendiri tanpa harus meminta lewat kontak manual.
+
+			Sengaja ditaruh paling bawah, tertutup, dan meminta pengguna
+			mengetik ulang emailnya. Tombol "yakin?" terlalu mudah tertekan
+			untuk tindakan yang tidak bisa dibatalkan.
+		-->
+		<section class="mt-10 rounded-2xl border border-red-200 bg-red-50/40 p-5">
+			<h2 class="text-lg font-bold text-red-900">Hapus Akun</h2>
+			<p class="mt-2 text-sm leading-6 text-slate-700">
+				Anda berhak menghapus akun ini kapan saja. Setelah dihapus, identitas Anda
+				(nama, email, nomor WhatsApp, bio, foto) dikosongkan permanen dan akun tidak
+				dapat dipakai masuk lagi.
+			</p>
+
+			<details class="mt-4 rounded-xl border border-red-200 bg-white p-4">
+				<summary class="cursor-pointer text-sm font-bold text-red-800">
+					Saya ingin menghapus akun saya
+				</summary>
+
+				<div class="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+					<p class="font-semibold text-slate-900">Yang perlu Anda ketahui:</p>
+					<ul class="space-y-1.5">
+						<li>• Identitas Anda dikosongkan permanen dan <strong>tidak bisa dikembalikan</strong>.</li>
+						<li>• Anda langsung keluar dari semua perangkat.</li>
+						<li>
+							• Catatan pembinaan lembaga (rekap hafalan, setoran yang sudah dinilai) dan
+							riwayat transaksi <strong>tetap tersimpan tanpa identitas Anda</strong> — karena
+							itu catatan lembaga dan wajib disimpan untuk audit keuangan.
+						</li>
+						<li>
+							• Jika Anda satu-satunya admin sebuah lembaga, angkat admin lain dulu agar
+							lembaga tidak ditinggalkan tanpa pengelola.
+						</li>
+					</ul>
+
+					{#if form?.type === 'hapus' && form?.message}
+						<p class="error-box rounded-lg px-3 py-2 text-sm font-semibold">{form.message}</p>
+					{/if}
+
+					<form method="POST" action="?/hapusAkun" class="space-y-3 pt-2">
+						<label class="block">
+							<span class="text-sm font-semibold text-slate-900">
+								Ketik ulang email akun Anda untuk konfirmasi
+							</span>
+							<input
+								type="email"
+								name="konfirmasi_email"
+								bind:value={konfirmasiHapus}
+								placeholder={data.user?.email ?? 'email akun Anda'}
+								autocomplete="off"
+								required
+								class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+							/>
+						</label>
+
+						<button
+							type="submit"
+							disabled={konfirmasiHapus.trim().toLowerCase() !==
+								(data.user?.email ?? '').trim().toLowerCase()}
+							class="w-full rounded-lg bg-red-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+						>
+							Hapus akun saya permanen
+						</button>
+						<p class="text-xs text-slate-500">
+							Tombol aktif setelah email yang Anda ketik cocok.
+						</p>
+					</form>
+				</div>
+			</details>
+		</section>
 	</div>
 </div>
 
