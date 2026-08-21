@@ -162,7 +162,12 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		url.pathname === '/beranda' ||
 		url.pathname.startsWith('/beranda/') ||
 		url.pathname === '/sosial' ||
-		url.pathname.startsWith('/sosial/');
+		url.pathname.startsWith('/sosial/') ||
+		// Rute wali: pemantauan milik akun pribadi, bukan milik lembaga.
+		// Wali biasanya TIDAK punya orgId, jadi wajib masuk daftar rute
+		// personal — kalau tidak, layout ini menolaknya dengan 404.
+		url.pathname === '/wali' ||
+		url.pathname.startsWith('/wali/');
 	const orgId = user.orgId ?? null;
 	let org = null;
 
