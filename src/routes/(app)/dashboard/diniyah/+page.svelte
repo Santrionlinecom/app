@@ -1,48 +1,10 @@
 <script lang="ts">
-	const days = [
-		{
-			day: 'Ahad',
-			title: 'Aqidah',
-			kitab: 'Aqidatul Awam',
-			href: '/kitab/terjemah-aqidatul-awam'
-		},
-		{
-			day: 'Senin',
-			title: "Tadabbur Qur'an",
-			kitab: 'Ilmu Tajwid Lengkap',
-			href: '/kitab/ilmu-tajwid-lengkap'
-		},
-		{
-			day: 'Selasa',
-			title: 'Hadits',
-			kitab: 'Arbain Nawawi',
-			href: '/kitab/terjemah-syarah-arbain-nawawiyah-ibnu-daqiqil-ied'
-		},
-		{
-			day: 'Rabu',
-			title: 'Fiqih',
-			kitab: 'Safinatun Najah',
-			href: '/kitab/safinatun-najah-makna-perkata'
-		},
-		{
-			day: 'Kamis',
-			title: 'Tasawuf',
-			kitab: 'Bidayatul Hidayah',
-			href: '/kitab/terjemah-bidayatul-hidayah'
-		},
-		{
-			day: 'Jumat',
-			title: "Do'a & Dzikir",
-			kitab: 'Bidayatul Hidayah — adab harian',
-			href: '/kitab/terjemah-bidayatul-hidayah'
-		},
-		{
-			day: 'Sabtu',
-			title: 'B. Arab',
-			kitab: 'Bahasa Arab Dasar 1',
-			href: '/kitab/bahasa-arab-dasar-1'
-		}
-	];
+	// src/routes/(app)/dashboard/diniyah/+page.svelte
+	// Jadwal diniyah. Judul & ketersediaan kitab datang dari server
+	// (kitab_catalog), bukan ditulis di sini — supaya tidak ada tautan mati.
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 </script>
 
 <svelte:head>
@@ -64,14 +26,23 @@
 			</div>
 			<a href="/kitab" class="btn btn-sm btn-ghost text-primary hover:bg-primary/10">Lihat semua kitab</a>
 		</div>
+
 		<div class="mt-3 grid gap-3 md:grid-cols-3">
-			{#each days as item}
-				<a href={item.href} class="rounded-xl border bg-slate-50 p-3 transition hover:border-so-green/40 hover:bg-white">
-					<p class="text-xs uppercase tracking-wide text-slate-500">{item.day}</p>
-					<p class="mt-1 text-sm font-semibold text-slate-900">{item.title}</p>
-					<p class="text-xs text-slate-500">{item.kitab}</p>
-					<p class="mt-2 text-xs font-bold text-so-green">Buka kitab</p>
-				</a>
+			{#each data.materi as item (item.hari)}
+				{#if item.tersedia}
+					<a href={`/kitab/${item.kitabSlug}`} class="rounded-xl border bg-slate-50 p-3 transition hover:border-so-green/40 hover:bg-white">
+						<p class="text-xs uppercase tracking-wide text-slate-500">{item.hari}</p>
+						<p class="mt-1 text-sm font-semibold text-slate-900">{item.topik}</p>
+						<p class="text-xs text-slate-500">{item.kitabJudul}</p>
+						<p class="mt-2 text-xs font-bold text-so-green">Buka kitab</p>
+					</a>
+				{:else}
+					<div class="rounded-xl border border-dashed bg-slate-50 p-3 opacity-70">
+						<p class="text-xs uppercase tracking-wide text-slate-500">{item.hari}</p>
+						<p class="mt-1 text-sm font-semibold text-slate-900">{item.topik}</p>
+						<p class="text-xs text-slate-500">Kitab belum tersedia di katalog</p>
+					</div>
+				{/if}
 			{/each}
 		</div>
 	</div>

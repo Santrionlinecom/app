@@ -16,13 +16,23 @@ test('halaman asrama pondok ada dan hanya untuk pondok', () => {
 });
 
 test('diniyah menaut ke kitab digital yang sudah ada', () => {
+	// 2026-08-21: kurikulum diniyah dipindah dari +page.svelte ke
+	// +page.server.ts supaya judul & ketersediaan kitab diverifikasi ke
+	// kitab_catalog. Maksud tes ini tidak berubah — memastikan halaman
+	// menaut ke kitab yang benar-benar ada, bukan tautan karangan.
+	const server = read('src/routes/(app)/dashboard/diniyah/+page.server.ts');
+	assert.match(server, /terjemah-aqidatul-awam/);
+	assert.match(server, /safinatun-najah-makna-perkata/);
+	assert.match(server, /terjemah-syarah-arbain-nawawiyah-ibnu-daqiqil-ied/);
+	assert.match(server, /terjemah-bidayatul-hidayah/);
+	assert.match(server, /bahasa-arab-dasar-1/);
+
+	// Slug wajib dicocokkan ke katalog, bukan langsung dijadikan tautan.
+	assert.match(server, /kitab_catalog/);
+
 	const page = read('src/routes/(app)/dashboard/diniyah/+page.svelte');
-	assert.match(page, /\/kitab\/terjemah-aqidatul-awam/);
-	assert.match(page, /\/kitab\/safinatun-najah-makna-perkata/);
-	assert.match(page, /\/kitab\/terjemah-syarah-arbain-nawawiyah-ibnu-daqiqil-ied/);
-	assert.match(page, /\/kitab\/terjemah-bidayatul-hidayah/);
-	assert.match(page, /\/kitab\/bahasa-arab-dasar-1/);
 	assert.doesNotMatch(page, /Integrasikan ringkasan materi/);
+	assert.match(page, /data\.materi/, 'halaman harus memakai data dari server');
 });
 
 test('ujian tahfidz menyimpan hasil, bukan halaman kosong', () => {

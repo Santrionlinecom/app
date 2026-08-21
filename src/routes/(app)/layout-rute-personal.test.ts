@@ -21,7 +21,16 @@ const layout = readFileSync(
 );
 
 /** Rute yang dipakai pengguna TANPA lembaga (santri mandiri, wali). */
-const RUTE_PERSONAL = ['/wali', '/halaqah', '/habit', '/belajar', '/sertifikat', '/akun', '/kitab'];
+const RUTE_PERSONAL = [
+	'/wali',
+	'/halaqah',
+	'/rapor',
+	'/habit',
+	'/belajar',
+	'/sertifikat',
+	'/akun',
+	'/kitab'
+];
 
 for (const rute of RUTE_PERSONAL) {
 	test(`rute personal ${rute} terdaftar di layout (app)`, () => {

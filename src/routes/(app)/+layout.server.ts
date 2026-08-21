@@ -171,7 +171,10 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		// Halaqah: santri mandiri boleh ikut halaqah tanpa jadi anggota
 		// lembaga formal, jadi rute ini juga personal.
 		url.pathname === '/halaqah' ||
-		url.pathname.startsWith('/halaqah/');
+		url.pathname.startsWith('/halaqah/') ||
+		// Rapor milik santri: santri mandiri pun berhak punya rapor.
+		url.pathname === '/rapor' ||
+		url.pathname.startsWith('/rapor/');
 	const orgId = user.orgId ?? null;
 	let org = null;
 
