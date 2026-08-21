@@ -3,6 +3,12 @@ import type { Actions, PageServerLoad } from './$types';
 import { ensureBukuWalletSchema } from '$lib/server/domains/buku/wallet';
 import { getCoinTopupPackageById, getCoinTopupPackages } from '$lib/server/coin-packages';
 import {
+	buatPermintaanManual,
+	metodeManualAktif,
+	permintaanManualSaya,
+	JANJI_VERIFIKASI
+} from '$lib/server/coins/topup-manual';
+import {
 	createMidtransAuthorization,
 	createMidtransOrderId,
 	ensurePaymentOrdersSchema,
@@ -18,16 +24,38 @@ type MidtransSnapResponse = {
 const INVALID_PACKAGE_MESSAGE =
 	'Paket top up tidak valid. Silakan pilih paket yang tersedia.';
 
+const PESAN_MANUAL: Record<string, string> = {
+	paket_tidak_sah: INVALID_PACKAGE_MESSAGE,
+	metode_tidak_sah: 'Metode pembayaran tidak tersedia. Silakan pilih ulang.',
+	bukti_kosong: 'Unggah bukti transfer terlebih dahulu.',
+	catatan_panjang: 'Catatan pembayaran maksimal 500 karakter.'
+};
+
 export const load: PageServerLoad = async ({ locals, platform }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth');
 	}
 
+	const db = locals.db ?? platform?.env?.DB;
+
+	// Metode manual dibaca dari database supaya rekening bisa diubah lewat
+	// CMS tanpa menyentuh kode. Bila database tak tersedia, halaman tetap
+	// jalan dengan Midtrans saja daripada gagal total.
+	const [metodeManual, riwayatManual] = db
+		? await Promise.all([
+				metodeManualAktif(db).catch(() => []),
+				permintaanManualSaya(db, locals.user.id).catch(() => [])
+			])
+		: [[], []];
+
 	return {
 		user: locals.user,
 		packages: getCoinTopupPackages(),
 		midtransClientKey: platform?.env?.MIDTRANS_CLIENT_KEY ?? '',
-		midtransSnapScriptUrl: getMidtransSnapScriptUrl(platform?.env?.MIDTRANS_IS_PRODUCTION === 'true')
+		midtransSnapScriptUrl: getMidtransSnapScriptUrl(platform?.env?.MIDTRANS_IS_PRODUCTION === 'true'),
+		metodeManual,
+		riwayatManual,
+		janjiVerifikasi: JANJI_VERIFIKASI
 	};
 };
 
@@ -202,6 +230,61 @@ export const actions: Actions = {
 		return {
 			type: 'snapToken',
 			snapToken: snapPayload.token
+		};
+	},
+
+	/**
+	 * Transfer manual (BCA/QRIS). Hanya MENCATAT permintaan — coin tidak
+	 * bertambah di sini. Saldo baru bergerak setelah admin menyetujui
+	 * lewat /admin/super/coin-topups.
+	 */
+	manual: async ({ request, locals, platform }) => {
+		if (!locals.user) {
+			throw redirect(302, '/auth');
+		}
+
+		const db = locals.db ?? platform?.env?.DB;
+		if (!db) {
+			return fail(500, { message: 'Layanan data tidak tersedia' });
+		}
+
+		const formData = await request.formData();
+		const packageId = formData.get('package_id');
+		const metodeId = formData.get('metode_id');
+		const buktiUrl = formData.get('bukti_url');
+		const userNote = formData.get('user_note');
+
+		if (typeof packageId !== 'string' || typeof metodeId !== 'string') {
+			return fail(400, { message: INVALID_PACKAGE_MESSAGE });
+		}
+
+		// Paket diambil dari katalog SERVER; nominal dari form tidak dipercaya.
+		const selectedPackage = getCoinTopupPackageById(packageId);
+
+		await ensureBukuWalletSchema(db);
+
+		const hasil = await buatPermintaanManual(db, {
+			userId: locals.user.id,
+			paket: selectedPackage ?? null,
+			metodeId,
+			buktiUrl: typeof buktiUrl === 'string' ? buktiUrl : '',
+			catatan: typeof userNote === 'string' ? userNote : ''
+		});
+
+		if (!hasil.ok) {
+			return fail(400, {
+				message: PESAN_MANUAL[hasil.alasan] ?? 'Permintaan top up tidak dapat diproses.'
+			});
+		}
+
+		console.info('manual_coin_topup_created', {
+			request_id: hasil.id,
+			product_slug: packageId
+		});
+
+		return {
+			type: 'manualDiterima',
+			message: `Permintaan terkirim. ${JANJI_VERIFIKASI}, lalu coin otomatis masuk.`
 		};
 	}
 };

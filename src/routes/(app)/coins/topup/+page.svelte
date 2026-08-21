@@ -23,6 +23,94 @@
 	let toast: { kind: 'success' | 'pending' | 'error'; message: string } | null = null;
 	let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
+	// —— Pilihan cara bayar ——
+	// 'midtrans' = otomatis (VA/GoPay/DANA/QRIS lewat Snap)
+	// 'manual'   = transfer ke rekening sendiri, diverifikasi admin
+	let caraBayar: 'midtrans' | 'manual' = 'midtrans';
+	let metodeManualId = data.metodeManual?.[0]?.id ?? '';
+	let buktiUrl = '';
+	let sedangUnggah = false;
+	let mengirimManual = false;
+	let nomorTersalin = '';
+
+	$: metodeManual = data.metodeManual ?? [];
+	$: metodeTerpilih = metodeManual.find((m) => m.id === metodeManualId) ?? null;
+	$: riwayatManual = data.riwayatManual ?? [];
+
+	async function salinNomor(nomor: string) {
+		try {
+			await navigator.clipboard.writeText(nomor.replace(/\s/g, ''));
+			nomorTersalin = nomor;
+			setTimeout(() => (nomorTersalin = ''), 2000);
+		} catch {
+			nomorTersalin = '';
+		}
+	}
+
+	async function unggahBukti(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+
+		sedangUnggah = true;
+		try {
+			const body = new FormData();
+			body.append('file', file);
+			const res = await fetch('/api/upload/topup-proof', { method: 'POST', body });
+			const payload = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+
+			if (!res.ok || !payload.url) {
+				showToast('error', payload.error ?? 'Gagal mengunggah bukti transfer.');
+				buktiUrl = '';
+				return;
+			}
+			buktiUrl = payload.url;
+			showToast('success', 'Bukti transfer terunggah.');
+		} catch {
+			showToast('error', 'Gagal mengunggah bukti transfer.');
+			buktiUrl = '';
+		} finally {
+			sedangUnggah = false;
+		}
+	}
+
+	async function kirimManual(event: SubmitEvent) {
+		if (!selectedPackage) {
+			showToast('error', 'Pilih paket top up terlebih dahulu.');
+			return;
+		}
+		if (!metodeManualId) {
+			showToast('error', 'Pilih metode pembayaran.');
+			return;
+		}
+		if (!buktiUrl) {
+			showToast('error', 'Unggah bukti transfer terlebih dahulu.');
+			return;
+		}
+
+		mengirimManual = true;
+		try {
+			const formData = new FormData(event.currentTarget as HTMLFormElement);
+			const res = await fetch('?/manual', { method: 'POST', body: formData });
+			const result = deserialize(await res.text());
+			const payload = (result as { data?: { message?: string } }).data;
+
+			if (result.type !== 'success') {
+				showToast('error', payload?.message ?? 'Permintaan top up gagal dikirim.');
+				return;
+			}
+
+			showToast('success', payload?.message ?? 'Permintaan terkirim.');
+			buktiUrl = '';
+			userNote = '';
+			await invalidateAll();
+		} catch {
+			showToast('error', 'Permintaan top up gagal dikirim.');
+		} finally {
+			mengirimManual = false;
+		}
+	}
+
 	type SnapCallbacks = {
 		onSuccess?: (result: unknown) => void;
 		onPending?: (result: unknown) => void;
@@ -189,7 +277,10 @@
 		</div>
 	{/if}
 
-	<form method="POST" class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-7" on:submit|preventDefault={startMidtransTopup}>
+	<form method="POST" class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-7" on:submit|preventDefault={(e) => (caraBayar === 'manual' ? kirimManual(e) : startMidtransTopup(e))}>
+		<!-- Dikirim ke action manual; nominal TIDAK ikut — server yang menentukan. -->
+		<input type="hidden" name="metode_id" value={metodeManualId} />
+		<input type="hidden" name="bukti_url" value={buktiUrl} />
 		<div class="space-y-6">
 			<fieldset class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
 				<div class="flex items-start justify-between gap-4">
@@ -270,17 +361,122 @@
 				</div>
 			</fieldset>
 
-			<section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm sm:p-6">
+			<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
 				<div class="flex items-start justify-between gap-4">
 					<div>
-						<h2 class="text-lg font-semibold text-emerald-950">Pembayaran Aman</h2>
-						<p class="mt-2 text-sm leading-6 text-emerald-900/75">
-							Saldo koin akan masuk otomatis setelah pembayaran berhasil diverifikasi.
-						</p>
+						<h2 class="text-lg font-semibold text-slate-950">Cara Pembayaran</h2>
+						<p class="mt-1 text-sm text-slate-500">Pilih yang paling nyaman untuk Anda.</p>
 					</div>
-					<CreditCard class="mt-1 h-5 w-5 shrink-0 text-emerald-600" />
+					<CreditCard class="mt-1 h-5 w-5 shrink-0 text-slate-400" />
+				</div>
+
+				<div class="mt-4 grid gap-3 sm:grid-cols-2">
+					<label class={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${caraBayar === 'midtrans' ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20' : 'border-slate-200 hover:border-slate-300'}`}>
+						<input type="radio" name="cara_bayar" value="midtrans" bind:group={caraBayar} class="mt-1 h-4 w-4 accent-emerald-600" />
+						<span>
+							<span class="block font-semibold text-slate-900">Otomatis</span>
+							<span class="mt-0.5 block text-xs leading-5 text-slate-500">
+								Virtual Account, GoPay, DANA, QRIS. Coin masuk seketika.
+							</span>
+						</span>
+					</label>
+
+					<label class={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${caraBayar === 'manual' ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20' : 'border-slate-200 hover:border-slate-300'} ${metodeManual.length === 0 ? 'pointer-events-none opacity-50' : ''}`}>
+						<input type="radio" name="cara_bayar" value="manual" bind:group={caraBayar} disabled={metodeManual.length === 0} class="mt-1 h-4 w-4 accent-emerald-600" />
+						<span>
+							<span class="block font-semibold text-slate-900">Transfer Manual</span>
+							<span class="mt-0.5 block text-xs leading-5 text-slate-500">
+								Transfer bank / QRIS lalu unggah bukti. {data.janjiVerifikasi}.
+							</span>
+						</span>
+					</label>
 				</div>
 			</section>
+
+			{#if caraBayar === 'midtrans'}
+				<section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm sm:p-6">
+					<div class="flex items-start justify-between gap-4">
+						<div>
+							<h2 class="text-lg font-semibold text-emerald-950">Pembayaran Aman</h2>
+							<p class="mt-2 text-sm leading-6 text-emerald-900/75">
+								Saldo koin akan masuk otomatis setelah pembayaran berhasil diverifikasi.
+							</p>
+						</div>
+						<CreditCard class="mt-1 h-5 w-5 shrink-0 text-emerald-600" />
+					</div>
+				</section>
+			{:else}
+				<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+					<div class="flex items-start justify-between gap-4">
+						<div>
+							<h2 class="text-lg font-semibold text-slate-950">Rekening Tujuan</h2>
+							<p class="mt-1 text-sm text-slate-500">
+								Transfer sesuai nominal, lalu unggah buktinya di bawah.
+							</p>
+						</div>
+						<WalletCards class="mt-1 h-5 w-5 shrink-0 text-slate-400" />
+					</div>
+
+					<div class="mt-4 space-y-3">
+						{#each metodeManual as metode (metode.id)}
+							<label class={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${metodeManualId === metode.id ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20' : 'border-slate-200 hover:border-slate-300'}`}>
+								<input type="radio" name="metode_pilih" value={metode.id} bind:group={metodeManualId} class="mt-1 h-4 w-4 accent-emerald-600" />
+								<span class="min-w-0 flex-1">
+									<span class="block font-semibold text-slate-900">{metode.nama}</span>
+									{#if metode.nomorRekening}
+										<span class="mt-1 block font-mono text-lg font-bold tracking-wide text-slate-900">
+											{metode.nomorRekening}
+										</span>
+									{/if}
+									{#if metode.atasNama}
+										<span class="block text-xs text-slate-500">a.n. {metode.atasNama}</span>
+									{/if}
+									{#if metode.instruksi}
+										<span class="mt-1 block text-xs leading-5 text-slate-500">{metode.instruksi}</span>
+									{/if}
+								</span>
+							</label>
+						{/each}
+					</div>
+
+					{#if metodeTerpilih?.nomorRekening}
+						<button
+							type="button"
+							on:click={() => salinNomor(metodeTerpilih.nomorRekening ?? '')}
+							class="mt-3 min-h-[44px] rounded-xl border border-emerald-300 px-4 text-sm font-bold text-emerald-800 transition hover:bg-emerald-50"
+						>
+							{nomorTersalin === metodeTerpilih.nomorRekening ? 'Nomor tersalin ✓' : 'Salin nomor rekening'}
+						</button>
+					{/if}
+
+					{#if metodeTerpilih?.gambarUrl}
+						<img src={metodeTerpilih.gambarUrl} alt={`Kode QR ${metodeTerpilih.nama}`} class="mt-4 w-full max-w-xs rounded-xl border border-slate-200" loading="lazy" />
+					{/if}
+
+					<div class="mt-5 border-t border-slate-200 pt-5">
+						<label for="bukti_file" class="block text-sm font-bold text-slate-900">
+							Bukti transfer <span class="font-normal text-slate-500">(wajib)</span>
+						</label>
+						<input
+							id="bukti_file"
+							type="file"
+							accept="image/*"
+							on:change={unggahBukti}
+							disabled={sedangUnggah}
+							class="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-800 file:px-4 file:py-2 file:font-semibold file:text-white"
+						/>
+						{#if sedangUnggah}
+							<p class="mt-2 text-xs font-semibold text-slate-500">Mengunggah…</p>
+						{:else if buktiUrl}
+							<p class="mt-2 text-xs font-semibold text-emerald-700">Bukti terunggah ✓</p>
+						{/if}
+					</div>
+
+					<p class="mt-4 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900">
+						{data.janjiVerifikasi}. Coin masuk setelah pembayaran diverifikasi — bukan seketika.
+					</p>
+				</section>
+			{/if}
 
 			<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
 				<div class="flex items-start justify-between gap-4">
@@ -364,24 +560,70 @@
 			</section>
 
 			<div class="flex flex-col gap-3">
-				<button
-					type="submit"
-					class="btn btn-primary btn-lg w-full gap-2"
-					disabled={isProcessing || !selectedPackage}
-				>
-					{#if isProcessing}
-						<LoaderCircle class="h-4 w-4 animate-spin" />
-						Menyiapkan pembayaran
-					{:else}
-						<CreditCard class="h-4 w-4" />
-						Lanjutkan Pembayaran
+				{#if caraBayar === 'midtrans'}
+					<button
+						type="submit"
+						class="btn btn-primary btn-lg w-full gap-2"
+						disabled={isProcessing || !selectedPackage}
+					>
+						{#if isProcessing}
+							<LoaderCircle class="h-4 w-4 animate-spin" />
+							Menyiapkan pembayaran
+						{:else}
+							<CreditCard class="h-4 w-4" />
+							Lanjutkan Pembayaran
+						{/if}
+					</button>
+				{:else}
+					<button
+						type="submit"
+						class="btn btn-primary btn-lg w-full gap-2"
+						disabled={mengirimManual || sedangUnggah || !selectedPackage || !buktiUrl}
+					>
+						{#if mengirimManual}
+							<LoaderCircle class="h-4 w-4 animate-spin" />
+							Mengirim permintaan
+						{:else}
+							<ReceiptText class="h-4 w-4" />
+							Kirim Bukti Transfer
+						{/if}
+					</button>
+					{#if !buktiUrl}
+						<p class="text-center text-xs text-slate-500">
+							Unggah bukti transfer dulu untuk mengaktifkan tombol.
+						</p>
 					{/if}
-				</button>
+				{/if}
 				<a href="/coins" class="btn btn-outline btn-lg w-full gap-2">
 					<ArrowLeft class="h-4 w-4" />
 					Batal
 				</a>
 			</div>
+
+			{#if riwayatManual.length > 0}
+				<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+					<h2 class="text-sm font-bold text-slate-900">Permintaan Transfer Manual</h2>
+					<ul class="mt-3 space-y-2">
+						{#each riwayatManual as r (r.id)}
+							<li class="flex items-baseline justify-between gap-3 border-b border-slate-100 pb-2 last:border-0">
+								<span class="text-sm text-slate-700">
+									{formatRupiah(r.amountRupiah)}
+									<span class="text-xs text-slate-400">· {r.coinAmount} coin</span>
+								</span>
+								<span class={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${
+									r.status === 'approved'
+										? 'bg-emerald-100 text-emerald-800'
+										: r.status === 'rejected'
+											? 'bg-slate-100 text-slate-600'
+											: 'bg-amber-100 text-amber-800'
+								}`}>
+									{r.status === 'approved' ? 'Disetujui' : r.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
+								</span>
+							</li>
+						{/each}
+					</ul>
+				</section>
+			{/if}
 		</aside>
 	</form>
 </div>
