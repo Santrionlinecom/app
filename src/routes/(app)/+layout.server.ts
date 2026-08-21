@@ -167,7 +167,11 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		// Wali biasanya TIDAK punya orgId, jadi wajib masuk daftar rute
 		// personal — kalau tidak, layout ini menolaknya dengan 404.
 		url.pathname === '/wali' ||
-		url.pathname.startsWith('/wali/');
+		url.pathname.startsWith('/wali/') ||
+		// Halaqah: santri mandiri boleh ikut halaqah tanpa jadi anggota
+		// lembaga formal, jadi rute ini juga personal.
+		url.pathname === '/halaqah' ||
+		url.pathname.startsWith('/halaqah/');
 	const orgId = user.orgId ?? null;
 	let org = null;
 
