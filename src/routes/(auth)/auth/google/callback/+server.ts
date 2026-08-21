@@ -15,6 +15,7 @@ import {
 	parseSuperAdminEmailAllowlist
 } from '$lib/server/auth/super-admin-security';
 import { queueRegistrationEmail } from '$lib/server/notifications/registration-email';
+import { consentOauth } from '$lib/server/legal/consent';
 
 type GoogleProfile = {
 	sub: string;
@@ -292,6 +293,19 @@ export const GET: RequestHandler = async ({ url, cookies, locals, fetch, request
 			if (columns.has('created_at')) {
 				insertColumns.push('created_at');
 				insertValues.push(Date.now());
+			}
+			// Jejak persetujuan Kebijakan Privasi & Syarat Ketentuan (UU 27/2022).
+			// Pada alur Google tidak ada checkbox form — persetujuan dinyatakan
+			// di halaman sebelum tombol Google ditekan, jadi yang dicatat waktu
+			// dan versi dokumennya.
+			if (columns.has('consent_at')) {
+				const [consentAt, consentVersi] = consentOauth();
+				insertColumns.push('consent_at');
+				insertValues.push(consentAt);
+				if (columns.has('consent_versi')) {
+					insertColumns.push('consent_versi');
+					insertValues.push(consentVersi);
+				}
 			}
 			if (memberContext && columns.has('org_id')) {
 				insertColumns.push('org_id');

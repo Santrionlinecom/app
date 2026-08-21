@@ -11,6 +11,9 @@
 
 	const encodeValue = (value: string) => encodeURIComponent(value);
 	let selectedRole = '';
+
+	// Persetujuan PDP. Bawaannya false — pengguna harus mencentang sendiri.
+	let setujuKebijakan = false;
 	$: if (!selectedRole) {
 		selectedRole = lockedRole?.value ?? roles[0]?.value ?? '';
 	}
@@ -111,13 +114,47 @@
 			<Turnstile siteKey={$page.data.turnstileSiteKey ?? ''} />
 		{/if}
 
-		<button class="btn btn-primary w-full">
+		{#if !isLoggedIn}
+			<!--
+				Persetujuan PDP. Menutup DUA jalur sekaligus: tombol daftar biasa
+				dan tombol Google — keduanya dinonaktifkan sampai dicentang,
+				sehingga jalur OAuth tidak bisa dipakai memintas persetujuan.
+			-->
+			<label class="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+				<input
+					type="checkbox"
+					name="setuju_kebijakan"
+					value="on"
+					bind:checked={setujuKebijakan}
+					required
+					class="mt-0.5 h-5 w-5 shrink-0 accent-emerald-700"
+				/>
+				<span class="text-sm leading-6 text-slate-700">
+					Saya membaca dan menyetujui
+					<a href="/privacy" target="_blank" rel="noopener" class="font-bold text-emerald-800 underline">Kebijakan Privasi</a>
+					dan
+					<a href="/syarat" target="_blank" rel="noopener" class="font-bold text-emerald-800 underline">Syarat &amp; Ketentuan</a>
+					SantriOnline sesuai UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi.
+					<span class="mt-1 block text-xs text-slate-500">
+						Untuk santri di bawah umur, persetujuan diberikan oleh orang tua/wali.
+					</span>
+				</span>
+			</label>
+		{/if}
+
+		<button class="btn btn-primary w-full" disabled={!isLoggedIn && !setujuKebijakan}>
 			{isLoggedIn ? `Daftar sebagai ${selectedRoleLabel}` : 'Daftar Anggota'}
 		</button>
 
 		{#if !isLoggedIn && googleHref}
 			<div class="pt-4 text-center text-xs text-slate-500">atau</div>
-			<GoogleAuthButton href={googleHref} label={`Daftar sebagai ${selectedRoleLabel} dengan Google`} />
+			{#if setujuKebijakan}
+				<GoogleAuthButton href={googleHref} label={`Daftar sebagai ${selectedRoleLabel} dengan Google`} />
+			{:else}
+				<button type="button" disabled class="btn w-full cursor-not-allowed opacity-60">
+					Centang persetujuan dulu untuk daftar dengan Google
+				</button>
+			{/if}
 			<p class="text-center text-xs text-slate-500">
 				Nama dan email akan diambil dari akun Google. Role mengikuti pilihan di atas.
 			</p>

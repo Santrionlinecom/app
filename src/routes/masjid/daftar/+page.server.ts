@@ -9,6 +9,7 @@ import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logg
 import { getInstitutionActionBlock, getInstitutionComingSoonLoad } from '$lib/server/institution-guards';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 import { grantMembership } from '$lib/server/active-org';
+import { bacaConsent, kolomConsent, PESAN_CONSENT_WAJIB } from '$lib/server/legal/consent';
 
 export const load: PageServerLoad = async () => {
 	getInstitutionComingSoonLoad('masjid');
@@ -27,6 +28,12 @@ export const actions: Actions = {
 		const db = locals.db!;
 
 		const formData = await request.formData();
+
+		// Persetujuan Kebijakan Privasi & Syarat Ketentuan (UU 27/2022).
+		// Diperiksa sebelum akun dibuat — bukan setelahnya.
+		if (!bacaConsent(formData).ok) {
+			return fail(400, { error: PESAN_CONSENT_WAJIB });
+		}
 		const ip = getRequestIp(request) ?? undefined;
 		const turnstile = await verifyTurnstileFormData(formData, ip);
 		if (!turnstile.success) {
@@ -99,10 +106,10 @@ export const actions: Actions = {
 			const hashed = await new Scrypt().hash(adminPassword as string);
 			await db
 				.prepare(
-					`INSERT INTO users (id, username, email, password_hash, role, org_id, org_status, created_at)
-					 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+					`INSERT INTO users (id, username, email, password_hash, role, org_id, org_status, created_at, consent_at, consent_versi)
+					 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 				)
-				.bind(userId, (adminName as string).trim(), (adminEmail as string).trim(), hashed, 'admin', orgId, 'active', Date.now())
+				.bind(userId, (adminName as string).trim(), (adminEmail as string).trim(), hashed, 'admin', orgId, 'active', Date.now(), ...kolomConsent())
 				.run();
 
 			await grantMembership(db, {

@@ -10,6 +10,7 @@ import { getInstitutionActionBlock, getInstitutionComingSoonLoad } from '$lib/se
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 import { registerLoggedInMember } from '$lib/server/member-registration';
 import { queueRegistrationEmail } from '$lib/server/notifications/registration-email';
+import { bacaConsent, kolomConsent, PESAN_CONSENT_WAJIB } from '$lib/server/legal/consent';
 
 const roleLabel = (value: string) => {
 	if (value === 'ustadzah') return 'Ustadzah';
@@ -57,6 +58,12 @@ export const actions: Actions = {
 		}
 
 		const formData = await request.formData();
+
+		// Persetujuan Kebijakan Privasi & Syarat Ketentuan (UU 27/2022).
+		// Diperiksa sebelum akun dibuat — bukan setelahnya.
+		if (!bacaConsent(formData).ok) {
+			return fail(400, { error: PESAN_CONSENT_WAJIB });
+		}
 		const role = formData.get('role');
 		const fallbackRole = getDefaultMemberRole('rumah-tahfidz');
 		const roleValue =
@@ -120,8 +127,8 @@ export const actions: Actions = {
 		const hashed = await new Scrypt().hash(password);
 		await db
 			.prepare(
-				`INSERT INTO users (id, username, email, password_hash, role, gender, org_id, org_status, created_at)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				`INSERT INTO users (id, username, email, password_hash, role, gender, org_id, org_status, created_at, consent_at, consent_versi)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			)
 			.bind(
 				userId,
@@ -133,7 +140,7 @@ export const actions: Actions = {
 				org.id,
 				'pending',
 				Date.now()
-			)
+			, ...kolomConsent())
 			.run();
 
 		await logActivity(db, {

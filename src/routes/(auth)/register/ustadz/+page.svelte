@@ -5,6 +5,9 @@
 
 	export let data: PageData;
 
+	// Persetujuan PDP. Bawaannya false — pengguna harus mencentang sendiri.
+	let setujuKebijakan = false;
+
 	const { form, errors, enhance, message } = superForm(data.form);
 	const fieldError = (value: unknown) => {
 		if (!value) return undefined;
@@ -196,9 +199,29 @@
 
 			<Turnstile siteKey={data.turnstileSiteKey} />
 
+			<!-- Persetujuan PDP. Bawaannya tidak tercentang. -->
+			<label class="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+				<input
+					type="checkbox"
+					name="setuju_kebijakan"
+					value="on"
+					bind:checked={setujuKebijakan}
+					required
+					class="mt-0.5 h-5 w-5 shrink-0 accent-emerald-700"
+				/>
+				<span class="text-sm leading-6 text-slate-700">
+					Saya membaca dan menyetujui
+					<a href="/privacy" target="_blank" rel="noopener" class="font-bold text-emerald-700 underline">Kebijakan Privasi</a>
+					dan
+					<a href="/syarat" target="_blank" rel="noopener" class="font-bold text-emerald-700 underline">Syarat &amp; Ketentuan</a>
+					SantriOnline sesuai UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi.
+				</span>
+			</label>
+
 			<button 
 				class="w-full min-h-[44px] rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-600 px-6 py-3 text-base font-bold text-white shadow-lg shadow-emerald-600/30 transition-all hover:from-emerald-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-emerald-600/40 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 disabled:opacity-60 disabled:cursor-not-allowed" 
 				type="submit"
+				disabled={!setujuKebijakan}
 			>
 				Daftar Sebagai Ustadz
 			</button>

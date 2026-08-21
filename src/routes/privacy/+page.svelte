@@ -1,8 +1,9 @@
 <script lang="ts">
 	import SeoHead from '$lib/components/seo/SeoHead.svelte';
 
-	const lastUpdated = '25 Juli 2026';
+	const lastUpdated = '21 Agustus 2026';
 	const sections = [
+		{ id: 'dasar-hukum', label: 'Dasar hukum' },
 		{ id: 'ringkasan', label: 'Ringkasan' },
 		{ id: 'data', label: 'Data yang dikumpulkan' },
 		{ id: 'penggunaan', label: 'Penggunaan data' },
@@ -54,6 +55,52 @@
 				{/each}
 			</div>
 		</nav>
+
+		<section id="dasar-hukum" class="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 shadow-sm">
+			<h2 class="text-xl font-bold text-emerald-900">0. Dasar Hukum & Pengendali Data</h2>
+			<p class="mt-3 text-sm leading-7 text-slate-700">
+				Kebijakan ini disusun mengacu pada
+				<strong>Undang-Undang Republik Indonesia Nomor 27 Tahun 2022 tentang Pelindungan Data
+				Pribadi</strong> (UU PDP), yang berlaku sejak 17 Oktober 2022.
+			</p>
+			<div class="mt-4 grid gap-4 md:grid-cols-2">
+				<div class="rounded-xl border border-emerald-100 bg-white p-4">
+					<h3 class="font-semibold text-slate-900">Pengendali Data Pribadi</h3>
+					<p class="mt-2 text-sm leading-6 text-slate-700">
+						SantriOnline bertindak sebagai <strong>Pengendali Data Pribadi</strong> atas data akun
+						pengguna platform.
+					</p>
+					<p class="mt-2 text-sm leading-6 text-slate-700">
+						Penanggung jawab pelindungan data:
+						<a class="font-semibold text-emerald-700 hover:underline" href="mailto:masyogik@santrionline.com">masyogik@santrionline.com</a>
+					</p>
+				</div>
+				<div class="rounded-xl border border-emerald-100 bg-white p-4">
+					<h3 class="font-semibold text-slate-900">Lembaga sebagai Pengendali Bersama</h3>
+					<p class="mt-2 text-sm leading-6 text-slate-700">
+						Untuk data santri yang dikelola lewat dashboard lembaga (TPQ, masjid, musholla, pondok,
+						rumah tahfidz), <strong>lembaga bertindak sebagai pengendali atas data santrinya</strong>,
+						dan SantriOnline menyediakan sarana pemrosesannya.
+					</p>
+					<p class="mt-2 text-sm leading-6 text-slate-700">
+						Pengurus lembaga bertanggung jawab memastikan pengumpulan data santri dilakukan dengan
+						dasar yang sah.
+					</p>
+				</div>
+			</div>
+
+			<h3 class="mt-5 font-semibold text-slate-900">Prinsip yang kami pegang</h3>
+			<ul class="mt-2 space-y-1.5 text-sm leading-6 text-slate-700">
+				<li>• <strong>Minimal data</strong> — kami tidak mengumpulkan NIK, nomor KK, foto KTP/KK, tanggal lahir, atau alamat rumah perorangan.</li>
+				<li>• <strong>Persetujuan tercatat</strong> — saat mendaftar, Anda menyetujui kebijakan ini secara eksplisit, dan waktu serta versi persetujuan itu kami simpan.</li>
+				<li>• <strong>Seperlunya</strong> — data dipakai untuk menjalankan layanan yang Anda minta, bukan diperjualbelikan.</li>
+			</ul>
+
+			<p class="mt-4 rounded-xl bg-white/70 p-3 text-xs leading-6 text-slate-600">
+				Rujukan resmi UU PDP dapat dibaca di
+				<a class="font-semibold text-emerald-700 hover:underline" href="https://peraturan.bpk.go.id/Details/229798/uu-no-27-tahun-2022" target="_blank" rel="noopener noreferrer">peraturan.bpk.go.id</a>.
+			</p>
+		</section>
 
 		<section id="ringkasan" class="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
 			<h2 class="text-xl font-bold text-emerald-800">1. Ringkasan</h2>

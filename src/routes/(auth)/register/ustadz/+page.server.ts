@@ -10,6 +10,7 @@ import { logActivity } from '$lib/server/activity-logs';
 import { getRequestIp, logActivity as logSystemActivity } from '$lib/server/logger';
 import { TURNSTILE_FAILURE_MESSAGE, verifyTurnstileFormData } from '$lib/server/turnstile';
 import { queueRegistrationEmail } from '$lib/server/notifications/registration-email';
+import { bacaConsent, kolomConsent, PESAN_CONSENT_WAJIB } from '$lib/server/legal/consent';
 
 const optionalText = z.preprocess(
 	(value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
@@ -53,6 +54,12 @@ export const actions: Actions = {
 		}
 
 		const formData = await request.formData();
+
+		// Persetujuan Kebijakan Privasi & Syarat Ketentuan (UU 27/2022).
+		// Diperiksa sebelum akun dibuat — bukan setelahnya.
+		if (!bacaConsent(formData).ok) {
+			return fail(400, { error: PESAN_CONSENT_WAJIB });
+		}
 		const form = await superValidate(formData, zod4(ustadzRegisterSchema));
 		const ip = getRequestIp(request) ?? undefined;
 		const turnstile = await verifyTurnstileFormData(formData, ip);
@@ -82,8 +89,8 @@ export const actions: Actions = {
 
 		await locals.db
 			.prepare(
-				`INSERT INTO users (id, username, email, password_hash, role, whatsapp, work_status, expertise, created_at)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				`INSERT INTO users (id, username, email, password_hash, role, whatsapp, work_status, expertise, created_at, consent_at, consent_versi)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			)
 			.bind(
 				userId,
@@ -95,7 +102,7 @@ export const actions: Actions = {
 				workStatus,
 				expertise ?? null,
 				Date.now()
-			)
+			, ...kolomConsent())
 			.run();
 
 		await logActivity(locals.db, {

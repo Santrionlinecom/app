@@ -93,6 +93,9 @@
 
 	$: currentUser = $page.data?.user ?? null;
 	$: isLoggedIn = !!currentUser;
+
+	// Persetujuan PDP. Bawaannya false — pengguna harus mencentang sendiri.
+	let setujuKebijakan = false;
 	$: featureInfo = featureMap[typePath] ?? featureMap.tpq;
 	$: orgNameError = touched.orgName && !orgName.trim() ? 'Nama lembaga wajib diisi.' : '';
 	$: adminNameError =
@@ -303,9 +306,34 @@
 					<Turnstile siteKey={$page.data.turnstileSiteKey ?? ''} />
 				</div>
 
+				<!--
+					Persetujuan Kebijakan Privasi & Syarat Ketentuan (UU 27/2022).
+					Sengaja TIDAK dicentang otomatis — persetujuan yang sudah
+					tercentang sejak awal bukan persetujuan.
+				-->
+				<label class="mt-6 flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+					<input
+						type="checkbox"
+						name="setuju_kebijakan"
+						value="on"
+						bind:checked={setujuKebijakan}
+						required
+						class="mt-0.5 h-5 w-5 shrink-0 accent-emerald-700"
+					/>
+					<span class="text-sm leading-6 text-slate-700">
+						Saya membaca dan menyetujui
+						<a href="/privacy" target="_blank" rel="noopener" class="font-bold text-emerald-800 underline">Kebijakan Privasi</a>
+						dan
+						<a href="/syarat" target="_blank" rel="noopener" class="font-bold text-emerald-800 underline">Syarat &amp; Ketentuan</a>
+						SantriOnline, termasuk pengelolaan data akun dan data santri lembaga
+						sesuai UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi.
+					</span>
+				</label>
+
 				<button
 					type="submit"
-					class="group mt-6 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-950 px-5 py-3 text-sm font-extrabold text-white transition hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-800/20"
+					disabled={!setujuKebijakan}
+					class="group mt-6 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-950 px-5 py-3 text-sm font-extrabold text-white transition hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-800/20 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:hover:bg-slate-300"
 					on:click={markSubmitTouched}
 				>
 					Daftarkan {title}
