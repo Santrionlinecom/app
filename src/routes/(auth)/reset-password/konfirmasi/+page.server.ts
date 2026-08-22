@@ -23,8 +23,15 @@ import { kirimEmailPasswordBerubah } from '$lib/server/notifications/reset-passw
 
 export const load: PageServerLoad = async ({ url, locals, platform, setHeaders }) => {
 	// Cegah token bocor lewat header Referer ke pihak ketiga.
+	//
+	// Dipakai 'same-origin', BUKAN 'no-referrer'. Keduanya sama-sama tidak
+	// mengirim apa pun ke domain lain — jadi token tetap aman. Bedanya:
+	// 'no-referrer' membuat browser mengirim `Origin: null` saat form
+	// di-submit, dan SvelteKit menolaknya sebagai serangan lintas-situs
+	// ("Cross-site POST form submissions are forbidden"). Akibatnya
+	// pengguna mentok persis di langkah terakhir.
 	setHeaders({
-		'Referrer-Policy': 'no-referrer',
+		'Referrer-Policy': 'same-origin',
 		'Cache-Control': 'no-store, max-age=0'
 	});
 
