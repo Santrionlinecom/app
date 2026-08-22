@@ -588,6 +588,110 @@ export const GLOBAL_APP_NAVIGATION: AppNavigationItem[] = [
 		allowedRoles: ['admin'],
 		group: 'lembaga'
 	},
+
+	// --- Pengurus lembaga: halaqah, setoran, rapor, undangan wali ----------
+	//
+	// Izin di bawah disalin dari gerbang tiap halaman, bukan dikira-kira:
+	//   kelola-halaqah   -> canAccessPermission(role, 'hafalan.input')
+	//   terbitkan-rapor  -> canAccessPermission(role, 'raport.write')
+	//   undangan-wali    -> assertOrgMember saja (tanpa izin khusus)
+	//   kotak-setoran    -> assertLoggedIn saja; disaring per musyrif di query
+	//
+	// allowedRoles WAJIB diisi, bukan sekadar pelengkap. Sebabnya:
+	// BASE_PERMISSIONS di src/lib/rbac/permissions.ts hanya mengenal peran
+	// KANONIK ('pengajar', 'kepala', 'pembimbing'), sedangkan normalizeRole()
+	// meloloskan peran warisan seperti 'ustadz'/'ustadzah'/'kepala_tpq' apa
+	// adanya. Akibatnya canAccessPermission('ustadz', 'hafalan.input') =>
+	// false, padahal ustadz jelas berhak menyimak setoran. itemAllowed()
+	// memang menyediakan jalan kedua lewat allowedRoles untuk kasus ini.
+	// Tanpa daftar itu, menu ini hilang justru dari orang yang paling
+	// membutuhkannya. Dijaga oleh tests/navigasi-pilar5.test.ts.
+	{
+		label: 'Kelola Halaqah',
+		href: '/dashboard/kelola-halaqah',
+		icon: ICONS.users,
+		description: 'Buat halaqah dan atur anggotanya',
+		permission: 'hafalan.input',
+		allowedRoles: [
+			'admin',
+			'kepala',
+			'kepala_tpq',
+			'kepala_tahfidz',
+			'pengasuh',
+			'pembimbing',
+			'koordinator',
+			'wali_kelas',
+			'musyrif',
+			'pengajar',
+			'ustadz',
+			'ustadzah'
+		],
+		group: 'akademik'
+	},
+	{
+		label: 'Kotak Setoran',
+		href: '/dashboard/kotak-setoran',
+		icon: ICONS.message,
+		description: 'Balas setoran hafalan santri',
+		permission: 'hafalan.input',
+		allowedRoles: [
+			'admin',
+			'kepala',
+			'kepala_tpq',
+			'kepala_tahfidz',
+			'pengasuh',
+			'pembimbing',
+			'koordinator',
+			'wali_kelas',
+			'musyrif',
+			'pengajar',
+			'ustadz',
+			'ustadzah'
+		],
+		group: 'akademik'
+	},
+	{
+		label: 'Terbitkan Rapor',
+		href: '/dashboard/terbitkan-rapor',
+		icon: ICONS.file,
+		description: 'Terbitkan rapor santri lembaga',
+		permission: 'raport.write',
+		allowedRoles: [
+			'admin',
+			'kepala',
+			'kepala_tpq',
+			'kepala_tahfidz',
+			'pengasuh',
+			'pembimbing',
+			'koordinator',
+			'wali_kelas',
+			'musyrif',
+			'pengajar',
+			'ustadz',
+			'ustadzah'
+		],
+		group: 'akademik'
+	},
+	{
+		label: 'Undangan Wali',
+		href: '/lembaga/undangan-wali',
+		icon: ICONS.megaphone,
+		description: 'Terbitkan kode undangan untuk wali santri',
+		permission: 'member.invite',
+		allowedRoles: [
+			'admin',
+			'kepala',
+			'kepala_tpq',
+			'kepala_tahfidz',
+			'pengasuh',
+			'pembimbing',
+			'koordinator',
+			'wali_kelas',
+			'operator',
+			'sekretaris'
+		],
+		group: 'lembaga'
+	},
 	{
 		label: 'License Produk',
 		href: '/admin/licenses/generate',
@@ -650,6 +754,45 @@ export const GLOBAL_APP_NAVIGATION: AppNavigationItem[] = [
 		description: 'Profil dan keamanan akun',
 		group: 'sistem',
 		mobilePrimary: true
+	},
+
+	// --- Pembinaan personal (Pilar 5) --------------------------------------
+	//
+	// Tiga rute berikut PERSONAL, bukan milik lembaga: wali dan santri mandiri
+	// umumnya tidak punya orgId, jadi entri ini sengaja diletakkan di navigasi
+	// global — bukan di APP_NAVIGATION_BY_TYPE — dan tanpa saringan peran.
+	// Lihat daftar rute personal di src/routes/(app)/+layout.server.ts.
+	//
+	// Ketiga halaman sudah punya keadaan kosong yang menuntun (mis. "Belum
+	// tergabung di halaqah"), sehingga aman tampil untuk pengguna yang belum
+	// terhubung: mereka melihat ajakan, bukan galat.
+	{
+		label: 'Pantau Anak',
+		href: '/wali',
+		icon: ICONS.users,
+		description: 'Pantau perkembangan anak sebagai wali',
+		group: 'pembinaan',
+		// Wali adalah pengguna paling HP-sentris di platform ini: orang tua
+		// membuka SantriOnline dari ponsel untuk menengok anaknya, bukan dari
+		// laptop. Tanpa penanda ini, bottom bar wali terisi Lembaga/Baca
+		// Buku/Kursus/Digital Store — tidak satu pun yang ia cari.
+		mobilePrimary: true
+	},
+	{
+		label: 'Halaqah Saya',
+		href: '/halaqah',
+		icon: ICONS.check,
+		description: 'Setoran hafalan disimak musyrif',
+		group: 'akademik',
+		// Setoran hafalan direkam dari HP, sering sambil di masjid atau majelis.
+		mobilePrimary: true
+	},
+	{
+		label: 'Rapor Saya',
+		href: '/rapor',
+		icon: ICONS.chart,
+		description: 'Rapor dan sertifikat milik santri',
+		group: 'akademik'
 	}
 ];
 
