@@ -312,3 +312,46 @@ test('setiap token unik antar permintaan', async () => {
 	}
 	assert.equal(kumpulan.size, 20, 'token tidak boleh dapat ditebak/berulang');
 });
+
+// ——— AKUN GOOGLE & SUPER ADMIN ———
+//
+// 27 dari 41 akun produksi masuk lewat Google tanpa password sama sekali.
+// Untuk mereka, reset password bukan sekadar tidak berguna — bisa
+// menyesatkan: mereka membuat password baru, lalu tetap tidak bisa masuk
+// dengannya. Halaman harus jujur soal ini.
+
+test('akun Super Admin ditolak reset — password memang tidak dipakai untuk masuk', async () => {
+	const db = buatDb();
+	db.exec(`UPDATE users SET role = 'SUPER_ADMIN', googleId = 'g-1' WHERE id='u1'`);
+
+	const hasil = await mintaResetPassword(d1(db) as never, { email: 'zaid@contoh.test' });
+
+	// Jawaban tetap netral supaya tidak membocorkan siapa Super Admin,
+	// tetapi tidak ada token yang diterbitkan dan tidak ada email dikirim.
+	assert.equal(hasil.kirim, false, 'jangan terbitkan token yang percuma');
+	assert.equal(hasil.pesan, PESAN_NETRAL, 'jawaban tetap tidak membocorkan peran akun');
+
+	const n = db.prepare(`SELECT COUNT(*) n FROM password_reset_tokens`).get() as { n: number };
+	assert.equal(Number(n.n), 0);
+});
+
+test('akun Google biasa TETAP boleh reset — password jadi cara masuk kedua', async () => {
+	const db = buatDb();
+	db.exec(`UPDATE users SET password_hash = NULL, googleId = 'g-2', role = 'santri' WHERE id='u1'`);
+
+	const hasil = await mintaResetPassword(d1(db) as never, { email: 'zaid@contoh.test' });
+
+	// Santri/ustadz/admin yang selama ini pakai Google boleh menambahkan
+	// password, misalnya karena akun Google-nya bermasalah.
+	assert.equal(hasil.kirim, true, 'akun Google biasa harus tetap bisa membuat password');
+});
+
+test('varian penulisan role Super Admin ikut ditolak', async () => {
+	for (const peran of ['SUPER_ADMIN', 'SUPERADMIN', 'super-admin', 'Super Admin']) {
+		const db = buatDb();
+		db.exec(`UPDATE users SET role = '${peran}' WHERE id='u1'`);
+
+		const hasil = await mintaResetPassword(d1(db) as never, { email: 'zaid@contoh.test' });
+		assert.equal(hasil.kirim, false, `role "${peran}" seharusnya ditolak`);
+	}
+});

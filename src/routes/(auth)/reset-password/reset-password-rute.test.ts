@@ -52,8 +52,36 @@ test('halaman konfirmasi memasang Referrer-Policy agar token tidak bocor', () =>
 	// Token ada di query string. Tanpa ini, alamat lengkap berikut tokennya
 	// bisa ikut terkirim ke domain lain lewat header Referer.
 	assert.match(konfirmasi, /setHeaders\(/);
-	assert.match(konfirmasi, /'Referrer-Policy':\s*'no-referrer'/);
-	assert.match(konfirmasiUi, /name="referrer"\s+content="no-referrer"/);
+	assert.match(konfirmasi, /'Referrer-Policy':\s*'same-origin'/);
+	assert.match(konfirmasiUi, /name="referrer"\s+content="same-origin"/);
+});
+
+test('Referrer-Policy TIDAK boleh no-referrer — itu mematahkan submit form', () => {
+	/*
+	 * BUG NYATA (22 Agustus 2026, dilaporkan Mas Yogik dari produksi):
+	 *
+	 * 'no-referrer' membuat browser mengirim `Origin: null` pada POST form,
+	 * bahkan untuk form ke domainnya sendiri. SvelteKit membaca itu sebagai
+	 * serangan lintas-situs dan menolak dengan
+	 * "Cross-site POST form submissions are forbidden".
+	 *
+	 * Akibatnya pengguna sampai di halaman ganti password, mengisi form,
+	 * lalu mentok — persis di langkah terakhir.
+	 *
+	 * 'same-origin' tetap melindungi: tidak ada apa pun yang dikirim ke
+	 * domain lain, jadi token tidak bocor. Bedanya, permintaan ke domain
+	 * sendiri tetap membawa Origin yang benar sehingga form bisa dikirim.
+	 */
+	assert.doesNotMatch(
+		konfirmasi,
+		/'Referrer-Policy':\s*'no-referrer'/,
+		"no-referrer membuat Origin menjadi null dan form ganti password tidak bisa dikirim"
+	);
+	assert.doesNotMatch(
+		konfirmasiUi,
+		/content="no-referrer"/,
+		'meta referrer no-referrer punya efek merusak yang sama'
+	);
 });
 
 test('halaman konfirmasi tidak boleh diindeks mesin pencari', () => {

@@ -19,6 +19,7 @@
 //    sendiri setelah 60 menit.
 
 import type { D1Database } from '@cloudflare/workers-types';
+import { isPasswordLoginAllowedForRole } from './super-admin-security';
 
 /** Masa berlaku tautan reset, dalam menit. */
 export const MENIT_BERLAKU = 60;
@@ -85,14 +86,29 @@ export async function mintaResetPassword(
 
 	const akun = await db
 		.prepare(
-			`SELECT id, email, username, dihapus_at
+			`SELECT id, email, username, role, dihapus_at
 			   FROM users WHERE LOWER(email) = ? LIMIT 1`
 		)
 		.bind(email)
-		.first<{ id: string; email: string; username: string | null; dihapus_at: number | null }>();
+		.first<{
+			id: string;
+			email: string;
+			username: string | null;
+			role: string | null;
+			dihapus_at: number | null;
+		}>();
 
 	// Setiap jalan keluar di bawah ini memakai PESAN_NETRAL yang sama.
 	if (!akun || akun.dihapus_at) {
+		return { kirim: false, pesan: PESAN_NETRAL };
+	}
+
+	// Super Admin memang tidak bisa masuk dengan password — hanya lewat
+	// Google. Menerbitkan token untuknya bukan sekadar percuma, tapi
+	// menyesatkan: dia akan membuat password baru lalu tetap ditolak saat
+	// login. Jawabannya tetap netral supaya tidak membocorkan siapa
+	// Super Admin.
+	if (!isPasswordLoginAllowedForRole(akun.role)) {
 		return { kirim: false, pesan: PESAN_NETRAL };
 	}
 

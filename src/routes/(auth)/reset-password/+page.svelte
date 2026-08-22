@@ -85,6 +85,18 @@
 				<button type="submit" class="auth-submit">Kirim Tautan Reset</button>
 			</form>
 
+			<!--
+				27 dari 41 akun masuk lewat Google tanpa password. Tanpa
+				keterangan ini, mereka bisa menghabiskan waktu mereset
+				password padahal cukup menekan tombol Google.
+			-->
+			<p class="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-xs leading-6 text-slate-600">
+				<strong class="text-slate-800">Biasa masuk dengan tombol Google?</strong>
+				Anda tidak perlu reset password — cukup
+				<a href="/auth" class="font-semibold text-so-green underline">masuk dengan Google</a>
+				seperti biasa. Reset password hanya untuk yang masuk memakai email dan password.
+			</p>
+
 			<div class="mt-6 text-center text-sm">
 				<a
 					href="/auth"

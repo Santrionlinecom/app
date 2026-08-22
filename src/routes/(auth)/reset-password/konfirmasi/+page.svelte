@@ -23,7 +23,7 @@
 <svelte:head>
 	<title>Buat Password Baru | SantriOnline</title>
 	<meta name="robots" content="noindex, nofollow" />
-	<meta name="referrer" content="no-referrer" />
+	<meta name="referrer" content="same-origin" />
 </svelte:head>
 
 <div class="auth-page flex min-h-screen flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
