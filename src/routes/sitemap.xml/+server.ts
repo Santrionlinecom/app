@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { designTemplates } from '$lib/data/desain';
 import { islamicDynasties } from '$lib/data/dinasti';
 import type { RequestHandler } from './$types';
 
@@ -34,16 +35,17 @@ type BookRow = {
 //
 // Pernah terjadi (22 Agu 2026): /kitab, /kitab/quran, /desain, /desain/cetak,
 // /digital-store, plus 12 template desain — 17 URL, 31% dari seluruh URL
-// non-blog — semuanya membalas 302 ke /auth. /kitab bahkan diberi
-// priority 0.9 changefreq daily, prioritas tertinggi untuk halaman yang tak
-// pernah bisa dilihat Google.
+// non-blog — semuanya membalas 302 ke /auth.
 //
-// Kalau nanti /kitab atau /desain dibuatkan versi pratinjau publik (di luar
-// grup `(app)`), barulah entri-entrinya boleh dikembalikan ke sini.
-// Dijaga oleh tests/sitemap-publik.test.ts.
+// Sesudah itu /kitab dan /desain DIPINDAHKAN keluar grup `(app)` karena
+// ternyata tidak pernah membutuhkan login, sehingga kini sah didaftarkan.
+// /digital-store tetap di luar daftar: ia memakai locals.user untuk
+// kepemilikan produk. Dijaga oleh tests/sitemap-publik.test.ts.
 const staticPages: SitemapPage[] = [
 	{ loc: '/', priority: '1.0', changefreq: 'daily' },
 	{ loc: '/buku', priority: '0.9', changefreq: 'daily' },
+	{ loc: '/kitab', priority: '0.9', changefreq: 'daily' },
+	{ loc: '/kitab/quran', priority: '0.9', changefreq: 'weekly' },
 	{ loc: '/fitur', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/tokoh', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/ulama', priority: '0.8', changefreq: 'weekly' },
@@ -51,6 +53,8 @@ const staticPages: SitemapPage[] = [
 	{ loc: '/ormas', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/blog', priority: '0.9', changefreq: 'daily' },
 	{ loc: '/blog/apa-itu-santri-online', priority: '0.9', changefreq: 'monthly' },
+	{ loc: '/desain', priority: '0.9', changefreq: 'weekly' },
+	{ loc: '/desain/cetak', priority: '0.8', changefreq: 'weekly' },
 	{ loc: '/tentang', priority: '0.5', changefreq: 'monthly' },
 	{ loc: '/kontak', priority: '0.5', changefreq: 'monthly' },
 	{ loc: '/privacy', priority: '0.5', changefreq: 'monthly' },
@@ -150,10 +154,15 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 		...[
 			...staticPages,
 			...dynastyPages,
-			// Template desain (`designTemplates`) sengaja TIDAK didaftarkan:
-			// /desain/[slug] berada di grup `(app)` sehingga tamu dialihkan ke
-			// /auth. Dulu 12 URL template ini adalah penyumbang terbesar URL
-			// terkunci di sitemap.
+			// 13 template desain. Dulu dikeluarkan karena /desain/[slug] berada
+			// di grup `(app)` dan mengalihkan tamu ke /auth; sesudah folder
+			// dipindah ke rute publik, URL-URL ini justru aset SEO musiman
+			// (twibbon Hari Santri, banner Isra Miraj, jadwal imsakiyah).
+			...designTemplates.map((template) => ({
+				loc: `/desain/${template.slug}`,
+				priority: '0.8',
+				changefreq: 'monthly' as const
+			})),
 			...dynamicPages
 		].map((page) => renderUrl(page, today)),
 		'</urlset>'

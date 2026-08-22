@@ -45,31 +45,44 @@ test('sitemap tidak memuat halaman yang wajib login', () => {
 	);
 });
 
-test('rute terkunci yang pernah bocor tidak kembali masuk', () => {
-	// Daftar spesifik dari insiden 22 Agu 2026.
-	for (const jalur of ['/kitab', '/kitab/quran', '/desain', '/desain/cetak', '/digital-store']) {
-		assert.ok(
-			!locStatis.includes(jalur),
-			`${jalur} kembali masuk sitemap padahal mewajibkan login`
-		);
+test('rute yang pernah bocor kini sudah publik', () => {
+	// Daftar spesifik dari insiden 22 Agu 2026. Semuanya dulu membalas 302
+	// ke /auth karena berada di grup (app).
+	//
+	// /kitab dan /desain KEMUDIAN dipindahkan keluar grup (app) sehingga sah
+	// masuk sitemap. Yang dijaga di sini bukan lagi "jangan didaftarkan",
+	// melainkan "jangan kembali terkunci": kalau suatu saat foldernya
+	// dipindah lagi ke dalam (app), tes pertama akan menangkapnya.
+	for (const jalur of ['/kitab', '/kitab/quran', '/desain', '/desain/cetak']) {
+		assert.ok(!wajibLogin(jalur), `${jalur} kembali masuk grup (app) — akan mengalihkan tamu ke /auth`);
 	}
+
+	// /digital-store memakai locals.user untuk kepemilikan produk, jadi
+	// memang tetap terkunci dan tidak boleh masuk sitemap.
+	assert.ok(
+		!locStatis.includes('/digital-store'),
+		'/digital-store mewajibkan login; jangan didaftarkan di sitemap'
+	);
 });
 
-test('template desain tidak didaftarkan massal', () => {
-	// Dulu 12 URL /desain/[slug] dibuat lewat designTemplates.map() —
-	// penyumbang terbesar URL terkunci.
-	//
-	// Periksa KODE, bukan komentar: berkasnya memang menyebut designTemplates
-	// di komentar penjelasan, dan itu justru harus dipertahankan.
+test('template desain didaftarkan dan rutenya publik', () => {
+	// Dulu 12 URL /desain/[slug] dikeluarkan karena mengalihkan ke /auth.
+	// Sesudah /desain jadi rute publik, mendaftarkannya justru benar — ini
+	// aset SEO musiman. Yang dijaga: rutenya harus tetap publik.
 	const kode = isi
 		.replace(/\/\*[\s\S]*?\*\//g, '')
 		.split('\n')
 		.filter((baris) => !baris.trim().startsWith('//'))
 		.join('\n');
 
+	assert.ok(/designTemplates/.test(kode), 'template desain tidak lagi didaftarkan di sitemap');
 	assert.ok(
-		!/designTemplates/.test(kode),
-		'designTemplates dipakai lagi di sitemap; /desain/[slug] masih di grup (app)'
+		existsSync(join(AKAR, 'desain', '[slug]', '+page.svelte')),
+		'/desain/[slug] bukan rute publik; jangan didaftarkan massal'
+	);
+	assert.ok(
+		!existsSync(join(AKAR, '(app)', 'desain')),
+		'/desain kembali ke grup (app) — sitemap akan mendaftarkan URL terkunci'
 	);
 });
 
