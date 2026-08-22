@@ -191,16 +191,25 @@ export async function addCoins(
 }
 
 /**
- * Convert Rupiah to Coin (1 Rupiah = 1 Coin for simplicity)
- * You can adjust the conversion rate here
+ * @deprecated JANGAN DIPAKAI. Gunakan `rupiahKeCoin` dari
+ * `$lib/server/coins/kurs` untuk konversi rupiah→coin, atau
+ * `hargaProdukDalamCoin` bila nilainya memang sudah coin.
+ *
+ * Fungsi ini bernilai 1:1 dan pernah menjadi jebakan: komentarnya
+ * mengundang orang "memperbaiki" kursnya menjadi 10:1, padahal ia dipakai
+ * pada harga produk yang SUDAH dalam coin. Perubahan itu akan membuat
+ * seluruh produk toko terjual sepersepuluh harga.
+ *
+ * Dibiarkan ada demi kompatibilitas, tetapi tidak boleh dipakai di kode baru.
  */
 export function rupiahToCoin(rupiah: number): number {
-	return rupiah; // 1:1 conversion
+	return rupiah; // 1:1 — lihat catatan deprecated di atas
 }
 
 /**
- * Convert Coin to Rupiah
+ * @deprecated JANGAN DIPAKAI. Gunakan `coinKeRupiah` dari
+ * `$lib/server/coins/kurs`.
  */
 export function coinToRupiah(coin: number): number {
-	return coin; // 1:1 conversion
+	return coin; // 1:1 — lihat catatan deprecated di atas
 }

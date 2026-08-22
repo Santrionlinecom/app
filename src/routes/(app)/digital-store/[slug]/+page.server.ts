@@ -4,7 +4,7 @@ import {
 	ensureDigitalCommerceSchema,
 	getPublishedDigitalProductBySlug
 } from '$lib/server/domains/digital-store/commerce';
-import { rupiahToCoin } from '$lib/server/domains/buku/coin-operations';
+import { hargaProdukDalamCoin } from '$lib/server/coins/kurs';
 import { getCoinBalance } from '$lib/server/domains/buku/wallet';
 import { checkoutDigitalProductWithCoins } from '$lib/server/domains/digital-store/coin-checkout';
 import { queueCoinTransactionEmail } from '$lib/server/notifications/coin-transaction-email';
@@ -80,8 +80,10 @@ export const actions: Actions = {
 			return fail(400, { error: 'Sesi checkout tidak valid. Muat ulang halaman lalu coba lagi.' });
 		}
 
-		// Convert price to coin (1:1 conversion)
-		const coinRequired = rupiahToCoin(product.price);
+		// Kolom `price` SUDAH menyimpan coin, bukan rupiah — jadi tidak ada
+		// konversi di sini. Helper dipakai supaya satuannya terbaca jelas
+		// dan tidak ada yang tergoda mengonversinya lagi.
+		const coinRequired = hargaProdukDalamCoin(product.price);
 
 		try {
 			const result = await checkoutDigitalProductWithCoins({
