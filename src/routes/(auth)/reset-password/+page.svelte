@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { reveal } from '$lib/motion';
+	import { page } from '$app/stores';
+	import Turnstile from '$lib/components/Turnstile.svelte';
 
 	export let form;
 </script>
@@ -72,6 +74,13 @@
 						class="auth-input"
 					/>
 				</div>
+
+				<!--
+					Turnstile: endpoint reset adalah sasaran empuk untuk
+					membanjiri inbox orang lain — cukup kirim email korban
+					berulang kali sampai inbox-nya penuh.
+				-->
+				<Turnstile siteKey={$page.data.turnstileSiteKey ?? ''} />
 
 				<button type="submit" class="auth-submit">Kirim Tautan Reset</button>
 			</form>
