@@ -1,3 +1,5 @@
+import { RUPIAH_PER_COIN } from './coins/kurs';
+
 export type CoinTopupPackage = {
 	id: string;
 	name: string;
@@ -13,7 +15,7 @@ export type CoinTopupPackage = {
 	toolPurchaseHint: string;
 };
 
-const BASE_RUPIAH_PER_COIN = 10;
+const BASE_RUPIAH_PER_COIN = RUPIAH_PER_COIN;
 const TOOL_PRICE_COIN = 9_900;
 
 const createPackage = (input: {
