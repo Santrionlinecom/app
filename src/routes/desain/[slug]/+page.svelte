@@ -4,10 +4,39 @@
 	import Search from '@lucide/svelte/icons/search';
 	import type { PageData } from './$types';
 	import { designCategories } from '$lib/data/desain';
+	import EditorDesain from '$lib/components/desain/EditorDesain.svelte';
 
 	export let data: PageData;
 	const template = data.template;
 	const printUrl = `/desain/cetak?template=${template.slug}`;
+
+	// Ambil satu warna nyata dari kelas gradien Tailwind milik template
+	// (mis. 'from-emerald-950 via-green-800 to-yellow-600') untuk dipakai
+	// sebagai warna dasar kanvas. Kanvas butuh warna sungguhan, bukan kelas.
+	const WARNA: Record<string, string> = {
+		emerald: '#064e3b',
+		green: '#14532d',
+		lime: '#365314',
+		teal: '#134e4a',
+		cyan: '#164e63',
+		sky: '#0c4a6e',
+		blue: '#1e3a8a',
+		indigo: '#312e81',
+		violet: '#4c1d95',
+		purple: '#581c87',
+		fuchsia: '#701a75',
+		rose: '#881337',
+		red: '#7f1d1d',
+		orange: '#7c2d12',
+		amber: '#78350f',
+		yellow: '#713f12',
+		slate: '#0f172a',
+		stone: '#1c1917'
+	};
+	const dasar = (() => {
+		const cocok = template.palette.match(/from-([a-z]+)-/);
+		return (cocok && WARNA[cocok[1]]) || '#0f172a';
+	})();
 </script>
 
 <svelte:head>
@@ -18,12 +47,12 @@
 
 <div class="min-h-screen bg-slate-950 text-white">
 	<section class={`bg-gradient-to-br ${template.palette}`}>
-		<div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8 lg:py-20">
+		<div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
 			<div>
 				<a href="/desain" class="text-sm font-bold text-white/80 hover:text-white">← Kembali ke katalog desain</a>
 				<p class="mt-8 inline-flex rounded-full bg-white/15 px-4 py-2 text-sm font-black text-white backdrop-blur">{designCategories[template.category].label} · {template.eventMonth}</p>
 				<h1 class="mt-5 text-4xl font-black tracking-tight sm:text-5xl">{template.title}</h1>
-				<p class="mt-5 text-lg leading-8 text-white/90">{template.description}</p>
+				<p class="mt-5 max-w-3xl text-lg leading-8 text-white/90">{template.description}</p>
 				<div class="mt-8 flex flex-col gap-3 sm:flex-row">
 					<a href={printUrl} class="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-4 font-black text-slate-950 shadow-xl">
 						<Printer class="h-5 w-5" /> {template.cta}
@@ -33,13 +62,22 @@
 					</a>
 				</div>
 			</div>
-			<div class="rounded-[2rem] bg-white/95 p-5 text-slate-950 shadow-2xl">
-				<div class="rounded-[1.5rem] border-4 border-slate-950/10 p-8 text-center">
-					<p class="text-sm font-black uppercase tracking-[0.3em] text-emerald-600">{template.formats[0]} siap edit</p>
-					<h2 class="mt-6 text-4xl font-black leading-tight">{template.previewLines[0]}</h2>
-					<p class="mx-auto mt-5 max-w-lg text-lg font-semibold text-slate-600">{template.previewLines[1]}</p>
-					<div class="mt-8 rounded-2xl bg-slate-950 px-5 py-4 text-lg font-black text-white">{template.previewLines[2]}</div>
-					<p class="mt-6 text-sm font-bold text-slate-500">Aksen visual: {template.accent}</p>
+
+			<!-- Editor diberi lebar penuh: kanvas cetak butuh ruang, dan ini
+			     bagian yang paling dipakai pengunjung. -->
+			<div class="mt-12">
+				<p class="text-sm font-black uppercase tracking-[0.3em] text-white/70">Editor langsung</p>
+				<h2 class="mt-2 text-2xl font-black">Buat sendiri sekarang, gratis</h2>
+				<p class="mt-2 max-w-3xl text-sm leading-6 text-white/80">
+					Ganti teks, unggah foto lembaga, atur ukuran cetak, lalu unduh PNG atau PDF.
+					Tanpa akun, tanpa aplikasi tambahan.
+				</p>
+				<div class="mt-5">
+					<EditorDesain
+						barisAwal={template.previewLines}
+						warnaDasar={dasar}
+						namaBerkas={template.slug}
+					/>
 				</div>
 			</div>
 		</div>

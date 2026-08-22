@@ -67,6 +67,9 @@ export const load: PageServerLoad = async ({ params, locals, platform }) => {
 		ringkasan,
 		pages,
 		html: renderMarkdown(raw),
+		// Halaman baca kitab TERBUKA untuk tamu — ilmu agama tidak dijual.
+		// Yang dibatasi hanya fitur tanya-jawab RAG (butuh sesi + kuota),
+		// jadi tamu tetap bisa membaca penuh, hanya tanpa kolom tanya.
 		bisaTanya: Boolean(locals.user)
 	};
 };

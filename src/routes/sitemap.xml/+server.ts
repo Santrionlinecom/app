@@ -24,6 +24,23 @@ type BookRow = {
 	updated_at: string | number | null;
 };
 
+// Halaman yang BOLEH masuk sitemap: harus bisa dibuka tanpa login.
+//
+// Aturannya sederhana tapi mudah dilanggar: rute di dalam grup `(app)`
+// mewajibkan login dan mengalihkan tamu ke /auth. Mendaftarkannya di sini
+// membuat sitemap berbohong kepada mesin pencari — Google membuang URL yang
+// mengalihkan ke halaman login, dan sitemap yang berulang kali menyodorkan
+// halaman terkunci menurunkan kepercayaan crawl untuk SELURUH situs, termasuk
+// seribu artikel blog yang sehat.
+//
+// Pernah terjadi (22 Agu 2026): /kitab, /kitab/quran, /desain, /desain/cetak,
+// /digital-store, plus 12 template desain — 17 URL, 31% dari seluruh URL
+// non-blog — semuanya membalas 302 ke /auth.
+//
+// Sesudah itu /kitab dan /desain DIPINDAHKAN keluar grup `(app)` karena
+// ternyata tidak pernah membutuhkan login, sehingga kini sah didaftarkan.
+// /digital-store tetap di luar daftar: ia memakai locals.user untuk
+// kepemilikan produk. Dijaga oleh tests/sitemap-publik.test.ts.
 const staticPages: SitemapPage[] = [
 	{ loc: '/', priority: '1.0', changefreq: 'daily' },
 	{ loc: '/buku', priority: '0.9', changefreq: 'daily' },
@@ -38,7 +55,6 @@ const staticPages: SitemapPage[] = [
 	{ loc: '/blog/apa-itu-santri-online', priority: '0.9', changefreq: 'monthly' },
 	{ loc: '/desain', priority: '0.9', changefreq: 'weekly' },
 	{ loc: '/desain/cetak', priority: '0.8', changefreq: 'weekly' },
-	{ loc: '/digital-store', priority: '0.7', changefreq: 'weekly' },
 	{ loc: '/tentang', priority: '0.5', changefreq: 'monthly' },
 	{ loc: '/kontak', priority: '0.5', changefreq: 'monthly' },
 	{ loc: '/privacy', priority: '0.5', changefreq: 'monthly' },
@@ -138,6 +154,10 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 		...[
 			...staticPages,
 			...dynastyPages,
+			// 13 template desain. Dulu dikeluarkan karena /desain/[slug] berada
+			// di grup `(app)` dan mengalihkan tamu ke /auth; sesudah folder
+			// dipindah ke rute publik, URL-URL ini justru aset SEO musiman
+			// (twibbon Hari Santri, banner Isra Miraj, jadwal imsakiyah).
 			...designTemplates.map((template) => ({
 				loc: `/desain/${template.slug}`,
 				priority: '0.8',
