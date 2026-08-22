@@ -1,7 +1,11 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { ensureBukuWalletSchema } from '$lib/server/domains/buku/wallet';
-import { getCoinTopupPackageById, getCoinTopupPackages } from '$lib/server/coin-packages';
+import {
+	getCoinTopupPackageById,
+	getCoinTopupPackages,
+	pilihPaketMencukupi
+} from '$lib/server/coin-packages';
 import {
 	buatPermintaanManual,
 	metodeManualAktif,
@@ -31,7 +35,7 @@ const PESAN_MANUAL: Record<string, string> = {
 	catatan_panjang: 'Catatan pembayaran maksimal 500 karakter.'
 };
 
-export const load: PageServerLoad = async ({ locals, platform }) => {
+export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth');
 	}
@@ -48,9 +52,24 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 			])
 		: [[], []];
 
+	// Kalau pengguna datang dari halaman produk yang saldonya kurang,
+	// `?butuh=` memberi tahu berapa coin yang dia perlukan — sehingga
+	// halaman ini bisa langsung menyarankan paket yang menutupinya dalam
+	// SATU kali isi, bukan membiarkannya menebak lalu kurang lagi.
+	const butuhMentah = Number(url.searchParams.get('butuh'));
+	const coinDibutuhkan =
+		Number.isSafeInteger(butuhMentah) && butuhMentah > 0 ? butuhMentah : null;
+
+	const semuaPaket = getCoinTopupPackages();
+	const paketDisarankan = coinDibutuhkan
+		? (pilihPaketMencukupi(coinDibutuhkan)?.id ?? null)
+		: null;
+
 	return {
 		user: locals.user,
-		packages: getCoinTopupPackages(),
+		packages: semuaPaket,
+		coinDibutuhkan,
+		paketDisarankan,
 		midtransClientKey: platform?.env?.MIDTRANS_CLIENT_KEY ?? '',
 		midtransSnapScriptUrl: getMidtransSnapScriptUrl(platform?.env?.MIDTRANS_IS_PRODUCTION === 'true'),
 		metodeManual,
