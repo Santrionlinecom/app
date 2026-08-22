@@ -59,3 +59,4 @@ pnpm-lock.yaml
 # Artefak pipeline kitab (parse lokal, jangan di-commit)
 scripts/kitab-pipeline/__pycache__/
 scripts/kitab-pipeline/out/
+backups/

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 
 const akar = process.cwd();
-const seed = readFileSync(join(akar, 'migrations/0068_seed_kursus_cloudflare_d1_r2.sql'), 'utf-8');
+const seed = readFileSync(join(akar, 'migrations/0077_seed_kursus_cloudflare_d1_r2.sql'), 'utf-8');
 const skrip = readFileSync(join(akar, 'scripts/seed-kursus-cloudflare-d1-r2.py'), 'utf-8');
 
 test('kursus edge terbit, gratis, slug tetap', () => {

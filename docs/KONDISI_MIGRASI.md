@@ -83,7 +83,12 @@ isinya memang sudah diterapkan.
 | 0030 | `0030_kitab_references.sql`, `0030_short_links.sql` |
 | 0038 | `0038_payment_orders.sql`, `0038_santri_learn.sql` |
 | 0039 | `0039_payment_notification_deliveries.sql`, `0039_santri_learn_seed.sql` |
-| 0068 | `0068_push_subscriptions.sql`, `0068_seed_kursus_cloudflare_d1_r2.sql` |
+
+**Kembar `0068` sudah SELESAI (2026-08-22).** `0068_seed_kursus_cloudflare_d1_r2.sql`
+diganti nama menjadi `0077_seed_kursus_cloudflare_d1_r2.sql`. Aman dilakukan
+karena nama lama itu TIDAK pernah tercatat di `d1_migrations` produksi (yang
+tercatat hanya `0068_push_subscriptions.sql`), dan isinya idempoten
+(`INSERT OR REPLACE` dengan id tetap). Tersisa 5 kembar warisan di atas.
 
 **Keputusan: TIDAK diganti namanya.** Sebagian nama itu sudah tercatat di
 `d1_migrations` produksi. Mengganti nama berkas membuat D1 menganggapnya

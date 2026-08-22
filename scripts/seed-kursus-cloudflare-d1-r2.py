@@ -291,7 +291,7 @@ if __name__ == "__main__":
     tujuan = (
         pathlib.Path(__file__).resolve().parent.parent
         / "migrations"
-        / "0068_seed_kursus_cloudflare_d1_r2.sql"
+        / "0077_seed_kursus_cloudflare_d1_r2.sql"
     )
     tujuan.write_text(bangun(), encoding="utf-8")
     print(f"Ditulis: {tujuan}")

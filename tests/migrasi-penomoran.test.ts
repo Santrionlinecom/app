@@ -23,7 +23,7 @@ import path from 'node:path';
 const DIR_MIGRASI = path.resolve('migrations');
 
 /** Kembar warisan yang sudah tercatat di produksi. Daftar ini tidak boleh tumbuh. */
-const KEMBAR_WARISAN = new Set(['0005', '0024', '0030', '0038', '0039', '0068']);
+const KEMBAR_WARISAN = new Set(['0005', '0024', '0030', '0038', '0039']);
 
 const berkasMigrasi = () =>
 	readdirSync(DIR_MIGRASI)
