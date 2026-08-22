@@ -302,7 +302,16 @@
 
 					<div class="flex gap-3">
 						{#if !canAfford}
-							<a href="/coins/topup" class="btn btn-warning flex-1">
+							<!--
+								Tautan membawa serta kekurangannya, supaya halaman topup
+								bisa langsung menyorot paket yang menutupi harga produk
+								dalam SATU kali isi — bukan membiarkan pengguna menebak
+								lalu kurang lagi.
+							-->
+							<a
+								href="/coins/topup?butuh={data.product.price - data.coinBalance}"
+								class="btn btn-warning flex-1"
+							>
 								<Coins class="h-4 w-4" />
 								Top Up Coin
 							</a>

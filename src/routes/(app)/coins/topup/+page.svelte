@@ -7,6 +7,7 @@
 	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Clock3 from '@lucide/svelte/icons/clock-3';
+	import Coins from '@lucide/svelte/icons/coins';
 	import CreditCard from '@lucide/svelte/icons/credit-card';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import ReceiptText from '@lucide/svelte/icons/receipt-text';
@@ -17,7 +18,7 @@
 	export let data: PageData;
 	export let form: { message?: string } | null;
 
-	let selectedPackageId = data.packages[0]?.id ?? '';
+	let selectedPackageId = data.paketDisarankan ?? data.packages[0]?.id ?? '';
 	let userNote = '';
 	let isProcessing = false;
 	let toast: { kind: 'success' | 'pending' | 'error'; message: string } | null = null;
@@ -292,6 +293,35 @@
 					</div>
 					<WalletCards class="mt-1 h-5 w-5 shrink-0 text-slate-400" />
 				</div>
+
+				<!--
+					Datang dari halaman produk dengan saldo kurang. Sebutkan
+					kekurangannya secara terbuka dan tandai paket yang sudah
+					dipilihkan, supaya tidak ada yang topup lalu ternyata masih
+					kurang untuk kedua kalinya.
+				-->
+				{#if data.coinDibutuhkan}
+					<div
+						class="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+					>
+						<Coins class="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+						<div class="text-sm text-amber-900">
+							<p class="font-semibold">
+								Anda kurang {data.coinDibutuhkan.toLocaleString('id-ID')} coin
+							</p>
+							<p class="mt-1 leading-6">
+								{#if data.paketDisarankan}
+									Kami sudah memilihkan paket yang mencukupi dalam sekali isi. Setelah top-up
+									berhasil, saldo langsung terpotong otomatis saat membeli — tidak perlu isi
+									ulang lagi.
+								{:else}
+									Belum ada paket tunggal yang mencukupi. Silakan pilih paket terbesar,
+									lalu ulangi sekali lagi.
+								{/if}
+							</p>
+						</div>
+					</div>
+				{/if}
 
 				<div class="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
 					{#each packages as pkg}
